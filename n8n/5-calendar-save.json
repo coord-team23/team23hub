@@ -204,6 +204,49 @@
         1200,
         120
       ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Reconstruir').first().json.projectId || $('Webhook').first().json.body.projectId }}",
+            "taskDates_json": "={{ $('Webhook').first().json.body.taskDates_json || '{}' }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "ff000005-0000-0000-0000-0000000000aa",
+      "name": "Guardar taskDates",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1420,
+        -120
+      ],
+      "executeOnce": true,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "connections": {
@@ -283,6 +326,17 @@
         [
           {
             "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Calendario": {
+      "main": [
+        [
+          {
+            "node": "Guardar taskDates",
             "type": "main",
             "index": 0
           }

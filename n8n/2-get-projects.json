@@ -15,7 +15,10 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REEMPLAZAR",
@@ -41,7 +44,10 @@
       "name": "CONFIG",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [200, 0]
+      "position": [
+        200,
+        0
+      ]
     },
     {
       "parameters": {
@@ -61,7 +67,10 @@
       "name": "Leer Projects",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [400, 0],
+      "position": [
+        400,
+        0
+      ],
       "alwaysOutputData": true,
       "executeOnce": true,
       "credentials": {
@@ -89,7 +98,10 @@
       "name": "Leer Calendar",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [600, 0],
+      "position": [
+        600,
+        0
+      ],
       "alwaysOutputData": true,
       "executeOnce": true,
       "credentials": {
@@ -101,13 +113,16 @@
     },
     {
       "parameters": {
-        "jsCode": "function safe(v, fb){ try { return v ? JSON.parse(v) : fb; } catch(e){ return fb; } }\nconst projRows = $('Leer Projects').all().map(i => i.json).filter(r => r && r.id);\nconst calRows = $('Leer Calendar').all().map(i => i.json).filter(r => r && r.project_id);\nconst projects = projRows.map(p => ({\n  id: String(p.id),\n  nombre: p.nombre || '',\n  cliente: p.cliente || '',\n  agencia: p.agencia || '',\n  productora: p.productora || '',\n  ep_nombre: p.ep_nombre || '', ep_email: p.ep_email || '',\n  prod_nombre: p.prod_nombre || '', prod_email: p.prod_email || '',\n  coord_nombre: p.coord_nombre || '', coord_email: p.coord_email || '',\n  tareas: safe(p.tareas_json, []),\n  asignaciones: safe(p.asignaciones_json, {}),\n  status: p.status || 'por_activarse',\n  year: String(p.year || ''),\n  links: safe(p.links_json, {}),\n  calendario: calRows.filter(c => String(c.project_id) === String(p.id)).map(c => ({ fase: c.fase, inicio: c.inicio, fin: c.fin, notas: c.notas || '', tipo: c.tipo === 'hito' ? 'hito' : 'fase' }))\n}));\nreturn [{ json: { projects } }];"
+        "jsCode": "function safe(v, fb){ try { return v ? JSON.parse(v) : fb; } catch(e){ return fb; } }\nconst projRows = $('Leer Projects').all().map(i => i.json).filter(r => r && r.id);\nconst calRows = $('Leer Calendar').all().map(i => i.json).filter(r => r && r.project_id);\nconst projects = projRows.map(p => ({\n  id: String(p.id),\n  nombre: p.nombre || '',\n  cliente: p.cliente || '',\n  agencia: p.agencia || '',\n  productora: p.productora || '',\n  director: p.director || '',\n  ep_nombre: p.ep_nombre || '', ep_email: p.ep_email || '',\n  prod_nombre: p.prod_nombre || '', prod_email: p.prod_email || '',\n  coord_nombre: p.coord_nombre || '', coord_email: p.coord_email || '',\n  tareas: safe(p.tareas_json, []),\n  asignaciones: safe(p.asignaciones_json, {}),\n  taskDates: safe(p.taskDates_json, {}),\n  sintesis: p.sintesis || '',\n  checklist: safe(p.checklist_json, {}),\n  storyboard_url: p.storyboard_url || '',\n  status: p.status || 'por_activarse',\n  year: String(p.year || ''),\n  links: safe(p.links_json, {}),\n  calendario: calRows.filter(c => String(c.project_id) === String(p.id)).map(c => ({ fase: c.fase, inicio: c.inicio, fin: c.fin, notas: c.notas || '', tipo: c.tipo === 'hito' ? 'hito' : 'fase' }))\n}));\nreturn [{ json: { projects } }];"
       },
       "id": "b2000002-0000-0000-0000-000000000005",
       "name": "Armar respuesta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [800, 0]
+      "position": [
+        800,
+        0
+      ]
     },
     {
       "parameters": {
@@ -118,15 +133,68 @@
       "name": "Responder",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1000, 0]
+      "position": [
+        1000,
+        0
+      ]
     }
   ],
   "connections": {
-    "Webhook": { "main": [[{ "node": "CONFIG", "type": "main", "index": 0 }]] },
-    "CONFIG": { "main": [[{ "node": "Leer Projects", "type": "main", "index": 0 }]] },
-    "Leer Projects": { "main": [[{ "node": "Leer Calendar", "type": "main", "index": 0 }]] },
-    "Leer Calendar": { "main": [[{ "node": "Armar respuesta", "type": "main", "index": 0 }]] },
-    "Armar respuesta": { "main": [[{ "node": "Responder", "type": "main", "index": 0 }]] }
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "Leer Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Projects": {
+      "main": [
+        [
+          {
+            "node": "Leer Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Calendar": {
+      "main": [
+        [
+          {
+            "node": "Armar respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar respuesta": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
   "settings": {},

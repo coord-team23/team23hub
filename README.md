@@ -23,10 +23,12 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 |---|----------|---------|----------|
 | 1 | Setup DB | (manual, se corre 1 vez) | Crea el spreadsheet TEAM23_DB con tabs Projects y Calendar |
 | 2 | Get Projects | `GET /webhook/team23/projects` | Devuelve todos los proyectos + calendarios a la página |
-| 3 | Crear Proyecto | `POST /webhook/team23/create` | Crea carpeta raíz en Drive + las 6 carpetas + subcarpetas de FOOTAGE y DELIVERY + copia Desglose y Tracker + crea el Doc de Notas con template + crea el proyecto en Frame.io con sus 4 carpetas + guarda el registro |
-| 4 | Actualizar Proyecto | `POST /webhook/team23/update` | Edita nombre/cliente/agencia/productora/**director**, equipo, tareas, asignaciones, **`taskDates_json`** (fechas por tarea: `{ "VFX": {inicio,fin,notas}, ... }`) y estado (según qué campos vengan en el body) |
+| 3 | Crear Proyecto | `POST /webhook/team23/create` | Crea carpeta raíz en Drive + las 6 carpetas + subcarpetas de FOOTAGE y DELIVERY + copia Desglose y Tracker + crea el Doc de Notas con template + crea el proyecto en Frame.io con sus 4 carpetas + guarda el registro (incluye `director`, `taskDates_json`, `sintesis`, `storyboard_url` si vienen en el body) |
+| 4 | Actualizar Proyecto | `POST /webhook/team23/update` | Edita nombre/cliente/agencia/productora/**director**, equipo, tareas, asignaciones (incluye `estado` de candidatos), **`taskDates_json`**, `checklist_json` y estado (según qué campos vengan en el body) |
 | 5 | Guardar Calendario | `POST /webhook/team23/calendar` | Guarda el calendario y manda mail a todos los involucrados |
-| 6 | Eliminar Proyecto | `POST /webhook/team23/delete` | Borra el registro del proyecto (recibe `{id}`). No borra la carpeta de Drive ni el proyecto en Frame.io — eso se hace a mano si hace falta |
+| 6 | Parse Debrief (IA) | `POST /webhook/team23/parse` | Analiza el texto de un debrief con Claude y devuelve nombre/cliente/agencia/productora/síntesis/tareas/timeline sugeridos, para precargar el alta de proyecto (Opción 2) |
+
+**Eliminar proyecto** (`POST /webhook/team23/delete`, recibe `{id}`) todavía no tiene un workflow armado en esta carpeta — hay que crearlo a mano en n8n (borra la fila del Sheet por `id`; no borra la carpeta de Drive ni el proyecto en Frame.io, eso se hace aparte si corresponde).
 
 **Estructura que crea en Drive por cada proyecto:**
 
@@ -71,9 +73,13 @@ Entrá a tu n8n → **Credentials** → creá estas (las de Google probablemente
 
 ### Paso 2 — Importar los workflows
 
-En n8n → **Workflows → Import from File** → importá los 5 archivos de la carpeta `n8n/` en orden.
+En n8n → **Workflows → Import from File** → importá los 6 archivos de la carpeta `n8n/` en orden (el 6 — Parse Debrief — es opcional, solo si vas a usar la Opción 2 de creación).
 
 En cada workflow, tocá los nodos que aparecen en rojo y seleccioná tu credencial correspondiente (dice `REEMPLAZAR`).
+
+Si vas a usar el workflow 6, además necesitás una credencial **Header Auth** llamada **`Anthropic API Key`**:
+- Name: `x-api-key`
+- Value: tu API key de [console.anthropic.com](https://console.anthropic.com)
 
 ### Paso 3 — Correr el Setup
 
@@ -81,7 +87,7 @@ Abrí **Team23 — 1. Setup DB** y ejecutalo una vez (Execute Workflow). El nodo
 
 ### Paso 4 — Completar los nodos CONFIG
 
-En los workflows **2, 3, 4 y 5** hay un nodo llamado **CONFIG**. Pegá ahí:
+En los workflows **2, 3, 4, 5 y 6** hay un nodo llamado **CONFIG**. Pegá ahí:
 
 - `dbSheetId` → el ID del paso 3 (en los 4 workflows).
 - Solo en el workflow 3, además:
@@ -105,7 +111,11 @@ El primer comando te da el `account_id`, el segundo el `workspace_id` del worksp
 
 ### Paso 5 — Activar los workflows
 
-Prendé el toggle **Active** en los workflows 2, 3, 4 y 5 (el 1 no hace falta, es manual).
+Prendé el toggle **Active** en los workflows 2, 3, 4, 5 y 6 (el 1 no hace falta, es manual).
+
+### Columnas nuevas en el Sheet
+
+Los workflows ahora guardan más campos en la pestaña **Projects**: `director`, `taskDates_json`, `sintesis`, `storyboard_url`, `checklist_json` (además de las columnas de siempre). El workflow 1 (Setup DB) ya las crea si corrés el setup de cero. **Si tu Sheet ya existe**, agregá esas 5 columnas a mano al final de la fila de encabezados de **Projects**.
 
 ### Paso 6 — Deployar la página
 
@@ -126,7 +136,13 @@ Listo. Entrás, creás un proyecto, y en ~15 segundos tenés Drive + Frame.io + 
 
 - **Pestañas** (arriba, junto al logo): **Proyectos** (la vista de siempre, con alta y edición completa), **Calendario** (todas las fases/hitos de los proyectos activos cruzadas en un solo mes, coloreadas por proyecto), **Equipo** (mismo listado de proyectos pero abre un detalle de solo lectura: calendario y links, sin edición) y **Dashboard** (conteos, carga de trabajo por persona y próximos hitos, calculados en el momento a partir de los proyectos activos).
 - **Estados del proyecto** (pipeline): **PRE-PRODUCCIÓN** → **EJECUTANDO** → **ENTREGANDO** → **LISTO PARA CIERRE** → **COMPLETADO**. En las listas se agrupan en tres bloques jerárquicos: *Pre-producción*, *Activos* (paraguas de Ejecutando/Entregando/Listo para cierre, cada tarjeta con su badge de etapa) y *Completados*. Los valores internos que recibe n8n no cambiaron (`por_activarse`, `activo`, `entregando`, `cierre`, `completado`).
-- **+ NUEVO PROYECTO** (botón fijo a la derecha de la barra de navegación, en todas las vistas) → cargás datos del proyecto, equipo interno (con mails), tareas (con equipo + fechas) → se crea todo. El proyecto nace en **PRE-PRODUCCIÓN**.
+- **+ NUEVO PROYECTO** (botón fijo a la derecha de la barra de navegación, en todas las vistas) → aparece un selector con dos caminos:
+  - **Opción 1 · Kick off manual**: el wizard de planificación de siempre (Discord, timing, storyboard, Notion, adelanto) y después el formulario de datos del proyecto.
+  - **Opción 2 · Desde debrief (IA)**: pegás el debrief completo, la IA (workflow 6) precarga nombre, cliente, agencia, productora, síntesis, tareas y un timeline tentativo. Revisás todo, cargás uno o más candidatos por tarea (para comparar presupuestos), y al crear se genera el mismo Drive + Frame.io de siempre; el timeline queda en el calendario y la síntesis en la ficha.
+  En ambos casos el proyecto nace en **PRE-PRODUCCIÓN**.
+- **Candidatos**: cada persona cargada por tarea en la Opción 2 nace como **candidato** (chip gris). En la ficha se **confirma** o **rechaza** con un click — el cambio se guarda al toque. Mientras haya candidatos sin resolver, la tarjeta del proyecto lo avisa con un pill rojo. Los avisos de calendario solo llegan a los **confirmados** (y al equipo interno); pendientes y rechazados no reciben mail. El equipo cargado por la Opción 1 (wizard manual) entra directo como confirmado, sin pasar por este flujo.
+- **Gate de activación**: al mover un proyecto de **Pre-producción** a cualquier estado en curso (Ejecutando/Entregando/Listo para cierre), aparece un checklist obligatorio (presupuesto aprobado, candidatos resueltos, timeline revisado, materiales confirmados, kick off hecho) — no se puede confirmar hasta tildar todo, y avisa si quedan candidatos sin resolver. Entre estados en curso (ej. Ejecutando → Entregando) no hay gate, se cambia directo. **Irreversible**: una vez activado, el proyecto no puede volver a Pre-producción.
+- **Checklists de etapa**: al entrar en **Entregando** aparece el *Protocolo de Delivery* (Entregas/Correcciones/Entrega final) y al entrar en **Listo para cierre** el *Protocolo de Cierre* (Cierre/Pagos/Archivo-Portfolio), cada ítem con responsable (COORD/PROD/EP/ADMIN) y quién lo tildó y cuándo. Se guardan en `checklist_json`.
 - **Datos del proyecto**: **Nombre de la campaña · Productora · Director · Cliente · Agencia**. Editables solo en **PRE-PRODUCCIÓN**; desde **EJECUTANDO** en adelante, tanto estos datos como el **equipo interno** quedan en solo lectura.
 - **Tareas = fases del calendario**: al elegir una tarea le cargás **equipo + inicio + fin** en el mismo bloque. Cada tarea se dibuja como su propia barra en el calendario. Las fechas se editan indistintamente desde el bloque de Tareas o desde la tabla del calendario (quedan sincronizadas). El calendario además admite **fases independientes** (ej. "Entrega Masters", se agregan con "+ agregar fase") e **hitos** por día. Tareas actuales: VFX · Color · DG · Motion Graphics · IA · 3D/CGI · Retoque · SFX/Mezcla · Online.
 - **Activar**: abrís el proyecto → tocás **EJECUTANDO** → cargás las fechas de cada tarea y de las fases; aparecen como barras en el calendario → **Guardar calendario y avisar al equipo** manda el mail a todos.
@@ -158,6 +174,10 @@ Hoy `POST /webhook/team23/calendar` solo guarda en el Sheet y manda el mail. Cua
 - `deletedEventIds[]` trae los ids de fases/hitos que se borraron desde el navegador desde el último guardado — son los eventos que hay que borrar de Calendar.
 - Con eso, el workflow de n8n debería: guardar en algún lado (columna nueva en el tab Calendar, o un Data Table) el `eventId` de Google que le corresponde a cada `id` propio; en cada guardado, por cada `entries[]` hacer upsert (crear si no existe ese `id` todavía, actualizar si ya existe) y por cada `deletedEventIds[]` borrar el evento.
 - La cuenta de Google se conecta con OAuth2 directamente en el nodo de Google Calendar de n8n — no hace falta tocar nada en esta página ni pedirle login a nadie en el navegador.
+
+## Pendiente: login real y portal de proveedores
+
+Existe una versión con login de Supabase (roles Productor Ejecutivo / Productor / Proveedor) y un portal aparte (`proveedores.html`) donde cada proveedor ve, en solo lectura, únicamente sus proyectos confirmados — seguridad real, verificada del lado del servidor, no el hack de URL de la vieja pestaña "Equipo". Quedó afuera de este merge a propósito (es un cambio de arquitectura: agrega autenticación, una cuenta de Supabase, y una segunda página). Está completo en la rama `version-eyal` de este repo (`proveedores.html`, `n8n/7-provider-portal.json`, `supabase/schema.sql`) para cuando se quiera sumar.
 
 ## Modificaciones
 

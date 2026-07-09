@@ -262,6 +262,48 @@
   .finales-btn.on{background:var(--red);border-color:var(--red);color:#fff}
   .finales-btn.on span{color:#fff}
   .finales-btn.on:hover{background:#d40000;border-color:#d40000}
+
+  /* ---------- candidatos (equipo propuesto por tarea) ---------- */
+  .chipst{font-size:9.5px;font-weight:var(--weight-bold);letter-spacing:.08em;text-transform:uppercase;border-radius:var(--radius-full);padding:3px 9px;border:1.5px solid var(--ink)}
+  .chipst.cand{border-color:var(--gray);color:var(--gray)}
+  .chipst.conf{background:var(--ink);color:#fff}
+  .chipst.rech{border-color:var(--red);color:var(--red);text-decoration:line-through}
+  .mini-btn{font-family:var(--font-primary);font-size:11px;font-weight:var(--weight-bold);border:2px solid var(--ink);border-radius:var(--radius-full);padding:4px 10px;background:#fff;cursor:pointer}
+  .mini-btn:hover{background:var(--ink);color:#fff}
+  .mini-btn.no{border-color:var(--red);color:var(--red)}
+  .mini-btn.no:hover{background:var(--red);color:#fff}
+  .mini-btn.on{background:var(--ink);color:#fff}
+  .cand-state{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-2px 0 10px 2px}
+  .pill.warn{border-color:var(--red);color:var(--red)}
+
+  /* ---------- gate de activación ---------- */
+  .gate-warn{border:2px solid var(--red);background:#FFF3F2;border-radius:var(--radius-md);padding:12px 14px;font-size:12.5px;margin-bottom:16px}
+  .gate-item{display:flex;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--hair)}
+  .gate-item .txt{font-size:13.5px}
+
+  /* ---------- checklists de etapa (delivery / cierre) ---------- */
+  .chk-box{width:22px;height:22px;border:2px solid var(--ink);border-radius:7px;background:#fff;cursor:pointer;flex:none;font-size:13px;font-weight:800;line-height:18px;text-align:center;color:#fff;padding:0}
+  .chk-box.done{background:var(--red);border-color:var(--red)}
+  .chk-box[disabled]{opacity:.5;cursor:default}
+  .chk-section{margin-bottom:16px}
+  .chk-section .chk-head{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:13px;text-transform:uppercase;letter-spacing:.02em;background:var(--soft);border:2px solid var(--ink);border-radius:var(--radius-md);padding:7px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+  .chk-head .prog{font-size:11px;font-weight:var(--weight-bold);color:var(--gray)}
+  .chk-item{display:flex;gap:10px;align-items:flex-start;padding:7px 4px;border-bottom:1px solid var(--hair);flex-wrap:wrap}
+  .chk-item:last-child{border-bottom:none}
+  .chk-item .txt{font-size:13px;flex:1;min-width:60%}
+  .chk-item.done .txt{color:var(--gray);text-decoration:line-through}
+  .chk-item .resp{font-size:9px;font-weight:800;letter-spacing:.1em;border:1.5px solid var(--ink);border-radius:var(--radius-full);padding:2px 8px;flex:none;margin-top:1px}
+  .chk-item .by{font-size:10px;color:var(--gray);flex-basis:100%;padding-left:32px}
+
+  /* ---------- selector de flujo de creación (kick off vs. debrief IA) ---------- */
+  .opt-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
+  @media(min-width:640px){.opt-grid{grid-template-columns:1fr 1fr}}
+  .opt-card{border:2px solid var(--ink);border-radius:var(--radius-lg);padding:20px;cursor:pointer;background:#fff;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:8px;text-align:left}
+  .opt-card:hover{transform:translateY(-3px);box-shadow:6px 6px 0 var(--ink)}
+  .opt-card .opt-num{font-size:10px;letter-spacing:.2em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--red)}
+  .opt-card h3{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:19px;text-transform:uppercase;letter-spacing:var(--tracking-tight);line-height:1.05}
+  .opt-card p{font-size:12.5px;color:var(--gray);line-height:1.45;flex:1;margin:0}
+  .opt-card .opt-cta{font-size:12px;font-weight:var(--weight-bold)}
   .frame-cta{
     display:flex;align-items:center;justify-content:center;text-align:center;
     border:2px solid var(--ink);border-radius:var(--radius-sm);background:var(--ink);color:#fff !important;
@@ -593,6 +635,114 @@
   </div>
 </div>
 
+<!-- ============ MODAL: GATE DE ACTIVACIÓN ============ -->
+<div class="overlay" id="ovGate">
+  <div class="modal" role="dialog" aria-modal="true" style="width:min(640px,100%)">
+    <button class="close" onclick="closeModal('ovGate')" aria-label="Cerrar">✕</button>
+    <h2>Activar proyecto</h2>
+    <div class="kicker" id="gateName"></div>
+    <div class="gate-warn">⚠️ <b>Checklist de activación.</b> Confirmá cada punto antes de que el proyecto entre en ejecución: a partir de acá el equipo empieza a recibir los avisos de calendario.</div>
+    <div id="gateItems"></div>
+    <div class="actions">
+      <button class="btn" onclick="closeModal('ovGate')">Todavía no</button>
+      <button class="btn primary" id="btnGate" disabled onclick="confirmGate()">🚀 Pasar a Ejecutando</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: ELEGIR FLUJO DE CREACIÓN ============ -->
+<div class="overlay" id="ovChooser">
+  <div class="modal" role="dialog" aria-modal="true" style="width:min(720px,100%)">
+    <button class="close" onclick="closeModal('ovChooser')" aria-label="Cerrar">✕</button>
+    <h2>Nuevo proyecto</h2>
+    <div class="kicker">¿Cómo lo querés crear?</div>
+    <div class="opt-grid">
+      <div class="opt-card" onclick="chooseOption(1)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')chooseOption(1)">
+        <div class="opt-num">Opción 1</div>
+        <h3>Kick off manual</h3>
+        <p>El wizard de planificación paso a paso (Discord, timing, storyboard, Notion, adelanto) y después el formulario de siempre.</p>
+        <span class="opt-cta">Arrancar wizard →</span>
+      </div>
+      <div class="opt-card" onclick="chooseOption(2)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')chooseOption(2)">
+        <div class="opt-num">Opción 2</div>
+        <h3>Desde debrief (IA)</h3>
+        <p>Pegás el debrief y la IA precarga nombre, cliente, síntesis, tareas y timeline. Revisás, cargás candidatos y creás.</p>
+        <span class="opt-cta">Pegar debrief →</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: NUEVO PROYECTO (OPCIÓN 2 · DEBRIEF IA) ============ -->
+<div class="overlay" id="ovNew2">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('ovNew2')" aria-label="Cerrar">✕</button>
+    <h2>Nuevo proyecto</h2>
+    <div class="kicker">Opción 2 · Desde debrief — la IA arma el borrador, vos lo revisás</div>
+
+    <div class="fgroup" id="n2DebriefStep">
+      <div class="glabel">1 · Debrief <small>pegá el documento completo</small></div>
+      <textarea id="n2Debrief" style="min-height:130px" placeholder="Pegá acá el debrief completo del proyecto…"></textarea>
+      <div class="actions" style="justify-content:flex-start;margin-top:10px">
+        <button class="btn primary small" id="btnParse2" onclick="parseDebrief2()">✨ Analizar debrief</button>
+        <button class="btn small" onclick="skipDebrief2()">Cargar a mano</button>
+      </div>
+    </div>
+
+    <div id="n2Form" style="display:none">
+      <div class="fgroup">
+        <div class="glabel">2 · Datos del proyecto</div>
+        <div class="frow">
+          <div><label class="f">Nombre de la campaña *</label><input type="text" id="n2Nombre"></div>
+          <div><label class="f">Productora</label><input type="text" id="n2Productora"></div>
+          <div><label class="f">Director</label><input type="text" id="n2Director"></div>
+          <div><label class="f">Cliente *</label><input type="text" id="n2Cliente"></div>
+          <div><label class="f">Agencia</label><input type="text" id="n2Agencia"></div>
+        </div>
+        <label class="f">Síntesis</label>
+        <textarea id="n2Sintesis" style="min-height:80px"></textarea>
+        <div style="margin-top:10px"><label class="f">Link a storyboard / referencias (opcional)</label><input type="text" id="n2Storyboard" placeholder="https://…"></div>
+      </div>
+
+      <div class="fgroup">
+        <div class="glabel">3 · Equipo interno <small>nombre + mail (para los avisos de calendario)</small></div>
+        <div class="frow">
+          <div><label class="f">Productor Ejecutivo *</label><input type="text" id="n2EpNombre" placeholder="Nombre"></div>
+          <div><label class="f">Mail EP *</label><input type="email" id="n2EpEmail" placeholder="ep@team23.online"></div>
+        </div>
+        <div class="frow">
+          <div><label class="f">Productor</label><input type="text" id="n2ProdNombre"></div>
+          <div><label class="f">Mail Productor</label><input type="email" id="n2ProdEmail"></div>
+        </div>
+        <div class="frow">
+          <div><label class="f">Coordinador</label><input type="text" id="n2CoordNombre"></div>
+          <div><label class="f">Mail Coordinador</label><input type="email" id="n2CoordEmail"></div>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <div class="glabel">4 · Tareas TEAM23 y candidatos <small>varios por tarea para comparar presupuestos; les sale la propuesta por mail al crear</small></div>
+        <div class="task-pills" id="n2Tasks"></div>
+        <div id="n2Assigns"></div>
+      </div>
+
+      <div class="fgroup">
+        <div class="glabel">5 · Timeline tentativo <small>fases del proyecto; se ajustan después desde la ficha</small></div>
+        <div class="tbl-scroll"><table class="cal">
+          <thead><tr><th>Fase</th><th>Inicio</th><th>Fin</th><th>Notas</th><th></th></tr></thead>
+          <tbody id="n2TimelineBody"></tbody>
+        </table></div>
+        <button class="addline" onclick="n2TlAdd()">+ agregar fase</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn" onclick="closeModal('ovNew2')">Cancelar</button>
+        <button class="btn primary" id="btnCreate2" onclick="createProject2()">Crear proyecto</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast" role="status"></div>
 <div id="printArea"></div>
 
@@ -728,13 +878,15 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function cardHTML(p, readOnly=false){
   const meta = [p.cliente,p.agencia,p.productora].filter(Boolean).map(esc).join(" · ");
   const pills = (p.tareas||[]).map(t=>`<span class="pill">${esc(t)}</span>`).join("");
+  const nCand = Object.values(p.asignaciones||{}).flat().filter(r=>r&&r.estado==="candidato").length;
+  const candWarn = nCand ? `<span class="pill warn">${nCand} candidato${nCand>1?"s":""} sin resolver</span>` : "";
   const dLink = p.links?.driveRoot && p.links.driveRoot!=="#" ? `<a href="${esc(p.links.driveRoot)}" target="_blank" onclick="event.stopPropagation()">DRIVE ↗</a>` : "";
   const fLink = p.links?.frameio && p.links.frameio!=="#" ? `<a href="${esc(p.links.frameio)}" target="_blank" onclick="event.stopPropagation()">FRAME.IO ↗</a>` : "";
   return `<div class="card" onclick="openDetail('${p.id}'${readOnly?",true":""})">
     <h3>${esc(p.nombre)}</h3>
     <div class="meta">${meta||"&nbsp;"}</div>
     ${inProgress(p.status)?`<div style="margin-bottom:var(--space-3)">${statusBadge(p.status)}</div>`:""}
-    <div class="pills">${pills}</div>
+    <div class="pills">${pills}${candWarn}</div>
     ${(dLink||fLink)?`<div class="links">${dLink}${fLink}</div>`:""}
   </div>`;
 }
@@ -836,6 +988,17 @@ function renderNPAssigns(){
 }
 function assignBlockHTML(tarea, rows, ctx){
   const td = taskDatesStore(ctx)[tarea] || {};
+  const tq = String(tarea).replace(/'/g,"\\'");
+  const stateRow = (r,i)=>{
+    if(ctx!=="dt" || !r.estado) return "";
+    const chip = r.estado==="confirmado" ? '<span class="chipst conf">Confirmado</span>'
+               : r.estado==="rechazado"  ? '<span class="chipst rech">Rechazado</span>'
+               : '<span class="chipst cand">Candidato</span>';
+    const acts = r.estado==="candidato"
+      ? `<button class="mini-btn" onclick="candSet('${tq}',${i},'confirmado')">✓ Confirmar</button><button class="mini-btn no" onclick="candSet('${tq}',${i},'rechazado')">✕ Rechazar</button>`
+      : `<button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
+    return `<div class="cand-state">${chip}${acts}</div>`;
+  };
   return `<div class="assign-block">
     <div class="ttl">${esc(tarea)} — equipo + fechas</div>
     ${rows.map((r,i)=>`
@@ -843,13 +1006,27 @@ function assignBlockHTML(tarea, rows, ctx){
         <input type="text" placeholder="Nombre" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tarea}',${i},'nombre',this.value)">
         <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tarea}',${i},'email',this.value)">
         <button class="icon-btn" onclick="delAssign('${ctx}','${tarea}',${i})" title="Quitar">✕</button>
-      </div>`).join("")}
+      </div>${stateRow(r,i)}`).join("")}
     <button class="addline" onclick="addAssign('${ctx}','${tarea}')">+ agregar persona</button>
     <div class="frow" style="margin-top:var(--space-4)">
       <div><label class="f">Inicio</label><input type="date" value="${esc(td.inicio||"")}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value)"></div>
       <div><label class="f">Fin</label><input type="date" value="${esc(td.fin||"")}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value)"></div>
     </div>
   </div>`;
+}
+/* confirmar / rechazar candidatos desde la ficha; persiste al toque */
+async function candSet(tarea, i, estado){
+  const p = detailProject;
+  const row = (p.asignaciones[tarea]||[])[i];
+  if(!row) return;
+  const prev = row.estado;
+  row.estado = estado;
+  renderDetail();
+  if(DEMO){ toast(estado==="confirmado"?"✔ "+(row.nombre||row.email)+" confirmado (demo)":estado==="rechazado"?"Candidato rechazado (demo)":"Vuelve a candidato (demo)"); return; }
+  try{
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, asignaciones_json: JSON.stringify(p.asignaciones) })});
+    toast(estado==="confirmado"?"✔ "+(row.nombre||row.email)+" confirmado":estado==="rechazado"?"Candidato rechazado":"Vuelve a candidato");
+  }catch(e){ row.estado = prev; renderDetail(); toast("No pude guardar el cambio: "+e.message, true); }
 }
 function taskDatesStore(ctx){ return ctx==="np" ? npTaskDates : (detailProject.taskDates = detailProject.taskDates||{}); }
 function setTaskDate(ctx,t,field,val){
@@ -1049,7 +1226,9 @@ function renderDetail(){
       }).join("")
     : p.tareas.map(t=>assignBlockHTML(t, p.asignaciones[t]||[{nombre:"",email:""}], "dt")).join("");
 
-  const statusBtns = Object.entries(STATUS_META).map(([k,m])=>
+  const statusBtns = Object.entries(STATUS_META)
+    .filter(([k])=> k!=="por_activarse" || p.status==="por_activarse")   /* en curso: no se vuelve a pre-producción */
+    .map(([k,m])=>
     `<span class="status-opt ${p.status===k?"on":""}" ${p.status===k?`style="background:${m.bg};border-color:${m.bg};color:${m.fg}"`:""} onclick="setStatus('${k}')">${m.label}</span>`).join("");
 
   const isActive = inProgress(p.status);
@@ -1078,6 +1257,14 @@ function renderDetail(){
     </tr>`;
   }).join("");
 
+  const sintesisBlock = (p.sintesis || p.storyboard_url) ? `
+    <div class="fgroup">
+      <div class="glabel">Síntesis</div>
+      ${p.sintesis?`<p style="font-size:13.5px;white-space:pre-line;margin:0">${esc(p.sintesis)}</p>`:""}
+      ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:12.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">🎨 Storyboard / referencias ↗</a></p>`:""}
+    </div>` : "";
+  const checklistBlock = checklistHTML(p, ro);
+
   $("#detailBody").innerHTML = `
     <h2>${esc(p.nombre)}</h2>
     <div class="kicker">${esc(p.cliente)}${p.agencia?" · "+esc(p.agencia):""}${p.productora?" · "+esc(p.productora):""}</div>
@@ -1085,6 +1272,10 @@ function renderDetail(){
     ${ro
       ? `<div class="pills" style="margin:6px 0 20px">${STATUS_LABEL[p.status]?`<span class="pill">${esc(STATUS_LABEL[p.status])}</span>`:""}</div>`
       : `<div class="status-select">${statusBtns}</div>`}
+
+    ${sintesisBlock}
+
+    ${checklistBlock}
 
     ${(cierre||completado) ? "" : (lockMeta ? `
     <div class="fgroup">
@@ -1577,8 +1768,12 @@ function dToggleTask(t){
   renderDetail();
 }
 
-async function setStatus(s){
+async function setStatus(s, skipGate=false){
   const p = detailProject;
+  /* gate: salir de pre-producción hacia un estado en curso pasa por el checklist de activación */
+  if(!skipGate && p.status==="por_activarse" && inProgress(s)){ openGate(s); return; }
+  /* irreversible: un proyecto en curso o completado no vuelve a pre-producción */
+  if(p.status!=="por_activarse" && s==="por_activarse"){ toast("Un proyecto en ejecución no puede volver a pre-producción", true); return; }
   const prev = p.status;
   p.status = s;
   if(s==="completado"){ p.year = String(new Date().getFullYear()); }
@@ -1593,13 +1788,115 @@ async function setStatus(s){
       toast("Cargá las fechas de cada tarea (en Tareas) y las fases; guardá para avisar al equipo");
     }
   }
+  const et = etapaDe(s);
+  if(et) seedChecklist(p, et);   /* Entregando → checklist Delivery, Listo p/cierre → checklist Cierre */
   renderDetail();
   if(!DEMO){
     try{
-      await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({id:p.id,status:s,year:p.year})});
+      await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({id:p.id,status:s,year:p.year,checklist_json:JSON.stringify(p.checklist||{})})});
     }catch(e){ p.status=prev; renderDetail(); toast("No pude actualizar el estado: "+e.message,true); return; }
   }
   onProjectsLoaded();
+}
+
+/* ================================================================
+   GATE DE ACTIVACIÓN — checklist obligatorio al pasar de
+   Pre-producción a un estado en curso (Ejecutando / Entregando / Cierre)
+================================================================ */
+const ACT_CHECKLIST = [
+  "Presupuesto aprobado por el cliente",
+  "Candidatos resueltos (confirmados o rechazados)",
+  "Timeline tentativo revisado",
+  "Materiales / footage confirmados o con fecha de llegada",
+  "Kick off hecho (Discord, timing, Notion, adelanto)"
+];
+let gateChecked = [], gateTarget = null;
+function openGate(target){
+  const p = detailProject;
+  gateTarget = target;
+  gateChecked = ACT_CHECKLIST.map(()=>false);
+  const pend = Object.values(p.asignaciones||{}).flat().filter(r=>r&&r.estado==="candidato").length;
+  $("#gateName").textContent = p.nombre+" → "+(STATUS_LABEL[target]||target);
+  $("#gateItems").innerHTML = (pend?`<div class="gate-warn" style="border-color:var(--ink);background:var(--soft)">Ojo: quedan <b>${pend} candidato${pend>1?"s":""}</b> sin confirmar ni rechazar.</div>`:"") +
+    ACT_CHECKLIST.map((t,i)=>`<div class="gate-item"><button class="chk-box" id="gate${i}" onclick="toggleGate(${i})"></button><span class="txt">${esc(t)}</span></div>`).join("");
+  $("#btnGate").textContent = "🚀 Pasar a "+(STATUS_LABEL[target]||target);
+  updateGateBtn();
+  openModal("ovGate");
+}
+function toggleGate(i){
+  gateChecked[i] = !gateChecked[i];
+  const b = $("#gate"+i);
+  b.classList.toggle("done", gateChecked[i]);
+  b.textContent = gateChecked[i] ? "✓" : "";
+  updateGateBtn();
+}
+function updateGateBtn(){ $("#btnGate").disabled = !gateChecked.every(Boolean); }
+function confirmGate(){
+  const t = gateTarget; gateTarget = null;
+  closeModal("ovGate");
+  setStatus(t, true);
+}
+
+/* ================================================================
+   CHECKLISTS DE ETAPA — dentro de Activos:
+   Entregando  → protocolo de DELIVERY
+   Listo p/cierre → protocolo de CIERRE
+   Se guardan en la columna checklist_json del sheet.
+================================================================ */
+const CHK_DELIVERY = [
+  {seccion:"ENTREGAS", items:[["Subir la entrega a Frame.io","COORD"],["Enviar mail de entrega","COORD"],["Avisar por WhatsApp","PROD"],["Avisar en #coord de Discord qué incluye la entrega","COORD"],["Actualizar planilla con fecha de entrega","COORD"]]},
+  {seccion:"CORRECIONES", items:[["Filtrar feedback y responder en los hilos correspondientes","COORD"]]},
+  {seccion:"ENTREGA FINAL", items:[["Supervisión de la entrega","PROD"],["Entrega final al cliente","COORD"],["Aviso en canal general de Discord","COORD"],["Actualizar planilla de entregables y fechas","COORD"],["Master ProRes (422HQ o 4444)","COORD"],["Testigo H.264","COORD"],["Carpetas ordenadas por proyecto","COORD"]]}
+];
+const CHK_CIERRE = [
+  {seccion:"CIERRE", items:[["Pasar en limpio el presupuesto","EP"],["Chequear tracker de jornadas y fechas de finalización de cada proveedor","ADMIN"],["Ajustar números","EP"],["Ver adicionales","PROD"]]},
+  {seccion:"PAGOS", items:[["Envío de factura a cliente","ADMIN"],["Recibo de liquidación","ADMIN"],["Pago a proveedores","EP"]]},
+  {seccion:"ARCHIVO / PORTFOLIO", items:[["Archivar todo en servidor / nube / disco","PROD"],["Frame.io: al año, copiar a disco y borrar","COORD"],["Armar carpeta FINALES dentro del Drive","COORD"],["Subir últimas versiones de cada adaptación","COORD"],["Comunicar la entrega al grupo por WhatsApp con links de la carpeta final","EP"]]}
+];
+function etapaDe(st){ return st==="entregando" ? "delivery" : st==="cierre" ? "cierre" : null; }
+function seedChecklist(p, etapa){
+  p.checklist = p.checklist || {};
+  if(p.checklist[etapa] && p.checklist[etapa].length) return false;
+  const tpl = etapa==="delivery" ? CHK_DELIVERY : CHK_CIERRE;
+  const rows = [];
+  tpl.forEach(sec=>sec.items.forEach(([texto,resp])=>rows.push({id:uid(), seccion:sec.seccion, texto, responsable:resp, done:false, done_por:null, done_at:null})));
+  p.checklist[etapa] = rows;
+  return true;
+}
+function checklistHTML(p, ro){
+  const etapa = etapaDe(p.status);
+  if(!etapa) return "";
+  seedChecklist(p, etapa);
+  const items = p.checklist[etapa];
+  const secs = [...new Set(items.map(i=>i.seccion))];
+  const titulo = etapa==="delivery" ? "Protocolo de Delivery" : "Protocolo de Cierre";
+  return `<div class="fgroup"><div class="glabel">${titulo}${ro?" <small>solo lectura</small>":""}</div>
+    ${secs.map(sec=>{
+      const rows = items.filter(i=>i.seccion===sec);
+      const done = rows.filter(i=>i.done).length;
+      return `<div class="chk-section"><div class="chk-head">${esc(sec)}<span class="prog">${done}/${rows.length}</span></div>
+        ${rows.map(i=>`<div class="chk-item ${i.done?"done":""}">
+          <button class="chk-box ${i.done?"done":""}" ${ro?"disabled":""} onclick="toggleChk('${etapa}','${i.id}')">${i.done?"✓":""}</button>
+          <span class="txt">${esc(i.texto)}</span>
+          ${i.responsable?`<span class="resp">${esc(i.responsable)}</span>`:""}
+          ${i.done&&i.done_por?`<span class="by">✓ ${esc(i.done_por)}${i.done_at?" · "+new Date(i.done_at).toLocaleDateString("es-AR",{day:"2-digit",month:"short"}):""}</span>`:""}
+        </div>`).join("")}
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+async function toggleChk(etapa, id){
+  const p = detailProject;
+  const it = ((p.checklist||{})[etapa]||[]).find(i=>i.id===id);
+  if(!it) return;
+  it.done = !it.done;
+  it.done_por = it.done ? "interno" : null;
+  it.done_at = it.done ? new Date().toISOString() : null;
+  renderDetail();
+  if(!DEMO){
+    try{ await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, checklist_json: JSON.stringify(p.checklist||{}) })}); }
+    catch(e){ toast("No pude guardar el checklist: "+e.message, true); }
+  }
 }
 
 function calSet(i,k,v){ detailProject.calendario[i][k]=v; if(k==="inicio" && detailProject.calendario[i].tipo==="hito") detailProject.calendario[i].fin=v; }
@@ -1667,7 +1964,8 @@ async function saveTeam(){
 function projectRecipients(p){
   const set = new Set();
   [p.ep_email,p.prod_email,p.coord_email].forEach(e=>{ if(e) set.add(e.trim()); });
-  Object.values(p.asignaciones||{}).forEach(rows=>rows.forEach(r=>{ if(r.email) set.add(r.email.trim()); }));
+  /* candidatos: solo los confirmados (o filas sin estado, el equipo directo) reciben avisos */
+  Object.values(p.asignaciones||{}).forEach(rows=>rows.forEach(r=>{ if(r.email && (!r.estado || r.estado==="confirmado")) set.add(r.email.trim()); }));
   return [...set].filter(Boolean);
 }
 
@@ -1845,6 +2143,168 @@ function kickOffComplete(){
   openModal("ovNew");
 }
 
+/* ================================================================
+   NUEVO PROYECTO — chooser de flujo
+   Opción 1: wizard de kick off (flujo original) → formulario ovNew
+   Opción 2: pegar debrief → IA precarga → formulario ovNew2
+================================================================ */
+function openChooser(){ openModal("ovChooser"); }
+function chooseOption(n){
+  closeModal("ovChooser");
+  if(n===1){ openKickOff(); } else { openDebrief(); }
+}
+
+/* ---------------- Opción 2: crear desde debrief (IA) ---------------- */
+let n2Selected = new Set(), n2AssignData = {}, n2Timeline = [];
+
+function openDebrief(){
+  n2Selected = new Set(); n2AssignData = {}; n2Timeline = [];
+  ["n2Debrief","n2Nombre","n2Productora","n2Director","n2Cliente","n2Agencia","n2Sintesis","n2Storyboard",
+   "n2EpNombre","n2EpEmail","n2ProdNombre","n2ProdEmail","n2CoordNombre","n2CoordEmail"]
+    .forEach(id=>{ const el=$("#"+id); if(el) el.value=""; });
+  $("#n2Form").style.display="none";
+  $("#n2DebriefStep").style.display="block";
+  renderN2Tasks(); renderN2Timeline();
+  openModal("ovNew2");
+}
+
+async function parseDebrief2(){
+  const text = $("#n2Debrief").value.trim();
+  if(!text){ toast("Pegá el debrief primero", true); return; }
+  const btn = $("#btnParse2"); btn.disabled=true; btn.textContent="Analizando…";
+  try{
+    let r;
+    if(DEMO){
+      await new Promise(res=>setTimeout(res,800));
+      r = { nombre:"PROYECTO DEMO", cliente:"Cliente X", agencia:"", productora:"", director:"",
+        sintesis:text.slice(0,200), tareas:["Online","VFX"],
+        timeline:[{fase:"Offline",inicio:"",fin:"",notas:""},{fase:"Online + VFX",inicio:"",fin:"",notas:""}],
+        storyboard_url:"" };
+    } else {
+      r = await api("/webhook/team23/parse", {method:"POST", body: JSON.stringify({debrief_text:text})});
+    }
+    $("#n2Nombre").value = r.nombre||"";       $("#n2Cliente").value = r.cliente||"";
+    $("#n2Agencia").value = r.agencia||"";     $("#n2Productora").value = r.productora||"";
+    $("#n2Director").value = r.director||"";
+    $("#n2Sintesis").value = r.sintesis||"";   $("#n2Storyboard").value = r.storyboard_url||"";
+    n2Selected = new Set((r.tareas||[]).filter(t=>TAREAS.includes(t)));
+    n2Timeline = (r.timeline||[]).map(t=>({fase:t.fase||"",inicio:t.inicio||"",fin:t.fin||"",notas:t.notas||""}));
+    renderN2Tasks(); renderN2Timeline();
+    $("#n2Form").style.display="block";
+    toast("✔ Debrief analizado, revisá y ajustá antes de crear");
+  }catch(e){ toast("No pude analizar el debrief: "+e.message, true); }
+  finally{ btn.disabled=false; btn.textContent="✨ Analizar debrief"; }
+}
+function skipDebrief2(){ $("#n2Form").style.display="block"; }
+
+function renderN2Tasks(){
+  $("#n2Tasks").innerHTML = TAREAS.map(t=>
+    `<span class="task-pill ${n2Selected.has(t)?"on":""}" onclick="toggleN2Task('${t}')">${t}</span>`).join("");
+  renderN2Assigns();
+}
+function toggleN2Task(t){ n2Selected.has(t)? n2Selected.delete(t) : n2Selected.add(t); renderN2Tasks(); }
+function renderN2Assigns(){
+  Object.keys(n2AssignData).forEach(k=>{ if(!n2Selected.has(k)) delete n2AssignData[k]; });
+  n2Selected.forEach(t=>{ if(!n2AssignData[t]) n2AssignData[t]=[{nombre:"",email:""}]; });
+  $("#n2Assigns").innerHTML = [...n2Selected].map(t=>`
+    <div class="assign-block">
+      <div class="ttl">${esc(t)} — candidatos</div>
+      ${n2AssignData[t].map((r,i)=>`
+        <div class="assign-row">
+          <input type="text" placeholder="Nombre" value="${esc(r.nombre)}" oninput="n2SetAssign('${t}',${i},'nombre',this.value)">
+          <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="n2SetAssign('${t}',${i},'email',this.value)">
+          <button class="icon-btn" onclick="n2DelAssign('${t}',${i})" title="Quitar">✕</button>
+        </div>`).join("")}
+      <button class="addline" onclick="n2AddAssign('${t}')">+ agregar persona</button>
+    </div>`).join("");
+}
+function n2SetAssign(t,i,k,v){ n2AssignData[t][i][k]=v; }
+function n2AddAssign(t){ n2AssignData[t].push({nombre:"",email:""}); renderN2Assigns(); }
+function n2DelAssign(t,i){ n2AssignData[t].splice(i,1); if(!n2AssignData[t].length) n2AssignData[t]=[{nombre:"",email:""}]; renderN2Assigns(); }
+
+function renderN2Timeline(){
+  $("#n2TimelineBody").innerHTML = n2Timeline.map((r,i)=>`
+    <tr>
+      <td><input type="text" value="${esc(r.fase)}" oninput="n2Timeline[${i}].fase=this.value" placeholder="Fase"></td>
+      <td><input type="date" value="${esc(r.inicio)}" oninput="n2Timeline[${i}].inicio=this.value"></td>
+      <td><input type="date" value="${esc(r.fin)}" oninput="n2Timeline[${i}].fin=this.value"></td>
+      <td><input type="text" value="${esc(r.notas||"")}" oninput="n2Timeline[${i}].notas=this.value"></td>
+      <td><button class="icon-btn" onclick="n2TlDel(${i})">✕</button></td>
+    </tr>`).join("");
+}
+function n2TlAdd(){ n2Timeline.push({fase:"",inicio:"",fin:"",notas:""}); renderN2Timeline(); }
+function n2TlDel(i){ n2Timeline.splice(i,1); renderN2Timeline(); }
+
+async function createProject2(){
+  const nombre = $("#n2Nombre").value.trim();
+  const cliente = $("#n2Cliente").value.trim();
+  const epN = $("#n2EpNombre").value.trim(), epE = $("#n2EpEmail").value.trim();
+  if(!nombre || !cliente){ toast("Falta el nombre o el cliente", true); return; }
+  if(!epN || !epE){ toast("Cargá el Productor Ejecutivo y su mail", true); return; }
+
+  const asigs = {};
+  Object.entries(n2AssignData).forEach(([t,rows])=>{
+    const clean = rows.filter(r=>r.nombre||r.email);
+    if(clean.length) asigs[t]=clean.map(r=>({ nombre:r.nombre, email:r.email, estado:"candidato" }));
+  });
+  const timeline = n2Timeline.filter(t=>t.fase);
+
+  const body = {
+    nombre, cliente,
+    agencia: $("#n2Agencia").value.trim(),
+    productora: $("#n2Productora").value.trim(),
+    director: $("#n2Director").value.trim(),
+    ep_nombre: epN, ep_email: epE,
+    prod_nombre: $("#n2ProdNombre").value.trim(), prod_email: $("#n2ProdEmail").value.trim(),
+    coord_nombre: $("#n2CoordNombre").value.trim(), coord_email: $("#n2CoordEmail").value.trim(),
+    tareas: [...n2Selected], asignaciones: asigs, taskDates: {},
+    sintesis: $("#n2Sintesis").value.trim(),
+    storyboard_url: $("#n2Storyboard").value.trim(),
+    debrief_raw: $("#n2Debrief").value.trim(),
+    timeline: timeline
+  };
+
+  const btn = $("#btnCreate2");
+  btn.disabled = true; btn.textContent = "Creando Drive + Frame.io…";
+  try{
+    let proj;
+    const calEntries = ensureCalIds(timeline.map(t=>({tipo:"fase", fase:t.fase, inicio:t.inicio, fin:t.fin, notas:t.notas||""})));
+    if(DEMO){
+      await new Promise(r=>setTimeout(r,900));
+      proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
+        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+        calendario: calEntries };
+    } else {
+      proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
+      proj.tareas = proj.tareas||body.tareas;
+      proj.asignaciones = proj.asignaciones||body.asignaciones;
+      proj.taskDates = proj.taskDates||{};
+      proj.sintesis = proj.sintesis!==undefined ? proj.sintesis : body.sintesis;
+      proj.storyboard_url = proj.storyboard_url!==undefined ? proj.storyboard_url : body.storyboard_url;
+      proj.calendario = calEntries;
+      // persistir el timeline en la hoja Calendar (sin mail: recipients vacío)
+      if(calEntries.length){
+        try{
+          await api("/webhook/team23/calendar",{method:"POST",body:JSON.stringify({
+            projectId: proj.id, projectName: proj.nombre,
+            entries: calEntries.map(e=>({ id:e.id, tipo:e.tipo, fase:e.fase, inicio:e.inicio, fin:e.fin, notas:e.notas||"", title:proj.nombre+" · "+e.fase, allDay:true })),
+            deletedEventIds: [], taskDates_json: "{}", recipients: [], isFirst: true
+          })});
+        }catch(e){ toast("Proyecto creado, pero el timeline no se guardó: reabrí la ficha y guardá el calendario", true); }
+      }
+    }
+    projects.push(proj);
+    onProjectsLoaded();
+    closeModal("ovNew2");
+    const nCand = Object.values(asigs).flat().filter(r=>r.email).length;
+    toast(nCand ? "✔ Proyecto creado, propuestas enviadas a "+nCand+" candidato"+(nCand>1?"s":"") : "✔ Proyecto creado, carpetas de Drive y Frame.io listas");
+  }catch(e){
+    toast("Error al crear: "+e.message, true);
+  }finally{
+    btn.disabled = false; btn.textContent = "Crear proyecto";
+  }
+}
+
 document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{ if(e.target===ov) closeModal(ov.id); }));
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id)); });
 
@@ -1868,7 +2328,7 @@ document.addEventListener("mousemove",e=>{
 });
 
 /* init */
-$("#btnNew").addEventListener("click",()=>{ openKickOff(); });
+$("#btnNew").addEventListener("click",()=>{ openChooser(); });
 $("#yr").textContent = new Date().getFullYear();
 if(DEMO) $("#demoBanner").style.display="block";
 currentView = VIEW_TITLES[location.hash.slice(1)] ? location.hash.slice(1) : "dashboard";

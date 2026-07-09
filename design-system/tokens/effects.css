@@ -10,7 +10,7 @@
   --radius-xl:   calc(var(--lg-radius-l-lg) * 1px);   /* 40px */
   --radius-full: calc(var(--special-radius-rounded-full) * 1px); /* 9999px — pill */
 
-  /* ---- Spacing scale (real token values, sm-p-*/md-p-*/lg-p-*) ---- */
+  /* ---- Spacing scale (real token values, sm-p / md-p / lg-p) ---- */
   --space-1: calc(var(--sm-p-1) * 1px);        /* 4px */
   --space-2: calc(var(--sm-p-2) * 1px);        /* 8px */
   --space-3: calc(var(--sm-p-3) * 1px);        /* 12px */
