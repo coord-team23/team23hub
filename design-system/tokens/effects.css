@@ -1,0 +1,40 @@
+/* TEAM23 — Effects & outline tokens
+   Radius scale = real Figma Variables (sm-radius-s-*, lg-radius-l-*, special-radius-rounded-full)
+   — see tokens/fig-tokens.css. Figma ships these as unitless floats; re-declared here as px. */
+
+:root {
+  /* ---- Corner radius scale (real token values) ---- */
+  --radius-sm:   calc(var(--sm-radius-s-sm) * 1px);   /* 8px */
+  --radius-md:   calc(var(--sm-radius-s-md) * 1px);   /* 12px */
+  --radius-lg:   calc(var(--lg-radius-l-md) * 1px);   /* 32px */
+  --radius-xl:   calc(var(--lg-radius-l-lg) * 1px);   /* 40px */
+  --radius-full: calc(var(--special-radius-rounded-full) * 1px); /* 9999px — pill */
+
+  /* ---- Spacing scale (real token values, sm-p-*/md-p-*/lg-p-*) ---- */
+  --space-1: calc(var(--sm-p-1) * 1px);        /* 4px */
+  --space-2: calc(var(--sm-p-2) * 1px);        /* 8px */
+  --space-3: calc(var(--sm-p-3) * 1px);        /* 12px */
+  --space-4: calc(var(--sm-p-4) * 1px);        /* 16px */
+  --space-5: calc(var(--spacement-md-p-5) * 1px); /* 20px */
+  --space-7: calc(var(--md-p-7) * 1px);        /* 28px */
+  --space-9: calc(var(--md-p-9) * 1px);        /* 40px */
+  --space-11: calc(var(--lg-p-11) * 1px);      /* 64px */
+
+  /* ---- Stroke scale (thick cartoon outlines — from Fundations > Outlines page) ---- */
+  --stroke-sm: 4px;
+  --stroke-md: 8px;
+  --stroke-lg: 16px;
+
+  /* ---- Surface blur (glass/blur panel — Fundations > Effects "Surface" section) ---- */
+  --blur-surface: calc(var(--blur-100) * 1px); /* 4px base unit; scale up for stronger blur */
+
+  /* ---- Text FX (Fundations > Effects "Text-FX" section: tx-outline / tx-blur) ---- */
+  --text-outline-width: 3px;
+  --text-outline-color: var(--n-600);
+  --text-blur-amount: 8px;
+
+  /* ---- Shadow: flat + graphic, matches the thick-outline "inset 0 0 0 3px black" card style seen throughout the guide ---- */
+  --shadow-flat: 6px 6px 0 var(--n-600);
+  --shadow-flat-sm: 3px 3px 0 var(--n-600);
+  --shadow-doc-card: inset 0 0 0 3px var(--n-600);
+}

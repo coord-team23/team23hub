@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>TEAM23 — Production Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="design-system/styles.css">
+<style>
+  :root{
+    /* app-level aliases onto the TEAM23 design-system tokens (design-system/tokens/) */
+    --ink:var(--n-600);
+    --paper:var(--n-000);
+    --red:var(--brand-red);
+    --gray:var(--tx-on-light-secondary);
+    --soft:var(--n-100);
+    --hair:var(--n-200);
+
+    /* type-scale rungs used across the hub — compact end of the DS scale,
+       capped at the token for that step (a dense dashboard uses the low rungs,
+       Header/Display sizes stay reserved for real marketing moments) */
+    --fs-hero:clamp(32px,6vw,var(--text-s1-size));       /* Subtitle S1 (48) · page title */
+    --fs-section:clamp(20px,3vw,var(--text-b3-size));    /* Body B3 (32) · section heads */
+    --fs-modal-title:clamp(24px,3.6vw,var(--text-s1-size)); /* Subtitle S1 (48) · modal titles */
+    --fs-card-title:clamp(16px,1.6vw,18px);              /* ~Body B1 (16) · card / component titles */
+    --fs-body:var(--text-b1-size);   /* Body B1 · buttons, inputs, running text */
+    --fs-caption:var(--text-c2-size); /* Caption C2 · labels, meta, kickers */
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--font-primary);
+    background:var(--paper);color:var(--ink);
+    font-size:var(--fs-body);line-height:1.3;letter-spacing:var(--tracking-tight);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--red);color:#fff}
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky;top:0;z-index:50;background:var(--paper);
+    border-bottom:var(--stroke-sm) solid var(--ink);
+    display:flex;flex-direction:column;gap:var(--space-2);
+    padding:var(--space-4) var(--space-7);
+  }
+  .header-top{display:flex;align-items:center;justify-content:space-between}
+  .tabrow{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap}
+  .tabbar{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .tabbar .status-opt{padding:var(--space-2) var(--space-4);font-size:12px}
+  .wordmark{display:flex;align-items:center;gap:var(--space-3);text-decoration:none;color:var(--ink)}
+  .wordmark .t{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:22px;letter-spacing:var(--tracking-tight)}
+  .eyes{display:inline-flex;gap:3px}
+  .eye{width:18px;height:22px;background:#fff;border:var(--stroke-sm) solid var(--ink);border-radius:50%;position:relative}
+  .pupil{width:7px;height:7px;background:var(--ink);border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+  .hub-label{font-size:var(--fs-caption);letter-spacing:.14em;font-weight:var(--weight-bold);color:var(--gray)}
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;z-index:1;
+    padding:var(--space-11) var(--space-7) var(--space-7);
+    display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-5);flex-wrap:wrap;
+  }
+  .hero h1{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-hero);
+    line-height:.92;letter-spacing:var(--tracking-tight);text-transform:uppercase;
+    -webkit-text-stroke:.6px currentColor;
+  }
+
+  .btn{
+    font-family:var(--font-secondary);font-weight:var(--weight-bold);font-size:var(--fs-caption);
+    border:var(--stroke-sm) solid var(--ink);background:var(--paper);color:var(--ink);
+    border-radius:var(--radius-full);padding:var(--space-4) var(--space-9);cursor:pointer;
+    transition:transform .15s ease, background .15s ease, color .15s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+  /* jerarquía: outline (secundaria) → negro (primaria) → rojo (peligro/alerta, exclusivo) */
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn.primary:hover{background:#2b2b2b;border-color:#2b2b2b}
+  .btn.danger{background:var(--red);border-color:var(--red);color:#fff}
+  .btn.danger:hover{background:#d40000;border-color:#d40000}
+  /* CTA de alta: outline rojo, se rellena en hover */
+  #btnNew{background:var(--paper);border-color:var(--red);color:var(--red)}
+  #btnNew:hover{background:var(--red);border-color:var(--red);color:#fff}
+  .btn.small{padding:var(--space-3) var(--space-5);font-size:12px}
+  .btn[disabled]{opacity:.5;cursor:wait;transform:none}
+
+  /* ---------- demo banner ---------- */
+  .demo-banner{
+    margin:0 var(--space-7) var(--space-4);padding:var(--space-4) var(--space-5);border:var(--stroke-sm) dashed var(--red);
+    border-radius:var(--radius-md);font-size:var(--fs-caption);line-height:1.6;color:var(--ink);
+    position:relative;z-index:1;
+  }
+  .demo-banner b{color:var(--red)}
+  .demo-banner code{font-size:.92em}
+
+  /* ---------- sections ---------- */
+  main{position:relative;z-index:1;padding:var(--space-5) var(--space-7) var(--space-9);max-width:1400px}
+  section.status-block{margin-top:var(--space-11)}
+  .section-head{
+    display:flex;align-items:baseline;gap:var(--space-4);border-bottom:var(--stroke-sm) solid var(--ink);
+    padding-bottom:var(--space-4);margin-bottom:var(--space-7);
+  }
+  .section-head h2{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-section);
+    text-transform:uppercase;letter-spacing:var(--tracking-tight);
+  }
+  .section-head .count{font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--gray)}
+  /* estados por color: pendiente = amarillo, activo = verde, completado = negro */
+  .section-head .dot{width:12px;height:12px;border-radius:50%;border:var(--stroke-sm) solid var(--ink);flex:none;align-self:center;background:var(--brand-yellow)}
+  .dot.act{background:var(--brand-green)}
+  .dot.done{background:var(--ink)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:var(--space-5)}
+  /* grilla de tiles de estado en Status: 4 en una fila, no envuelve en desktop */
+  .stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-4)}
+  @media(max-width:720px){.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+  .card{
+    border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-lg);background:var(--paper);
+    padding:var(--space-5) var(--space-5) var(--space-4);cursor:pointer;position:relative;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .grid .card:nth-child(odd){transform:rotate(-.4deg)}
+  .grid .card:nth-child(even){transform:rotate(.35deg)}
+  .card:hover{transform:rotate(0) translateY(-3px);box-shadow:var(--shadow-flat)}
+  .card h3{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-card-title);line-height:1.05;
+    text-transform:uppercase;letter-spacing:var(--tracking-tight);margin-bottom:var(--space-3)}
+  .card .meta{font-size:var(--fs-caption);color:var(--gray);font-weight:var(--weight-regular);margin-bottom:var(--space-4)}
+  .pills{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+  .pill{
+    font-size:12px;font-weight:var(--weight-bold);letter-spacing:.04em;text-transform:uppercase;
+    border:2px solid var(--ink);border-radius:var(--radius-full);padding:var(--space-2) var(--space-4);
+  }
+  .card .links{margin-top:var(--space-5);display:flex;gap:var(--space-4);font-size:var(--fs-caption);font-weight:var(--weight-bold)}
+  .card .links a{font-family:var(--font-secondary);color:var(--ink);text-decoration:none;border-bottom:2px solid var(--red)}
+  .card .links a:hover{color:var(--red)}
+  .empty{
+    border:var(--stroke-sm) dashed var(--hair);border-radius:var(--radius-lg);padding:var(--space-9);text-align:center;
+    color:var(--gray);font-size:var(--fs-caption);
+  }
+
+  details.year{border:none;margin-bottom:var(--space-3)}
+  details.year summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;gap:var(--space-3);
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-card-title);padding:var(--space-3) 0;user-select:none;
+  }
+  details.year summary::before{content:'+';font-size:22px;line-height:1;transition:transform .2s}
+  details.year[open] summary::before{content:'–'}
+  details.year .grid{margin:var(--space-2) 0 var(--space-7)}
+
+  /* ---------- modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,10,10,.45);z-index:80;
+    display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:5vh 16px 6vh;
+  }
+  .overlay.open{display:flex}
+  .modal{
+    background:var(--paper);border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-xl);
+    width:min(920px,100%);padding:var(--space-9) var(--space-7) var(--space-5);position:relative;
+    box-shadow:10px 10px 0 var(--ink);
+  }
+  /* ficha de proyecto: modal más ancho + contenido escalado al 90% */
+  #ovDetail .modal{width:min(1080px,100%)}
+  #detailBody{zoom:0.9}
+  .modal .close{
+    position:absolute;top:var(--space-4);right:var(--space-4);width:38px;height:38px;border-radius:50%;
+    border:var(--stroke-sm) solid var(--ink);background:#fff;font-size:17px;cursor:pointer;font-weight:var(--weight-bold);z-index:2;
+  }
+  .modal .close:hover{background:var(--red);border-color:var(--red);color:#fff}
+  .modal h2{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-modal-title);text-transform:uppercase;
+    letter-spacing:var(--tracking-tight);line-height:1;margin-bottom:var(--space-1);padding-right:50px;
+  }
+  .modal .kicker{font-size:var(--fs-caption);letter-spacing:.16em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin-bottom:var(--space-5)}
+
+  /* ---------- wizard kick off ---------- */
+  #ovKickOff .modal{padding-bottom:120px}
+  .kickoff-q{
+    font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .9);color:var(--gray);
+    text-transform:uppercase;letter-spacing:var(--tracking-tight);line-height:1.05;margin-bottom:var(--space-7);
+    white-space:pre-line;
+  }
+  .kickoff-check{
+    display:flex;align-items:center;gap:var(--space-4);cursor:pointer;
+    font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .9);color:var(--gray);
+    text-transform:uppercase;letter-spacing:var(--tracking-tight);
+  }
+  .kickoff-check input[type=checkbox],.kickoff-check input[type=radio]{width:30px;height:30px;cursor:pointer;flex:none}
+  .kickoff-sinos{display:flex;gap:var(--space-9);flex-wrap:wrap}
+  .kickoff-actions{
+    position:absolute;left:var(--space-7);right:var(--space-7);bottom:var(--space-7);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+
+  .fgroup{margin-bottom:var(--space-7)}
+  .fgroup>.glabel{
+    font-size:var(--fs-caption);letter-spacing:.12em;font-weight:var(--weight-bold);text-transform:uppercase;
+    border-bottom:2px solid var(--ink);padding-bottom:var(--space-3);margin-bottom:var(--space-4);
+    display:flex;justify-content:space-between;align-items:baseline;
+  }
+  .fgroup>.glabel small{color:var(--gray);letter-spacing:0;font-weight:var(--weight-regular);text-transform:none}
+  .sublabel{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin:var(--space-3) 0 var(--space-2)}
+  .frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:var(--space-3);margin-bottom:var(--space-3)}
+  label.f{display:block;font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--gray);margin-bottom:var(--space-1)}
+  input[type=text],input[type=email],input[type=date],select,textarea{
+    width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3) var(--space-3);
+    border:2px solid var(--ink);border-radius:var(--radius-md);background:#fff;color:var(--ink);
+  }
+  input:focus,select:focus,textarea:focus{outline:3px solid rgba(255,0,0,.35)}
+
+  .task-pills{display:flex;flex-wrap:wrap;gap:var(--space-3)}
+  .task-pill{
+    font-size:12px;font-weight:var(--weight-bold);letter-spacing:.04em;text-transform:uppercase;
+    border:2px solid var(--ink);border-radius:var(--radius-full);padding:var(--space-3) var(--space-5);cursor:pointer;
+    background:#fff;transition:all .12s;user-select:none;
+  }
+  .task-pill.on{background:var(--red);border-color:var(--red);color:#fff}
+
+  .assign-block{border:2px solid var(--ink);border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);margin-top:var(--space-4)}
+  .assign-block .ttl{font-size:var(--fs-caption);font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--space-2)}
+  .assign-row{display:grid;grid-template-columns:1fr 1fr 34px;gap:var(--space-2);margin-bottom:var(--space-2)}
+  .icon-btn{
+    width:34px;height:38px;border:2px solid var(--ink);border-radius:var(--radius-sm);background:#fff;
+    cursor:pointer;font-weight:var(--weight-bold);font-size:15px;flex:none;
+  }
+  .icon-btn:hover{background:var(--ink);color:#fff}
+  .addline{font-family:var(--font-secondary);font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--ink);background:none;border:none;cursor:pointer;padding:2px 0}
+  .addline:hover{text-decoration:underline}
+
+  .modal .actions{display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5);flex-wrap:wrap}
+
+  /* ---------- detalle: links Drive / Frame ---------- */
+  .link-split{display:grid;grid-template-columns:1fr;gap:var(--space-5)}
+  @media(min-width:760px){.link-split{grid-template-columns:1.7fr 1fr}}
+  .link-box{border:2px solid var(--ink);border-radius:var(--radius-md);padding:var(--space-5) var(--space-5)}
+  .link-box .lb-head{
+    display:flex;align-items:center;gap:var(--space-2);font-family:var(--font-primary);font-weight:var(--weight-bold);
+    font-size:var(--fs-caption);letter-spacing:.04em;text-transform:uppercase;margin-bottom:var(--space-3);
+  }
+  .lb-head .lb-dot{width:10px;height:10px;border-radius:50%;background:var(--ink)}
+  .lb-head .lb-dot.frame{background:var(--red)}
+  .linkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--space-2)}
+  .linkgrid a{
+    display:block;border:2px solid var(--ink);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-3);
+    font-family:var(--font-secondary);font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--ink);text-decoration:none;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .linkgrid a:hover{background:var(--ink);color:#fff}
+  .linkgrid a span{color:var(--red)}
+  .linkgrid a:hover span{color:#fff}
+  .finales-btn{
+    display:block;border:2px solid var(--ink);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-3);
+    font-family:var(--font-secondary);font-size:var(--fs-caption);font-weight:var(--weight-bold);text-decoration:none;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .finales-btn.off{color:var(--gray);border-color:var(--hair);opacity:.6;cursor:not-allowed}
+  .finales-btn.on{background:var(--red);border-color:var(--red);color:#fff}
+  .finales-btn.on span{color:#fff}
+  .finales-btn.on:hover{background:#d40000;border-color:#d40000}
+  .frame-cta{
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    border:2px solid var(--ink);border-radius:var(--radius-sm);background:var(--ink);color:#fff !important;
+    font-family:var(--font-secondary);font-size:var(--fs-caption);font-weight:var(--weight-bold);letter-spacing:0;padding:var(--space-5) var(--space-4);text-decoration:none;
+    text-transform:uppercase;
+  }
+  .frame-cta:hover{background:var(--red);border-color:var(--red)}
+  .status-select{display:flex;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-3) 0 var(--space-7)}
+  .status-opt{
+    font-size:12px;font-weight:var(--weight-bold);letter-spacing:.08em;text-transform:uppercase;
+    border:2px solid var(--ink);border-radius:var(--radius-full);padding:var(--space-3) var(--space-5);cursor:pointer;background:#fff;
+  }
+  .status-opt.on{background:var(--ink);color:#fff}
+  .status-opt.on.act{background:var(--brand-green);border-color:var(--brand-green);color:var(--ink)}
+
+  /* ---------- editor de fases ---------- */
+  table.cal{width:100%;border-collapse:collapse;font-size:var(--fs-caption)}
+  table.cal th{
+    text-align:left;font-size:var(--fs-caption);letter-spacing:.1em;text-transform:uppercase;
+    border-bottom:2px solid var(--ink);padding:var(--space-2) var(--space-2);
+  }
+  table.cal td{padding:var(--space-2) var(--space-1);border-bottom:1px solid var(--hair);vertical-align:middle}
+  table.cal input{padding:var(--space-2) var(--space-3);border-radius:var(--radius-sm);font-size:var(--fs-caption)}
+  .dotc{display:inline-block;width:14px;height:14px;border-radius:4px;border:2px solid var(--ink)}
+
+  /* ---------- calendario mensual ---------- */
+  .cal-wrap{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);overflow:hidden;margin-top:var(--space-4)}
+  .cal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:var(--space-3) var(--space-4);border-bottom:2px solid var(--ink);background:#fff;
+  }
+  .cal-head .mtitle{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:20px;letter-spacing:var(--tracking-tight);text-transform:uppercase}
+  .cal-nav{display:flex;gap:var(--space-2)}
+  .cal-nav button{
+    width:34px;height:34px;border:2px solid var(--ink);border-radius:50%;background:#fff;
+    font-size:15px;font-weight:var(--weight-bold);cursor:pointer;line-height:1;
+  }
+  .cal-nav button:hover{background:var(--ink);color:#fff}
+  .cal-scroll{overflow-x:auto}
+  .cal-min{min-width:660px}
+  .wdays{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:2px solid var(--ink);background:var(--soft)}
+  .wdays div{
+    font-size:var(--fs-caption);font-weight:var(--weight-bold);letter-spacing:.12em;text-transform:uppercase;
+    padding:var(--space-2) var(--space-2);color:var(--ink);border-right:1px solid var(--hair);
+  }
+  .wdays div:last-child{border-right:none}
+  .week{position:relative;display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--hair)}
+  .week:last-child{border-bottom:none}
+  .cell{
+    border-right:1px solid var(--hair);padding:4px 5px 6px;cursor:pointer;
+    min-height:calc(58px + var(--bh,0px));display:flex;flex-direction:column;background:#fff;
+    transition:background .12s;
+  }
+  .cell:last-child{border-right:none}
+  .cell:hover{background:#FAFAF7}
+  .cell.om{background:#FAFAF8;color:#C2C2BD}
+  .cell.om:hover{background:#F4F4F0}
+  .cell.sel{box-shadow:inset 0 0 0 2.5px var(--red)}
+  .dnum{
+    font-size:11.5px;font-weight:var(--weight-bold);width:22px;height:22px;display:flex;align-items:center;
+    justify-content:center;border-radius:50%;margin-bottom:2px;
+  }
+  .dnum.today{background:var(--red);color:#fff}
+  .cell .chips{margin-top:calc(var(--bh,0px) + 2px);display:flex;flex-direction:column;gap:2px}
+  .chip{
+    font-size:9.5px;font-weight:var(--weight-bold);border:1.5px solid var(--red);color:var(--red);
+    border-radius:6px;padding:1.5px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    background:#fff;
+  }
+  .om .chip{opacity:.45}
+  .barlayer{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
+  .bar{
+    position:absolute;height:15px;border-radius:7px;font-size:9.5px;font-weight:var(--weight-bold);
+    letter-spacing:.03em;padding:0 7px;line-height:12px;display:flex;align-items:center;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;
+  }
+
+  /* ---------- panel del día ---------- */
+  .daypanel{border:2px solid var(--ink);border-radius:var(--radius-md);padding:var(--space-5) var(--space-5);margin-top:var(--space-5);background:#fff}
+  .dp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3)}
+  .dp-head .dp-title{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-caption);text-transform:uppercase;letter-spacing:var(--tracking-tight)}
+  .dp-close{border:none;background:none;font-size:15px;font-weight:var(--weight-bold);cursor:pointer}
+  .dp-close:hover{color:var(--red)}
+  .dp-fases{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-3)}
+  .dp-fase{
+    display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--fs-caption);font-weight:var(--weight-regular);
+    border:1.5px solid var(--hair);border-radius:var(--radius-full);padding:var(--space-2) var(--space-4);color:var(--ink);
+  }
+  .dp-fase .dotc{width:10px;height:10px;border-width:1.5px}
+  .hito-row{display:grid;grid-template-columns:1fr 34px;gap:var(--space-2);margin-bottom:var(--space-2)}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--ink);color:#fff;font-size:var(--fs-caption);font-weight:var(--weight-bold);
+    padding:var(--space-3) var(--space-5);border-radius:var(--radius-full);z-index:200;opacity:0;transition:all .3s;
+    max-width:90vw;text-align:center;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.err{background:var(--red)}
+
+  footer{
+    border-top:var(--stroke-sm) solid var(--ink);padding:var(--space-7);
+    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:var(--space-7);
+    position:relative;z-index:1;
+  }
+  .foot-mark-img{display:block;width:clamp(280px,42vw,620px);height:auto;max-width:100%}
+  .foot-right{
+    text-align:right;font-size:var(--fs-caption);letter-spacing:.1em;color:var(--gray);
+    font-family:var(--font-secondary);font-weight:var(--weight-bold);
+  }
+  .foot-scope{margin-bottom:var(--space-2)}
+
+  /* ---------- print (PDF del calendario) ---------- */
+  #printArea{display:none}
+  @media print{
+    body>*:not(#printArea){display:none !important}
+    #printArea{display:block;padding:14px;font-family:var(--font-primary),Helvetica,sans-serif;color:#000}
+    #printArea h1{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:26px;text-transform:uppercase;letter-spacing:var(--tracking-tight)}
+    #printArea .pmeta{font-size:10px;letter-spacing:.15em;color:#555;margin:4px 0 14px;text-transform:uppercase}
+    #printArea .pmonth{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:16px;text-transform:uppercase;margin:10px 0 6px}
+    #printArea table.pgrid{width:100%;border-collapse:collapse;table-layout:fixed}
+    #printArea table.pgrid th{border:1px solid #000;font-size:8.5px;letter-spacing:.12em;padding:4px;text-transform:uppercase;background:#F2F2F0}
+    #printArea table.pgrid td{border:1px solid #999;vertical-align:top;padding:3px 4px;height:72px;font-size:8.5px}
+    #printArea .pd{font-weight:700;font-size:9.5px;margin-bottom:2px}
+    #printArea .pd.om{color:#bbb}
+    #printArea .pl{line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #printArea .ph{line-height:1.35;color:#FF2B1E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #printArea h3{font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin:16px 0 6px}
+    #printArea table.plist{width:100%;border-collapse:collapse;font-size:11px}
+    #printArea table.plist th{text-align:left;border-bottom:2px solid #000;padding:5px;font-size:9px;text-transform:uppercase;letter-spacing:.1em}
+    #printArea table.plist td{padding:5px;border-bottom:1px solid #ccc}
+    #printArea .pfoot{margin-top:22px;font-size:9px;letter-spacing:.15em;color:#777}
+  }
+  /* ---------- mobile ---------- */
+  @media(max-width:640px){
+    header{padding:10px 16px}
+    .hub-label{display:none}
+    .hero{padding:24px 16px 10px;gap:10px}
+    #btnNew{width:100%}
+    .demo-banner{margin:0 16px 8px}
+    main{padding:8px 16px 90px}
+    section.status-block{margin-top:30px}
+    .grid{gap:12px}
+
+    /* modales a pantalla completa */
+    .overlay{padding:0}
+    .modal{
+      width:100%;min-height:100vh;min-height:100dvh;border-radius:0;
+      border-left:none;border-right:none;box-shadow:none;
+      padding:20px 16px calc(44px + env(safe-area-inset-bottom));
+    }
+    .modal .close{position:fixed;top:10px;right:10px;box-shadow:3px 3px 0 var(--ink)}
+    .modal h2{padding-right:50px}
+    .modal .actions .btn{flex:1}
+
+    /* inputs: 16px evita el auto-zoom de iOS al enfocar */
+    input[type=text],input[type=email],input[type=date],select,textarea{font-size:16px}
+    .assign-row{grid-template-columns:1fr 44px}
+    .assign-row input[type=email]{grid-column:1 / -1}
+    .icon-btn{width:44px;height:42px}
+
+    /* tabla de fases con scroll lateral propio */
+    .tbl-scroll{overflow-x:auto;padding-bottom:4px}
+    .tbl-scroll table.cal{min-width:540px}
+
+    /* calendario compacto: entra en el ancho del celular */
+    .cal-min{min-width:0}
+    .cal-head{padding:10px 12px}
+    .cal-head .mtitle{font-size:15px}
+    .cal-nav button{width:38px;height:38px}
+    .wdays div{padding:5px 3px;font-size:8px;letter-spacing:.06em}
+    .cell{min-height:calc(44px + var(--bh,0px));padding:3px 3px 4px}
+    .dnum{width:18px;height:18px;font-size:10px}
+    .bar{height:12px;font-size:0;padding:0}
+    .cell .chips{flex-direction:row;flex-wrap:wrap;gap:3px}
+    .chip{width:9px;height:9px;border-radius:50%;padding:0;font-size:0;background:var(--red);border-color:var(--red);flex:none}
+    .daypanel{padding:12px 12px 14px}
+    footer{padding:40px 16px 28px;flex-direction:column;align-items:flex-start;gap:20px}
+    .foot-right{text-align:left}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <a class="wordmark" href="#" onclick="return false">
+      <span class="t">TEAM23</span>
+      <span class="eyes" id="eyes">
+        <span class="eye"><span class="pupil"></span></span>
+        <span class="eye"><span class="pupil"></span></span>
+      </span>
+      <span class="hub-label">PRODUCTION&nbsp;HUB</span>
+    </a>
+  </div>
+  <div class="tabrow">
+    <nav class="tabbar" id="tabbar">
+      <button class="status-opt" data-view="dashboard" onclick="switchView('dashboard')">Status</button>
+      <button class="status-opt" data-view="proyectos" onclick="switchView('proyectos')">Proyectos</button>
+      <button class="status-opt" data-view="calendario" onclick="switchView('calendario')">Calendario</button>
+    </nav>
+    <button class="btn small" id="btnNew">+ NUEVO PROYECTO</button>
+  </div>
+</header>
+
+<div class="hero">
+  <div>
+    <h1 id="heroTitle">Proyectos</h1>
+  </div>
+</div>
+
+<div class="demo-banner" id="demoBanner" style="display:none">
+  <b>MODO DEMO</b> — Estás viendo datos de ejemplo. Para conectarlo en serio: configurá <code>CONFIG.N8N_BASE</code> y <code>CONFIG.API_KEY</code> al inicio del archivo, con tus workflows de n8n importados (ver README).
+</div>
+
+<main>
+  <section id="view-proyectos" class="view">
+    <section class="status-block">
+      <div class="section-head"><span class="dot"></span><h2>Pre-producción</h2><span class="count" id="cPending"></span></div>
+      <div class="grid" id="listPending"></div>
+    </section>
+
+    <section class="status-block">
+      <div class="section-head"><span class="dot act"></span><h2>Activos</h2><span class="count" id="cActive"></span></div>
+      <div class="grid" id="listActive"></div>
+    </section>
+
+    <section class="status-block">
+      <div class="section-head"><span class="dot done"></span><h2>Completados</h2><span class="count" id="cDone"></span></div>
+      <div id="listDone"></div>
+    </section>
+  </section>
+
+  <section id="view-calendario" class="view" hidden>
+    <div id="calGlobalBody"></div>
+  </section>
+
+  <section id="view-equipo" class="view" hidden>
+    <div id="equipoBody"></div>
+  </section>
+
+  <section id="view-dashboard" class="view" hidden>
+    <div id="dashboardBody"></div>
+  </section>
+</main>
+
+<footer>
+  <div>
+    <img class="foot-mark-img" src="assets/footer-mark.png" alt="biz@team23.online — Creative direction, (Post) producción, New media lab">
+  </div>
+  <div class="foot-right">
+    <div class="foot-scope">MX — ARG — WORLDWIDE</div>
+    <div>TEAM23 © <span id="yr"></span></div>
+  </div>
+</footer>
+
+<!-- ============ MODAL: NUEVO PROYECTO ============ -->
+<div class="overlay" id="ovNew">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newTitle">
+    <button class="close" onclick="closeModal('ovNew')" aria-label="Cerrar">✕</button>
+    <h2 id="newTitle">Nuevo proyecto</h2>
+    <div class="kicker">Al crearlo se genera Drive + Frame.io + documentos, automáticamente</div>
+
+    <div class="fgroup">
+      <div class="glabel">Datos externos</div>
+      <div class="frow">
+        <div><label class="f">Nombre de la campaña *</label><input type="text" id="npNombre" placeholder="BRAHMA - Te la mereSED"></div>
+        <div><label class="f">Productora</label><input type="text" id="npProductora" placeholder="LANDIA / TMMT"></div>
+        <div><label class="f">Director</label><input type="text" id="npDirector" placeholder=""></div>
+        <div><label class="f">Cliente *</label><input type="text" id="npCliente" placeholder="Brahma"></div>
+        <div><label class="f">Agencia</label><input type="text" id="npAgencia" placeholder=""></div>
+      </div>
+    </div>
+
+    <div class="fgroup">
+      <div class="glabel">Equipo interno <small>nombre + mail (para los avisos de calendario)</small></div>
+      <div class="frow">
+        <div><label class="f">Productor Ejecutivo *</label><input type="text" id="npEpNombre" placeholder="Nombre"></div>
+        <div><label class="f">Mail EP *</label><input type="email" id="npEpEmail" placeholder="ep@team23.online"></div>
+      </div>
+      <div class="frow">
+        <div><label class="f">Productor</label><input type="text" id="npProdNombre" placeholder="Nombre"></div>
+        <div><label class="f">Mail Productor</label><input type="email" id="npProdEmail" placeholder="prod@team23.online"></div>
+      </div>
+      <div class="frow">
+        <div><label class="f">Coordinador</label><input type="text" id="npCoordNombre" placeholder="Nombre"></div>
+        <div><label class="f">Mail Coordinador</label><input type="email" id="npCoordEmail" placeholder="coord@team23.online"></div>
+      </div>
+    </div>
+
+    <div class="fgroup">
+      <div class="glabel">Tareas TEAM23 <small>elegí las que aplican</small></div>
+      <div class="task-pills" id="npTasks"></div>
+      <div id="npAssigns"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="closeModal('ovNew')">Cancelar</button>
+      <button class="btn primary" id="btnCreate" onclick="createProject()">Crear proyecto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: DETALLE ============ -->
+<div class="overlay" id="ovDetail">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('ovDetail')" aria-label="Cerrar">✕</button>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<!-- ============ MODAL: WIZARD PLANIFICACIÓN KICK OFF ============ -->
+<div class="overlay" id="ovKickOff">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('ovKickOff')" aria-label="Cerrar">✕</button>
+    <h2>Planificación Kick Off</h2>
+    <div class="kicker" id="kickOffHeader">Paso 1 de 6</div>
+
+    <div id="kickOffContent" style="margin:var(--space-9) 0 0"></div>
+
+    <div class="kickoff-actions">
+      <button class="btn" id="kickOffBtnBack" onclick="kickOffBack()" style="display:none">Atrás</button>
+      <button class="btn primary" id="kickOffBtnNext" onclick="kickOffNext()" disabled style="margin-left:auto">Siguiente</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+<div id="printArea"></div>
+
+<script>
+/* ================================================================
+   CONFIG — completá esto para salir del modo demo.
+   N8N_BASE: la URL de tu instancia, p.ej. "https://n8n.rawmarketing.co"
+   API_KEY : el valor que definiste en la credencial "Team23 Key" (header x-team23-key)
+================================================================ */
+const CONFIG = {
+  N8N_BASE: "",
+  API_KEY: ""
+};
+
+/* id estable por entrada de calendario — necesario para poder sincronizar cada
+   fase/hito con un evento de Google Calendar (crear una vez, actualizar/borrar después
+   en lugar de duplicar) el día que se conecte n8n a Google Calendar */
+function uid(){ return "c_"+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function ensureCalIds(cal){ (cal||[]).forEach(r=>{ if(!r.id) r.id = uid(); }); return cal; }
+
+const TAREAS = ["VFX","Color","DG","Motion Graphics","IA","3D/CGI","Retoque","SFX/Mezcla","Online"];
+const DEMO = !CONFIG.N8N_BASE;
+const WDAYS = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
+/* looks de fase (calendario por proyecto): paleta Supportive Brand, texto oscuro sobre
+   color pleno. Rojo excluido a propósito — queda reservado para peligro/alerta e hitos. */
+const PHASE_LOOKS = [
+  {bg:"#AA8CF8", fg:"#0A0A0A", bd:"#AA8CF8"}, /* purple */
+  {bg:"#00F7FF", fg:"#0A0A0A", bd:"#00F7FF"}, /* cyan   */
+  {bg:"#FF61F7", fg:"#0A0A0A", bd:"#FF61F7"}, /* pink   */
+  {bg:"#33FF00", fg:"#0A0A0A", bd:"#33FF00"}, /* green  */
+  {bg:"#F8FF2E", fg:"#0A0A0A", bd:"#F8FF2E"}, /* yellow */
+  {bg:"#0A0A0A", fg:"#FFFFFF", bd:"#0A0A0A"}  /* ink (fallback) */
+];
+/* colores de marca (Supportive Brand del design system) para distinguir proyectos en el calendario global */
+const PROJECT_COLORS = ["var(--brand-purple)","var(--brand-cyan)","var(--brand-pink)","var(--brand-green)","var(--brand-yellow)","var(--brand-red)"];
+
+/* ---------------- demo data ---------------- */
+let projects = [];
+const demoProjects = [
+  {
+    id:"p_demo1", nombre:"SPOTIFY - CDMX", cliente:"Spotify", agencia:"", productora:"LANDIA/TMMT", director:"Sofía Vargas",
+    ep_nombre:"N4rf", ep_email:"ep@team23.online", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
+    tareas:["Online","VFX","Color"],
+    asignaciones:{"Online":[{nombre:"Edi Uno",email:"edi@team23.online"}],"VFX":[{nombre:"Comp Dos",email:"vfx@team23.online"}]},
+    taskDates:{"Online":{inicio:"2026-07-06",fin:"2026-07-14",notas:""},"VFX":{inicio:"2026-07-13",fin:"2026-07-24",notas:""},"Color":{inicio:"2026-07-16",fin:"2026-07-22",notas:""}},
+    status:"activo", year:"2026",
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+    calendario:[
+      {tipo:"fase",fase:"Entrega Masters",inicio:"2026-07-27",fin:"2026-07-28",notas:""},
+      {tipo:"hito",fase:"Corte 1 al cliente",inicio:"2026-07-10",fin:"2026-07-10",notas:""},
+      {tipo:"hito",fase:"Review con dirección",inicio:"2026-07-21",fin:"2026-07-21",notas:""}
+    ]
+  },
+  {
+    id:"p_demo2", nombre:"BRAHMA - Te la mereSED", cliente:"Brahma", agencia:"", productora:"",
+    ep_nombre:"N4rf", ep_email:"ep@team23.online", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
+    tareas:["VFX","Online"], asignaciones:{}, taskDates:{}, status:"completado", year:"2026",
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+    calendario:[]
+  },
+  {
+    id:"p_demo3", nombre:"PROYECTO X - TVC", cliente:"Cliente X", agencia:"Agencia Y", productora:"Prod Z",
+    ep_nombre:"", ep_email:"", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
+    tareas:["Retoque","SFX/Mezcla"], asignaciones:{}, taskDates:{}, status:"por_activarse", year:"2026",
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+    calendario:[]
+  }
+];
+
+/* ---------------- api ---------------- */
+async function api(path, opts={}){
+  const res = await fetch(CONFIG.N8N_BASE + path, {
+    ...opts,
+    headers:{ "Content-Type":"application/json", "x-team23-key": CONFIG.API_KEY, ...(opts.headers||{}) }
+  });
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  return res.json().catch(()=>({}));
+}
+
+/* fecha de finalización = la última fecha del calendario (fin de fase o hito) */
+function projectEndDate(p){
+  const ds = (p.calendario||[]).map(r=>parseYMD(r.fin)||parseYMD(r.inicio)).filter(Boolean);
+  return ds.length ? new Date(Math.max(...ds.map(d=>d.getTime()))) : null;
+}
+/* un proyecto en ejecución/entregando que pasó su fecha de fin salta solo a "cierre" */
+function autoAdvanceOverdue(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  projects.forEach(p=>{
+    if(p.status==="activo" || p.status==="entregando"){
+      const end = projectEndDate(p);
+      if(end && end < today){
+        p.status = "cierre";
+        if(!DEMO) api("/webhook/team23/update",{method:"POST",body:JSON.stringify({id:p.id,status:"cierre"})}).catch(()=>{});
+      }
+    }
+  });
+}
+
+async function loadProjects(){
+  if(DEMO){
+    projects = JSON.parse(JSON.stringify(demoProjects));
+    projects.forEach(p=>ensureCalIds(p.calendario));
+    autoAdvanceOverdue();
+    onProjectsLoaded(); return;
+  }
+  try{
+    const data = await api("/webhook/team23/projects");
+    projects = (data.projects||[]).map(p=>({
+      ...p,
+      tareas: p.tareas || [],
+      asignaciones: p.asignaciones || {},
+      taskDates: p.taskDates || (p.taskDates_json ? (()=>{try{return JSON.parse(p.taskDates_json)}catch(e){return {}}})() : {}),
+      links: p.links || {},
+      calendario: ensureCalIds((p.calendario || []).map(c=>({ ...c, tipo: c.tipo==="hito"?"hito":"fase" })))
+    }));
+    autoAdvanceOverdue();
+    onProjectsLoaded();
+  }catch(e){
+    toast("No pude cargar los proyectos, revisá n8n ("+e.message+")", true);
+  }
+}
+
+/* ---------------- helpers de fecha ---------------- */
+function parseYMD(s){ if(!s) return null; const p=String(s).split("-").map(Number); if(p.length<3||!p[0]) return null; return new Date(p[0],p[1]-1,p[2]); }
+function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function dayDiff(a,b){ return Math.round((b-a)/86400000); }
+function fmtShort(s){ const d=parseYMD(s); return d? d.toLocaleDateString("es-AR",{day:"2-digit",month:"short"}) : ""; }
+
+/* ---------------- render principal ---------------- */
+const $ = s=>document.querySelector(s);
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+function cardHTML(p, readOnly=false){
+  const meta = [p.cliente,p.agencia,p.productora].filter(Boolean).map(esc).join(" · ");
+  const pills = (p.tareas||[]).map(t=>`<span class="pill">${esc(t)}</span>`).join("");
+  const dLink = p.links?.driveRoot && p.links.driveRoot!=="#" ? `<a href="${esc(p.links.driveRoot)}" target="_blank" onclick="event.stopPropagation()">DRIVE ↗</a>` : "";
+  const fLink = p.links?.frameio && p.links.frameio!=="#" ? `<a href="${esc(p.links.frameio)}" target="_blank" onclick="event.stopPropagation()">FRAME.IO ↗</a>` : "";
+  return `<div class="card" onclick="openDetail('${p.id}'${readOnly?",true":""})">
+    <h3>${esc(p.nombre)}</h3>
+    <div class="meta">${meta||"&nbsp;"}</div>
+    ${inProgress(p.status)?`<div style="margin-bottom:var(--space-3)">${statusBadge(p.status)}</div>`:""}
+    <div class="pills">${pills}</div>
+    ${(dLink||fLink)?`<div class="links">${dLink}${fLink}</div>`:""}
+  </div>`;
+}
+
+function renderAll(){
+  const pend = projects.filter(p=>p.status==="por_activarse");
+  const act  = projects.filter(p=>inProgress(p.status));
+  const done = projects.filter(p=>p.status==="completado");
+
+  $("#cPending").textContent = "("+pend.length+")";
+  $("#cActive").textContent  = "("+act.length+")";
+  $("#cDone").textContent    = "("+done.length+")";
+
+  $("#listPending").innerHTML = pend.length? pend.map(p=>cardHTML(p)).join("") : `<div class="empty">Nada en pre-producción. Los proyectos nuevos aparecen acá.</div>`;
+  $("#listActive").innerHTML  = act.length ? act.map(p=>cardHTML(p)).join("")  : `<div class="empty">Sin proyectos activos ahora mismo.</div>`;
+
+  if(!done.length){ $("#listDone").innerHTML = `<div class="empty">Todavía no hay completados.</div>`; return; }
+  const byYear = {};
+  done.forEach(p=>{ const y=p.year||"s/año"; (byYear[y]=byYear[y]||[]).push(p); });
+  const years = Object.keys(byYear).sort((a,b)=>b.localeCompare(a));
+  $("#listDone").innerHTML = years.map((y,i)=>`
+    <details class="year" ${i===0?"open":""}>
+      <summary>${esc(y)} <span class="count">(${byYear[y].length})</span></summary>
+      <div class="grid">${byYear[y].map(p=>cardHTML(p)).join("")}</div>
+    </details>`).join("");
+}
+
+/* ---------------- vistas (tabs) ---------------- */
+const VIEW_TITLES = {proyectos:"Proyectos", calendario:"Calendario", equipo:"Equipo", dashboard:"Status"};
+let currentView = "dashboard";
+
+/* ---------------- kick off wizard ---------------- */
+let kickOffStep = 1;
+let kickOffChecks = {};
+
+function onProjectsLoaded(){ renderAll(); renderCurrentView(); }
+
+function renderCurrentView(){
+  if(currentView==="calendario") renderGlobalCalendar();
+  else if(currentView==="equipo") renderEquipo();
+  else if(currentView==="dashboard") renderDashboard();
+}
+
+function applyViewUI(name){
+  document.querySelectorAll(".tabbar button").forEach(b=>b.classList.toggle("on", b.dataset.view===name));
+  document.querySelectorAll("main > .view").forEach(v=>v.hidden = v.id!=="view-"+name);
+  $("#heroTitle").textContent = VIEW_TITLES[name];
+}
+
+function switchView(name){
+  currentView = name;
+  if(location.hash.slice(1)!==name) location.hash = name;
+  applyViewUI(name);
+  renderCurrentView();
+}
+
+window.addEventListener("hashchange", ()=>{
+  const h = location.hash.slice(1);
+  if(VIEW_TITLES[h] && h!==currentView) switchView(h);
+});
+
+/* ---------------- vista equipo (solo lectura) ---------------- */
+function renderEquipo(){
+  const pend = projects.filter(p=>p.status==="por_activarse");
+  const act  = projects.filter(p=>inProgress(p.status));
+  const done = projects.filter(p=>p.status==="completado");
+  const group = (label, dotClass, list) => `
+    <section class="status-block">
+      <div class="section-head"><span class="dot ${dotClass}"></span><h2>${label}</h2><span class="count">(${list.length})</span></div>
+      <div class="grid">${list.length ? list.map(p=>cardHTML(p,true)).join("") : `<div class="empty">Nada acá por ahora.</div>`}</div>
+    </section>`;
+  $("#equipoBody").innerHTML =
+    group("Pre-producción","",pend) +
+    group("Activos","act",act) +
+    group("Completados","done",done);
+}
+
+/* ---------------- nuevo proyecto ---------------- */
+let npSelected = new Set();
+function renderNPTasks(){
+  $("#npTasks").innerHTML = TAREAS.map(t=>
+    `<span class="task-pill ${npSelected.has(t)?"on":""}" onclick="toggleTask('${t}')">${t}</span>`).join("");
+  renderNPAssigns();
+}
+function toggleTask(t){
+  npSelected.has(t)? npSelected.delete(t) : npSelected.add(t);
+  renderNPTasks();
+}
+let npAssignData = {};
+let npTaskDates = {};
+function renderNPAssigns(){
+  Object.keys(npAssignData).forEach(k=>{ if(!npSelected.has(k)) delete npAssignData[k]; });
+  Object.keys(npTaskDates).forEach(k=>{ if(!npSelected.has(k)) delete npTaskDates[k]; });
+  npSelected.forEach(t=>{
+    if(!npAssignData[t]) npAssignData[t]=[{nombre:"",email:""}];
+    if(!npTaskDates[t]) npTaskDates[t]={inicio:"",fin:"",notas:""};
+  });
+  $("#npAssigns").innerHTML = [...npSelected].map(t=>assignBlockHTML(t, npAssignData[t], "np")).join("");
+}
+function assignBlockHTML(tarea, rows, ctx){
+  const td = taskDatesStore(ctx)[tarea] || {};
+  return `<div class="assign-block">
+    <div class="ttl">${esc(tarea)} — equipo + fechas</div>
+    ${rows.map((r,i)=>`
+      <div class="assign-row">
+        <input type="text" placeholder="Nombre" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tarea}',${i},'nombre',this.value)">
+        <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tarea}',${i},'email',this.value)">
+        <button class="icon-btn" onclick="delAssign('${ctx}','${tarea}',${i})" title="Quitar">✕</button>
+      </div>`).join("")}
+    <button class="addline" onclick="addAssign('${ctx}','${tarea}')">+ agregar persona</button>
+    <div class="frow" style="margin-top:var(--space-4)">
+      <div><label class="f">Inicio</label><input type="date" value="${esc(td.inicio||"")}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value)"></div>
+      <div><label class="f">Fin</label><input type="date" value="${esc(td.fin||"")}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value)"></div>
+    </div>
+  </div>`;
+}
+function taskDatesStore(ctx){ return ctx==="np" ? npTaskDates : (detailProject.taskDates = detailProject.taskDates||{}); }
+function setTaskDate(ctx,t,field,val){
+  const s = taskDatesStore(ctx); s[t] = s[t]||{inicio:"",fin:"",notas:""}; s[t][field]=val;
+  if(ctx==="dt") renderDetail();   // refresca las barras del calendario
+}
+function assignStore(ctx){ return ctx==="np" ? npAssignData : detailProject.asignaciones; }
+function setAssign(ctx,t,i,k,v){ assignStore(ctx)[t][i][k]=v; }
+function addAssign(ctx,t){ assignStore(ctx)[t].push({nombre:"",email:""}); ctx==="np"?renderNPAssigns():renderDetail(); }
+function delAssign(ctx,t,i){ assignStore(ctx)[t].splice(i,1); if(!assignStore(ctx)[t].length) assignStore(ctx)[t]=[{nombre:"",email:""}]; ctx==="np"?renderNPAssigns():renderDetail(); }
+
+async function createProject(){
+  const nombre = $("#npNombre").value.trim();
+  const cliente = $("#npCliente").value.trim();
+  const epN = $("#npEpNombre").value.trim(), epE = $("#npEpEmail").value.trim();
+  if(!nombre || !cliente){ toast("Falta el nombre o el cliente", true); return; }
+  if(!epN || !epE){ toast("Cargá el Productor Ejecutivo y su mail", true); return; }
+
+  const asigs = {};
+  Object.entries(npAssignData).forEach(([t,rows])=>{
+    const clean = rows.filter(r=>r.nombre||r.email);
+    if(clean.length) asigs[t]=clean;
+  });
+  const tDates = {};
+  [...npSelected].forEach(t=>{
+    const d = npTaskDates[t];
+    if(d && (d.inicio||d.fin||d.notas)) tDates[t]=d;
+  });
+
+  const body = {
+    nombre, cliente,
+    agencia: $("#npAgencia").value.trim(),
+    productora: $("#npProductora").value.trim(),
+    director: $("#npDirector").value.trim(),
+    ep_nombre: epN, ep_email: epE,
+    prod_nombre: $("#npProdNombre").value.trim(), prod_email: $("#npProdEmail").value.trim(),
+    coord_nombre: $("#npCoordNombre").value.trim(), coord_email: $("#npCoordEmail").value.trim(),
+    tareas: [...npSelected], asignaciones: asigs, taskDates: tDates
+  };
+
+  const btn = $("#btnCreate");
+  btn.disabled = true; btn.textContent = "Creando Drive + Frame.io…";
+
+  try{
+    let proj;
+    if(DEMO){
+      await new Promise(r=>setTimeout(r,900));
+      proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
+        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"}, calendario:[] };
+    } else {
+      proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
+      proj.tareas = proj.tareas||body.tareas; proj.asignaciones = proj.asignaciones||body.asignaciones;
+      proj.taskDates = proj.taskDates||body.taskDates||{};
+      proj.calendario = proj.calendario||[];
+    }
+    projects.push(proj);
+    onProjectsLoaded();
+    closeModal("ovNew");
+    toast("✔ Proyecto creado, carpetas de Drive y Frame.io listas");
+  }catch(e){
+    toast("Error al crear: "+e.message, true);
+  }finally{
+    btn.disabled = false; btn.textContent = "Crear proyecto";
+  }
+}
+
+/* ---------------- detalle ---------------- */
+let detailProject = null;
+let detailReadOnly = false; // true cuando se abre desde la vista Equipo: oculta controles de edición
+let calView = null;   // Date del mes visible
+let weekView = null;  // Date dentro de la semana visible (vista semanal de cierre)
+let selDay = null;    // 'YYYY-MM-DD' del día seleccionado
+
+function openDetail(id, readOnly=false){
+  detailProject = projects.find(p=>p.id===id);
+  if(!detailProject) return;
+  detailReadOnly = readOnly;
+  detailProject.tareas = detailProject.tareas||[];
+  detailProject.asignaciones = detailProject.asignaciones||{};
+  detailProject.taskDates = detailProject.taskDates||{};
+  detailProject.calendario = detailProject.calendario||[];
+  detailProject.tareas.forEach(t=>{
+    if(!detailProject.asignaciones[t]) detailProject.asignaciones[t]=[{nombre:"",email:""}];
+    if(!detailProject.taskDates[t]) detailProject.taskDates[t]={inicio:"",fin:"",notas:""};
+  });
+  const f = detailProject.calendario.find(r=>(r.tipo||"fase")!=="hito" && r.inicio);
+  const base = f? parseYMD(f.inicio) : new Date();
+  calView = new Date(base.getFullYear(), base.getMonth(), 1);
+  // la vista semanal (cierre) arranca en la semana del deadline, o en la actual
+  weekView = projectEndDate(detailProject) || new Date();
+  selDay = null;
+  renderDetail();
+  openModal("ovDetail");
+}
+
+const DRIVE_FOLDERS = [
+  ["driveRoot","Carpeta raíz"],
+  ["coord","00. COORD"],
+  ["supervision","01. SUPERVISION - PRE"],
+  ["footage","02. FOOTAGE"],
+  ["recursos","03. RECURSOS"],
+  ["edicion","04. EDICIÓN"],
+  ["delivery","05. DELIVERY"]
+];
+const DRIVE_DOCS = [
+  ["notas","📝 Notas"],
+  ["desglose","📊 Desglose"],
+  ["tracker","📊 Tracker"]
+];
+/* pipeline de estados (orden = flujo del proyecto). color de marca por etapa,
+   texto oscuro sobre neón / blanco sobre negro. activo→entregando→cierre son la
+   familia "en curso" (proyecto vivo con calendario). */
+const STATUS_META = {
+  por_activarse:{label:"Pre-producción",    bg:"var(--brand-yellow)", fg:"var(--ink)"},
+  activo:       {label:"Ejecutando",        bg:"var(--brand-green)",  fg:"var(--ink)"},
+  entregando:   {label:"Entregando",        bg:"var(--brand-cyan)",   fg:"var(--ink)"},
+  cierre:       {label:"Listo para cierre", bg:"var(--red)",          fg:"#fff"},
+  completado:   {label:"Completado",        bg:"var(--ink)",          fg:"#fff"}
+};
+const STATUS_LABEL = Object.fromEntries(Object.entries(STATUS_META).map(([k,v])=>[k,v.label]));
+const IN_PROGRESS = ["activo","entregando","cierre"];
+function inProgress(s){ return IN_PROGRESS.includes(s); }
+function statusBadge(s){
+  const m = STATUS_META[s]; if(!m) return "";
+  return `<span style="display:inline-block;font-size:11px;font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.04em;padding:2px 10px;border-radius:var(--radius-full);background:${m.bg};color:${m.fg}">${m.label}</span>`;
+}
+
+/* entradas unificadas del calendario:
+   fases-desde-tareas (tarea + fechas de taskDates) + fases/hitos independientes de calendario.
+   src:"task" → se edita por nombre de tarea (taskDates); src:"cal" → por índice en calendario. */
+function allCalEntries(p){
+  const out = [];
+  (p.tareas||[]).forEach(t=>{
+    const d = (p.taskDates && p.taskDates[t]) || {};
+    out.push({id:"task:"+t, src:"task", key:t, tipo:"fase", fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||""});
+  });
+  (p.calendario||[]).forEach((r,i)=>{
+    out.push({id:r.id||("cal:"+i), src:"cal", idx:i, tipo:(r.tipo||"fase"), fase:r.fase, inicio:r.inicio, fin:r.fin, notas:r.notas||""});
+  });
+  return out;
+}
+function taskDateSet(t,field,val){
+  detailProject.taskDates = detailProject.taskDates||{};
+  detailProject.taskDates[t] = detailProject.taskDates[t]||{inicio:"",fin:"",notas:""};
+  detailProject.taskDates[t][field] = val;
+}
+
+function faseLookMap(p){
+  const map = {};
+  let n = 0;
+  allCalEntries(p).forEach(e=>{ if(e.tipo!=="hito"){ map[e.id]=n%PHASE_LOOKS.length; n++; } });
+  return map;
+}
+
+function renderDetail(){
+  const p = detailProject;
+  const ro = detailReadOnly;
+  const cierre = p.status==="cierre";
+  const completado = p.status==="completado";
+  const lockFields = ro || cierre || completado;   // en cierre/completado no se edita ningún campo (tareas/calendario)
+  const lockMeta = ro || p.status!=="por_activarse"; // datos del proyecto + equipo: editables solo en pre-producción
+  const lookMap = faseLookMap(p);
+
+  // en completado la ficha es un archivo: solo carpeta raíz (+ finales + documentos)
+  const folders = completado ? DRIVE_FOLDERS.filter(([k])=>k==="driveRoot") : DRIVE_FOLDERS;
+  const driveLinks = folders
+    .filter(([k])=>p.links && p.links[k])
+    .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">📁 ${l} <span>↗</span></a>`).join("");
+  // carpeta de finales: desactivada hasta cierre; en cierre roja (acción); en completado, link normal
+  const finalesLink = p.links?.finales;
+  const finalesHref = finalesLink && finalesLink!=='#';
+  const finalesBtn = cierre
+    ? `<a class="finales-btn on" href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 06. FINALES <span>↗</span></a>`
+    : completado
+    ? `<a href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 06. FINALES <span>↗</span></a>`
+    : `<span class="finales-btn off" title="Se habilita cuando el proyecto pasa a cierre">📁 06. FINALES</span>`;
+  const docLinks = DRIVE_DOCS
+    .filter(([k])=>p.links && p.links[k])
+    .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
+  const frameLink = p.links?.frameio
+    ? `<a class="frame-cta" href="${esc(p.links.frameio)}" target="_blank">🎬 Abrir proyecto en Frame.io ↗</a>
+       <div class="sublabel" style="margin-top:10px">Adentro: 1. Footage · 2. Offline · 3. Online · 4. Masters</div>`
+    : `<span style="font-size:12.5px;color:var(--gray)">Sin link de Frame.io</span>`;
+
+  const taskPills = lockFields
+    ? (p.tareas.length ? p.tareas.map(t=>`<span class="pill">${esc(t)}</span>`).join("") : `<span style="font-size:12.5px;color:var(--gray)">Sin tareas asignadas</span>`)
+    : TAREAS.map(t=>`<span class="task-pill ${p.tareas.includes(t)?"on":""}" onclick="dToggleTask('${t}')">${t}</span>`).join("");
+
+  const assigns = lockFields
+    ? p.tareas.map(t=>{
+        const rows = (p.asignaciones[t]||[]).filter(r=>r.nombre||r.email);
+        const d = (p.taskDates&&p.taskDates[t])||{};
+        const range = d.inicio ? ` <small style="color:var(--gray);font-weight:var(--weight-regular)">(${fmtShort(d.inicio)} – ${fmtShort(d.fin||d.inicio)})</small>` : "";
+        if(!rows.length && !range) return "";
+        return `<div class="assign-block"><div class="ttl">${esc(t)} — asignados${range}</div>${rows.map(r=>
+          `<div style="font-size:${"var(--fs-caption)"};margin-bottom:4px">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}</div>`).join("")}</div>`;
+      }).join("")
+    : p.tareas.map(t=>assignBlockHTML(t, p.asignaciones[t]||[{nombre:"",email:""}], "dt")).join("");
+
+  const statusBtns = Object.entries(STATUS_META).map(([k,m])=>
+    `<span class="status-opt ${p.status===k?"on":""}" ${p.status===k?`style="background:${m.bg};border-color:${m.bg};color:${m.fg}"`:""} onclick="setStatus('${k}')">${m.label}</span>`).join("");
+
+  const isActive = inProgress(p.status);
+  // tabla editable: fases-desde-tareas (nombre fijo, fechas/notas editables) + fases independientes (todo editable + borrar)
+  const calRows = allCalEntries(p).filter(e=>e.tipo!=="hito").map(e=>{
+    const lk = PHASE_LOOKS[lookMap[e.id]||0];
+    const dot = `<td style="width:22px"><span class="dotc" style="background:${lk.bg};border-color:${lk.bd}"></span></td>`;
+    if(e.src==="task"){
+      const t = e.key.replace(/'/g,"\\'");
+      return `<tr>
+        ${dot}
+        <td><span style="display:flex;align-items:center;gap:6px;font-weight:var(--weight-bold)">${esc(e.fase)}<small style="color:var(--gray);font-weight:var(--weight-regular)">tarea</small></span></td>
+        <td><input type="date" value="${esc(e.inicio)}" oninput="taskDateSet('${t}','inicio',this.value)" onchange="renderDetail()"></td>
+        <td><input type="date" value="${esc(e.fin)}" oninput="taskDateSet('${t}','fin',this.value)" onchange="renderDetail()"></td>
+        <td><input type="text" value="${esc(e.notas||"")}" oninput="taskDateSet('${t}','notas',this.value)" placeholder=""></td>
+        <td></td>
+      </tr>`;
+    }
+    return `<tr>
+      ${dot}
+      <td><input type="text" value="${esc(e.fase)}" oninput="calSet(${e.idx},'fase',this.value)" onchange="renderDetail()" placeholder="Fase"></td>
+      <td><input type="date" value="${esc(e.inicio)}" oninput="calSet(${e.idx},'inicio',this.value)" onchange="renderDetail()"></td>
+      <td><input type="date" value="${esc(e.fin)}" oninput="calSet(${e.idx},'fin',this.value)" onchange="renderDetail()"></td>
+      <td><input type="text" value="${esc(e.notas||"")}" oninput="calSet(${e.idx},'notas',this.value)" placeholder=""></td>
+      <td><button class="icon-btn" onclick="calDel(${e.idx})">✕</button></td>
+    </tr>`;
+  }).join("");
+
+  $("#detailBody").innerHTML = `
+    <h2>${esc(p.nombre)}</h2>
+    <div class="kicker">${esc(p.cliente)}${p.agencia?" · "+esc(p.agencia):""}${p.productora?" · "+esc(p.productora):""}</div>
+
+    ${ro
+      ? `<div class="pills" style="margin:6px 0 20px">${STATUS_LABEL[p.status]?`<span class="pill">${esc(STATUS_LABEL[p.status])}</span>`:""}</div>`
+      : `<div class="status-select">${statusBtns}</div>`}
+
+    ${(cierre||completado) ? "" : (lockMeta ? `
+    <div class="fgroup">
+      <div class="glabel">Datos del proyecto</div>
+      <div class="frow">
+        <div><label class="f">Nombre de la campaña</label><div style="font-size:var(--fs-body)">${esc(p.nombre||"—")}</div></div>
+        <div><label class="f">Productora</label><div style="font-size:var(--fs-body)">${esc(p.productora||"—")}</div></div>
+        <div><label class="f">Director</label><div style="font-size:var(--fs-body)">${esc(p.director||"—")}</div></div>
+        <div><label class="f">Cliente</label><div style="font-size:var(--fs-body)">${esc(p.cliente||"—")}</div></div>
+        <div><label class="f">Agencia</label><div style="font-size:var(--fs-body)">${esc(p.agencia||"—")}</div></div>
+      </div>
+    </div>` : `
+    <div class="fgroup">
+      <div class="glabel">Datos del proyecto <small>editable</small></div>
+      <div class="frow">
+        <div><label class="f">Nombre de la campaña</label><input type="text" value="${esc(p.nombre||"")}" oninput="detailProject.nombre=this.value"></div>
+        <div><label class="f">Productora</label><input type="text" value="${esc(p.productora||"")}" oninput="detailProject.productora=this.value"></div>
+        <div><label class="f">Director</label><input type="text" value="${esc(p.director||"")}" oninput="detailProject.director=this.value"></div>
+        <div><label class="f">Cliente</label><input type="text" value="${esc(p.cliente||"")}" oninput="detailProject.cliente=this.value"></div>
+        <div><label class="f">Agencia</label><input type="text" value="${esc(p.agencia||"")}" oninput="detailProject.agencia=this.value"></div>
+      </div>
+      <div class="actions" style="justify-content:flex-start;margin-top:14px">
+        <button class="btn small" onclick="saveProjectInfo()">Guardar datos del proyecto</button>
+      </div>
+    </div>`)}
+
+    <div class="fgroup">
+      <div class="glabel">Documentos & carpetas</div>
+      <div class="link-split">
+        <div class="link-box">
+          <div class="lb-head"><span class="lb-dot"></span> Google Drive</div>
+          <div class="sublabel" style="margin-top:0">Carpetas</div>
+          <div class="linkgrid">${driveLinks || '<span style="font-size:12.5px;color:var(--gray)">Sin links de Drive</span>'}${finalesBtn}</div>
+          ${docLinks?`<div class="sublabel">Documentos (en 00. COORD)</div><div class="linkgrid">${docLinks}</div>`:""}
+        </div>
+        <div class="link-box">
+          <div class="lb-head"><span class="lb-dot frame"></span> Frame.io</div>
+          ${frameLink}
+        </div>
+      </div>
+    </div>
+
+    ${lockMeta ? `
+    <div class="fgroup">
+      <div class="glabel">Equipo interno</div>
+      <div class="frow">
+        ${p.ep_nombre?`<div><label class="f">Productor Ejecutivo</label><div style="font-size:var(--fs-body)">${esc(p.ep_nombre)}</div></div>`:""}
+        ${p.prod_nombre?`<div><label class="f">Productor</label><div style="font-size:var(--fs-body)">${esc(p.prod_nombre)}</div></div>`:""}
+        ${p.coord_nombre?`<div><label class="f">Coordinador</label><div style="font-size:var(--fs-body)">${esc(p.coord_nombre)}</div></div>`:""}
+        ${(!p.ep_nombre && !p.prod_nombre && !p.coord_nombre)?`<span style="font-size:12.5px;color:var(--gray)">Sin datos de equipo cargados</span>`:""}
+      </div>
+    </div>` : `
+    <div class="fgroup">
+      <div class="glabel">Equipo interno <small>editable</small></div>
+      <div class="frow">
+        <div><label class="f">Productor Ejecutivo</label><input type="text" value="${esc(p.ep_nombre||"")}" oninput="detailProject.ep_nombre=this.value"></div>
+        <div><label class="f">Mail EP</label><input type="email" value="${esc(p.ep_email||"")}" oninput="detailProject.ep_email=this.value"></div>
+        <div><label class="f">Productor</label><input type="text" value="${esc(p.prod_nombre||"")}" oninput="detailProject.prod_nombre=this.value"></div>
+        <div><label class="f">Mail Productor</label><input type="email" value="${esc(p.prod_email||"")}" oninput="detailProject.prod_email=this.value"></div>
+        <div><label class="f">Coordinador</label><input type="text" value="${esc(p.coord_nombre||"")}" oninput="detailProject.coord_nombre=this.value"></div>
+        <div><label class="f">Mail Coordinador</label><input type="email" value="${esc(p.coord_email||"")}" oninput="detailProject.coord_email=this.value"></div>
+      </div>
+    </div>`}
+
+    ${cierre||completado ? "" : `
+    <div class="fgroup">
+      <div class="glabel">Tareas TEAM23 ${lockFields?"":"<small>editable</small>"}</div>
+      <div class="${lockFields?"pills":"task-pills"}">${taskPills}</div>
+      ${assigns}
+      ${lockFields?"":`<div class="actions" style="justify-content:flex-start;margin-top:14px">
+        <button class="btn small" onclick="saveTeam()">Guardar cambios de equipo</button>
+      </div>`}
+    </div>`}
+
+    ${completado ? "" : `
+    <div class="fgroup">
+      <div class="glabel">Calendario ${cierre?"<small>vista semanal · solo lectura</small>":(isActive?"<small>fases + hitos por día. Clickeá un día para detallar algo puntual</small>":"<small>se define al activar el proyecto</small>")}</div>
+      ${cierre ? `
+        ${weekCalendarHTML(p, lookMap)}
+        ${dayPanelHTML(p, lookMap, true)}
+        <div class="actions" style="justify-content:flex-start;margin-top:16px">
+          <button class="btn small" onclick="printCalendar()">Descargar PDF</button>
+        </div>
+      ` : isActive ? `
+        ${lockFields ? "" : `
+        <div class="tbl-scroll"><table class="cal">
+          <thead><tr><th></th><th>Fase</th><th>Inicio</th><th>Fin</th><th>Notas</th><th></th></tr></thead>
+          <tbody>${calRows || ""}</tbody>
+        </table></div>
+        <button class="addline" onclick="calAdd()">+ agregar fase</button>`}
+
+        ${monthCalendarHTML(p, lookMap)}
+        ${dayPanelHTML(p, lookMap, lockFields)}
+
+        <div class="actions" style="justify-content:flex-start;margin-top:16px">
+          ${lockFields?"":`<button class="btn primary small" onclick="saveCalendar(false)">Guardar calendario y avisar al equipo</button>`}
+          <button class="btn small" onclick="printCalendar()">Descargar PDF</button>
+        </div>
+      ` : `<div class="empty" style="padding:20px">${lockFields?"Este proyecto todavía no tiene calendario.":"Pasá el proyecto a <b>ACTIVO</b> para generar el calendario."}</div>`}
+    </div>`}
+
+    ${lockFields ? "" : `
+    <div class="fgroup">
+      <div class="glabel" style="color:var(--red);border-color:var(--red)">Zona de riesgo</div>
+      <div class="sublabel" style="margin-top:0">Eliminar borra el proyecto de este hub. No se puede deshacer.</div>
+      <div class="actions" style="justify-content:flex-start;margin-top:10px">
+        <button class="btn danger small" onclick="deleteProject()">Eliminar proyecto</button>
+      </div>
+    </div>`}
+  `;
+}
+
+/* ---------------- calendario mensual ---------------- */
+function navMonth(delta){
+  calView = new Date(calView.getFullYear(), calView.getMonth()+delta, 1);
+  renderDetail();
+}
+function selectDay(key){ selDay = key; renderDetail(); }
+function closeDayPanel(){ selDay = null; renderDetail(); }
+
+function buildMonthGrid(y, m){
+  const first = new Date(y, m, 1);
+  const startOff = (first.getDay()+6)%7; // lunes = 0
+  const gridStart = new Date(y, m, 1-startOff);
+  const lastDate = new Date(y, m+1, 0).getDate();
+  const totalCells = Math.ceil((startOff+lastDate)/7)*7;
+  const days = [];
+  for(let i=0;i<totalCells;i++){ const d=new Date(gridStart); d.setDate(gridStart.getDate()+i); days.push(d); }
+  const weeks = [];
+  for(let i=0;i<days.length;i+=7) weeks.push(days.slice(i,i+7));
+  const mtitle = first.toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase();
+  return {weeks, mtitle};
+}
+
+function monthCalendarHTML(p, lookMap){
+  const y = calView.getFullYear(), m = calView.getMonth();
+  const {weeks, mtitle} = buildMonthGrid(y, m);
+
+  const entries = allCalEntries(p);
+  const fases = entries.filter(e=>e.tipo!=="hito" && e.inicio);
+  const hitos = entries.filter(e=>e.tipo==="hito" && e.inicio);
+  const todayKey = ymd(new Date());
+
+  const weekHTML = weeks.map(week=>{
+    const wStart = week[0], wEnd = week[6];
+    const segs = [];
+    fases.forEach(f=>{
+      const s = parseYMD(f.inicio); if(!s) return;
+      const e = parseYMD(f.fin) || s;
+      const a = s<=e? s : e, b = s<=e? e : s;
+      if(b < wStart || a > wEnd) return;
+      const c0 = Math.max(0, dayDiff(wStart, a));
+      const c1 = Math.min(6, dayDiff(wStart, b));
+      segs.push({f, c0, c1});
+    });
+    segs.sort((x,z)=> x.c0-z.c0 || (z.c1-z.c0)-(x.c1-x.c0));
+    const laneEnd = [];
+    segs.forEach(sg=>{ let L=0; while(laneEnd[L]!==undefined && laneEnd[L]>=sg.c0) L++; sg.lane=L; laneEnd[L]=sg.c1; });
+    const barsH = laneEnd.length ? laneEnd.length*18+2 : 0;
+
+    const cells = week.map(d=>{
+      const key = ymd(d);
+      const other = d.getMonth()!==m;
+      const dayHitos = hitos.filter(h=>h.inicio===key);
+      const chips = dayHitos.map(h=>`<div class="chip" title="${esc(h.fase)}">● ${esc(h.fase||"…")}</div>`).join("");
+      return `<div class="cell ${other?"om":""} ${key===selDay?"sel":""}" onclick="selectDay('${key}')">
+        <div class="dnum ${key===todayKey?"today":""}">${d.getDate()}</div>
+        <div class="chips">${chips}</div>
+      </div>`;
+    }).join("");
+
+    const bars = segs.map(sg=>{
+      const lk = PHASE_LOOKS[lookMap[sg.f.id]||0];
+      const left = (sg.c0/7*100).toFixed(3);
+      const width = ((sg.c1-sg.c0+1)/7*100).toFixed(3);
+      return `<div class="bar" style="left:calc(${left}% + 3px);width:calc(${width}% - 6px);top:${27+sg.lane*18}px;background:${lk.bg};color:${lk.fg};border:1.5px solid ${lk.bd}">${esc(sg.f.fase)}</div>`;
+    }).join("");
+
+    return `<div class="week" style="--bh:${barsH}px">${cells}<div class="barlayer">${bars}</div></div>`;
+  }).join("");
+
+  return `<div class="cal-wrap">
+    <div class="cal-head">
+      <div class="mtitle">${mtitle}</div>
+      <div class="cal-nav">
+        <button onclick="navMonth(-1)" aria-label="Mes anterior">‹</button>
+        <button onclick="navMonth(1)" aria-label="Mes siguiente">›</button>
+      </div>
+    </div>
+    <div class="cal-scroll"><div class="cal-min">
+      <div class="wdays">${WDAYS.map(w=>`<div>${w}</div>`).join("")}</div>
+      ${weekHTML}
+    </div></div>
+  </div>`;
+}
+
+/* ---------------- calendario semanal (modo cierre, solo lectura) ---------------- */
+function weekStartOf(d){ const x=new Date(d); const off=(x.getDay()+6)%7; x.setDate(x.getDate()-off); x.setHours(0,0,0,0); return x; }
+function navWeek(delta){ weekView = new Date(weekView.getFullYear(), weekView.getMonth(), weekView.getDate()+delta*7); renderDetail(); }
+
+function weekCalendarHTML(p, lookMap){
+  const wStart = weekStartOf(weekView);
+  const week = []; for(let i=0;i<7;i++){ const d=new Date(wStart); d.setDate(wStart.getDate()+i); week.push(d); }
+  const wEnd = week[6];
+  const entries = allCalEntries(p);
+  const fases = entries.filter(e=>e.tipo!=="hito" && e.inicio);
+  const hitos = entries.filter(e=>e.tipo==="hito" && e.inicio);
+  const todayKey = ymd(new Date());
+
+  const segs = [];
+  fases.forEach(f=>{
+    const s=parseYMD(f.inicio); if(!s) return;
+    const e=parseYMD(f.fin)||s;
+    const a=s<=e?s:e, b=s<=e?e:s;
+    if(b<wStart||a>wEnd) return;
+    segs.push({f, c0:Math.max(0,dayDiff(wStart,a)), c1:Math.min(6,dayDiff(wStart,b))});
+  });
+  segs.sort((x,z)=> x.c0-z.c0 || (z.c1-z.c0)-(x.c1-x.c0));
+  const laneEnd=[];
+  segs.forEach(sg=>{ let L=0; while(laneEnd[L]!==undefined && laneEnd[L]>=sg.c0) L++; sg.lane=L; laneEnd[L]=sg.c1; });
+  const barsH = laneEnd.length ? laneEnd.length*18+2 : 0;
+
+  const cells = week.map(d=>{
+    const key=ymd(d);
+    const chips=hitos.filter(h=>h.inicio===key).map(h=>`<div class="chip" title="${esc(h.fase)}">● ${esc(h.fase||"…")}</div>`).join("");
+    return `<div class="cell ${key===selDay?"sel":""}" onclick="selectDay('${key}')">
+      <div class="dnum ${key===todayKey?"today":""}">${d.getDate()}</div>
+      <div class="chips">${chips}</div>
+    </div>`;
+  }).join("");
+
+  const bars = segs.map(sg=>{
+    const lk=PHASE_LOOKS[lookMap[sg.f.id]||0];
+    const left=(sg.c0/7*100).toFixed(3);
+    const width=((sg.c1-sg.c0+1)/7*100).toFixed(3);
+    return `<div class="bar" style="left:calc(${left}% + 3px);width:calc(${width}% - 6px);top:${27+sg.lane*18}px;background:${lk.bg};color:${lk.fg};border:1.5px solid ${lk.bd}">${esc(sg.f.fase)}</div>`;
+  }).join("");
+
+  const title = `SEMANA ${wStart.toLocaleDateString("es-AR",{day:"2-digit",month:"short"})} – ${wEnd.toLocaleDateString("es-AR",{day:"2-digit",month:"short"})}`.toUpperCase();
+
+  return `<div class="cal-wrap">
+    <div class="cal-head">
+      <div class="mtitle">${title}</div>
+      <div class="cal-nav">
+        <button onclick="navWeek(-1)" aria-label="Semana anterior">‹</button>
+        <button onclick="navWeek(1)" aria-label="Semana siguiente">›</button>
+      </div>
+    </div>
+    <div class="cal-scroll"><div class="cal-min">
+      <div class="wdays">${WDAYS.map(w=>`<div>${w}</div>`).join("")}</div>
+      <div class="week" style="--bh:${barsH}px">${cells}<div class="barlayer">${bars}</div></div>
+    </div></div>
+  </div>`;
+}
+
+/* ---------------- panel del día ---------------- */
+function dayPanelHTML(p, lookMap, readOnly=false){
+  if(!selDay) return "";
+  const d = parseYMD(selDay);
+  const label = d.toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"}).toUpperCase();
+  const entries = allCalEntries(p);
+  const fasesDia = entries.filter(e=>{
+    if(e.tipo==="hito" || !e.inicio) return false;
+    const s = parseYMD(e.inicio), ee = parseYMD(e.fin)||s;
+    return s<=d && ee>=d;
+  });
+  // los hitos siempre viven en calendario (editables por índice)
+  const hitosDia = (p.calendario||[]).map((r,i)=>({r,i})).filter(x=>x.r.tipo==="hito" && x.r.inicio===selDay);
+
+  const faseChips = fasesDia.map(e=>{
+    const lk = PHASE_LOOKS[lookMap[e.id]||0];
+    return `<span class="dp-fase"><span class="dotc" style="background:${lk.bg};border-color:${lk.bd}"></span>${esc(e.fase)} <small style="color:var(--gray)">(${fmtShort(e.inicio)} – ${fmtShort(e.fin||e.inicio)})</small></span>`;
+  }).join("");
+
+  const hitoRows = readOnly
+    ? hitosDia.map(({r})=>`<div class="dp-fase">${esc(r.fase||"(sin título)")}</div>`).join("")
+    : hitosDia.map(({r,i})=>`
+    <div class="hito-row">
+      <input type="text" value="${esc(r.fase)}" placeholder="Ej: Corte 1 al cliente, llegada de material…" oninput="calSet(${i},'fase',this.value)" onchange="renderDetail()">
+      <button class="icon-btn" onclick="calDel(${i})">✕</button>
+    </div>`).join("");
+
+  return `<div class="daypanel">
+    <div class="dp-head">
+      <div class="dp-title">${label}</div>
+      <button class="dp-close" onclick="closeDayPanel()">✕ cerrar</button>
+    </div>
+    ${faseChips?`<div class="dp-fases">${faseChips}</div>`:""}
+    <div class="sublabel" style="margin-top:0">Hitos de este día</div>
+    ${hitoRows || `<div style="font-size:12.5px;color:var(--gray);margin-bottom:8px">Nada puntual todavía.</div>`}
+    ${readOnly?"":`<button class="addline" onclick="hitoAdd()">+ agregar hito este día</button>`}
+  </div>`;
+}
+
+/* ---------------- calendario global (todos los proyectos activos) ---------------- */
+let calViewGlobal = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+function navMonthGlobal(delta){
+  calViewGlobal = new Date(calViewGlobal.getFullYear(), calViewGlobal.getMonth()+delta, 1);
+  renderGlobalCalendar();
+}
+function renderGlobalCalendar(){ $("#calGlobalBody").innerHTML = globalCalendarHTML(); }
+
+function globalCalendarHTML(){
+  const active = projects.filter(p=>inProgress(p.status));
+  if(!active.length) return `<div class="empty">Sin proyectos activos para mostrar en el calendario.</div>`;
+
+  const y = calViewGlobal.getFullYear(), m = calViewGlobal.getMonth();
+  const {weeks, mtitle} = buildMonthGrid(y, m);
+  const todayKey = ymd(new Date());
+
+  const fases = [], hitos = [];
+  active.forEach((p,pi)=>{
+    const color = PROJECT_COLORS[pi % PROJECT_COLORS.length];
+    allCalEntries(p).forEach(r=>{
+      if(r.tipo!=="hito" && r.inicio) fases.push({...r, project:p, color});
+      else if(r.tipo==="hito" && r.inicio) hitos.push({...r, project:p});
+    });
+  });
+
+  const weekHTML = weeks.map(week=>{
+    const wStart = week[0], wEnd = week[6];
+    const segs = [];
+    fases.forEach(f=>{
+      const s = parseYMD(f.inicio); if(!s) return;
+      const e = parseYMD(f.fin) || s;
+      const a = s<=e? s : e, b = s<=e? e : s;
+      if(b < wStart || a > wEnd) return;
+      const c0 = Math.max(0, dayDiff(wStart, a));
+      const c1 = Math.min(6, dayDiff(wStart, b));
+      segs.push({f, c0, c1});
+    });
+    segs.sort((x,z)=> x.c0-z.c0 || (z.c1-z.c0)-(x.c1-x.c0));
+    const laneEnd = [];
+    segs.forEach(sg=>{ let L=0; while(laneEnd[L]!==undefined && laneEnd[L]>=sg.c0) L++; sg.lane=L; laneEnd[L]=sg.c1; });
+    const barsH = laneEnd.length ? laneEnd.length*18+2 : 0;
+
+    const cells = week.map(d=>{
+      const key = ymd(d);
+      const other = d.getMonth()!==m;
+      const dayHitos = hitos.filter(h=>h.inicio===key);
+      const chips = dayHitos.map(h=>
+        `<div class="chip" title="${esc(h.project.nombre)} · ${esc(h.fase)}" onclick="event.stopPropagation();openDetail('${h.project.id}')">● ${esc(h.project.nombre)}</div>`
+      ).join("");
+      return `<div class="cell ${other?"om":""}">
+        <div class="dnum ${key===todayKey?"today":""}">${d.getDate()}</div>
+        <div class="chips">${chips}</div>
+      </div>`;
+    }).join("");
+
+    const bars = segs.map(sg=>{
+      const left = (sg.c0/7*100).toFixed(3);
+      const width = ((sg.c1-sg.c0+1)/7*100).toFixed(3);
+      return `<div class="bar" style="left:calc(${left}% + 3px);width:calc(${width}% - 6px);top:${27+sg.lane*18}px;background:${sg.f.color};color:var(--ink);border:1.5px solid var(--ink);cursor:pointer" title="${esc(sg.f.project.nombre)} · ${esc(sg.f.fase)}" onclick="openDetail('${sg.f.project.id}')">${esc(sg.f.project.nombre)} · ${esc(sg.f.fase)}</div>`;
+    }).join("");
+
+    return `<div class="week" style="--bh:${barsH}px">${cells}<div class="barlayer">${bars}</div></div>`;
+  }).join("");
+
+  const legend = active.map((p,pi)=>{
+    const color = PROJECT_COLORS[pi % PROJECT_COLORS.length];
+    return `<span class="pill" style="cursor:pointer" onclick="openDetail('${p.id}')">
+      <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${color};border:1.5px solid var(--ink);margin-right:5px;vertical-align:middle"></span>${esc(p.nombre)}
+    </span>`;
+  }).join("");
+
+  return `<div class="cal-wrap">
+    <div class="cal-head">
+      <div class="mtitle">${mtitle}</div>
+      <div class="cal-nav">
+        <button onclick="navMonthGlobal(-1)" aria-label="Mes anterior">‹</button>
+        <button onclick="navMonthGlobal(1)" aria-label="Mes siguiente">›</button>
+      </div>
+    </div>
+    <div class="cal-scroll"><div class="cal-min">
+      <div class="wdays">${WDAYS.map(w=>`<div>${w}</div>`).join("")}</div>
+      ${weekHTML}
+    </div></div>
+  </div>
+  <div class="pills" style="margin-top:var(--space-3)">${legend}</div>`;
+}
+
+/* ---------------- dashboard ---------------- */
+/* badge de proximidad de un hito: rojo = inminente (≤3d), amarillo = pronto (≤7d), cyan = lejos.
+   texto oscuro sobre amarillo/cyan (neón) y blanco sobre rojo, por contraste. */
+function hitoUrgency(target, today){
+  const days = Math.round((target - today)/86400000);
+  const label = days<=0 ? "HOY" : days===1 ? "MAÑANA" : `EN ${days} DÍAS`;
+  if(days<=3) return {label, bg:"var(--brand-red)", fg:"#fff"};
+  if(days<=7) return {label, bg:"var(--brand-yellow)", fg:"var(--ink)"};
+  return {label, bg:"var(--brand-cyan)", fg:"var(--ink)"};
+}
+
+function renderDashboard(){ $("#dashboardBody").innerHTML = dashboardHTML(); }
+
+let loadScope = "activo"; // 'activo' | 'pre' — qué proyectos mira "Carga de trabajo"
+function setLoadScope(s){ loadScope = s; renderDashboard(); }
+
+/* equipo interno primero (EP/Productor/Coordinador), después los asignados a tareas */
+function computeLoad(list){
+  const teamLoad = {}, taskLoad = {};
+  const bump = (store,nombre,email) => { const key=(nombre||email||"").trim(); if(key) store[key]=(store[key]||0)+1; };
+  list.forEach(p=>{
+    Object.values(p.asignaciones||{}).forEach(rows=>(rows||[]).forEach(r=>bump(taskLoad,r.nombre,r.email)));
+    bump(teamLoad, p.ep_nombre, p.ep_email);
+    bump(teamLoad, p.prod_nombre, p.prod_email);
+    bump(teamLoad, p.coord_nombre, p.coord_email);
+  });
+  return [
+    ...Object.entries(teamLoad).sort((a,b)=>b[1]-a[1]),
+    ...Object.entries(taskLoad).sort((a,b)=>b[1]-a[1])
+  ];
+}
+/* más de 1 proyecto en el scope = sobrecargado → se marca en rojo (mismo rojo de alerta del resto del hub) */
+function loadListHTML(rows, emptyMsg){
+  return rows.length
+    ? `<div style="display:flex;flex-direction:column;gap:var(--space-2);align-items:flex-start">${rows.map(([nombre,n])=>{
+        const busy = n>1;
+        return `<span class="dp-fase">${esc(nombre)} <small style="color:${busy?"var(--red)":"var(--gray)"};font-weight:${busy?"var(--weight-bold)":"var(--weight-regular)"}">(${n} proyecto${n>1?"s":""})</small></span>`;
+      }).join("")}</div>`
+    : `<div class="empty">${emptyMsg}</div>`;
+}
+
+function dashboardHTML(){
+  const act = projects.filter(p=>inProgress(p.status)); // para hitos
+  const pend = projects.filter(p=>p.status==="por_activarse");
+
+  const statCard = (list,label) => `<div class="card" style="cursor:default">
+    <h3 style="font-size:var(--fs-section);text-transform:none">${list.length}</h3>
+    <div class="meta" style="font-weight:var(--weight-bold);font-size:var(--fs-card-title)">${esc(label)}</div>
+    ${list.length ? `<div style="margin-top:var(--space-3);display:flex;flex-direction:column;gap:var(--space-1)">${list.map(p=>`<small style="color:var(--gray)">${esc(p.nombre)}</small>`).join("")}</div>` : ""}
+  </div>`;
+  // un div por estado: pre-producción + cada etapa de activo. completados NO se muestran acá.
+  const STATUS_CARDS = ["por_activarse","activo","entregando","cierre"];
+  const stats = `<div class="stat-grid">${STATUS_CARDS.map(k=>statCard(projects.filter(p=>p.status===k), STATUS_META[k].label)).join("")}</div>`;
+
+  const loadHTML = loadListHTML(
+    computeLoad(loadScope==="pre" ? pend : act),
+    loadScope==="pre" ? "Nadie asignado en pre-producción todavía." : "Nadie asignado en proyectos activos todavía."
+  );
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const hitos = [];
+  act.forEach(p=>(p.calendario||[]).forEach(r=>{
+    if(r.tipo==="hito" && r.inicio){
+      const d = parseYMD(r.inicio);
+      if(d && d>=today) hitos.push({...r, project:p, d});
+    }
+  }));
+  hitos.sort((a,b)=>a.d-b.d);
+  const hitosHTML = hitos.length
+    ? `<div style="display:flex;flex-direction:column;gap:var(--space-2)">${hitos.slice(0,8).map(h=>{
+        const u = hitoUrgency(h.d, today);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3)">
+          <span class="dp-fase">${fmtShort(h.inicio)} — <b>${esc(h.project.nombre)}</b>${h.fase?" · "+esc(h.fase):""}</span>
+          <span style="font-size:11px;font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.04em;padding:3px 10px;border-radius:var(--radius-full);background:${u.bg};color:${u.fg};white-space:nowrap;flex:none">${u.label}</span>
+        </div>`;
+      }).join("")}</div>`
+    : `<div class="empty">Sin hitos próximos en proyectos activos.</div>`;
+
+  return `
+    ${stats}
+    <div class="fgroup" style="margin-top:var(--space-7)">
+      <div class="glabel">Próximos hitos</div>
+      ${hitosHTML}
+    </div>
+    <div class="fgroup">
+      <div class="glabel">
+        Carga de trabajo
+        <span style="display:flex;gap:6px;text-transform:none;letter-spacing:0">
+          <button class="status-opt ${loadScope==="activo"?"on":""}" style="padding:3px 12px;font-size:11px" onclick="setLoadScope('activo')">Activos</button>
+          <button class="status-opt ${loadScope==="pre"?"on":""}" style="padding:3px 12px;font-size:11px" onclick="setLoadScope('pre')">Pre-producción</button>
+        </span>
+      </div>
+      ${loadHTML}
+    </div>
+  `;
+}
+
+/* ---------------- edición de calendario ---------------- */
+function dToggleTask(t){
+  const p = detailProject;
+  if(p.tareas.includes(t)){
+    p.tareas = p.tareas.filter(x=>x!==t);
+    if(p.taskDates) delete p.taskDates[t];
+  } else {
+    p.tareas.push(t);
+    if(!p.asignaciones[t]) p.asignaciones[t]=[{nombre:"",email:""}];
+    p.taskDates = p.taskDates||{}; if(!p.taskDates[t]) p.taskDates[t]={inicio:"",fin:"",notas:""};
+  }
+  renderDetail();
+}
+
+async function setStatus(s){
+  const p = detailProject;
+  const prev = p.status;
+  p.status = s;
+  if(s==="completado"){ p.year = String(new Date().getFullYear()); }
+  if(s==="activo"){
+    // asegurar contenedor de fechas por tarea y sembrar "Entrega Masters" como fase independiente
+    p.taskDates = p.taskDates||{};
+    (p.tareas||[]).forEach(t=>{ if(!p.taskDates[t]) p.taskDates[t]={inicio:"",fin:"",notas:""}; });
+    if(!(p.calendario||[]).some(r=>(r.tipo||"fase")!=="hito")){
+      p.calendario = p.calendario||[];
+      p.calendario.push({id:uid(), tipo:"fase", fase:"Entrega Masters", inicio:"", fin:"", notas:""});
+      calView = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      toast("Cargá las fechas de cada tarea (en Tareas) y las fases; guardá para avisar al equipo");
+    }
+  }
+  renderDetail();
+  if(!DEMO){
+    try{
+      await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({id:p.id,status:s,year:p.year})});
+    }catch(e){ p.status=prev; renderDetail(); toast("No pude actualizar el estado: "+e.message,true); return; }
+  }
+  onProjectsLoaded();
+}
+
+function calSet(i,k,v){ detailProject.calendario[i][k]=v; if(k==="inicio" && detailProject.calendario[i].tipo==="hito") detailProject.calendario[i].fin=v; }
+function calAdd(){ detailProject.calendario.push({id:uid(), tipo:"fase", fase:"", inicio:"", fin:"", notas:""}); renderDetail(); }
+function calDel(i){
+  const [removed] = detailProject.calendario.splice(i,1);
+  if(removed && removed.id){
+    detailProject._deletedCalIds = detailProject._deletedCalIds || [];
+    detailProject._deletedCalIds.push(removed.id);
+  }
+  renderDetail();
+}
+function hitoAdd(){
+  if(!selDay) return;
+  detailProject.calendario.push({id:uid(), tipo:"hito", fase:"", inicio:selDay, fin:selDay, notas:""});
+  renderDetail();
+  const panel = document.querySelector(".daypanel .hito-row:last-of-type input");
+  if(panel) panel.focus();
+}
+
+/* ---------------- guardar / mail / pdf ---------------- */
+async function saveProjectInfo(){
+  const p = detailProject;
+  if(!p.nombre.trim()){ toast("El proyecto necesita un nombre", true); return; }
+  if(DEMO){ toast("✔ Datos del proyecto actualizados (demo)"); onProjectsLoaded(); renderDetail(); return; }
+  try{
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({
+      id:p.id, nombre:p.nombre, cliente:p.cliente, agencia:p.agencia, productora:p.productora, director:p.director||""
+    })});
+    toast("✔ Datos del proyecto actualizados");
+    onProjectsLoaded();
+    renderDetail();
+  }catch(e){ toast("Error al guardar: "+e.message,true); }
+}
+
+async function deleteProject(){
+  const p = detailProject;
+  if(!confirm(`¿Eliminar "${p.nombre}"? Esta acción no se puede deshacer.`)) return;
+  if(!DEMO){
+    try{
+      await api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id:p.id})});
+    }catch(e){ toast("Error al eliminar: "+e.message, true); return; }
+  }
+  projects = projects.filter(x=>x.id!==p.id);
+  closeModal("ovDetail");
+  onProjectsLoaded();
+  toast("✔ Proyecto eliminado");
+}
+
+async function saveTeam(){
+  const p = detailProject;
+  if(DEMO){ toast("✔ Equipo actualizado (demo)"); onProjectsLoaded(); return; }
+  try{
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({
+      id:p.id, ep_nombre:p.ep_nombre, ep_email:p.ep_email, prod_nombre:p.prod_nombre, prod_email:p.prod_email,
+      coord_nombre:p.coord_nombre, coord_email:p.coord_email,
+      tareas_json: JSON.stringify(p.tareas), asignaciones_json: JSON.stringify(p.asignaciones),
+      taskDates_json: JSON.stringify(p.taskDates||{})
+    })});
+    toast("✔ Equipo actualizado");
+    onProjectsLoaded();
+  }catch(e){ toast("Error al guardar: "+e.message,true); }
+}
+
+function projectRecipients(p){
+  const set = new Set();
+  [p.ep_email,p.prod_email,p.coord_email].forEach(e=>{ if(e) set.add(e.trim()); });
+  Object.values(p.asignaciones||{}).forEach(rows=>rows.forEach(r=>{ if(r.email) set.add(r.email.trim()); }));
+  return [...set].filter(Boolean);
+}
+
+/* entries llevan id estable + un título ya armado ("Proyecto · Fase") y allDay,
+   para que un workflow de n8n pueda crear/actualizar eventos de Google Calendar
+   por id (1 evento por fase/hito) en lugar de duplicarlos en cada guardado.
+   deletedEventIds son los ids de fases/hitos borrados desde el último guardado,
+   para que ese mismo workflow borre sus eventos correspondientes en Calendar. */
+async function saveCalendar(isFirst){
+  const p = detailProject;
+  // entries = unión (fases-desde-tareas + fases/hitos independientes), con id estable
+  const entries = allCalEntries(p).filter(e=>e.fase).map(e=>({
+    id: e.id, tipo: e.tipo, fase: e.fase, inicio: e.inicio, fin: e.fin, notas: e.notas||"",
+    title: `${p.nombre} · ${e.fase}`, allDay: true
+  }));
+  if(!entries.length){ toast("Cargá al menos una fase o un hito", true); return; }
+  const deletedEventIds = p._deletedCalIds || [];
+  if(DEMO){ toast("✔ Calendario guardado, mail enviado al equipo (demo)"); p._deletedCalIds=[]; return; }
+  try{
+    await api("/webhook/team23/calendar",{method:"POST",body:JSON.stringify({
+      projectId:p.id, projectName:p.nombre, entries, deletedEventIds,
+      taskDates_json: JSON.stringify(p.taskDates||{}),
+      recipients: projectRecipients(p), isFirst
+    })});
+    p._deletedCalIds = [];
+    toast("✔ Calendario guardado, se avisó por mail al equipo");
+  }catch(e){ toast("Error al guardar el calendario: "+e.message, true); }
+}
+
+function printCalendar(){
+  const p = detailProject;
+  const lookMap = faseLookMap(p);
+  const y = calView.getFullYear(), m = calView.getMonth();
+  const first = new Date(y, m, 1);
+  const startOff = (first.getDay()+6)%7;
+  const gridStart = new Date(y, m, 1-startOff);
+  const lastDate = new Date(y, m+1, 0).getDate();
+  const totalCells = Math.ceil((startOff+lastDate)/7)*7;
+  const days = [];
+  for(let i=0;i<totalCells;i++){ const d=new Date(gridStart); d.setDate(gridStart.getDate()+i); days.push(d); }
+
+  const entries = allCalEntries(p);
+  const fases = entries.filter(e=>e.tipo!=="hito" && e.inicio);
+  const hitos = entries.filter(e=>e.tipo==="hito" && e.inicio);
+
+  let rowsHTML = "";
+  for(let w=0; w<days.length; w+=7){
+    rowsHTML += "<tr>" + days.slice(w,w+7).map(d=>{
+      const key = ymd(d);
+      const other = d.getMonth()!==m;
+      const dayFases = fases.filter(f=>{
+        const s=parseYMD(f.inicio), e=parseYMD(f.fin)||s;
+        return s<=d && e>=d;
+      }).map(f=>{
+        const lk = PHASE_LOOKS[lookMap[f.id]||0];
+        const col = lk.bg==="#FFFFFF"? lk.bd : lk.bg;
+        const start = f.inicio===key ? "▶ " : "";
+        return `<div class="pl"><span style="color:${col}">▪</span> ${start}${esc(f.fase)}</div>`;
+      }).join("");
+      const dayHitos = hitos.filter(h=>h.inicio===key).map(h=>`<div class="ph">● ${esc(h.fase)}</div>`).join("");
+      return `<td><div class="pd ${other?"om":""}">${d.getDate()}</div>${other?"":dayFases+dayHitos}</td>`;
+    }).join("") + "</tr>";
+  }
+
+  const mtitle = calView.toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase();
+  const faseList = entries.filter(r=>r.tipo!=="hito" && r.fase).map(r=>
+    `<tr><td><b>${esc(r.fase)}</b></td><td>${esc(r.inicio||"-")}</td><td>${esc(r.fin||"-")}</td><td>${esc(r.notas||"-")}</td></tr>`).join("");
+  const hitoList = entries.filter(r=>r.tipo==="hito" && r.fase).map(r=>
+    `<tr><td>${esc(r.inicio||"-")}</td><td><b>${esc(r.fase)}</b></td></tr>`).join("");
+
+  $("#printArea").innerHTML = `
+    <h1>${esc(p.nombre)}</h1>
+    <div class="pmeta">CALENDARIO · ${esc(p.cliente)} · TEAM23</div>
+    <div class="pmonth">${mtitle}</div>
+    <table class="pgrid"><thead><tr>${WDAYS.map(w=>`<th>${w}</th>`).join("")}</tr></thead><tbody>${rowsHTML}</tbody></table>
+    <h3>Fases</h3>
+    <table class="plist"><thead><tr><th>Fase</th><th>Inicio</th><th>Fin</th><th>Notas</th></tr></thead><tbody>${faseList}</tbody></table>
+    ${hitoList?`<h3>Hitos</h3><table class="plist"><thead><tr><th>Fecha</th><th>Hito</th></tr></thead><tbody>${hitoList}</tbody></table>`:""}
+    <div class="pfoot">GENERADO ${new Date().toLocaleDateString("es-AR")} · TEAM23 PRODUCTION HUB</div>`;
+  window.print();
+}
+
+/* ---------------- helpers UI ---------------- */
+function openModal(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; }
+function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; }
+
+/* kick off wizard */
+const KICKOFF_QUESTIONS = [
+  { q: "¿Creaste la categoría del proyecto en Discord?", mandatory: true },
+  { q: "¿Creaste los canales de prod, coord y general?", mandatory: true },
+  { q: "¿Tenemos a mano la última versión del timing de CL?", mandatory: true },
+  { q: "¿Hay storyboard?", mandatory: false, sinos: true },
+  { q: "¿Creaste el proyecto en Notion?\n(con fecha inicio/fin + link a presupuesto)", mandatory: true },
+  { q: "¿Avisaste a Krla que puede ir pidiendo el adelanto?", mandatory: true }
+];
+
+function openKickOff(){
+  kickOffStep = 1;
+  kickOffChecks = {};
+  renderKickOffStep();
+  openModal("ovKickOff");
+}
+
+function renderKickOffStep(){
+  const q = KICKOFF_QUESTIONS[kickOffStep-1];
+  const isSinos = q.sinos;
+  const isLast = kickOffStep === KICKOFF_QUESTIONS.length;
+
+  $("#kickOffHeader").textContent = `Paso ${kickOffStep} de ${KICKOFF_QUESTIONS.length}`;
+
+  let html = `<div class="kickoff-q">${esc(q.q)}</div>`;
+
+  if(isSinos){
+    html += `<div class="kickoff-sinos">
+      <label class="kickoff-check">
+        <input type="radio" name="sinos" value="si" onchange="kickOffChecks[${kickOffStep-1}]='si';updateKickOffBtn()">
+        Sí
+      </label>
+      <label class="kickoff-check">
+        <input type="radio" name="sinos" value="no" onchange="kickOffChecks[${kickOffStep-1}]='no';updateKickOffBtn()">
+        No
+      </label>
+    </div>`;
+  } else {
+    html += `<label class="kickoff-check">
+      <input type="checkbox" id="kickOffCheckbox" onchange="kickOffChecks[${kickOffStep-1}]=this.checked;updateKickOffBtn()">
+      Completé este paso
+    </label>`;
+  }
+
+  $("#kickOffContent").innerHTML = html;
+
+  $("#kickOffBtnBack").style.display = kickOffStep === 1 ? "none" : "";
+  const nextBtn = $("#kickOffBtnNext");
+  nextBtn.textContent = isLast ? "Comenzar creación" : "Siguiente";
+  updateKickOffBtn();
+}
+
+function updateKickOffBtn(){
+  const q = KICKOFF_QUESTIONS[kickOffStep-1];
+  const isChecked = kickOffChecks[kickOffStep-1];
+
+  // Para preguntas sí/no, cualquier selección es válida
+  // Para otras, solo el checkbox marcado
+  const isValid = q.sinos ? isChecked : isChecked === true;
+
+  $("#kickOffBtnNext").disabled = !isValid;
+}
+
+function kickOffBack(){
+  if(kickOffStep > 1){
+    kickOffStep--;
+    renderKickOffStep();
+  }
+}
+
+function kickOffNext(){
+  if(kickOffStep < KICKOFF_QUESTIONS.length){
+    kickOffStep++;
+    renderKickOffStep();
+  } else {
+    kickOffComplete();
+  }
+}
+
+function kickOffComplete(){
+  closeModal("ovKickOff");
+  kickOffStep = 1;
+  kickOffChecks = {};
+  // Inicializar el estado del nuevo proyecto
+  npSelected = new Set(); npAssignData = {}; npTaskDates = {};
+  ["npNombre","npCliente","npAgencia","npProductora","npDirector","npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"]
+    .forEach(id=>$("#"+id).value="");
+  renderNPTasks();
+  openModal("ovNew");
+}
+
+document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{ if(e.target===ov) closeModal(ov.id); }));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id)); });
+
+let toastTimer;
+function toast(msg, err=false){
+  const t = $("#toast");
+  t.textContent = msg; t.className = err?"err show":"show";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 4200);
+}
+
+/* ojitos que siguen el cursor */
+document.addEventListener("mousemove",e=>{
+  document.querySelectorAll(".eye").forEach(eye=>{
+    const r = eye.getBoundingClientRect();
+    const cx = r.left+r.width/2, cy = r.top+r.height/2;
+    const a = Math.atan2(e.clientY-cy, e.clientX-cx);
+    const p = eye.querySelector(".pupil");
+    p.style.transform = `translate(calc(-50% + ${Math.cos(a)*3.5}px), calc(-50% + ${Math.sin(a)*4.5}px))`;
+  });
+});
+
+/* init */
+$("#btnNew").addEventListener("click",()=>{ openKickOff(); });
+$("#yr").textContent = new Date().getFullYear();
+if(DEMO) $("#demoBanner").style.display="block";
+currentView = VIEW_TITLES[location.hash.slice(1)] ? location.hash.slice(1) : "dashboard";
+applyViewUI(currentView);
+loadProjects();
+</script>
+</body>
+</html>
