@@ -27,7 +27,8 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 | 4 | Actualizar Proyecto | `POST /webhook/team23/update` | Edita nombre/cliente/agencia/productora/**director**, equipo, tareas, asignaciones (incluye `estado` de candidatos), **`taskDates_json`**, `checklist_json` y estado (según qué campos vengan en el body) |
 | 5 | Guardar Calendario | `POST /webhook/team23/calendar` | Guarda el calendario y manda mail a todos los involucrados |
 | 6 | Parse Debrief (IA) | `POST /webhook/team23/parse` | Analiza el texto de un debrief con Claude y devuelve nombre/cliente/agencia/productora/síntesis/tareas/timeline sugeridos, para precargar el alta de proyecto (Opción 2) |
-| 7 | Avisar en Discord | `POST /webhook/team23/notify` | Cada vez que se tilda o destilda un ítem de los checklists de Delivery/Cierre, manda un mensaje a un canal de Discord (vía Incoming Webhook) |
+| 7 | Avisar en Discord | `POST /webhook/team23/notify` | Cada vez que se tilda o destilda un ítem de cualquiera de los tres checklists (gate, Delivery, Cierre), manda un mensaje a un canal de Discord (vía Incoming Webhook) |
+| 8 | Portal de Proveedores | `POST` (login Supabase) | Devuelve, a un proveedor logueado, solo sus proyectos confirmados — filtrado del lado del servidor. Requiere Supabase configurado (ver sección "Portal de proveedores" más abajo) |
 
 **Eliminar proyecto** (`POST /webhook/team23/delete`, recibe `{id}`) todavía no tiene un workflow armado en esta carpeta — hay que crearlo a mano en n8n (borra la fila del Sheet por `id`; no borra la carpeta de Drive ni el proyecto en Frame.io, eso se hace aparte si corresponde).
 
@@ -192,11 +193,9 @@ Cada vez que se tilda o destilda un ítem de **cualquiera de los tres checklists
 
 Si el workflow no está importado o no está activo, no pasa nada: el hub intenta avisar y, si falla, lo ignora en silencio — el checklist se guarda igual.
 
-> ⚠️ Numeración: en la rama `version-eyal` de este repo, `n8n/7-provider-portal.json` también usa el número 7 (para el portal de proveedores, que quedó afuera de este merge). Son dos workflows distintos con el mismo número en ramas distintas — si en algún momento se suman ambos a la misma carpeta, hay que renumerar uno de los dos.
+## Portal de proveedores (traído, login todavía apagado)
 
-## Pendiente: login real y portal de proveedores
-
-Existe una versión con login de Supabase (roles Productor Ejecutivo / Productor / Proveedor) y un portal aparte (`proveedores.html`) donde cada proveedor ve, en solo lectura, únicamente sus proyectos confirmados — seguridad real, verificada del lado del servidor, no el hack de URL de la vieja pestaña "Equipo". Quedó afuera de este merge a propósito (es un cambio de arquitectura: agrega autenticación, una cuenta de Supabase, y una segunda página). Está completo en la rama `version-eyal` de este repo (`proveedores.html`, `n8n/7-provider-portal.json`, `supabase/schema.sql`) para cuando se quiera sumar.
+`proveedores.html` es una segunda página, aparte de `index.html`, donde cada proveedor ve — en solo lectura — únicamente sus proyectos confirmados. Ya está en esta carpeta junto con `n8n/8-provider-portal.json` y `supabase/schema.sql`, pero el login real (Supabase, con roles Productor Ejecutivo / Productor / Proveedor) todavía no está activado: sin `SUPABASE_URL` configurada en el `CONFIG` de cada página, las dos entran en modo demo. Activar el login es un cambio de arquitectura aparte (crear el proyecto en Supabase, correr `supabase/schema.sql`, cargar los mails internos, pegar las credenciales en ambos `CONFIG`) — avisame cuando quieras que lo armemos.
 
 ## Modificaciones
 
