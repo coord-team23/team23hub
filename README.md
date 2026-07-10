@@ -27,6 +27,7 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 | 4 | Actualizar Proyecto | `POST /webhook/team23/update` | Edita nombre/cliente/agencia/productora/**director**, equipo, tareas, asignaciones (incluye `estado` de candidatos), **`taskDates_json`**, `checklist_json` y estado (según qué campos vengan en el body) |
 | 5 | Guardar Calendario | `POST /webhook/team23/calendar` | Guarda el calendario y manda mail a todos los involucrados |
 | 6 | Parse Debrief (IA) | `POST /webhook/team23/parse` | Analiza el texto de un debrief con Claude y devuelve nombre/cliente/agencia/productora/síntesis/tareas/timeline sugeridos, para precargar el alta de proyecto (Opción 2) |
+| 7 | Avisar en Discord | `POST /webhook/team23/notify` | Cada vez que se tilda o destilda un ítem de los checklists de Delivery/Cierre, manda un mensaje a un canal de Discord (vía Incoming Webhook) |
 
 **Eliminar proyecto** (`POST /webhook/team23/delete`, recibe `{id}`) todavía no tiene un workflow armado en esta carpeta — hay que crearlo a mano en n8n (borra la fila del Sheet por `id`; no borra la carpeta de Drive ni el proyecto en Frame.io, eso se hace aparte si corresponde).
 
@@ -49,6 +50,8 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 ```
 
 > El botón **06. FINALES** de la ficha abre `links.finales`. Para que funcione, el workflow de creación (y/o el de Get Projects) debe crear esa carpeta y devolver su URL en `links.finales` junto al resto de los links. Si no viene, el botón igual aparece: desactivado fuera de cierre y en rojo (sin destino) al entrar en cierre.
+>
+> El botón **FEEDBACK** abre `links.feedback` — un doc de Drive para centralizar feedback del cliente. Siempre está visible, pero solo se resalta en rojo mientras el proyecto está en **Entregando**; en el resto de las etapas se ve como un link normal. Si el workflow de creación no crea ese doc todavía, el botón queda visible pero sin destino real (podés crearlo a mano y pegar el link en `links_json` del Sheet mientras tanto).
 
 **En Frame.io:** proyecto con carpetas `1. Footage / 2. Offline / 3. Online / 4. Masters`.
 
@@ -73,7 +76,7 @@ Entrá a tu n8n → **Credentials** → creá estas (las de Google probablemente
 
 ### Paso 2 — Importar los workflows
 
-En n8n → **Workflows → Import from File** → importá los 6 archivos de la carpeta `n8n/` en orden (el 6 — Parse Debrief — es opcional, solo si vas a usar la Opción 2 de creación).
+En n8n → **Workflows → Import from File** → importá los 7 archivos de la carpeta `n8n/` en orden (el 6 — Parse Debrief — es opcional, solo si vas a usar la Opción 2 de creación; el 7 — Avisar en Discord — es opcional, solo si querés los avisos de checklist en Discord).
 
 En cada workflow, tocá los nodos que aparecen en rojo y seleccioná tu credencial correspondiente (dice `REEMPLAZAR`).
 
@@ -138,14 +141,16 @@ Listo. Entrás, creás un proyecto, y en ~15 segundos tenés Drive + Frame.io + 
 - **Estados del proyecto** (pipeline): **PRE-PRODUCCIÓN** → **EJECUTANDO** → **ENTREGANDO** → **LISTO PARA CIERRE** → **COMPLETADO**. En las listas se agrupan en tres bloques jerárquicos: *Pre-producción*, *Activos* (paraguas de Ejecutando/Entregando/Listo para cierre, cada tarjeta con su badge de etapa) y *Completados*. Los valores internos que recibe n8n no cambiaron (`por_activarse`, `activo`, `entregando`, `cierre`, `completado`).
 - **+ NUEVO PROYECTO** (botón fijo a la derecha de la barra de navegación, en todas las vistas) → aparece un selector con dos caminos:
   - **Opción 1 · Kick off manual**: el wizard de planificación de siempre (Discord, timing, storyboard, Notion, adelanto) y después el formulario de datos del proyecto.
-  - **Opción 2 · Desde debrief (IA)**: pegás el debrief completo, la IA (workflow 6) precarga nombre, cliente, agencia, productora, síntesis, tareas y un timeline tentativo. Revisás todo, cargás uno o más candidatos por tarea (para comparar presupuestos), y al crear se genera el mismo Drive + Frame.io de siempre; el timeline queda en el calendario y la síntesis en la ficha.
+  - **Opción 2 · Desde debrief (IA)**: pegás el debrief completo, la IA (workflow 6) precarga nombre, cliente, agencia, productora, síntesis y tareas. Si además sugiere un timeline, el hub usa esas fechas para precargar el campo **Inicio/Fin de la tarea que coincide por nombre** (mismo bloque de equipo + fechas que el resto del hub, no hay una tabla de timeline aparte). Revisás todo, cargás uno o más candidatos por tarea (para comparar presupuestos), y al crear se genera el mismo Drive + Frame.io de siempre; la síntesis queda en la ficha.
   En ambos casos el proyecto nace en **PRE-PRODUCCIÓN**.
 - **Candidatos**: cada persona cargada por tarea en la Opción 2 nace como **candidato** (chip gris). En la ficha se **confirma** o **rechaza** con un click — el cambio se guarda al toque. Mientras haya candidatos sin resolver, la tarjeta del proyecto lo avisa con un pill rojo. Los avisos de calendario solo llegan a los **confirmados** (y al equipo interno); pendientes y rechazados no reciben mail. El equipo cargado por la Opción 1 (wizard manual) entra directo como confirmado, sin pasar por este flujo.
-- **Gate de activación**: al mover un proyecto de **Pre-producción** a cualquier estado en curso (Ejecutando/Entregando/Listo para cierre), aparece un checklist obligatorio (presupuesto aprobado, candidatos resueltos, timeline revisado, materiales confirmados, kick off hecho) — no se puede confirmar hasta tildar todo, y avisa si quedan candidatos sin resolver. Entre estados en curso (ej. Ejecutando → Entregando) no hay gate, se cambia directo. **Irreversible**: una vez activado, el proyecto no puede volver a Pre-producción.
-- **Checklists de etapa**: al entrar en **Entregando** aparece el *Protocolo de Delivery* (Entregas/Correcciones/Entrega final) y al entrar en **Listo para cierre** el *Protocolo de Cierre* (Cierre/Pagos/Archivo-Portfolio), cada ítem con responsable (COORD/PROD/EP/ADMIN) y quién lo tildó y cuándo. Se guardan en `checklist_json`.
+- **Gate de activación**: al mover un proyecto de **Pre-producción** a cualquier estado en curso (Ejecutando/Entregando/Listo para cierre), aparece un checklist obligatorio (candidatos resueltos, materiales confirmados, kick off hecho, aviso en #general de arranque, coordinación de la llamada de kick-off, mensaje pineado con items y links en #general) — no se puede confirmar hasta tildar todo, y avisa si quedan candidatos sin resolver. Entre estados en curso (ej. Ejecutando → Entregando) no hay gate, se cambia directo. **Irreversible**: una vez activado, el proyecto no puede volver a Pre-producción.
+- **Checklists de etapa**: al entrar en **Entregando** aparece el *Protocolo de Delivery* (Cargar V1 a Frame.io, status en #coord, revisión con EP, envío a AG/CL, aviso a WhatsApp, actualizar planilla) y al entrar en **Listo para cierre** el *Protocolo de Cierre* (Cierre/Pagos/Archivo-Portfolio), cada ítem con responsable (COORD/PROD/EP/ADMIN) y quién lo tildó y cuándo. Se guardan en `checklist_json`. **No se puede pasar a la siguiente etapa sin tildar todo el checklist de la etapa actual** — el botón de estado avisa y no avanza hasta completarlo.
+- **Doc de Feedback**: en Documentos & carpetas hay un botón a un doc de Drive de feedback (`links.feedback`), visible en cualquier etapa — se pone en **rojo solo durante Entregando** (cuando llega la devolución del cliente).
 - **Datos del proyecto**: **Nombre de la campaña · Productora · Director · Cliente · Agencia**. Editables solo en **PRE-PRODUCCIÓN**; desde **EJECUTANDO** en adelante, tanto estos datos como el **equipo interno** quedan en solo lectura.
-- **Tareas = fases del calendario**: al elegir una tarea le cargás **equipo + inicio + fin** en el mismo bloque. Cada tarea se dibuja como su propia barra en el calendario. Las fechas se editan indistintamente desde el bloque de Tareas o desde la tabla del calendario (quedan sincronizadas). El calendario además admite **fases independientes** (ej. "Entrega Masters", se agregan con "+ agregar fase") e **hitos** por día. Tareas actuales: VFX · Color · DG · Motion Graphics · IA · 3D/CGI · Retoque · SFX/Mezcla · Online.
-- **Activar**: abrís el proyecto → tocás **EJECUTANDO** → cargás las fechas de cada tarea y de las fases; aparecen como barras en el calendario → **Guardar calendario y avisar al equipo** manda el mail a todos.
+- **Tareas = fases del calendario**: al elegir una tarea le cargás **equipo + inicio + fin** en el mismo bloque, ya sea en el alta (manual o por debrief) o después desde la ficha. Cada tarea se dibuja como su propia barra en el calendario. Las fechas se editan indistintamente desde el bloque de Tareas o desde la tabla del calendario (quedan sincronizadas). El calendario además admite **fases independientes** (ej. "Entrega Masters", se agregan con "+ agregar fase") e **hitos** por día. Tareas actuales: VFX · Color · DG · Motion Graphics · IA · 3D/CGI · Retoque · SFX/Mezcla · Online.
+- **El calendario ya es visible y editable en PRE-PRODUCCIÓN** (no hace falta activar el proyecto para empezar a cargar fechas) — al pasar a **EJECUTANDO** simplemente se siembra la fase independiente "Entrega Masters" como ayuda y se dispara el gate de activación.
+- **Entregando**: las tareas (equipo + fechas) pasan a **solo lectura** — no se edita el equipo asignado ni sus fechas desde ese bloque. La tabla del calendario sigue permitiendo editar las fechas de esas mismas tareas ahí (evita perder la sincronía fases↔calendario), y las fases independientes siguen totalmente editables.
 - **Cierre automático**: cuando un proyecto en *Ejecutando* o *Entregando* pasa su fecha de finalización (la última fecha del calendario), el hub lo mueve solo a **LISTO PARA CIERRE** al cargar. En ese estado la ficha se bloquea: no se editan campos, desaparece la sección de tareas, el calendario pasa a **vista semanal de solo lectura** y se habilita en rojo el botón **06. FINALES** de Drive (antes aparece desactivado). *(El cálculo es del lado del navegador; si querés que el cambio de estado quede persistido siempre, el hub ya postea el nuevo estado a `/webhook/team23/update`.)*
 - **Hitos por día**: clickeás cualquier día del calendario mensual → "agregar hito este día" para detallar cosas puntuales (ej: "Corte 1 al cliente", "Llegada de material"). Los hitos aparecen en rojo dentro del día y también van en el mail.
 - **Cambios de calendario**: editás fechas o hitos → guardar → mail automático a todos los involucrados.
@@ -174,6 +179,20 @@ Hoy `POST /webhook/team23/calendar` solo guarda en el Sheet y manda el mail. Cua
 - `deletedEventIds[]` trae los ids de fases/hitos que se borraron desde el navegador desde el último guardado — son los eventos que hay que borrar de Calendar.
 - Con eso, el workflow de n8n debería: guardar en algún lado (columna nueva en el tab Calendar, o un Data Table) el `eventId` de Google que le corresponde a cada `id` propio; en cada guardado, por cada `entries[]` hacer upsert (crear si no existe ese `id` todavía, actualizar si ya existe) y por cada `deletedEventIds[]` borrar el evento.
 - La cuenta de Google se conecta con OAuth2 directamente en el nodo de Google Calendar de n8n — no hace falta tocar nada en esta página ni pedirle login a nadie en el navegador.
+
+### Avisos en Discord al marcar el checklist
+
+Cada vez que se tilda o destilda un ítem de **cualquiera de los tres checklists** — el *Gate de activación*, el *Protocolo de Delivery* o el *Protocolo de Cierre* —, el hub manda un mensaje a un canal de Discord con el proyecto, la etapa, quién lo marcó y qué ítem fue. No usa bot ni OAuth — es un **Incoming Webhook** de Discord (una URL por canal).
+
+**Setup (~3 min):**
+
+1. En Discord, entrá al canal donde querés los avisos → ⚙️ **Editar canal** → **Integraciones** → **Webhooks** → **Nuevo Webhook** → copiá la **URL del Webhook**.
+2. Importá `n8n/7-discord-notify.json`, asigná la credencial `Team23 Key` en el nodo Webhook, y en el nodo **CONFIG** pegá esa URL en `discordWebhookUrl`.
+3. Activá el workflow.
+
+Si el workflow no está importado o no está activo, no pasa nada: el hub intenta avisar y, si falla, lo ignora en silencio — el checklist se guarda igual.
+
+> ⚠️ Numeración: en la rama `version-eyal` de este repo, `n8n/7-provider-portal.json` también usa el número 7 (para el portal de proveedores, que quedó afuera de este merge). Son dos workflows distintos con el mismo número en ramas distintas — si en algún momento se suman ambos a la misma carpeta, hay que renumerar uno de los dos.
 
 ## Pendiente: login real y portal de proveedores
 
