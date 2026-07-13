@@ -703,7 +703,7 @@
         </div>
         <label class="f">Síntesis</label>
         <textarea id="n2Sintesis" style="min-height:80px"></textarea>
-        <div style="margin-top:10px"><label class="f">Link a storyboard / referencias (opcional)</label><input type="text" id="n2Storyboard" placeholder="https://…"></div>
+        <div style="margin-top:10px"><label class="f">Link a tratamiento - referencias (opcional)</label><input type="text" id="n2Storyboard" placeholder="https://…"></div>
       </div>
 
       <div class="fgroup">
@@ -1259,11 +1259,10 @@ function renderDetail(){
     </tr>`;
   }).join("");
 
-  const sintesisBlock = (p.sintesis || p.storyboard_url) ? `
-    <div class="fgroup">
-      <div class="glabel">Síntesis</div>
-      ${p.sintesis?`<p style="font-size:13.5px;white-space:pre-line;margin:0">${esc(p.sintesis)}</p>`:""}
-      ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:12.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">🎨 Storyboard / referencias ↗</a></p>`:""}
+  const sintesisContent = (p.sintesis || p.storyboard_url) ? `
+    <div style="margin-top:var(--space-5)">
+      ${p.sintesis?`<p style="font-size:16.5px;white-space:pre-line;margin:0">${esc(p.sintesis)}</p>`:""}
+      ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">🎨 Tratamiento/Referencias ↗</a></p>`:""}
     </div>` : "";
   const checklistBlock = checklistHTML(p, ro);
 
@@ -1275,13 +1274,11 @@ function renderDetail(){
       ? `<div class="pills" style="margin:6px 0 20px">${STATUS_LABEL[p.status]?`<span class="pill">${esc(STATUS_LABEL[p.status])}</span>`:""}</div>`
       : `<div class="status-select">${statusBtns}</div>`}
 
-    ${sintesisBlock}
-
     ${checklistBlock}
 
     ${(cierre||completado) ? "" : (lockMeta ? `
     <div class="fgroup">
-      <div class="glabel">Datos del proyecto</div>
+      <div class="glabel">Datos del proyecto + Síntesis</div>
       <div class="frow">
         <div><label class="f">Nombre de la campaña</label><div style="font-size:var(--fs-body)">${esc(p.nombre||"—")}</div></div>
         <div><label class="f">Productora</label><div style="font-size:var(--fs-body)">${esc(p.productora||"—")}</div></div>
@@ -1289,9 +1286,10 @@ function renderDetail(){
         <div><label class="f">Cliente</label><div style="font-size:var(--fs-body)">${esc(p.cliente||"—")}</div></div>
         <div><label class="f">Agencia</label><div style="font-size:var(--fs-body)">${esc(p.agencia||"—")}</div></div>
       </div>
+      ${sintesisContent}
     </div>` : `
     <div class="fgroup">
-      <div class="glabel">Datos del proyecto <small>editable</small></div>
+      <div class="glabel">Datos del proyecto + Síntesis <small>editable</small></div>
       <div class="frow">
         <div><label class="f">Nombre de la campaña</label><input type="text" value="${esc(p.nombre||"")}" oninput="detailProject.nombre=this.value"></div>
         <div><label class="f">Productora</label><input type="text" value="${esc(p.productora||"")}" oninput="detailProject.productora=this.value"></div>
@@ -1302,6 +1300,7 @@ function renderDetail(){
       <div class="actions" style="justify-content:flex-start;margin-top:14px">
         <button class="btn small" onclick="saveProjectInfo()">Guardar datos del proyecto</button>
       </div>
+      ${sintesisContent}
     </div>`)}
 
     <div class="fgroup">
