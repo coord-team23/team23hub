@@ -66,8 +66,6 @@
     line-height:.92;letter-spacing:var(--tracking-tight);text-transform:uppercase;
     -webkit-text-stroke:.6px currentColor;
   }
-  .hero .sub{font-size:var(--fs-caption);letter-spacing:.18em;font-weight:var(--weight-bold);color:var(--gray);margin-top:var(--space-3);text-transform:uppercase}
-
   main{position:relative;z-index:1;padding:var(--space-5) var(--space-7) var(--space-9);max-width:1400px}
   .demo-banner{
     margin:0 var(--space-7) var(--space-4);padding:var(--space-4) var(--space-5);border:var(--stroke-sm) dashed var(--red);
@@ -198,9 +196,16 @@
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   #toast.err{background:var(--red)}
   footer{
-    border-top:var(--stroke-sm) solid var(--ink);padding:var(--space-7);display:flex;justify-content:space-between;
-    font-family:var(--font-secondary);font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);color:var(--gray);
+    border-top:var(--stroke-sm) solid var(--ink);padding:var(--space-11) var(--space-7) var(--space-7);
+    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:var(--space-7);
+    position:relative;z-index:1;
   }
+  .foot-mark-img{display:block;width:clamp(280px,42vw,620px);height:auto;max-width:100%}
+  .foot-right{
+    text-align:right;font-size:var(--fs-caption);letter-spacing:.1em;color:var(--gray);
+    font-family:var(--font-secondary);font-weight:var(--weight-bold);
+  }
+  .foot-scope{margin-bottom:var(--space-2)}
 
   @media(max-width:640px){
     header{padding:10px 16px}
@@ -219,7 +224,8 @@
     .bar{height:12px;font-size:0;padding:0}
     .cell .chips{flex-direction:row;flex-wrap:wrap;gap:3px}
     .chip{width:9px;height:9px;border-radius:50%;padding:0;font-size:0;background:var(--red);border-color:var(--red);flex:none}
-    footer{padding:14px 16px;font-size:9.5px}
+    footer{padding:40px 16px 28px;flex-direction:column;align-items:flex-start;gap:20px}
+    .foot-right{text-align:left}
   }
   @media (prefers-reduced-motion: reduce){*{transition:none !important}}
 </style>
@@ -230,7 +236,7 @@
   <a class="wordmark" href="#" onclick="return false">
     <span class="t">TEAM23</span>
     <span class="eyes"><span class="eye"><span class="pupil"></span></span><span class="eye"><span class="pupil"></span></span></span>
-    <span class="hub-label">PROVEEDORES</span>
+    <span class="hub-label">PRODUCTION&nbsp;HUB</span>
   </a>
   <div class="userbox" id="userBox" style="display:none">
     <span class="who" id="userEmail"></span>
@@ -254,7 +260,6 @@
 <div id="appView" style="display:none">
   <div class="hero">
     <h1>Tus proyectos</h1>
-    <div class="sub" id="heroSub">CON TEAM23</div>
   </div>
   <div class="demo-banner" id="demoBanner" style="display:none">
     <b>MODO DEMO</b> — Datos de ejemplo. Configurá <code>CONFIG</code> con tu Supabase para conectarlo.
@@ -262,7 +267,15 @@
   <main><div class="grid" id="listProjects"></div><div id="emptyState"></div></main>
 </div>
 
-<footer><span>TEAM23 © <span id="yr"></span></span><span>POST-PRODUCTION STUDIO</span></footer>
+<footer>
+  <div>
+    <img class="foot-mark-img" src="assets/footer-mark.png" alt="biz@team23.online — Creative direction, (Post) producción, New media lab">
+  </div>
+  <div class="foot-right">
+    <div class="foot-scope">MX — ARG — WORLDWIDE</div>
+    <div>TEAM23 © <span id="yr"></span></div>
+  </div>
+</footer>
 
 <div class="overlay" id="ovDetail">
   <div class="modal" role="dialog" aria-modal="true">
