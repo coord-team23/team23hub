@@ -335,7 +335,7 @@ function demoData(){
   projects=[{
     id:"demo1", nombre:"SPOTIFY - CDMX", cliente:"Spotify", productora:"LANDIA/TMMT", status:"entregando",
     sintesis:"Hero film + social. Post completa.",
-    links:{driveRoot:"#",frameio:"#",notas:"#"},
+    links:{driveRoot:"#",frameio:"#",feedback:"#"},
     misRoles:["Online"],
     calendario:[
       {tipo:"fase",fase:"Online",inicio:d(6),fin:d(14),notas:""},
@@ -438,22 +438,16 @@ function renderDetail(){
   const stepper=`<div class="stepper">${ETAPAS.map((e,i)=>
     `<span class="step ${i<idx?"done":""}" style="${i===idx?statusPillStyle(e):""}">${ETIQ[e]}</span>`
   ).join("")}</div>`;
-  const linkDefs=[["driveRoot","📁 Drive del proyecto"],["frameio","🎬 Frame.io"],["notas","📝 Notas"]];
+  const linkDefs=[["driveRoot","📁 Drive del proyecto"],["frameio","🎬 Frame.io"],["feedback","📝 Feedback"]];
   const links=linkDefs.filter(([k])=>p.links&&p.links[k]).map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
   const lookMap={}; let n=0;
   (p.calendario||[]).forEach((r,i)=>{ if(r.tipo!=="hito"){ lookMap[i]=n%PHASE_LOOKS.length; n++; } });
-  const fases=(p.calendario||[]).map((r,i)=>({r,i})).filter(x=>x.r.tipo!=="hito"&&x.r.fase);
-  const faseTable=fases.length?`<div class="fgroup"><div class="glabel">Fases</div><table class="cal">
-    <thead><tr><th></th><th>Fase</th><th>Inicio</th><th>Fin</th><th>Notas</th></tr></thead>
-    <tbody>${fases.map(({r,i})=>{const lk=PHASE_LOOKS[lookMap[i]||0];return `<tr><td style="width:22px"><span class="dotc" style="background:${lk.bg};border-color:${lk.bd}"></span></td><td><b>${esc(r.fase)}</b></td><td>${esc(r.inicio||"a definir")}</td><td>${esc(r.fin||"")}</td><td>${esc(r.notas||"")}</td></tr>`;}).join("")}</tbody>
-  </table></div>`:"";
   $("#detailBody").innerHTML=`
     <h2>${esc(p.nombre)}</h2>
     <div class="kicker">${esc(p.cliente)}${p.productora?" · "+esc(p.productora):""}${(p.misRoles||[]).length?" · Tu rol: "+p.misRoles.map(esc).join(", "):""}</div>
     ${stepper}
     ${p.sintesis?`<div class="fgroup"><div class="glabel">Síntesis</div><p style="font-size:13.5px;white-space:pre-line">${esc(p.sintesis)}</p></div>`:""}
     ${links?`<div class="fgroup"><div class="glabel">Links</div><div class="linkgrid">${links}</div></div>`:""}
-    ${faseTable}
     ${(p.calendario||[]).some(r=>r.inicio)?`<div class="fgroup"><div class="glabel">Calendario</div>${monthHTML(p,lookMap)}</div>`:""}`;
 }
 function monthHTML(p, lookMap){

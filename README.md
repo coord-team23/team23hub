@@ -23,7 +23,7 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 |---|----------|---------|----------|
 | 1 | Setup DB | (manual, se corre 1 vez) | Crea el spreadsheet TEAM23_DB con tabs Projects y Calendar |
 | 2 | Get Projects | `GET /webhook/team23/projects` | Devuelve todos los proyectos + calendarios a la página |
-| 3 | Crear Proyecto | `POST /webhook/team23/create` | Crea carpeta raíz en Drive + las 6 carpetas + subcarpetas de FOOTAGE y DELIVERY + copia Desglose y Tracker + crea el Doc de Notas con template + crea el proyecto en Frame.io con sus 4 carpetas + guarda el registro (incluye `director`, `taskDates_json`, `sintesis`, `storyboard_url` si vienen en el body) |
+| 3 | Crear Proyecto | `POST /webhook/team23/create` | Crea carpeta raíz en Drive + las 6 carpetas + subcarpetas de FOOTAGE y DELIVERY + copia Desglose y Tracker + crea el proyecto en Frame.io con sus 4 carpetas + guarda el registro (incluye `director`, `taskDates_json`, `sintesis`, `storyboard_url` si vienen en el body) |
 | 4 | Actualizar Proyecto | `POST /webhook/team23/update` | Edita nombre/cliente/agencia/productora/**director**, equipo, tareas, asignaciones (incluye `estado` de candidatos), **`taskDates_json`**, `checklist_json` y estado (según qué campos vengan en el body) |
 | 5 | Guardar Calendario | `POST /webhook/team23/calendar` | Guarda el calendario y manda mail a todos los involucrados |
 | 6 | Parse Debrief (IA) | `POST /webhook/team23/parse` | Analiza el texto de un debrief con Claude y devuelve nombre/cliente/agencia/productora/síntesis/tareas/timeline sugeridos, para precargar el alta de proyecto (Opción 2) |
@@ -37,7 +37,6 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 ```
 {NOMBRE DEL PROYECTO}/
 ├── 00. COORD/
-│   ├── {Proyecto} — Notas        (Google Doc con template de reunión + feedback)
 │   ├── {Proyecto} — Desglose     (copia de tu planilla de desglose)
 │   └── {Proyecto} — Tracker      (copia de tu tracker)
 ├── 01. SUPERVISION - PRE/
