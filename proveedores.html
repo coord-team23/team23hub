@@ -97,6 +97,11 @@
     text-align:center;color:var(--gray);font-size:var(--fs-caption);margin-top:var(--space-5);
   }
 
+  .dp-fase{
+    display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--fs-caption);font-weight:var(--weight-regular);
+    border:1.5px solid var(--hair);border-radius:var(--radius-full);padding:var(--space-2) var(--space-4);color:var(--ink);
+  }
+
   #loginView{min-height:70vh;display:none;align-items:center;justify-content:center;padding:var(--space-9) var(--space-4)}
   .login-card{
     border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-xl);padding:var(--space-9) var(--space-7);
@@ -264,7 +269,10 @@
   <div class="demo-banner" id="demoBanner" style="display:none">
     <b>MODO DEMO</b> — Datos de ejemplo. Configurá <code>CONFIG</code> con tu Supabase para conectarlo.
   </div>
-  <main><div class="grid" id="listProjects"></div><div id="emptyState"></div></main>
+  <main>
+    <div class="grid" id="listProjects"></div><div id="emptyState"></div>
+    <div id="statusSummary"></div>
+  </main>
 </div>
 
 <footer>
@@ -320,6 +328,7 @@ let sb=null, session=null, projects=[];
 const $ = s=>document.querySelector(s);
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function parseYMD(s){ if(!s) return null; const p=String(s).split("-").map(Number); if(p.length<3||!p[0]) return null; return new Date(p[0],p[1]-1,p[2]); }
+function fmtShort(s){ const d=parseYMD(s); return d? d.toLocaleDateString("es-AR",{day:"2-digit",month:"short"}) : ""; }
 function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function dayDiff(a,b){ return Math.round((b-a)/86400000); }
 let toastTimer;
@@ -402,7 +411,53 @@ async function loadAll(){
   }catch(e){ toast("No pude cargar tus proyectos: " + e.message, true); }
 }
 
+function hitoUrgency(target, today){
+  const days = Math.round((target - today)/86400000);
+  const label = days<=0 ? "HOY" : days===1 ? "MAÑANA" : `EN ${days} DÍAS`;
+  if(days<=3) return {label, bg:"var(--brand-red)", fg:"#fff"};
+  if(days<=7) return {label, bg:"var(--brand-yellow)", fg:"var(--ink)"};
+  return {label, bg:"var(--brand-cyan)", fg:"var(--ink)"};
+}
+
+function renderSummary(){
+  const box = $("#statusSummary");
+  if(!projects.length){ box.innerHTML=""; return; }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // un solo listado: hitos del proyecto + tus propias entregas (fases donde SOS el responsable)
+  const items = [];
+  projects.forEach(p=>(p.calendario||[]).forEach(r=>{
+    if(r.tipo==="hito" && r.inicio){
+      const d = parseYMD(r.inicio);
+      if(d && d>=today) items.push({d, date:r.inicio, project:p, label:r.fase||"Hito", delivery:false});
+    } else if(r.tipo!=="hito" && r.fin && (p.misRoles||[]).includes(r.fase)){
+      const d = parseYMD(r.fin);
+      if(d && d>=today) items.push({d, date:r.fin, project:p, label:"Entrega", delivery:true});
+    }
+  }));
+  items.sort((a,b)=>a.d-b.d);
+
+  const itemsHTML = items.length
+    ? `<div style="display:flex;flex-direction:column;gap:var(--space-2)">${items.slice(0,8).map(it=>{
+        const u = hitoUrgency(it.d, today);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3)">
+          <span class="dp-fase">${fmtShort(it.date)} — <b>${esc(it.project.nombre)}</b> · ${it.delivery?`<span style="color:var(--red);font-weight:var(--weight-bold)">${esc(it.label)}</span>`:esc(it.label)}</span>
+          <span style="font-size:11px;font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.04em;padding:3px 10px;border-radius:var(--radius-full);background:${u.bg};color:${u.fg};white-space:nowrap;flex:none">${u.label}</span>
+        </div>`;
+      }).join("")}</div>`
+    : `<div class="empty">Sin hitos próximos.</div>`;
+
+  box.innerHTML = `
+    <div class="fgroup" style="margin-top:var(--space-7)">
+      <div class="glabel">Próximos hitos</div>
+      ${itemsHTML}
+    </div>
+  `;
+}
+
 function renderList(){
+  renderSummary();
   const list=$("#listProjects"), empty=$("#emptyState");
   if(!projects.length){
     list.innerHTML=""; empty.innerHTML=`<div class="empty">Todavía no tenés proyectos confirmados con TEAM23.<br>Cuando el estudio te confirme en un proyecto, aparece acá.</div>`;
