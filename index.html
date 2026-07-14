@@ -384,6 +384,41 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;
   }
 
+  /* ---------- tracker de jornadas ---------- */
+  .trk-range{font-size:var(--fs-caption);color:var(--gray);margin-bottom:var(--space-4)}
+  .trk-range b{color:var(--ink)}
+  .trk-empty{border:var(--stroke-sm) dashed var(--hair);border-radius:var(--radius-lg);padding:var(--space-9);text-align:center;color:var(--gray);font-size:var(--fs-caption)}
+  .trk-wrap{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);overflow:auto;max-height:60vh}
+  /* width:100% + table-layout:fixed reparte el sobrante en partes iguales entre todas las columnas */
+  table.trk{border-collapse:collapse;font-size:12px;white-space:nowrap;width:100%;table-layout:fixed}
+  table.trk th,table.trk td{border-bottom:1px solid var(--hair);border-right:1px solid var(--hair);padding:5px 8px;text-align:center;overflow:hidden;text-overflow:ellipsis}
+  table.trk th.trk-day,table.trk td.trk-day{width:52px}
+  table.trk th.trk-date,table.trk td.trk-date{width:64px}
+  table.trk thead th{
+    position:sticky;top:0;background:#fff;z-index:2;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+    border-bottom:2px solid var(--ink);font-weight:var(--weight-bold);
+  }
+  table.trk th.trk-rol{font-weight:var(--weight-regular);color:var(--gray);text-transform:none;letter-spacing:0}
+  table.trk td.trk-day,table.trk th.trk-day{position:sticky;left:0;background:#fff;z-index:1;text-align:left;font-weight:var(--weight-bold)}
+  table.trk td.trk-date{position:sticky;left:54px;background:#fff;z-index:1;text-align:left;color:var(--gray)}
+  table.trk th.trk-date{position:sticky;left:54px;background:#fff;z-index:3}
+  table.trk tr.trk-weekend td{background:var(--soft)}
+  table.trk tr.trk-weekend td.trk-day,table.trk tr.trk-weekend td.trk-date{background:var(--soft)}
+  table.trk td.trk-cell{cursor:pointer}
+  table.trk td.trk-cell:hover{background:var(--soft)}
+  table.trk td.trk-cell.on{background:var(--brand-green);font-weight:var(--weight-bold)}
+  table.trk td.trk-cell.trk-inact{background:var(--soft);color:var(--gray)}
+  table.trk td.trk-cell.trk-inact.on{background:#D9D9D4;color:var(--gray)}
+  table.trk td.trk-removido{color:var(--gray)}
+  .trk-toggle{display:block;margin-top:4px;font-size:9px;font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--hair);border-radius:var(--radius-full);background:#fff;color:var(--gray);cursor:pointer;padding:1px 6px}
+  .trk-toggle:hover{border-color:var(--ink);color:var(--ink)}
+  table.trk input.trk-nota{width:100%;border:none;font-size:12px;padding:2px 4px;background:transparent}
+  table.trk input.trk-nota:focus{outline:1.5px solid var(--red);background:#fff}
+  .trk-resumen{margin-top:var(--space-6)}
+  .trk-resumen table{width:100%;border-collapse:collapse;font-size:var(--fs-caption)}
+  .trk-resumen th{text-align:left;border-bottom:2px solid var(--ink);padding:var(--space-2);text-transform:uppercase;letter-spacing:.08em;font-size:11px}
+  .trk-resumen td{border-bottom:1px solid var(--hair);padding:var(--space-2)}
+
   /* ---------- panel del día ---------- */
   .daypanel{border:2px solid var(--ink);border-radius:var(--radius-md);padding:var(--space-5) var(--space-5);margin-top:var(--space-5);background:#fff}
   .dp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3)}
@@ -650,6 +685,16 @@
       <button class="btn" onclick="closeModal('ovGate')">Todavía no</button>
       <button class="btn primary" id="btnGate" disabled onclick="confirmGate()">🚀 Pasar a Ejecutando</button>
     </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: TRACKER DE JORNADAS ============ -->
+<div class="overlay" id="ovTracker">
+  <div class="modal" role="dialog" aria-modal="true" style="width:min(1200px,100%)">
+    <button class="close" onclick="closeModal('ovTracker')" aria-label="Cerrar">✕</button>
+    <h2>Tracker de jornadas</h2>
+    <div class="kicker" id="trkKicker"></div>
+    <div id="trkBody"></div>
   </div>
 </div>
 
@@ -1138,8 +1183,7 @@ const DRIVE_FOLDERS = [
   ["delivery","05. DELIVERY"]
 ];
 const DRIVE_DOCS = [
-  ["desglose","📊 Desglose"],
-  ["tracker","📊 Tracker"]
+  ["desglose","📊 Desglose"]
 ];
 /* pipeline de estados (orden = flujo del proyecto). color de marca por etapa,
    texto oscuro sobre neón / blanco sobre negro. activo→entregando→cierre son la
@@ -1218,6 +1262,7 @@ function renderDetail(){
   const feedbackBtn = p.status==="entregando"
     ? `<a class="finales-btn on" href="${esc(feedbackLink||'#')}"${feedbackHref ? ' target="_blank"' : ' onclick="return false"'}>📝 FEEDBACK <span>↗</span></a>`
     : `<a href="${esc(feedbackLink||'#')}"${feedbackHref ? ' target="_blank"' : ' onclick="return false"'}>📝 FEEDBACK <span>↗</span></a>`;
+  const trackerBtn = `<a href="#" onclick="openTracker('${p.id}');return false">📊 Tracker de jornadas <span>↗</span></a>`;
   const frameLink = p.links?.frameio
     ? `<a class="frame-cta" href="${esc(p.links.frameio)}" target="_blank">🎬 Abrir proyecto en Frame.io ↗</a>
        <div class="sublabel" style="margin-top:10px">Adentro: 1. Footage · 2. Offline · 3. Online · 4. Masters</div>`
@@ -1321,7 +1366,7 @@ function renderDetail(){
           <div class="sublabel" style="margin-top:0">Carpetas</div>
           <div class="linkgrid">${driveLinks || '<span style="font-size:12.5px;color:var(--gray)">Sin links de Drive</span>'}${finalesBtn}</div>
           <div class="sublabel">Documentos (en 00. COORD)</div>
-          <div class="linkgrid">${docLinks}${feedbackBtn}</div>
+          <div class="linkgrid">${docLinks}${trackerBtn}${feedbackBtn}</div>
         </div>
         <div class="link-box">
           <div class="lb-head"><span class="lb-dot frame"></span> Frame.io</div>
@@ -1953,6 +1998,179 @@ function hitoAdd(){
 }
 
 /* ---------------- guardar / mail / pdf ---------------- */
+/* ================================================================
+   TRACKER DE JORNADAS
+   Reemplaza el link externo a la planilla. Los participantes se derivan
+   solos del Equipo interno (EP/Prod/Coord) y de las asignaciones
+   confirmadas por tarea — no se cargan a mano acá, coinciden siempre con
+   lo que ya está en la ficha del proyecto. El rango de días también se
+   deriva del calendario del proyecto (tareas + hitos), no se carga a mano.
+================================================================ */
+let trkProject = null;
+
+function ensureTracker(p){
+  p.tracker = p.tracker || {};
+  p.tracker.jornadas = p.tracker.jornadas || {};
+  p.tracker.notas = p.tracker.notas || {};
+  p.tracker.nombres = p.tracker.nombres || {};
+  p.tracker.inactivos = p.tracker.inactivos || {};
+  return p.tracker;
+}
+
+/* rango de días = del calendario del proyecto (min inicio → max fin de tareas/fases/hitos) */
+function trackerRange(p){
+  let min = null, max = null;
+  allCalEntries(p).forEach(e=>{
+    [e.inicio, e.fin].forEach(v=>{
+      const d = parseYMD(v); if(!d) return;
+      if(!min || d<min) min = d;
+      if(!max || d>max) max = d;
+    });
+  });
+  return (min && max) ? {start:min, end:max} : null;
+}
+
+/* última jornada marcada por una persona (fecha real de finalización) */
+function ultimaJornada(t, key){
+  const marks = Object.keys(t.jornadas[key]||{}).filter(k=>t.jornadas[key][k]);
+  if(!marks.length) return "";
+  return marks.sort().slice(-1)[0];
+}
+
+function trackerParticipants(p){
+  const t = ensureTracker(p);
+  const list = [], seen = new Set();
+  const add = (key, nombre, rol, removido)=>{
+    if(!key || seen.has(key)) return;
+    seen.add(key);
+    list.push({key, nombre, rol, removido:!!removido, inactivo:!!t.inactivos[key]});
+    t.nombres[key] = nombre;
+  };
+  if(p.ep_nombre) add("ep", p.ep_nombre, "EP");
+  if(p.prod_nombre) add("prod", p.prod_nombre, "Prod");
+  if(p.coord_nombre) add("coord", p.coord_nombre, "Coord");
+  Object.entries(p.asignaciones||{}).forEach(([tarea, rows])=>{
+    (rows||[]).forEach(r=>{
+      if(!r || !r.nombre) return;
+      if(r.estado && r.estado!=="confirmado") return;
+      const key = r.email && r.email.trim() ? "e:"+r.email.trim().toLowerCase() : "n:"+tarea+"|"+r.nombre;
+      add(key, r.nombre, tarea);
+    });
+  });
+  // participantes que ya no están asignados pero tienen jornadas cargadas: se conservan, grisados
+  Object.keys(t.jornadas).forEach(key=>{
+    if(seen.has(key)) return;
+    if(!Object.values(t.jornadas[key]||{}).some(Boolean)) return;
+    add(key, t.nombres[key]||key, "—", true);
+  });
+  return list;
+}
+
+function trackerDays(p){
+  const range = trackerRange(p);
+  if(!range) return [];
+  const days = [];
+  const d = new Date(range.start);
+  let guard = 0;
+  while(d <= range.end && guard < 730){ days.push(new Date(d)); d.setDate(d.getDate()+1); guard++; }
+  return days;
+}
+
+function openTracker(id){
+  trkProject = projects.find(x=>x.id===id);
+  if(!trkProject) return;
+  ensureTracker(trkProject);
+  $("#trkKicker").textContent = trkProject.nombre + (trkProject.cliente ? " · "+trkProject.cliente : "");
+  renderTracker();
+  openModal("ovTracker");
+}
+
+function toggleJornada(key, dateKey){
+  const t = ensureTracker(trkProject);
+  t.jornadas[key] = t.jornadas[key] || {};
+  if(t.jornadas[key][dateKey]) delete t.jornadas[key][dateKey];
+  else t.jornadas[key][dateKey] = true;
+  renderTracker();
+  saveTracker();
+}
+
+function setTrackerNota(dateKey, val){
+  const t = ensureTracker(trkProject);
+  if(val) t.notas[dateKey] = val; else delete t.notas[dateKey];
+  saveTracker();
+}
+
+function toggleInactivo(key){
+  const t = ensureTracker(trkProject);
+  if(t.inactivos[key]) delete t.inactivos[key];
+  else t.inactivos[key] = true;
+  renderTracker();
+  saveTracker();
+}
+
+async function saveTracker(){
+  if(DEMO) return;
+  try{
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({id:trkProject.id,tracker_json:JSON.stringify(trkProject.tracker)})});
+  }catch(e){ toast("No pude guardar el tracker: "+e.message, true); }
+}
+
+function trackerHTML(p){
+  const t = ensureTracker(p);
+  const parts = trackerParticipants(p);
+  const range = trackerRange(p);
+  const days = trackerDays(p);
+
+  if(!range){
+    return `<div class="trk-empty">El rango de días se arma con el calendario del proyecto.<br>Cargá fechas en las tareas / fases / hitos y el tracker aparece solo.</div>`;
+  }
+  if(!parts.length){
+    return `<div class="trk-empty">Todavía no hay nadie asignado. Cargá Equipo interno y/o asignaciones por tarea en la ficha del proyecto — acá van a aparecer solos.</div>`;
+  }
+
+  const rangeLine = `<div class="trk-range">📅 Del calendario del proyecto: <b>${fmtShort(ymd(range.start))} → ${fmtShort(ymd(range.end))}</b> · ${days.length} días</div>`;
+
+  const head = `<tr>
+    <th class="trk-day">Día</th><th class="trk-date">Fecha</th>
+    ${parts.map(pp=>`<th class="${(pp.removido||pp.inactivo)?"trk-removido":""}">${esc(pp.nombre)}<div class="trk-rol">${esc(pp.rol)}${pp.inactivo?" · inactivo":""}</div><button class="trk-toggle" title="${pp.inactivo?"Reactivar":"Marcar inactivo"}" onclick="toggleInactivo('${pp.key}')">${pp.inactivo?"↺ activar":"○ inactivar"}</button></th>`).join("")}
+    <th>Notas / hitos</th>
+  </tr>`;
+
+  const rows = days.map(d=>{
+    const key = ymd(d);
+    const isWeekend = [0,6].includes(d.getDay());
+    const cells = parts.map(pp=>{
+      const on = !!(t.jornadas[pp.key] && t.jornadas[pp.key][key]);
+      return `<td class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""}" onclick="toggleJornada('${pp.key}','${key}')">${on?"✕":""}</td>`;
+    }).join("");
+    return `<tr class="${isWeekend?"trk-weekend":""}">
+      <td class="trk-day">${d.toLocaleDateString("es-AR",{weekday:"short"}).toUpperCase()}</td>
+      <td class="trk-date">${fmtShort(key)}</td>
+      ${cells}
+      <td><input class="trk-nota" type="text" value="${esc(t.notas[key]||"")}" placeholder="" onchange="setTrackerNota('${key}',this.value)"></td>
+    </tr>`;
+  }).join("");
+
+  const totalJor = parts.reduce((s,pp)=>s+Object.values(t.jornadas[pp.key]||{}).filter(Boolean).length,0);
+  const resumen = `<div class="trk-resumen">
+    <div class="glabel">Resumen</div>
+    <table><thead><tr><th>Nombre</th><th>Rol</th><th>Jornadas</th><th>Última jornada</th></tr></thead><tbody>
+      ${parts.map(pp=>{
+        const jor = Object.values(t.jornadas[pp.key]||{}).filter(Boolean).length;
+        const ult = ultimaJornada(t, pp.key);
+        return `<tr${(pp.removido||pp.inactivo)?' style="color:var(--gray)"':""}><td>${esc(pp.nombre)}${pp.removido?' <small style="color:var(--gray)">(ya no asignado)</small>':pp.inactivo?' <small style="color:var(--gray)">(inactivo)</small>':""}</td><td>${esc(pp.rol)}</td><td>${jor}</td><td>${ult?fmtShort(ult):"—"}</td></tr>`;
+      }).join("")}
+      <tr style="font-weight:var(--weight-bold);border-top:2px solid var(--ink)"><td>TOTAL</td><td></td><td>${totalJor}</td><td></td></tr>
+    </tbody></table>
+  </div>`;
+
+  return rangeLine + `<div class="trk-wrap"><table class="trk"><thead>${head}</thead><tbody>${rows}</tbody></table></div>` + resumen;
+}
+
+function renderTracker(){
+  $("#trkBody").innerHTML = trackerHTML(trkProject);
+}
+
 async function saveProjectInfo(){
   const p = detailProject;
   if(!p.nombre.trim()){ toast("El proyecto necesita un nombre", true); return; }
