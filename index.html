@@ -180,8 +180,9 @@
 
   /* ---------- wizard kick off ---------- */
   #ovKickOff .modal{padding-bottom:120px}
-  /* flujo "nuevo proyecto" (chooser, kick off, formularios) — todo el modal +20% */
-  #ovChooser .modal,#ovKickOff .modal,#ovNew .modal,#ovNew2 .modal{zoom:1.4}
+  /* el chooser (elegir opción 1/2) se queda grande; kick off y formularios van a la escala de la ficha de detalle */
+  #ovChooser .modal{zoom:1.4}
+  #ovKickOff .modal,#ovNew .modal,#ovNew2 .modal{zoom:0.9}
   .kickoff-q{
     font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .727);color:var(--gray);
     text-transform:uppercase;letter-spacing:var(--tracking-tight);line-height:1.05;margin-bottom:var(--space-7);
@@ -914,6 +915,8 @@ let currentView = "dashboard";
 /* ---------------- kick off wizard ---------------- */
 let kickOffStep = 1;
 let kickOffChecks = {};
+let kickOffResumen = "";
+let kickOffLinks = {};
 
 function onProjectsLoaded(){ renderAll(); renderCurrentView(); }
 
@@ -970,6 +973,9 @@ function toggleTask(t){
 }
 let npAssignData = {};
 let npTaskDates = {};
+let npSintesis = "";
+let npStoryboardUrl = "";
+let npTratamientoUrl = "";
 function renderNPAssigns(){
   Object.keys(npAssignData).forEach(k=>{ if(!npSelected.has(k)) delete npAssignData[k]; });
   Object.keys(npTaskDates).forEach(k=>{ if(!npSelected.has(k)) delete npTaskDates[k]; });
@@ -1057,7 +1063,8 @@ async function createProject(){
     ep_nombre: epN, ep_email: epE,
     prod_nombre: $("#npProdNombre").value.trim(), prod_email: $("#npProdEmail").value.trim(),
     coord_nombre: $("#npCoordNombre").value.trim(), coord_email: $("#npCoordEmail").value.trim(),
-    tareas: [...npSelected], asignaciones: asigs, taskDates: tDates
+    tareas: [...npSelected], asignaciones: asigs, taskDates: tDates, sintesis: npSintesis,
+    storyboard_url: npStoryboardUrl, tratamiento_url: npTratamientoUrl
   };
 
   const btn = $("#btnCreate");
@@ -1078,6 +1085,8 @@ async function createProject(){
     projects.push(proj);
     onProjectsLoaded();
     closeModal("ovNew");
+    if(currentView!=="proyectos") switchView("proyectos");
+    openDetail(proj.id);
     toast("✔ Proyecto creado, carpetas de Drive y Frame.io listas");
   }catch(e){
     toast("Error al crear: "+e.message, true);
@@ -1259,10 +1268,11 @@ function renderDetail(){
     </tr>`;
   }).join("");
 
-  const sintesisContent = (p.sintesis || p.storyboard_url) ? `
+  const sintesisContent = (p.sintesis || p.storyboard_url || p.tratamiento_url) ? `
     <div style="margin-top:var(--space-5)">
       ${p.sintesis?`<p style="font-size:16.5px;white-space:pre-line;margin:0">${esc(p.sintesis)}</p>`:""}
-      ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">🎨 Tratamiento/Referencias ↗</a></p>`:""}
+      ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">🎨 Storyboard ↗</a></p>`:""}
+      ${p.tratamiento_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.tratamiento_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">🎨 Tratamiento/Referencias ↗</a></p>`:""}
     </div>` : "";
   const checklistBlock = checklistHTML(p, ro);
 
@@ -1770,10 +1780,28 @@ function dToggleTask(t){
   renderDetail();
 }
 
+/* datos obligatorios para poder activar un proyecto (pasar de Pre-producción a Ejecutando) */
+const REQUIRED_FOR_ACTIVATION = [
+  {key:"nombre", label:"Nombre de la campaña"},
+  {key:"productora", label:"Productora"},
+  {key:"cliente", label:"Cliente"},
+  {key:"ep_nombre", label:"Productor Ejecutivo"},
+  {key:"ep_email", label:"Mail EP"},
+  {key:"prod_nombre", label:"Productor"},
+  {key:"prod_email", label:"Mail Productor"},
+  {key:"coord_nombre", label:"Coordinador"},
+  {key:"coord_email", label:"Mail Coordinador"}
+];
+
 async function setStatus(s, skipGate=false){
   const p = detailProject;
   /* gate: salir de pre-producción hacia un estado en curso pasa por el checklist de activación */
-  if(!skipGate && p.status==="por_activarse" && inProgress(s)){ openGate(s); return; }
+  if(!skipGate && p.status==="por_activarse" && inProgress(s)){
+    const missing = REQUIRED_FOR_ACTIVATION.filter(f=>!String(p[f.key]||"").trim()).map(f=>f.label);
+    if(missing.length){ toast("Completá antes de activar: "+missing.join(", "), true); return; }
+    openGate(s);
+    return;
+  }
   /* irreversible: un proyecto en curso o completado no vuelve a pre-producción */
   if(p.status!=="por_activarse" && s==="por_activarse"){ toast("Un proyecto en ejecución no puede volver a pre-producción", true); return; }
   /* no se avanza de etapa sin terminar el checklist de la etapa actual (Delivery / Cierre) */
@@ -1848,7 +1876,7 @@ function confirmGate(){
    Se guardan en la columna checklist_json del sheet.
 ================================================================ */
 const CHK_DELIVERY = [
-  {seccion:"ENTREGA", items:[["Cargar V1 de ONLINE a Frame.io","COORD"],["Status de la entrega en canal #coord","COORD"],["Compartir el online con el EP para revisión","PROD"],["Enviar vía cadena de mail a AG/CL","PROD"],["Aviso a WhatsApp","PROD"],["Actualizar planilla con fecha de entrega","COORD"]]}
+  {seccion:"ENTREGA", items:[["Cargar online a Frame.io","COORD"],["Status de la entrega en canal #coord","COORD"],["Compartir el online con el EP para revisión","PROD"],["Enviar vía cadena de mail a AG/CL","PROD"],["Aviso a WhatsApp","PROD"],["Actualizar planilla con fecha de entrega","COORD"]]}
 ];
 const CHK_CIERRE = [
   {seccion:"CIERRE", items:[["Chequear tracker de jornadas y fechas de finalización de cada proveedor","PROD"],["Revisión final de presupuesto (adicionales, ajustes)","EP"]]},
@@ -2064,28 +2092,41 @@ const KICKOFF_QUESTIONS = [
   { q: "¿Creaste la categoría del proyecto en Discord?", mandatory: true, resp: "EP / PROD" },
   { q: "¿Creaste los canales de prod, coord y general?", mandatory: true, resp: "PROD / COORD" },
   { q: "¿Tenemos a mano la última versión del timing de CL?", mandatory: true, resp: "EP / PROD" },
-  { q: "¿Hay storyboard?", mandatory: false, sinos: true },
+  { q: "¿Hay storyboard o tratamiento?\nPegá los links", mandatory: false, links: [{key:"storyboard",label:"Storyboard"},{key:"tratamiento",label:"Tratamiento"}] },
+  { q: "¿Hay resumen de entregables?\nPegalo en esta caja de texto", mandatory: false, texto: true, skipForOption: 2 },
   { q: "¿Creaste el proyecto en Notion?\n(con fecha inicio/fin + link a presupuesto)", mandatory: true, resp: "EP" },
   { q: "¿Avisaste a Krla que puede ir pidiendo el adelanto?", mandatory: true, resp: "EP" }
 ];
 
+let kickOffQuestions = KICKOFF_QUESTIONS;
+
 function openKickOff(){
+  kickOffQuestions = KICKOFF_QUESTIONS.filter(q=>!q.skipForOption || q.skipForOption!==kickOffTargetOption);
   kickOffStep = 1;
   kickOffChecks = {};
+  kickOffResumen = "";
+  kickOffLinks = {};
   renderKickOffStep();
   openModal("ovKickOff");
 }
 
 function renderKickOffStep(){
-  const q = KICKOFF_QUESTIONS[kickOffStep-1];
+  const q = kickOffQuestions[kickOffStep-1];
   const isSinos = q.sinos;
-  const isLast = kickOffStep === KICKOFF_QUESTIONS.length;
+  const isLast = kickOffStep === kickOffQuestions.length;
 
-  $("#kickOffHeader").textContent = `Paso ${kickOffStep} de ${KICKOFF_QUESTIONS.length}`;
+  $("#kickOffHeader").textContent = `Paso ${kickOffStep} de ${kickOffQuestions.length}`;
 
   let html = `<div class="kickoff-q">${esc(q.q)}${q.resp?` <span style="display:inline-block;vertical-align:middle;font-size:14px;font-weight:800;letter-spacing:.1em;border:1.5px solid var(--ink);border-radius:var(--radius-full);padding:2px 10px;color:var(--ink)">${esc(q.resp)}</span>`:""}</div>`;
 
-  if(isSinos){
+  if(q.links){
+    html += q.links.map(f=>`
+      <label class="f" style="display:block;margin-top:var(--space-4)">${esc(f.label)}</label>
+      <input type="text" value="${esc(kickOffLinks[f.key]||"")}" placeholder="https://…" style="width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3);border:2px solid var(--ink);border-radius:var(--radius-md)" oninput="kickOffLinks['${f.key}']=this.value">
+    `).join("");
+  } else if(q.texto){
+    html += `<textarea rows="5" style="width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3);border:2px solid var(--ink);border-radius:var(--radius-md);resize:vertical" placeholder="Pegá el resumen de entregables…" oninput="kickOffResumen=this.value">${esc(kickOffResumen)}</textarea>`;
+  } else if(isSinos){
     html += `<div class="kickoff-sinos">
       <label class="kickoff-check">
         <input type="radio" name="sinos" value="si" onchange="kickOffChecks[${kickOffStep-1}]='si';updateKickOffBtn()">
@@ -2112,12 +2153,11 @@ function renderKickOffStep(){
 }
 
 function updateKickOffBtn(){
-  const q = KICKOFF_QUESTIONS[kickOffStep-1];
+  const q = kickOffQuestions[kickOffStep-1];
   const isChecked = kickOffChecks[kickOffStep-1];
 
-  // Para preguntas sí/no, cualquier selección es válida
-  // Para otras, solo el checkbox marcado
-  const isValid = q.sinos ? isChecked : isChecked === true;
+  // Links y texto: siempre válido (opcional). Sí/no: cualquier selección. Checkbox simple: solo marcado
+  const isValid = (q.links || q.texto) ? true : (q.sinos ? isChecked : isChecked === true);
 
   $("#kickOffBtnNext").disabled = !isValid;
 }
@@ -2130,7 +2170,7 @@ function kickOffBack(){
 }
 
 function kickOffNext(){
-  if(kickOffStep < KICKOFF_QUESTIONS.length){
+  if(kickOffStep < kickOffQuestions.length){
     kickOffStep++;
     renderKickOffStep();
   } else {
@@ -2142,9 +2182,16 @@ function kickOffComplete(){
   closeModal("ovKickOff");
   kickOffStep = 1;
   kickOffChecks = {};
-  if(kickOffTargetOption===2){ openDebrief(); return; }
+  if(kickOffTargetOption===2){
+    openDebrief();
+    if(kickOffLinks.tratamiento || kickOffLinks.storyboard) $("#n2Storyboard").value = kickOffLinks.tratamiento || kickOffLinks.storyboard;
+    return;
+  }
   // Inicializar el estado del nuevo proyecto
   npSelected = new Set(); npAssignData = {}; npTaskDates = {};
+  npSintesis = kickOffResumen;
+  npStoryboardUrl = kickOffLinks.storyboard || "";
+  npTratamientoUrl = kickOffLinks.tratamiento || "";
   ["npNombre","npCliente","npAgencia","npProductora","npDirector","npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"]
     .forEach(id=>$("#"+id).value="");
   renderNPTasks();
@@ -2281,6 +2328,8 @@ async function createProject2(){
     projects.push(proj);
     onProjectsLoaded();
     closeModal("ovNew2");
+    if(currentView!=="proyectos") switchView("proyectos");
+    openDetail(proj.id);
     const nCand = Object.values(asigs).flat().filter(r=>r.email).length;
     toast(nCand ? "✔ Proyecto creado, propuestas enviadas a "+nCand+" candidato"+(nCand>1?"s":"") : "✔ Proyecto creado, carpetas de Drive y Frame.io listas");
   }catch(e){
