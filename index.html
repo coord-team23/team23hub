@@ -183,13 +183,13 @@
   /* flujo "nuevo proyecto" (chooser, kick off, formularios) — todo el modal +20% */
   #ovChooser .modal,#ovKickOff .modal,#ovNew .modal,#ovNew2 .modal{zoom:1.4}
   .kickoff-q{
-    font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .9);color:var(--gray);
+    font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .727);color:var(--gray);
     text-transform:uppercase;letter-spacing:var(--tracking-tight);line-height:1.05;margin-bottom:var(--space-7);
     white-space:pre-line;
   }
   .kickoff-check{
     display:flex;align-items:center;gap:var(--space-4);cursor:pointer;
-    font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .9);color:var(--gray);
+    font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .727);color:var(--gray);
     text-transform:uppercase;letter-spacing:var(--tracking-tight);
   }
   .kickoff-check input[type=checkbox],.kickoff-check input[type=radio]{width:30px;height:30px;cursor:pointer;flex:none}
@@ -662,14 +662,14 @@
       <div class="opt-card" onclick="chooseOption(1)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')chooseOption(1)">
         <div class="opt-num">Opción 1</div>
         <h3>Kick off manual</h3>
-        <p>El wizard de planificación paso a paso (Discord, timing, storyboard, Notion, adelanto) y después el formulario de siempre.</p>
-        <span class="opt-cta">Arrancar wizard →</span>
+        <p>El checklist de planificación paso a paso (Discord, timing, storyboard, Notion, adelanto) y después el formulario de siempre.</p>
+        <span class="opt-cta">Empezar →</span>
       </div>
       <div class="opt-card" onclick="chooseOption(2)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')chooseOption(2)">
         <div class="opt-num">Opción 2</div>
         <h3>Desde debrief (IA)</h3>
-        <p>Pegás el debrief y la IA precarga nombre, cliente, síntesis, tareas y timeline. Revisás, cargás candidatos y creás.</p>
-        <span class="opt-cta">Pegar debrief →</span>
+        <p>Mismo checklist de planificación primero. Después pegás el debrief y la IA precarga nombre, cliente, síntesis, tareas y timeline. Revisás, cargás candidatos y creás.</p>
+        <span class="opt-cta">Empezar →</span>
       </div>
     </div>
   </div>
@@ -2061,12 +2061,12 @@ function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style
 
 /* kick off wizard */
 const KICKOFF_QUESTIONS = [
-  { q: "¿Creaste la categoría del proyecto en Discord?", mandatory: true },
-  { q: "¿Creaste los canales de prod, coord y general?", mandatory: true },
-  { q: "¿Tenemos a mano la última versión del timing de CL?", mandatory: true },
+  { q: "¿Creaste la categoría del proyecto en Discord?", mandatory: true, resp: "EP / PROD" },
+  { q: "¿Creaste los canales de prod, coord y general?", mandatory: true, resp: "PROD / COORD" },
+  { q: "¿Tenemos a mano la última versión del timing de CL?", mandatory: true, resp: "EP / PROD" },
   { q: "¿Hay storyboard?", mandatory: false, sinos: true },
-  { q: "¿Creaste el proyecto en Notion?\n(con fecha inicio/fin + link a presupuesto)", mandatory: true },
-  { q: "¿Avisaste a Krla que puede ir pidiendo el adelanto?", mandatory: true }
+  { q: "¿Creaste el proyecto en Notion?\n(con fecha inicio/fin + link a presupuesto)", mandatory: true, resp: "EP" },
+  { q: "¿Avisaste a Krla que puede ir pidiendo el adelanto?", mandatory: true, resp: "EP" }
 ];
 
 function openKickOff(){
@@ -2083,7 +2083,7 @@ function renderKickOffStep(){
 
   $("#kickOffHeader").textContent = `Paso ${kickOffStep} de ${KICKOFF_QUESTIONS.length}`;
 
-  let html = `<div class="kickoff-q">${esc(q.q)}</div>`;
+  let html = `<div class="kickoff-q">${esc(q.q)}${q.resp?` <span style="display:inline-block;vertical-align:middle;font-size:14px;font-weight:800;letter-spacing:.1em;border:1.5px solid var(--ink);border-radius:var(--radius-full);padding:2px 10px;color:var(--ink)">${esc(q.resp)}</span>`:""}</div>`;
 
   if(isSinos){
     html += `<div class="kickoff-sinos">
@@ -2142,6 +2142,7 @@ function kickOffComplete(){
   closeModal("ovKickOff");
   kickOffStep = 1;
   kickOffChecks = {};
+  if(kickOffTargetOption===2){ openDebrief(); return; }
   // Inicializar el estado del nuevo proyecto
   npSelected = new Set(); npAssignData = {}; npTaskDates = {};
   ["npNombre","npCliente","npAgencia","npProductora","npDirector","npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"]
@@ -2152,13 +2153,16 @@ function kickOffComplete(){
 
 /* ================================================================
    NUEVO PROYECTO — chooser de flujo
-   Opción 1: wizard de kick off (flujo original) → formulario ovNew
-   Opción 2: pegar debrief → IA precarga → formulario ovNew2
+   Ambas opciones pasan primero por el wizard de kick off:
+   Opción 1: wizard → formulario manual ovNew
+   Opción 2: wizard → pegar debrief → IA precarga → formulario ovNew2
 ================================================================ */
+let kickOffTargetOption = 1;
 function openChooser(){ openModal("ovChooser"); }
 function chooseOption(n){
   closeModal("ovChooser");
-  if(n===1){ openKickOff(); } else { openDebrief(); }
+  kickOffTargetOption = n;
+  openKickOff();
 }
 
 /* ---------------- Opción 2: crear desde debrief (IA) ---------------- */
