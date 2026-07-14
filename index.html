@@ -1881,7 +1881,7 @@ const CHK_DELIVERY = [
 const CHK_CIERRE = [
   {seccion:"CIERRE", items:[["Chequear tracker de jornadas y fechas de finalización de cada proveedor","PROD"],["Revisión final de presupuesto (adicionales, ajustes)","EP"]]},
   {seccion:"PAGOS", items:[["Envío de factura a cliente","ADMIN"],["Recibo de liquidación","ADMIN"],["Pago a proveedores","ADMIN"]]},
-  {seccion:"ARCHIVO / PORTFOLIO", items:[["Cargar los masters a FINALES en drive","COORD"],["Avisar a Mile que en #prod con link a la carpeta","PROD"],["Backup de frame.io en disco","EP/PROD"],["Comunicar el cierre al grupo de WhatsApp compartiendo el link de frame.io y vía mail","EP"]]}
+  {seccion:"ARCHIVO / PORTFOLIO", items:[["Cargar los masters a FINALES en drive","COORD"],["Avisar a mile en #prod con link de finales","COORD/PROD"],["Archivar canales principales en #archivo-proy","MILE"],["Backup de frame.io en disco","EP/PROD"],["Comunicar el cierre al grupo de WhatsApp compartiendo el link de frame.io y vía mail","EP"]]}
 ];
 function etapaDe(st){ return st==="entregando" ? "delivery" : st==="cierre" ? "cierre" : null; }
 function seedChecklist(p, etapa){
