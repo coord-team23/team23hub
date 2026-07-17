@@ -257,9 +257,12 @@
     <button class="btn primary" style="width:100%" onclick="loginGoogle()">Entrar con Google</button>
     <div class="or">— O CON TU MAIL —</div>
     <label class="f">Tu mail (el que usás con TEAM23)</label>
-    <input type="email" id="loginEmail" placeholder="vos@tuestudio.com">
-    <button class="btn primary" style="width:100%;margin-top:10px" onclick="loginMagic()">Mandarme un link de acceso</button>
-    <p style="font-size:11.5px;color:var(--gray);margin-top:14px">Sin contraseñas: te llega un mail con un link y entrás. Vas a ver solo los proyectos donde estás confirmado.</p>
+    <input type="email" id="loginEmail" placeholder="vos@tuestudio.com" autocomplete="email">
+    <label class="f" style="margin-top:8px">Contraseña</label>
+    <input type="password" id="loginPass" placeholder="Tu contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginPassword()">
+    <button class="btn primary" style="width:100%;margin-top:12px" onclick="loginPassword()">Entrar</button>
+    <button class="btn small" style="width:100%;margin-top:10px" onclick="signupPassword()">Crear cuenta (primera vez)</button>
+    <p style="font-size:11.5px;color:var(--gray);margin-top:14px">Usá el mail con el que TEAM23 te asigna a los proyectos: vas a ver solo aquellos donde estás confirmado.</p>
   </div>
 </div>
 
@@ -380,13 +383,22 @@ async function loginGoogle(){
   try{ await sb.auth.signInWithOAuth({provider:"google", options:{redirectTo: location.origin+location.pathname}}); }
   catch(e){ toast("No pude iniciar con Google: "+e.message, true); }
 }
-async function loginMagic(){
-  const email=$("#loginEmail").value.trim();
-  if(!email){ toast("Poné tu mail", true); return; }
+async function loginPassword(){
+  const email=$("#loginEmail").value.trim(), password=$("#loginPass").value;
+  if(!email || !password){ toast("Completá mail y contraseña", true); return; }
   try{
-    const { error } = await sb.auth.signInWithOtp({email, options:{emailRedirectTo: location.origin+location.pathname}});
+    const { data, error } = await sb.auth.signInWithPassword({email, password});
     if(error) throw error;
-    toast("✔ Te mandamos el link de acceso, revisá tu mail");
+  }catch(e){ toast(/invalid/i.test(e.message) ? "Mail o contraseña incorrectos" : "Error: "+e.message, true); }
+}
+async function signupPassword(){
+  const email=$("#loginEmail").value.trim(), password=$("#loginPass").value;
+  if(!email || !password){ toast("Completá mail y contraseña", true); return; }
+  if(password.length < 6){ toast("La contraseña necesita al menos 6 caracteres", true); return; }
+  try{
+    const { data, error } = await sb.auth.signUp({email, password, options:{emailRedirectTo: location.origin+location.pathname}});
+    if(error) throw error;
+    if(!data.session) toast("✔ Cuenta creada, revisá tu mail para confirmarla");
   }catch(e){ toast("Error: "+e.message, true); }
 }
 async function logout(){ if(sb) await sb.auth.signOut(); location.reload(); }
