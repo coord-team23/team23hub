@@ -117,31 +117,26 @@ En los workflows **2, 3, 4, 5 y 6** hay un nodo llamado **CONFIG**. Pegá ahí:
   - `desgloseTemplateId`, `briefTemplateId` y `feedbackTemplateId` → **ya están precargados** con tus tres plantillas actuales (desglose, brief y feedback). La cuenta de Google conectada en n8n tiene que tener acceso a esas plantillas para poder copiarlas. (Ya no existe `trackerTemplateId`: el tracker de jornadas vive dentro del hub.)
   - `frameAccountId` y `frameWorkspaceId` → ver abajo.
 
-**Autenticación con Frame.io (API v4 · Adobe):**
+**Autenticación con Frame.io (API v4):**
 
-La API v4 se autentica contra Adobe IMS con una credencial **Server-to-Server**. Requisito: tu cuenta de Frame.io tiene que estar administrada desde el **Adobe Admin Console** (si todavía entrás a Frame con usuario y contraseña propios de Frame, pedile la migración a tu contacto de Adobe/Frame antes de este paso).
+Los tres nodos de Frame del workflow 3 (Crear proyecto, Crear carpetas, Crear subcarpetas) usan los endpoints **v4** con un **Legacy Developer Token**, que es el mecanismo indicado para cuentas que no están administradas desde el Adobe Admin Console (la credencial Server-to-Server de Adobe aparece como "License required" si tu organización no tiene ese entitlement enterprise; no es configuración, es plan).
 
-1. Entrá a [developer.adobe.com/console](https://developer.adobe.com/console) → **Create new project** → **Add API** → elegí **Frame.io API** → credencial **OAuth Server-to-Server**.
-2. Al terminar te da un **Client ID** y un **Client Secret**. No los pegues en los workflows: van en una credencial de n8n.
-3. En n8n creá una credencial **OAuth2 API** llamada `Frame.io OAuth2 (Adobe)`:
-   - **Grant Type**: `Client Credentials`
-   - **Access Token URL**: `https://ims-na1.adobelogin.com/ims/token/v3`
-   - **Client ID / Client Secret**: los del paso 2
-   - **Scope**: `openid,AdobeID,frame.s2s.all`
-   - **Authentication**: `Body`
-4. Asignásela a los tres nodos de Frame del workflow 3 (Crear proyecto, Crear carpetas, Crear subcarpetas). Los tokens duran ~1 hora y **n8n los renueva solo** con esta credencial; no hay nada que mantener a mano.
+1. Entrá a [developer.frame.io/app/tokens](https://developer.frame.io/app/tokens) con tu login de Frame.io y generá un token.
+2. En n8n creá (o editá) la credencial **Header Auth** llamada **`Frame.io Token`**:
+   - **Name**: `Authorization`
+   - **Value**: `Bearer TU_TOKEN` (con la palabra Bearer y un espacio adelante)
+3. Los nodos ya mandan además el header `x-frameio-legacy-token-auth: true`, obligatorio para usar el token legacy contra la API v4. No hay que tocar nada más.
+
+El token no expira, pero es un mecanismo de transición: si algún día migran la cuenta a la administración de Adobe (Admin Console) con licencia enterprise, el cambio es crear la credencial OAuth Server-to-Server en el [Adobe Developer Console](https://developer.adobe.com/console) y quitar ese header de los tres nodos; los endpoints ya quedan bien.
 
 **Cómo obtener los IDs para el CONFIG:**
 
 ```
-curl -H "Authorization: Bearer TU_ACCESS_TOKEN" https://api.frame.io/v4/accounts
-curl -H "Authorization: Bearer TU_ACCESS_TOKEN" https://api.frame.io/v4/accounts/{account_id}/workspaces
+curl -H "Authorization: Bearer TU_TOKEN" -H "x-frameio-legacy-token-auth: true" https://api.frame.io/v4/accounts
+curl -H "Authorization: Bearer TU_TOKEN" -H "x-frameio-legacy-token-auth: true" https://api.frame.io/v4/accounts/{account_id}/workspaces
 ```
 
-El primer comando te da el `account_id`, el segundo el `workspace_id` del workspace donde querés que se creen los proyectos. Para conseguir un access token rápido para estos dos curls, en n8n abrí cualquier nodo de Frame con la credencial ya asignada y ejecutalo, o pedile el token a IMS con un POST de client_credentials.
-
-Las acciones hechas por esta credencial aparecen en Frame.io a nombre de la cuenta de servicio, no de una persona.
-
+El primer comando te da el `account_id`, el segundo el `workspace_id` del workspace donde querés que se creen los proyectos. 
 ### Paso 5 — Activar los workflows
 
 Prendé el toggle **Active** en los workflows 2, 3, 4, 5 y 6 (el 1 no hace falta, es manual).
