@@ -117,26 +117,38 @@ En los workflows **2, 3, 4, 5 y 6** hay un nodo llamado **CONFIG**. Pegá ahí:
   - `desgloseTemplateId`, `briefTemplateId` y `feedbackTemplateId` → **ya están precargados** con tus tres plantillas actuales (desglose, brief y feedback). La cuenta de Google conectada en n8n tiene que tener acceso a esas plantillas para poder copiarlas. (Ya no existe `trackerTemplateId`: el tracker de jornadas vive dentro del hub.)
   - `frameAccountId` y `frameWorkspaceId` → ver abajo.
 
-**Autenticación con Frame.io (API v4):**
+**Autenticación con Frame.io (API v4 · OAuth de usuario):**
 
-Los tres nodos de Frame del workflow 3 (Crear proyecto, Crear carpetas, Crear subcarpetas) usan los endpoints **v4** con un **Legacy Developer Token**, que es el mecanismo indicado para cuentas que no están administradas desde el Adobe Admin Console (la credencial Server-to-Server de Adobe aparece como "License required" si tu organización no tiene ese entitlement enterprise; no es configuración, es plan).
+Los tres nodos de Frame del workflow 3 (Crear proyecto, Crear carpetas, Crear subcarpetas) usan los endpoints **v4** con **OAuth Web App** (autenticación de usuario de Adobe). Este método no requiere el entitlement enterprise que pide Server-to-Server, así que se puede crear con una cuenta normal. La credencial actúa "como vos" (con tus permisos de Frame) y n8n renueva el token solo.
 
-1. Entrá a [developer.frame.io/app/tokens](https://developer.frame.io/app/tokens) con tu login de Frame.io y generá un token.
-2. En n8n creá (o editá) la credencial **Header Auth** llamada **`Frame.io Token`**:
-   - **Name**: `Authorization`
-   - **Value**: `Bearer TU_TOKEN` (con la palabra Bearer y un espacio adelante)
-3. Los nodos ya mandan además el header `x-frameio-legacy-token-auth: true`, obligatorio para usar el token legacy contra la API v4. No hay que tocar nada más.
+**En el Adobe Developer Console** ([developer.adobe.com/console](https://developer.adobe.com/console)):
+1. Abrí tu proyecto de Frame.io → **Add API → Frame.io API** → credencial **OAuth Web App**.
+2. Te va a pedir un **Redirect URI**: lo sacás de n8n (ver abajo), pegalo acá y guardá.
+3. Copiá el **Client ID** y el **Client Secret** que te da.
 
-El token no expira, pero es un mecanismo de transición: si algún día migran la cuenta a la administración de Adobe (Admin Console) con licencia enterprise, el cambio es crear la credencial OAuth Server-to-Server en el [Adobe Developer Console](https://developer.adobe.com/console) y quitar ese header de los tres nodos; los endpoints ya quedan bien.
+**En n8n:**
+1. **Credentials → Add credential → OAuth2 API**, nombre `Frame.io OAuth2`.
+2. Copiá el **OAuth Redirect URL** que muestra n8n (tipo `https://n8n.rawmarketing.co/rest/oauth2-credential/callback`) y pegalo como Redirect URI en Adobe (paso 2 de arriba).
+3. Completá:
+   - **Grant Type**: `Authorization Code`
+   - **Authorization URL**: `https://ims-na1.adobelogin.com/ims/authorize/v2`
+   - **Access Token URL**: `https://ims-na1.adobelogin.com/ims/token/v3`
+   - **Client ID / Client Secret**: los de Adobe
+   - **Scope**: `openid email profile offline_access additional_info.roles`
+   - **Authentication**: `Header`
+4. Tocá **Connect**, iniciá sesión en la ventana de Adobe y autorizá. Queda conectada.
+5. Asigná la credencial `Frame.io OAuth2` a los tres nodos de Frame del workflow 3.
+
+El scope `offline_access` es el que hace que Adobe devuelva un refresh token; sin él, el acceso se corta al rato y hay que volver a loguearse. Como la credencial actúa como tu usuario, los proyectos y carpetas creados por el workflow figuran a tu nombre en Frame.io.
 
 **Cómo obtener los IDs para el CONFIG:**
 
 ```
-curl -H "Authorization: Bearer TU_TOKEN" -H "x-frameio-legacy-token-auth: true" https://api.frame.io/v4/accounts
-curl -H "Authorization: Bearer TU_TOKEN" -H "x-frameio-legacy-token-auth: true" https://api.frame.io/v4/accounts/{account_id}/workspaces
+curl -H "Authorization: Bearer TU_ACCESS_TOKEN" https://api.frame.io/v4/accounts
+curl -H "Authorization: Bearer TU_ACCESS_TOKEN" https://api.frame.io/v4/accounts/{account_id}/workspaces
 ```
 
-El primer comando te da el `account_id`, el segundo el `workspace_id` del workspace donde querés que se creen los proyectos. 
+El primer comando te da el `account_id`, el segundo el `workspace_id` del workspace donde querés que se creen los proyectos. El `TU_ACCESS_TOKEN` es un token de acceso OAuth ya emitido: la forma más simple de conseguirlo es, en n8n, abrir uno de los nodos de Frame con la credencial ya conectada y ejecutarlo una vez (o usar el API Explorer de Frame). Es solo para este trámite de descubrir los IDs; después el workflow maneja los tokens solo. 
 ### Paso 5 — Activar los workflows
 
 Prendé el toggle **Active** en los workflows 2, 3, 4, 5 y 6 (el 1 no hace falta, es manual).
