@@ -530,6 +530,20 @@
 </style>
 </head>
 <body>
+<div id="authGate" style="display:none;position:fixed;inset:0;z-index:2000;background:#fff;align-items:center;justify-content:center">
+  <div style="width:min(430px,92%);border:2px solid var(--ink);border-radius:var(--radius-lg,16px);padding:30px;box-shadow:8px 8px 0 var(--ink);background:#fff">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <span style="font-family:var(--font-primary);font-weight:900;font-size:24px;letter-spacing:-0.5px">TEAM23</span>
+      <svg width="34" height="22" viewBox="0 0 64 40" aria-hidden="true"><circle cx="18" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="46" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="21" cy="24" r="7.5" fill="#0A0A0A"/><circle cx="49" cy="24" r="7.5" fill="#0A0A0A"/></svg>
+    </div>
+    <div class="kicker" style="margin-bottom:14px">Production Hub · acceso del equipo</div>
+    <p id="agMsg" style="font-size:14px;line-height:1.5;margin:0 0 14px">Verificando sesión…</p>
+    <div id="agForm" style="display:none">
+      <input id="agEmail" type="email" placeholder="tu@team23.online" style="width:100%;margin-bottom:10px" onkeydown="if(event.key==='Enter')authSend(document.getElementById('agBtn'))">
+      <button class="btn primary" id="agBtn" style="width:100%" onclick="authSend(this)">Enviarme el link de acceso</button>
+    </div>
+  </div>
+</div>
 
 <header>
   <div class="header-top">
@@ -549,6 +563,7 @@
       <button class="status-opt" data-view="calendario" onclick="switchView('calendario')">Calendario</button>
     </nav>
     <button class="btn small" id="btnNew">+ NUEVO PROYECTO</button>
+    <button class="btn small" id="btnLogout" style="display:none" onclick="authLogout()">Salir</button>
   </div>
 </header>
 
@@ -806,7 +821,9 @@
 ================================================================ */
 const CONFIG = {
   N8N_BASE: "https://coordteam23.app.n8n.cloud",
-  API_KEY: "coordHUBt23"
+  API_KEY: "coordHUBt23",
+  SUPABASE_URL: "https://muvmrkacjhygfuialpyn.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI"
 };
 
 /* id estable por entrada de calendario — necesario para poder sincronizar cada
@@ -2657,7 +2674,57 @@ $("#yr").textContent = new Date().getFullYear();
 if(DEMO) $("#demoBanner").style.display="block";
 currentView = VIEW_TITLES[location.hash.slice(1)] ? location.hash.slice(1) : "dashboard";
 applyViewUI(currentView);
-loadProjects();
+/* ---------------- login (Supabase) ---------------- */
+let sb = null, authUser = null;
+const AUTH_ON = !!CONFIG.SUPABASE_URL;
+function startApp(){ loadProjects(); }
+async function initAuth(){
+  if(!AUTH_ON){ startApp(); return; }
+  const gate = $("#authGate"); gate.style.display = "flex";
+  try{
+    const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+    sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session){ authEnter(session); return; }
+    sb.auth.onAuthStateChange((ev, s)=>{ if(s && !authUser) authEnter(s); });
+    $("#agMsg").textContent = "Ingresá con tu mail del equipo y te mandamos un link de acceso.";
+    $("#agForm").style.display = "block";
+  }catch(e){ $("#agMsg").textContent = "No pude conectar con el login ("+e.message+"). Recargá la página."; }
+}
+async function authEnter(session){
+  authUser = session.user;
+  try{
+    const { data, error } = await sb.from("profiles").select("role,subrol").eq("id", authUser.id).single();
+    if(error) throw error;
+    if(data.role !== "interno"){
+      $("#agForm").style.display = "none";
+      $("#agMsg").innerHTML = 'Tu cuenta es de proveedor, este panel es del equipo interno. Entrá por el <a href="/proveedores">portal de proveedores</a>.<br><br><a href="#" onclick="authLogout();return false">Cerrar sesión</a>';
+      return;
+    }
+    $("#authGate").style.display = "none";
+    $("#btnLogout").style.display = "";
+    startApp();
+  }catch(e){
+    $("#agForm").style.display = "none";
+    $("#agMsg").textContent = "No pude verificar tu cuenta ("+e.message+"). Probá recargar.";
+  }
+}
+async function authSend(btn){
+  const email = $("#agEmail").value.trim();
+  if(!email){ toast("Escribí tu mail", true); return; }
+  btn.disabled = true; btn.textContent = "Enviando…";
+  try{
+    const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.origin + location.pathname } });
+    if(error) throw error;
+    $("#agMsg").textContent = "Listo, revisá tu casilla y abrí el link para entrar.";
+    $("#agForm").style.display = "none";
+  }catch(e){
+    toast("No pude enviar el link: "+e.message, true);
+    btn.disabled = false; btn.textContent = "Enviarme el link de acceso";
+  }
+}
+function authLogout(){ if(sb) sb.auth.signOut().then(()=>location.reload()); else location.reload(); }
+initAuth();
 </script>
 </body>
 </html>
