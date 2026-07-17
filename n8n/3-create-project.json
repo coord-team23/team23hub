@@ -290,7 +290,16 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ data: { name: $('Webhook').first().json.body.nombre } }) }}",
-        "options": {}
+        "options": {},
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-frameio-legacy-token-auth",
+              "value": "true"
+            }
+          ]
+        }
       },
       "id": "c3000003-0000-0000-0000-00000000000d",
       "name": "Frame: Crear proyecto",
@@ -329,7 +338,16 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ data: { name: $json.name } }) }}",
-        "options": {}
+        "options": {},
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-frameio-legacy-token-auth",
+              "value": "true"
+            }
+          ]
+        }
       },
       "id": "c3000003-0000-0000-0000-00000000000f",
       "name": "Frame: Crear carpetas",
