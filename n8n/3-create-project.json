@@ -31,12 +31,6 @@
         "assignments": {
           "assignments": [
             {
-              "id": "k1",
-              "name": "parentFolderId",
-              "value": "PEGAR_ID_CARPETA_MADRE_DRIVE",
-              "type": "string"
-            },
-            {
               "id": "k2",
               "name": "desgloseTemplateId",
               "value": "1hMKi5R-tVpqQ_FF-KtfZsYgF_eIqUlhLFhfvZPCDkns",
@@ -65,6 +59,12 @@
               "name": "frameWorkspaceId",
               "value": "PEGAR_FRAME_WORKSPACE_ID",
               "type": "string"
+            },
+            {
+              "id": "drv-members",
+              "name": "driveMembers",
+              "value": "PEGAR_MAILS_DEL_EQUIPO_SEPARADOS_POR_COMA",
+              "type": "string"
             }
           ]
         },
@@ -83,16 +83,16 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://www.googleapis.com/drive/v3/files?supportsAllDrives=true",
+        "url": "=https://www.googleapis.com/drive/v3/drives?requestId={{ $execution.id }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleDriveOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre, mimeType: 'application/vnd.google-apps.folder', parents: [ $('CONFIG').first().json.parentFolderId ] }) }}",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre }) }}",
         "options": {}
       },
       "id": "c3000003-0000-0000-0000-000000000003",
-      "name": "Drive: Carpeta raiz",
+      "name": "Drive: Crear Unidad",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -108,7 +108,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rootId = $json.id;\nconst names = ['00. COORD','01. SUPERVISION - PRE','02. FOOTAGE','03. RECURSOS','04. EDICIÓN','05. DELIVERY'];\nreturn names.map(name => ({ json: { name, parent: rootId } }));"
+        "jsCode": "const rootId = $('Drive: Crear Unidad').first().json.id;\nconst names = ['00. COORD','01. SUPERVISION - PRE','02. FOOTAGE','03. RECURSOS','04. EDICIÓN','05. DELIVERY'];\nreturn names.map(name => ({ json: { name, parent: rootId } }));"
       },
       "id": "c3000003-0000-0000-0000-000000000004",
       "name": "Nivel 1: carpetas",
@@ -368,7 +368,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $('Webhook').first().json.body;\nconst root = $('Drive: Carpeta raiz').first().json;\nconst l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst find = (kw) => { const f = l1.find(x => (x.name || '').includes(kw)); return f ? f.id : ''; };\nconst desglose = $('Copia Desglose').first().json;\nconst tracker = $('Copia Tracker').first().json;\nconst notas = $('Crear Doc Notas').first().json;\nconst frame = $('Frame: carpetas').first().json;\nconst folderUrl = (id) => id ? 'https://drive.google.com/drive/folders/' + id : '';\nconst links = {\n  driveRoot: folderUrl(root.id),\n  coord: folderUrl(find('COORD')),\n  supervision: folderUrl(find('SUPERVISION')),\n  footage: folderUrl(find('FOOTAGE')),\n  recursos: folderUrl(find('RECURSOS')),\n  edicion: folderUrl(find('EDICI')),\n  delivery: folderUrl(find('DELIVERY')),\n  notas: 'https://docs.google.com/document/d/' + notas.id,\n  desglose: 'https://docs.google.com/spreadsheets/d/' + desglose.id,\n  tracker: 'https://docs.google.com/spreadsheets/d/' + tracker.id,\n  frameio: 'https://next.frame.io/project/' + frame.frameProjectId\n};\nconst id = 'p_' + Date.now();\nconst now = new Date().toISOString();\nconst year = String(new Date().getFullYear());\nconst row = {\n  id,\n  nombre: body.nombre,\n  cliente: body.cliente || '',\n  agencia: body.agencia || '',\n  productora: body.productora || '',\n  director: body.director || '',\n  ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '',\n  prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '',\n  coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '',\n  tareas_json: JSON.stringify(body.tareas || []),\n  asignaciones_json: JSON.stringify(body.asignaciones || {}),\n  status: 'por_activarse',\n  year,\n  links_json: JSON.stringify(links),\n  created_at: now,\n  taskDates_json: JSON.stringify(body.taskDates || {}),\n  sintesis: body.sintesis || '',\n  storyboard_url: body.storyboard_url || ''\n};\nconst project = { id, nombre: body.nombre, cliente: body.cliente || '', agencia: body.agencia || '', productora: body.productora || '', director: body.director || '', ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '', prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '', coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '', tareas: body.tareas || [], asignaciones: body.asignaciones || {}, status: 'por_activarse', year, links, calendario: [], taskDates: body.taskDates || {}, sintesis: body.sintesis || '', storyboard_url: body.storyboard_url || '' };\nreturn [{ json: { row, project } }];"
+        "jsCode": "const body = $('Webhook').first().json.body;\nconst root = $('Drive: Crear Unidad').first().json;\nconst l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst find = (kw) => { const f = l1.find(x => (x.name || '').includes(kw)); return f ? f.id : ''; };\nconst desglose = $('Copia Desglose').first().json;\nconst tracker = $('Copia Tracker').first().json;\nconst notas = $('Crear Doc Notas').first().json;\nconst frame = $('Frame: carpetas').first().json;\nconst folderUrl = (id) => id ? 'https://drive.google.com/drive/folders/' + id : '';\nconst links = {\n  driveRoot: folderUrl(root.id),\n  coord: folderUrl(find('COORD')),\n  supervision: folderUrl(find('SUPERVISION')),\n  footage: folderUrl(find('FOOTAGE')),\n  recursos: folderUrl(find('RECURSOS')),\n  edicion: folderUrl(find('EDICI')),\n  delivery: folderUrl(find('DELIVERY')),\n  notas: 'https://docs.google.com/document/d/' + notas.id,\n  desglose: 'https://docs.google.com/spreadsheets/d/' + desglose.id,\n  tracker: 'https://docs.google.com/spreadsheets/d/' + tracker.id,\n  frameio: 'https://next.frame.io/project/' + frame.frameProjectId\n};\nconst id = 'p_' + Date.now();\nconst now = new Date().toISOString();\nconst year = String(new Date().getFullYear());\nconst row = {\n  id,\n  nombre: body.nombre,\n  cliente: body.cliente || '',\n  agencia: body.agencia || '',\n  productora: body.productora || '',\n  director: body.director || '',\n  ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '',\n  prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '',\n  coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '',\n  tareas_json: JSON.stringify(body.tareas || []),\n  asignaciones_json: JSON.stringify(body.asignaciones || {}),\n  status: 'por_activarse',\n  year,\n  links_json: JSON.stringify(links),\n  created_at: now,\n  taskDates_json: JSON.stringify(body.taskDates || {}),\n  sintesis: body.sintesis || '',\n  storyboard_url: body.storyboard_url || ''\n};\nconst project = { id, nombre: body.nombre, cliente: body.cliente || '', agencia: body.agencia || '', productora: body.productora || '', director: body.director || '', ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '', prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '', coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '', tareas: body.tareas || [], asignaciones: body.asignaciones || {}, status: 'por_activarse', year, links, calendario: [], taskDates: body.taskDates || {}, sintesis: body.sintesis || '', storyboard_url: body.storyboard_url || '' };\nreturn [{ json: { row, project } }];"
       },
       "id": "c3000003-0000-0000-0000-000000000010",
       "name": "Armar registro",
@@ -488,6 +488,46 @@
           "name": "Gmail account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $('CONFIG').first().json.driveMembers || '';\nconst emails = raw.split(',').map(e => e.trim()).filter(e => e && e.includes('@'));\nreturn emails.map(email => ({ json: { email } }));"
+      },
+      "id": "mm000003-0000-0000-0000-000000000001",
+      "name": "Armar miembros",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('Drive: Crear Unidad').first().json.id }}/permissions?supportsAllDrives=true&sendNotificationEmail=false",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ role: 'organizer', type: 'user', emailAddress: $json.email }) }}",
+        "options": {}
+      },
+      "id": "mm000003-0000-0000-0000-000000000002",
+      "name": "Drive: Miembros",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        180
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
     }
   ],
   "connections": {
@@ -506,18 +546,7 @@
       "main": [
         [
           {
-            "node": "Drive: Carpeta raiz",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Drive: Carpeta raiz": {
-      "main": [
-        [
-          {
-            "node": "Nivel 1: carpetas",
+            "node": "Drive: Crear Unidad",
             "type": "main",
             "index": 0
           }
@@ -694,6 +723,33 @@
         [
           {
             "node": "Mail de propuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drive: Crear Unidad": {
+      "main": [
+        [
+          {
+            "node": "Nivel 1: carpetas",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Armar miembros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar miembros": {
+      "main": [
+        [
+          {
+            "node": "Drive: Miembros",
             "type": "main",
             "index": 0
           }
