@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>TEAM23 — Proveedores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="design-system/styles.css">
+<style>
+  :root{
+    /* mismos alias del hub principal, sobre los tokens de design-system/tokens/ */
+    --ink:var(--n-600);
+    --paper:var(--n-000);
+    --red:var(--brand-red);
+    --gray:var(--tx-on-light-secondary);
+    --soft:var(--n-100);
+    --hair:var(--n-200);
+
+    --fs-hero:clamp(32px,6vw,var(--text-s1-size));
+    --fs-modal-title:clamp(24px,3.6vw,var(--text-s1-size));
+    --fs-card-title:clamp(16px,1.6vw,18px);
+    --fs-body:var(--text-b1-size);
+    --fs-caption:var(--text-c2-size);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--font-primary);background:var(--paper);color:var(--ink);
+    font-size:var(--fs-body);line-height:1.3;letter-spacing:var(--tracking-tight);
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  ::selection{background:var(--red);color:#fff}
+
+  header{
+    position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:var(--stroke-sm) solid var(--ink);
+    display:flex;align-items:center;justify-content:space-between;padding:var(--space-4) var(--space-7);gap:var(--space-3);
+  }
+  .wordmark{display:flex;align-items:center;gap:var(--space-3);color:var(--ink);text-decoration:none}
+  .wordmark .t{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:22px;letter-spacing:var(--tracking-tight)}
+  .eyes{display:inline-flex;gap:3px}
+  .eye{width:18px;height:22px;background:#fff;border:var(--stroke-sm) solid var(--ink);border-radius:50%;position:relative}
+  .pupil{width:7px;height:7px;background:var(--ink);border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+  .hub-label{font-size:var(--fs-caption);letter-spacing:.14em;font-weight:var(--weight-bold);color:var(--gray)}
+  .userbox{display:flex;align-items:center;gap:var(--space-3);font-size:var(--fs-caption);font-weight:var(--weight-bold)}
+  .userbox .who{color:var(--gray);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .btn{
+    font-family:var(--font-secondary);font-weight:var(--weight-bold);font-size:var(--fs-caption);
+    border:var(--stroke-sm) solid var(--ink);background:var(--paper);color:var(--ink);
+    border-radius:var(--radius-full);padding:var(--space-4) var(--space-9);cursor:pointer;white-space:nowrap;
+    transition:transform .15s ease, background .15s ease, color .15s ease;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+  /* misma jerarquía que el hub: outline (secundaria) → negro (primaria) → rojo (peligro/alerta, exclusivo) */
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn.primary:hover{background:#2b2b2b;border-color:#2b2b2b}
+  .btn.danger{background:var(--red);border-color:var(--red);color:#fff}
+  .btn.danger:hover{background:#d40000;border-color:#d40000}
+  .btn.small{padding:var(--space-3) var(--space-5);font-size:12px}
+
+  .hero{padding:var(--space-11) var(--space-7) var(--space-7)}
+  .hero h1{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-hero);
+    line-height:.92;letter-spacing:var(--tracking-tight);text-transform:uppercase;
+    -webkit-text-stroke:.6px currentColor;
+  }
+  main{position:relative;z-index:1;padding:var(--space-5) var(--space-7) var(--space-9);max-width:1400px}
+  .demo-banner{
+    margin:0 var(--space-7) var(--space-4);padding:var(--space-4) var(--space-5);border:var(--stroke-sm) dashed var(--red);
+    border-radius:var(--radius-md);font-size:var(--fs-caption);line-height:1.6;display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap;
+  }
+  .demo-banner b{color:var(--red)}
+  .demo-banner code{font-size:.92em}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:var(--space-5);margin-top:var(--space-5)}
+  .card{
+    border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-lg);background:var(--paper);
+    padding:var(--space-5) var(--space-5) var(--space-4);cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .grid .card:nth-child(odd){transform:rotate(-.4deg)}
+  .grid .card:nth-child(even){transform:rotate(.35deg)}
+  .card:hover{transform:rotate(0) translateY(-3px);box-shadow:var(--shadow-flat)}
+  .card h3{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-card-title);line-height:1.05;
+    text-transform:uppercase;letter-spacing:var(--tracking-tight);margin-bottom:var(--space-3);
+  }
+  .card .meta{font-size:var(--fs-caption);color:var(--gray);font-weight:var(--weight-regular);margin-bottom:var(--space-4)}
+  .pills{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+  .pill{
+    font-size:12px;font-weight:var(--weight-bold);letter-spacing:.04em;text-transform:uppercase;
+    border:2px solid var(--ink);border-radius:var(--radius-full);padding:var(--space-2) var(--space-4);
+  }
+  .empty{
+    border:var(--stroke-sm) dashed var(--hair);border-radius:var(--radius-lg);padding:var(--space-9);
+    text-align:center;color:var(--gray);font-size:var(--fs-caption);margin-top:var(--space-5);
+  }
+
+  .dp-fase{
+    display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--fs-caption);font-weight:var(--weight-regular);
+    border:1.5px solid var(--hair);border-radius:var(--radius-full);padding:var(--space-2) var(--space-4);color:var(--ink);
+  }
+
+  #loginView{min-height:70vh;display:none;align-items:center;justify-content:center;padding:var(--space-9) var(--space-4)}
+  .login-card{
+    border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-xl);padding:var(--space-9) var(--space-7);
+    width:min(420px,100%);box-shadow:10px 10px 0 var(--ink);background:var(--paper);
+  }
+  .login-card h2{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-modal-title);
+    text-transform:uppercase;letter-spacing:var(--tracking-tight);line-height:1;margin-bottom:var(--space-1);
+  }
+  .login-card .kicker{font-size:var(--fs-caption);letter-spacing:.16em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin-bottom:var(--space-5)}
+  .login-card .or{text-align:center;font-size:var(--fs-caption);color:var(--gray);letter-spacing:.2em;margin:var(--space-4) 0}
+  label.f{display:block;font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--gray);margin-bottom:var(--space-1)}
+  input[type=email]{
+    width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3) var(--space-3);
+    border:2px solid var(--ink);border-radius:var(--radius-md);background:#fff;color:var(--ink);
+  }
+  input:focus{outline:3px solid rgba(255,0,0,.35)}
+
+  .overlay{position:fixed;inset:0;background:rgba(10,10,10,.45);z-index:80;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:5vh 16px 6vh}
+  .overlay.open{display:flex}
+  .modal{
+    background:var(--paper);border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-xl);
+    width:min(1080px,100%);padding:var(--space-9) var(--space-7) var(--space-5);position:relative;box-shadow:10px 10px 0 var(--ink);
+  }
+  .modal .close{
+    position:absolute;top:var(--space-4);right:var(--space-4);width:38px;height:38px;border-radius:50%;
+    border:var(--stroke-sm) solid var(--ink);background:#fff;font-size:17px;cursor:pointer;font-weight:var(--weight-bold);z-index:5;
+  }
+  .modal .close:hover{background:var(--red);border-color:var(--red);color:#fff}
+  .modal h2{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-modal-title);text-transform:uppercase;
+    letter-spacing:var(--tracking-tight);line-height:1;margin-bottom:var(--space-1);padding-right:50px;
+  }
+  .modal .kicker{font-size:var(--fs-caption);letter-spacing:.16em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin-bottom:var(--space-5)}
+
+  .fgroup{margin-bottom:var(--space-7)}
+  .fgroup>.glabel{
+    font-size:var(--fs-caption);letter-spacing:.12em;font-weight:var(--weight-bold);text-transform:uppercase;
+    border-bottom:2px solid var(--ink);padding-bottom:var(--space-3);margin-bottom:var(--space-4);
+  }
+  /* pipeline del proyecto: mismo color por etapa que el hub (STATUS_COLORS en el script) */
+  .stepper{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:var(--space-2) 0 var(--space-7)}
+  .step{
+    font-size:12px;font-weight:var(--weight-bold);letter-spacing:.08em;text-transform:uppercase;
+    border:2px solid var(--hair);border-radius:var(--radius-full);padding:var(--space-3) var(--space-5);color:var(--gray);
+  }
+  .step.done{background:var(--ink);border-color:var(--ink);color:#fff}
+
+  .linkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--space-2)}
+  .linkgrid a{
+    display:block;border:2px solid var(--ink);border-radius:var(--radius-sm);padding:var(--space-2) var(--space-3);
+    font-family:var(--font-secondary);font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--ink);text-decoration:none;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .linkgrid a:hover{background:var(--ink);color:#fff}
+  .linkgrid a span{color:var(--red)}
+  .linkgrid a:hover span{color:#fff}
+
+  table.cal{width:100%;border-collapse:collapse;font-size:var(--fs-caption)}
+  table.cal th{
+    text-align:left;font-size:var(--fs-caption);letter-spacing:.1em;text-transform:uppercase;
+    border-bottom:2px solid var(--ink);padding:var(--space-2) var(--space-2);
+  }
+  table.cal td{padding:var(--space-2) var(--space-1);border-bottom:1px solid var(--hair)}
+  .dotc{display:inline-block;width:14px;height:14px;border-radius:4px;border:2px solid var(--ink)}
+
+  .cal-wrap{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);overflow:hidden;margin-top:var(--space-4)}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;padding:var(--space-3) var(--space-4);border-bottom:2px solid var(--ink);background:#fff}
+  .cal-head .mtitle{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:20px;letter-spacing:var(--tracking-tight);text-transform:uppercase}
+  .cal-nav{display:flex;gap:var(--space-2)}
+  .cal-nav button{width:34px;height:34px;border:2px solid var(--ink);border-radius:50%;background:#fff;font-size:15px;font-weight:var(--weight-bold);cursor:pointer;line-height:1}
+  .cal-nav button:hover{background:var(--ink);color:#fff}
+  .cal-scroll{overflow-x:auto}
+  .cal-min{min-width:660px}
+  .wdays{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:2px solid var(--ink);background:var(--soft)}
+  .wdays div{font-size:var(--fs-caption);font-weight:var(--weight-bold);letter-spacing:.12em;text-transform:uppercase;padding:var(--space-2) var(--space-2);border-right:1px solid var(--hair)}
+  .wdays div:last-child{border-right:none}
+  .week{position:relative;display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--hair)}
+  .week:last-child{border-bottom:none}
+  .cell{border-right:1px solid var(--hair);padding:4px 5px 6px;min-height:calc(58px + var(--bh,0px));display:flex;flex-direction:column;background:#fff}
+  .cell:last-child{border-right:none}
+  .cell.om{background:#FAFAF8;color:#C2C2BD}
+  .dnum{font-size:11.5px;font-weight:var(--weight-bold);width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:2px}
+  .dnum.today{background:var(--red);color:#fff}
+  .cell .chips{margin-top:calc(var(--bh,0px) + 2px);display:flex;flex-direction:column;gap:2px}
+  .chip{font-size:9.5px;font-weight:var(--weight-bold);border:1.5px solid var(--red);color:var(--red);border-radius:6px;padding:1.5px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#fff}
+  .om .chip{opacity:.45}
+  .barlayer{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
+  .bar{position:absolute;height:15px;border-radius:7px;font-size:9.5px;font-weight:var(--weight-bold);padding:0 7px;line-height:12px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--ink);color:#fff;font-size:var(--fs-caption);font-weight:var(--weight-bold);
+    padding:var(--space-3) var(--space-5);border-radius:var(--radius-full);z-index:200;opacity:0;transition:all .3s;
+    max-width:90vw;text-align:center;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.err{background:var(--red)}
+  footer{
+    border-top:var(--stroke-sm) solid var(--ink);padding:var(--space-11) var(--space-7) var(--space-7);
+    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:var(--space-7);
+    position:relative;z-index:1;
+  }
+  .foot-mark-img{display:block;width:clamp(280px,42vw,620px);height:auto;max-width:100%}
+  .foot-right{
+    text-align:right;font-size:var(--fs-caption);letter-spacing:.1em;color:var(--gray);
+    font-family:var(--font-secondary);font-weight:var(--weight-bold);
+  }
+  .foot-scope{margin-bottom:var(--space-2)}
+
+  @media(max-width:640px){
+    header{padding:10px 16px}
+    .hub-label{display:none}
+    .hero{padding:24px 16px 10px}
+    main{padding:8px 16px 90px}
+    .demo-banner{margin:0 16px 8px}
+    .overlay{padding:0}
+    .modal{width:100%;min-height:100vh;min-height:100dvh;border-radius:0;border-left:none;border-right:none;box-shadow:none;padding:20px 16px calc(44px + env(safe-area-inset-bottom))}
+    .modal .close{position:fixed;top:10px;right:10px;box-shadow:3px 3px 0 var(--ink)}
+    input[type=email]{font-size:16px}
+    .cal-min{min-width:0}
+    .wdays div{padding:5px 3px;font-size:8px}
+    .cell{min-height:calc(44px + var(--bh,0px));padding:3px}
+    .dnum{width:18px;height:18px;font-size:10px}
+    .bar{height:12px;font-size:0;padding:0}
+    .cell .chips{flex-direction:row;flex-wrap:wrap;gap:3px}
+    .chip{width:9px;height:9px;border-radius:50%;padding:0;font-size:0;background:var(--red);border-color:var(--red);flex:none}
+    footer{padding:40px 16px 28px;flex-direction:column;align-items:flex-start;gap:20px}
+    .foot-right{text-align:left}
+  }
+  @media (prefers-reduced-motion: reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="wordmark" href="#" onclick="return false">
+    <span class="t">TEAM23</span>
+    <span class="eyes"><span class="eye"><span class="pupil"></span></span><span class="eye"><span class="pupil"></span></span></span>
+    <span class="hub-label">PRODUCTION&nbsp;HUB</span>
+  </a>
+  <div class="userbox" id="userBox" style="display:none">
+    <span class="who" id="userEmail"></span>
+    <button class="btn small" onclick="logout()">Salir</button>
+  </div>
+</header>
+
+<div id="loginView">
+  <div class="login-card">
+    <h2>Portal de proveedores</h2>
+    <div class="kicker">TEAM23</div>
+    <button class="btn primary" style="width:100%" onclick="loginGoogle()">Entrar con Google</button>
+    <div class="or">— O CON TU MAIL —</div>
+    <label class="f">Tu mail (el que usás con TEAM23)</label>
+    <input type="email" id="loginEmail" placeholder="vos@tuestudio.com">
+    <button class="btn primary" style="width:100%;margin-top:10px" onclick="loginMagic()">Mandarme un link de acceso</button>
+    <p style="font-size:11.5px;color:var(--gray);margin-top:14px">Sin contraseñas: te llega un mail con un link y entrás. Vas a ver solo los proyectos donde estás confirmado.</p>
+  </div>
+</div>
+
+<div id="appView" style="display:none">
+  <div class="hero">
+    <h1>Tus proyectos</h1>
+  </div>
+  <div class="demo-banner" id="demoBanner" style="display:none">
+    <b>MODO DEMO</b> — Datos de ejemplo. Configurá <code>CONFIG</code> con tu Supabase para conectarlo.
+  </div>
+  <main>
+    <div class="grid" id="listProjects"></div><div id="emptyState"></div>
+    <div id="statusSummary"></div>
+  </main>
+</div>
+
+<footer>
+  <div>
+    <img class="foot-mark-img" src="assets/footer-mark.png" alt="biz@team23.online — Creative direction, (Post) producción, New media lab">
+  </div>
+  <div class="foot-right">
+    <div class="foot-scope">MX — ARG — WORLDWIDE</div>
+    <div>TEAM23 © <span id="yr"></span></div>
+  </div>
+</footer>
+
+<div class="overlay" id="ovDetail">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('ovDetail')" aria-label="Cerrar">✕</button>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script>
+/* ================================================================
+   CONFIG — solo Supabase. Esta página NO tiene claves de n8n:
+   los proveedores solo leen sus proyectos (lo garantiza la base).
+================================================================ */
+const CONFIG = {
+  SUPABASE_URL: "",        // https://xxxx.supabase.co  (login)
+  SUPABASE_ANON_KEY: "",   // anon public key
+  N8N_BASE: ""             // https://n8n.rawmarketing.co  (de acá salen tus proyectos)
+};
+
+const ETAPAS = ["por_activarse","activo","entregando","cierre","completado"];
+const ETIQ = {por_activarse:"Pre-producción",activo:"Ejecutando",entregando:"Entregando",cierre:"Listo para cierre",completado:"Completado"};
+/* mismos colores por etapa que el hub principal (STATUS_META de index.html) */
+const STATUS_COLORS = {
+  por_activarse:{bg:"var(--brand-yellow)",fg:"var(--ink)"},
+  activo:       {bg:"var(--brand-green)", fg:"var(--ink)"},
+  entregando:   {bg:"var(--brand-cyan)",  fg:"var(--ink)"},
+  cierre:       {bg:"var(--red)",         fg:"#fff"},
+  completado:   {bg:"var(--ink)",         fg:"#fff"}
+};
+function statusPillStyle(st){ const c=STATUS_COLORS[st]; return c?`background:${c.bg};border-color:${c.bg};color:${c.fg}`:""; }
+const WDAYS = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
+const PHASE_LOOKS = [
+  {bg:"#0A0A0A",fg:"#FFFFFF",bd:"#0A0A0A"},{bg:"#FF2B1E",fg:"#FFFFFF",bd:"#FF2B1E"},
+  {bg:"#FFFFFF",fg:"#0A0A0A",bd:"#0A0A0A"},{bg:"#E9E9E5",fg:"#0A0A0A",bd:"#B9B9B4"},
+  {bg:"#FFFFFF",fg:"#FF2B1E",bd:"#FF2B1E"},{bg:"#5A5A57",fg:"#FFFFFF",bd:"#5A5A57"}
+];
+const DEMO = !CONFIG.SUPABASE_URL;
+let sb=null, session=null, projects=[];
+
+const $ = s=>document.querySelector(s);
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function parseYMD(s){ if(!s) return null; const p=String(s).split("-").map(Number); if(p.length<3||!p[0]) return null; return new Date(p[0],p[1]-1,p[2]); }
+function fmtShort(s){ const d=parseYMD(s); return d? d.toLocaleDateString("es-AR",{day:"2-digit",month:"short"}) : ""; }
+function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function dayDiff(a,b){ return Math.round((b-a)/86400000); }
+let toastTimer;
+function toast(msg,err=false){ const t=$("#toast"); t.textContent=msg; t.className=err?"err show":"show"; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),4400); }
+function openModal(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; }
+function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; }
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id)); });
+document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{ if(e.target===ov) closeModal(ov.id); }));
+
+function demoData(){
+  const hoy=new Date(); const m=hoy.getMonth(), y=hoy.getFullYear();
+  const d=(day)=>ymd(new Date(y,m,day));
+  projects=[{
+    id:"demo1", nombre:"SPOTIFY - CDMX", cliente:"Spotify", productora:"LANDIA/TMMT", status:"entregando",
+    sintesis:"Hero film + social. Post completa.",
+    links:{driveRoot:"#",frameio:"#",feedback:"#"},
+    misRoles:["Online"],
+    calendario:[
+      {tipo:"fase",fase:"Online",inicio:d(6),fin:d(14),notas:""},
+      {tipo:"fase",fase:"VFX",inicio:d(13),fin:d(24),notas:""},
+      {tipo:"hito",fase:"Corte 1 al cliente",inicio:d(10),fin:d(10)}
+    ]
+  }];
+}
+
+async function initApp(){
+  $("#yr").textContent = new Date().getFullYear();
+  if(DEMO){
+    demoData();
+    $("#demoBanner").style.display="flex";
+    $("#loginView").style.display="none"; $("#appView").style.display="block";
+    renderList(); return;
+  }
+  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+  sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  const { data } = await sb.auth.getSession();
+  session = data.session;
+  sb.auth.onAuthStateChange((_e,s)=>{ session=s; boot(); });
+  boot();
+}
+async function boot(){
+  if(!session){ $("#loginView").style.display="flex"; $("#appView").style.display="none"; $("#userBox").style.display="none"; return; }
+  $("#loginView").style.display="none"; $("#appView").style.display="block";
+  $("#userBox").style.display="flex"; $("#userEmail").textContent = session.user.email;
+  await loadAll();
+}
+async function loginGoogle(){
+  try{ await sb.auth.signInWithOAuth({provider:"google", options:{redirectTo: location.origin+location.pathname}}); }
+  catch(e){ toast("No pude iniciar con Google: "+e.message, true); }
+}
+async function loginMagic(){
+  const email=$("#loginEmail").value.trim();
+  if(!email){ toast("Poné tu mail", true); return; }
+  try{
+    const { error } = await sb.auth.signInWithOtp({email, options:{emailRedirectTo: location.origin+location.pathname}});
+    if(error) throw error;
+    toast("✔ Te mandamos el link de acceso, revisá tu mail");
+  }catch(e){ toast("Error: "+e.message, true); }
+}
+async function logout(){ if(sb) await sb.auth.signOut(); location.reload(); }
+
+async function loadAll(){
+  try{
+    const res = await fetch(CONFIG.N8N_BASE + "/webhook/team23/provider-portal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: session.access_token })
+    });
+    if(res.status === 401){ toast("Tu sesión venció, entrá de nuevo", true); await logout(); return; }
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    projects = (data.projects || []).map(p => ({
+      ...p,
+      links: p.links || {},
+      misRoles: p.misRoles || [],
+      calendario: (p.calendario || []).map(c => ({ ...c, tipo: c.tipo === "hito" ? "hito" : "fase" }))
+        .sort((a,b) => String(a.inicio||"").localeCompare(String(b.inicio||"")))
+    }));
+    renderList();
+  }catch(e){ toast("No pude cargar tus proyectos: " + e.message, true); }
+}
+
+function hitoUrgency(target, today){
+  const days = Math.round((target - today)/86400000);
+  const label = days<=0 ? "HOY" : days===1 ? "MAÑANA" : `EN ${days} DÍAS`;
+  if(days<=3) return {label, bg:"var(--brand-red)", fg:"#fff"};
+  if(days<=7) return {label, bg:"var(--brand-yellow)", fg:"var(--ink)"};
+  return {label, bg:"var(--brand-cyan)", fg:"var(--ink)"};
+}
+
+function renderSummary(){
+  const box = $("#statusSummary");
+  if(!projects.length){ box.innerHTML=""; return; }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // un solo listado: hitos del proyecto + tus propias entregas (fases donde SOS el responsable)
+  const items = [];
+  projects.forEach(p=>(p.calendario||[]).forEach(r=>{
+    if(r.tipo==="hito" && r.inicio){
+      const d = parseYMD(r.inicio);
+      if(d && d>=today) items.push({d, date:r.inicio, project:p, label:r.fase||"Hito", delivery:false});
+    } else if(r.tipo!=="hito" && r.fin && (p.misRoles||[]).includes(r.fase)){
+      const d = parseYMD(r.fin);
+      if(d && d>=today) items.push({d, date:r.fin, project:p, label:"Entrega", delivery:true});
+    }
+  }));
+  items.sort((a,b)=>a.d-b.d);
+
+  const itemsHTML = items.length
+    ? `<div style="display:flex;flex-direction:column;gap:var(--space-2)">${items.slice(0,8).map(it=>{
+        const u = hitoUrgency(it.d, today);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3)">
+          <span class="dp-fase">${fmtShort(it.date)} — <b>${esc(it.project.nombre)}</b> · ${it.delivery?`<span style="color:var(--red);font-weight:var(--weight-bold)">${esc(it.label)}</span>`:esc(it.label)}</span>
+          <span style="font-size:11px;font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.04em;padding:3px 10px;border-radius:var(--radius-full);background:${u.bg};color:${u.fg};white-space:nowrap;flex:none">${u.label}</span>
+        </div>`;
+      }).join("")}</div>`
+    : `<div class="empty">Sin hitos próximos.</div>`;
+
+  box.innerHTML = `
+    <div class="fgroup" style="margin-top:var(--space-7)">
+      <div class="glabel">Próximos hitos</div>
+      ${itemsHTML}
+    </div>
+  `;
+}
+
+function renderList(){
+  renderSummary();
+  const list=$("#listProjects"), empty=$("#emptyState");
+  if(!projects.length){
+    list.innerHTML=""; empty.innerHTML=`<div class="empty">Todavía no tenés proyectos confirmados con TEAM23.<br>Cuando el estudio te confirme en un proyecto, aparece acá.</div>`;
+    return;
+  }
+  empty.innerHTML="";
+  list.innerHTML = projects.map(p=>`
+    <div class="card" onclick="openDetail('${p.id}')">
+      <h3>${esc(p.nombre)}</h3>
+      <div class="meta">${[p.cliente,p.productora].filter(Boolean).map(esc).join(" · ")}</div>
+      <div class="pills">
+        <span class="pill" style="${statusPillStyle(p.status)}">${ETIQ[p.status]||p.status}</span>
+        ${(p.misRoles||[]).map(r=>`<span class="pill">Tu rol: ${esc(r)}</span>`).join("")}
+      </div>
+    </div>`).join("");
+}
+
+let detailProject=null, calView=null;
+function openDetail(id){
+  detailProject = projects.find(p=>p.id===id);
+  if(!detailProject) return;
+  const f=(detailProject.calendario||[]).find(r=>r.tipo!=="hito"&&r.inicio);
+  const base=f?parseYMD(f.inicio):new Date();
+  calView=new Date(base.getFullYear(), base.getMonth(), 1);
+  renderDetail();
+  openModal("ovDetail");
+}
+function navMonth(d){ calView=new Date(calView.getFullYear(), calView.getMonth()+d, 1); renderDetail(); }
+
+function renderDetail(){
+  const p=detailProject;
+  const idx=ETAPAS.indexOf(p.status);
+  const stepper=`<div class="stepper">${ETAPAS.map((e,i)=>
+    `<span class="step ${i<idx?"done":""}" style="${i===idx?statusPillStyle(e):""}">${ETIQ[e]}</span>`
+  ).join("")}</div>`;
+  const linkDefs=[["driveRoot","📁 Drive del proyecto"],["frameio","🎬 Frame.io"],["feedback","📝 Feedback"]];
+  const links=linkDefs.filter(([k])=>p.links&&p.links[k]).map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
+  const lookMap={}; let n=0;
+  (p.calendario||[]).forEach((r,i)=>{ if(r.tipo!=="hito"){ lookMap[i]=n%PHASE_LOOKS.length; n++; } });
+  $("#detailBody").innerHTML=`
+    <h2>${esc(p.nombre)}</h2>
+    <div class="kicker">${esc(p.cliente)}${p.productora?" · "+esc(p.productora):""}${(p.misRoles||[]).length?" · Tu rol: "+p.misRoles.map(esc).join(", "):""}</div>
+    ${stepper}
+    ${p.sintesis?`<div class="fgroup"><div class="glabel">Síntesis</div><p style="font-size:13.5px;white-space:pre-line">${esc(p.sintesis)}</p></div>`:""}
+    ${links?`<div class="fgroup"><div class="glabel">Links</div><div class="linkgrid">${links}</div></div>`:""}
+    ${(p.calendario||[]).some(r=>r.inicio)?`<div class="fgroup"><div class="glabel">Calendario</div>${monthHTML(p,lookMap)}</div>`:""}`;
+}
+function monthHTML(p, lookMap){
+  const y=calView.getFullYear(), m=calView.getMonth();
+  const first=new Date(y,m,1);
+  const startOff=(first.getDay()+6)%7;
+  const gridStart=new Date(y,m,1-startOff);
+  const lastDate=new Date(y,m+1,0).getDate();
+  const totalCells=Math.ceil((startOff+lastDate)/7)*7;
+  const days=[]; for(let i=0;i<totalCells;i++){ const d=new Date(gridStart); d.setDate(gridStart.getDate()+i); days.push(d); }
+  const weeks=[]; for(let i=0;i<days.length;i+=7) weeks.push(days.slice(i,i+7));
+  const cal=p.calendario||[];
+  const fases=cal.map((r,i)=>({...r,_i:i})).filter(r=>r.tipo!=="hito"&&r.inicio);
+  const hitos=cal.map((r,i)=>({...r,_i:i})).filter(r=>r.tipo==="hito"&&r.inicio);
+  const todayKey=ymd(new Date());
+  const weekHTML=weeks.map(week=>{
+    const wStart=week[0], wEnd=week[6];
+    const segs=[];
+    fases.forEach(f=>{
+      const s=parseYMD(f.inicio); if(!s) return;
+      const e=parseYMD(f.fin)||s;
+      const a=s<=e?s:e, b=s<=e?e:s;
+      if(b<wStart||a>wEnd) return;
+      segs.push({f, c0:Math.max(0,dayDiff(wStart,a)), c1:Math.min(6,dayDiff(wStart,b))});
+    });
+    segs.sort((x,z)=>x.c0-z.c0||(z.c1-z.c0)-(x.c1-x.c0));
+    const laneEnd=[];
+    segs.forEach(sg=>{ let L=0; while(laneEnd[L]!==undefined&&laneEnd[L]>=sg.c0)L++; sg.lane=L; laneEnd[L]=sg.c1; });
+    const barsH=laneEnd.length?laneEnd.length*18+2:0;
+    const cells=week.map(d=>{
+      const key=ymd(d); const other=d.getMonth()!==m;
+      const chips=hitos.filter(h=>h.inicio===key).map(h=>`<div class="chip" title="${esc(h.fase)}">● ${esc(h.fase||"…")}</div>`).join("");
+      return `<div class="cell ${other?"om":""}"><div class="dnum ${key===todayKey?"today":""}">${d.getDate()}</div><div class="chips">${chips}</div></div>`;
+    }).join("");
+    const bars=segs.map(sg=>{
+      const lk=PHASE_LOOKS[lookMap[sg.f._i]||0];
+      const left=(sg.c0/7*100).toFixed(3), width=((sg.c1-sg.c0+1)/7*100).toFixed(3);
+      return `<div class="bar" style="left:calc(${left}% + 3px);width:calc(${width}% - 6px);top:${27+sg.lane*18}px;background:${lk.bg};color:${lk.fg};border:1.5px solid ${lk.bd}">${esc(sg.f.fase)}</div>`;
+    }).join("");
+    return `<div class="week" style="--bh:${barsH}px">${cells}<div class="barlayer">${bars}</div></div>`;
+  }).join("");
+  const mtitle=calView.toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase();
+  return `<div class="cal-wrap">
+    <div class="cal-head"><div class="mtitle">${mtitle}</div>
+      <div class="cal-nav"><button onclick="navMonth(-1)">‹</button><button onclick="navMonth(1)">›</button></div></div>
+    <div class="cal-scroll"><div class="cal-min">
+      <div class="wdays">${WDAYS.map(w=>`<div>${w}</div>`).join("")}</div>
+      ${weekHTML}
+    </div></div></div>`;
+}
+
+document.addEventListener("mousemove",e=>{
+  document.querySelectorAll(".eye").forEach(eye=>{
+    const r=eye.getBoundingClientRect();
+    const a=Math.atan2(e.clientY-(r.top+r.height/2), e.clientX-(r.left+r.width/2));
+    eye.querySelector(".pupil").style.transform=`translate(calc(-50% + ${Math.cos(a)*3.5}px), calc(-50% + ${Math.sin(a)*4.5}px))`;
+  });
+});
+
+initApp();
+</script>
+</body>
+</html>

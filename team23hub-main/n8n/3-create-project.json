@@ -1,0 +1,870 @@
+{
+  "name": "Team23 — 3. Crear Proyecto",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "team23/create",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "c3000003-0000-0000-0000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Team23 Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "k2",
+              "name": "desgloseTemplateId",
+              "value": "1cWnzuiWV2RLfTYCQNtSvRb7diMpi6HFPTUZNkTJuvOk",
+              "type": "string"
+            },
+            {
+              "id": "k4",
+              "name": "dbSheetId",
+              "value": "PEGAR_DB_SHEET_ID",
+              "type": "string"
+            },
+            {
+              "id": "k5",
+              "name": "frameAccountId",
+              "value": "PEGAR_FRAME_ACCOUNT_ID",
+              "type": "string"
+            },
+            {
+              "id": "k6",
+              "name": "frameWorkspaceId",
+              "value": "PEGAR_FRAME_WORKSPACE_ID",
+              "type": "string"
+            },
+            {
+              "id": "drv-members",
+              "name": "driveMembers",
+              "value": "PEGAR_MAILS_DEL_EQUIPO_SEPARADOS_POR_COMA",
+              "type": "string"
+            },
+            {
+              "id": "tpl-brief",
+              "name": "briefTemplateId",
+              "value": "1wIzskZ8AJxqY07dfxZrbeowcJbfOtHucqCf1xu9NyO8",
+              "type": "string"
+            },
+            {
+              "id": "tpl-feedback",
+              "name": "feedbackTemplateId",
+              "value": "1tdcjx9st0kwJKE9VjTvPEpuRPKABcB8g4wEtMlfgVyg",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c3000003-0000-0000-0000-000000000002",
+      "name": "CONFIG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/drives?requestId={{ $execution.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre }) }}",
+        "options": {}
+      },
+      "id": "c3000003-0000-0000-0000-000000000003",
+      "name": "Drive: Crear Unidad",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rootId = $('Drive: Crear Unidad').first().json.id;\nconst names = ['0. COORD','1. SUPERVISION','2. FOOTAGE','3. RECURSOS','4. EDITABLES','5. FINALES'];\nreturn names.map(name => ({ json: { name, parent: rootId } }));"
+      },
+      "id": "c3000003-0000-0000-0000-000000000004",
+      "name": "Nivel 1: carpetas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $json.name, mimeType: 'application/vnd.google-apps.folder', parents: [ $json.parent ] }) }}",
+        "options": {}
+      },
+      "id": "c3000003-0000-0000-0000-000000000005",
+      "name": "Drive: Subcarpetas N1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const nombre = $('Webhook').first().json.body.nombre;\nconst l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst idDe = (kw) => { const f = l1.find(x => (x.name || '').includes(kw)); return f ? f.id : null; };\nconst items = [];\nconst push = (parent, names) => { if (parent) names.forEach(name => items.push({ json: { name, parent } })); };\npush(idDe('COORD'), ['00. PLANTILLAS-DOCUMENTOS','01. KIT DE POST']);\npush(idDe('SUPERVISION'), ['00. OCF','01. PROXY','03. CC']);\npush(idDe('FOOTAGE'), ['00. OCF','01. PROXY','03. CC']);\npush(idDe('RECURSOS'), ['1. [3D]_' + nombre, '2. [GRÁFICAS]_' + nombre, '3. [VFX]_' + nombre, '4. [MOTION]_' + nombre, '5. [CONFORMADO]_' + nombre]);\nreturn items;"
+      },
+      "id": "c3000003-0000-0000-0000-000000000006",
+      "name": "Nivel 2: carpetas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $json.name, mimeType: 'application/vnd.google-apps.folder', parents: [ $json.parent ] }) }}",
+        "options": {}
+      },
+      "id": "c3000003-0000-0000-0000-000000000007",
+      "name": "Drive: Subcarpetas N2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const l2 = $('Drive: Subcarpetas N2').all().map(i => i.json);\nconst plantillas = l2.find(f => (f.name || '').includes('PLANTILLAS'));\nif (plantillas) return [{ json: { coordId: plantillas.id } }];\nconst l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst coord = l1.find(f => (f.name || '').includes('COORD'));\nreturn [{ json: { coordId: coord.id } }];"
+      },
+      "id": "c3000003-0000-0000-0000-000000000008",
+      "name": "Buscar COORD",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('CONFIG').first().json.desgloseTemplateId }}/copy?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre + ' — Desglose', parents: [ $('Buscar COORD').first().json.coordId ] }) }}",
+        "options": {}
+      },
+      "id": "c3000003-0000-0000-0000-000000000009",
+      "name": "Copia Desglose",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre + ' — Notas', mimeType: 'application/vnd.google-apps.document', parents: [ $('Buscar COORD').first().json.coordId ] }) }}",
+        "options": {}
+      },
+      "id": "c3000003-0000-0000-0000-00000000000b",
+      "name": "Crear Doc Notas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://docs.googleapis.com/v1/documents/{{ $json.id }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ requests: [ { insertText: { location: { index: 1 }, text: 'NOTAS — ' + $('Webhook').first().json.body.nombre + '\\n\\n════════════════════════\\nREUNIÓN — [fecha]\\n════════════════════════\\nParticipantes:\\n\\nPuntos tratados:\\n- \\n\\nDecisiones:\\n- \\n\\nPróximos pasos (quién / qué / cuándo):\\n- \\n\\n\\n════════════════════════\\nFEEDBACK\\n════════════════════════\\nFecha | Pieza / Versión | Feedback | Estado\\n- \\n' } } ] }) }}",
+        "options": {}
+      },
+      "id": "c3000003-0000-0000-0000-00000000000c",
+      "name": "Template Notas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        0
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.frame.io/v4/accounts/{{ $('CONFIG').first().json.frameAccountId }}/workspaces/{{ $('CONFIG').first().json.frameWorkspaceId }}/projects",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: { name: $('Webhook').first().json.body.nombre } }) }}",
+        "options": {}
+      },
+      "id": "c3000003-0000-0000-0000-00000000000d",
+      "name": "Frame: Crear proyecto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        0
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Frame.io OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const proj = $json.data || $json;\nconst rootFolderId = proj.root_folder_id || (proj.root_asset && proj.root_asset.id) || proj.root_asset_id;\nconst frameProjectId = proj.id;\nreturn ['00. OFFLINE','01. POST','02. ONLINE','03. MASTERS'].map(name => ({ json: { name, rootFolderId, frameProjectId } }));"
+      },
+      "id": "c3000003-0000-0000-0000-00000000000e",
+      "name": "Frame: carpetas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.frame.io/v4/accounts/{{ $('CONFIG').first().json.frameAccountId }}/folders/{{ $json.rootFolderId }}/folders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: { name: $json.name } }) }}",
+        "options": {}
+      },
+      "id": "c3000003-0000-0000-0000-00000000000f",
+      "name": "Frame: Crear carpetas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2800,
+        0
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Frame.io OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook').first().json.body;\nconst root = $('Drive: Crear Unidad').first().json;\nconst l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst find = (kw) => { const f = l1.find(x => (x.name || '').includes(kw)); return f ? f.id : ''; };\nconst desglose = $('Copia Desglose').first().json;\nconst brief = $('Copia Brief').first().json;\nconst feedback = $('Copia Feedback').first().json;\nconst notas = $('Crear Doc Notas').first().json;\nconst frame = $('Frame: carpetas').first().json;\nconst folderUrl = (id) => id ? 'https://drive.google.com/drive/folders/' + id : '';\nconst links = {\n  driveRoot: folderUrl(root.id),\n  coord: folderUrl(find('COORD')),\n  supervision: folderUrl(find('SUPERVISION')),\n  footage: folderUrl(find('FOOTAGE')),\n  recursos: folderUrl(find('RECURSOS')),\n  editables: folderUrl(find('EDITABLES')),\n  finales: folderUrl(find('FINALES')),\n  notas: 'https://docs.google.com/document/d/' + notas.id,\n  desglose: 'https://docs.google.com/spreadsheets/d/' + desglose.id,\n  brief: 'https://docs.google.com/presentation/d/' + brief.id,\n  feedback: 'https://docs.google.com/presentation/d/' + feedback.id,\n  frameio: 'https://next.frame.io/project/' + frame.frameProjectId\n};\nconst id = 'p_' + Date.now();\nconst now = new Date().toISOString();\nconst year = String(new Date().getFullYear());\nconst row = {\n  id,\n  nombre: body.nombre,\n  cliente: body.cliente || '',\n  agencia: body.agencia || '',\n  productora: body.productora || '',\n  director: body.director || '',\n  ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '',\n  prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '',\n  coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '',\n  tareas_json: JSON.stringify(body.tareas || []),\n  asignaciones_json: JSON.stringify(body.asignaciones || {}),\n  status: 'por_activarse',\n  year,\n  links_json: JSON.stringify(links),\n  created_at: now,\n  taskDates_json: JSON.stringify(body.taskDates || {}),\n  sintesis: body.sintesis || '',\n  storyboard_url: body.storyboard_url || ''\n};\nconst project = { id, nombre: body.nombre, cliente: body.cliente || '', agencia: body.agencia || '', productora: body.productora || '', director: body.director || '', ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '', prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '', coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '', tareas: body.tareas || [], asignaciones: body.asignaciones || {}, status: 'por_activarse', year, links, calendario: [], taskDates: body.taskDates || {}, sintesis: body.sintesis || '', storyboard_url: body.storyboard_url || '' };\nreturn [{ json: { row, project } }];"
+      },
+      "id": "c3000003-0000-0000-0000-000000000010",
+      "name": "Armar registro",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3000,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.row.id }}",
+            "nombre": "={{ $json.row.nombre }}",
+            "cliente": "={{ $json.row.cliente }}",
+            "agencia": "={{ $json.row.agencia }}",
+            "productora": "={{ $json.row.productora }}",
+            "director": "={{ $json.row.director }}",
+            "ep_nombre": "={{ $json.row.ep_nombre }}",
+            "ep_email": "={{ $json.row.ep_email }}",
+            "prod_nombre": "={{ $json.row.prod_nombre }}",
+            "prod_email": "={{ $json.row.prod_email }}",
+            "coord_nombre": "={{ $json.row.coord_nombre }}",
+            "coord_email": "={{ $json.row.coord_email }}",
+            "tareas_json": "={{ $json.row.tareas_json }}",
+            "asignaciones_json": "={{ $json.row.asignaciones_json }}",
+            "status": "={{ $json.row.status }}",
+            "year": "={{ $json.row.year }}",
+            "links_json": "={{ $json.row.links_json }}",
+            "created_at": "={{ $json.row.created_at }}",
+            "taskDates_json": "={{ $json.row.taskDates_json }}",
+            "sintesis": "={{ $json.row.sintesis }}",
+            "storyboard_url": "={{ $json.row.storyboard_url }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "c3000003-0000-0000-0000-000000000011",
+      "name": "Guardar en DB",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3200,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Armar registro').first().json.project) }}",
+        "options": {}
+      },
+      "id": "c3000003-0000-0000-0000-000000000012",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook').first().json.body;\nconst proyecto = body.nombre || '';\nconst cliente = body.cliente || '';\nconst sintesis = body.sintesis || '';\nconst storyboard = body.storyboard_url || '';\nconst timeline = (body.timeline || []).filter(t => t && t.fase);\nconst emails = [];\nObject.entries(body.asignaciones || {}).forEach(([tarea, rows]) => {\n  (rows || []).forEach(r => {\n    if (r && r.email && r.estado === 'candidato') emails.push({ to: r.email, nombre: r.nombre || '', rol: tarea });\n  });\n});\nif (!emails.length) return [{ json: { to: '', subject: 'sin candidatos', html: '' } }];\nconst fmt = d => d || 'a definir';\nconst tlHtml = timeline.length\n  ? '<table style=\"border-collapse:collapse;width:100%;font-size:14px;\"><thead><tr><th style=\"text-align:left;padding:6px 10px;border-bottom:2px solid #0A0A0A;font-size:11px;\">FASE</th><th style=\"text-align:left;padding:6px 10px;border-bottom:2px solid #0A0A0A;font-size:11px;\">INICIO</th><th style=\"text-align:left;padding:6px 10px;border-bottom:2px solid #0A0A0A;font-size:11px;\">FIN</th></tr></thead><tbody>' + timeline.map(t => '<tr><td style=\"padding:6px 10px;border-bottom:1px solid #ddd;\"><b>' + t.fase + '</b></td><td style=\"padding:6px 10px;border-bottom:1px solid #ddd;\">' + fmt(t.inicio) + '</td><td style=\"padding:6px 10px;border-bottom:1px solid #ddd;\">' + fmt(t.fin) + '</td></tr>').join('') + '</tbody></table>'\n  : '<p style=\"color:#8A8A8A;\">Timeline a definir.</p>';\nconst sb = storyboard ? '<p><b>Storyboard / referencias:</b> <a href=\"' + storyboard + '\">' + storyboard + '</a></p>' : '';\nreturn emails.map(e => ({ json: {\n  to: e.to,\n  subject: '🎬 Propuesta TEAM23 — ' + proyecto + ' (' + e.rol + ')',\n  html: '<div style=\"font-family:Helvetica,Arial,sans-serif;color:#0A0A0A;max-width:640px;\">' +\n    '<h2 style=\"margin:0 0 4px;font-size:22px;\">' + proyecto + '</h2>' +\n    '<p style=\"margin:0 0 16px;color:#FF2B1E;font-weight:bold;letter-spacing:2px;font-size:11px;\">PROPUESTA DE PROYECTO · TEAM23</p>' +\n    '<p>Hola ' + (e.nombre || '') + ', te contactamos por un proyecto nuevo' + (cliente ? ' para <b>' + cliente + '</b>' : '') + '. Tu rol propuesto: <b>' + e.rol + '</b>.</p>' +\n    (sintesis ? '<p style=\"margin:14px 0 6px;font-weight:bold;font-size:12px;letter-spacing:1px;\">DE QUÉ SE TRATA</p><p style=\"white-space:pre-line;\">' + sintesis + '</p>' : '') + sb +\n    '<p style=\"margin:14px 0 6px;font-weight:bold;font-size:12px;letter-spacing:1px;\">TIMELINE TENTATIVO</p>' + tlHtml +\n    '<p style=\"margin-top:18px;\">Si te interesa, respondé este mail con tu disponibilidad y presupuesto para el rol.</p>' +\n    '<p style=\"margin-top:22px;font-size:10px;color:#8A8A8A;letter-spacing:2px;\">TEAM23 PRODUCTION HUB</p></div>'\n} }));"
+      },
+      "id": "gg000003-0000-0000-0000-0000000000b1",
+      "name": "Armar propuestas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "gg000003-0000-0000-0000-0000000000b2",
+      "name": "Mail de propuesta",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3800,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $('CONFIG').first().json.driveMembers || '';\nconst emails = raw.split(',').map(e => e.trim()).filter(e => e && e.includes('@'));\nreturn emails.map(email => ({ json: { email } }));"
+      },
+      "id": "mm000003-0000-0000-0000-000000000001",
+      "name": "Armar miembros",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('Drive: Crear Unidad').first().json.id }}/permissions?supportsAllDrives=true&sendNotificationEmail=false",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ role: 'organizer', type: 'user', emailAddress: $json.email }) }}",
+        "options": {}
+      },
+      "id": "mm000003-0000-0000-0000-000000000002",
+      "name": "Drive: Miembros",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        180
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('CONFIG').first().json.briefTemplateId }}/copy?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre + ' — Brief', parents: [ $('Buscar COORD').first().json.coordId ] }) }}",
+        "options": {}
+      },
+      "id": "tt000003-0000-0000-0000-000000000003",
+      "name": "Copia Brief",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('CONFIG').first().json.feedbackTemplateId }}/copy?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre + ' — Feedback', parents: [ $('Buscar COORD').first().json.coordId ] }) }}",
+        "options": {}
+      },
+      "id": "tt000003-0000-0000-0000-000000000004",
+      "name": "Copia Feedback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const creadas = $('Frame: Crear carpetas').all().map(i => i.json.data || i.json);\nconst post = creadas.find(f => (f.name || '').includes('POST'));\nif (!post) return [];\nreturn ['00.WIP','01.FINALES'].map(name => ({ json: { name, parentId: post.id } }));"
+      },
+      "id": "ff000003-0000-0000-0000-000000000005",
+      "name": "Frame: subcarpetas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2980,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.frame.io/v4/accounts/{{ $('CONFIG').first().json.frameAccountId }}/folders/{{ $json.parentId }}/folders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: { name: $json.name } }) }}",
+        "options": {}
+      },
+      "id": "ff000003-0000-0000-0000-000000000006",
+      "name": "Frame: Crear subcarpetas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3180,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Frame.io OAuth2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "Drive: Crear Unidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nivel 1: carpetas": {
+      "main": [
+        [
+          {
+            "node": "Drive: Subcarpetas N1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drive: Subcarpetas N1": {
+      "main": [
+        [
+          {
+            "node": "Nivel 2: carpetas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nivel 2: carpetas": {
+      "main": [
+        [
+          {
+            "node": "Drive: Subcarpetas N2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drive: Subcarpetas N2": {
+      "main": [
+        [
+          {
+            "node": "Buscar COORD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar COORD": {
+      "main": [
+        [
+          {
+            "node": "Copia Desglose",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copia Desglose": {
+      "main": [
+        [
+          {
+            "node": "Copia Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear Doc Notas": {
+      "main": [
+        [
+          {
+            "node": "Template Notas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Template Notas": {
+      "main": [
+        [
+          {
+            "node": "Frame: Crear proyecto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frame: Crear proyecto": {
+      "main": [
+        [
+          {
+            "node": "Frame: carpetas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frame: carpetas": {
+      "main": [
+        [
+          {
+            "node": "Frame: Crear carpetas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frame: Crear carpetas": {
+      "main": [
+        [
+          {
+            "node": "Frame: subcarpetas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar registro": {
+      "main": [
+        [
+          {
+            "node": "Guardar en DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar en DB": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder": {
+      "main": [
+        [
+          {
+            "node": "Armar propuestas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar propuestas": {
+      "main": [
+        [
+          {
+            "node": "Mail de propuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drive: Crear Unidad": {
+      "main": [
+        [
+          {
+            "node": "Nivel 1: carpetas",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Armar miembros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar miembros": {
+      "main": [
+        [
+          {
+            "node": "Drive: Miembros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copia Brief": {
+      "main": [
+        [
+          {
+            "node": "Copia Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copia Feedback": {
+      "main": [
+        [
+          {
+            "node": "Crear Doc Notas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frame: subcarpetas": {
+      "main": [
+        [
+          {
+            "node": "Frame: Crear subcarpetas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frame: Crear subcarpetas": {
+      "main": [
+        [
+          {
+            "node": "Armar registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
