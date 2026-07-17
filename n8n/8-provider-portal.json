@@ -26,19 +26,19 @@
             {
               "id": "k1",
               "name": "supabaseUrl",
-              "value": "https://PEGAR_REF.supabase.co",
+              "value": "https://muvmrkacjhygfuialpyn.supabase.co",
               "type": "string"
             },
             {
               "id": "k2",
               "name": "supabaseAnonKey",
-              "value": "PEGAR_ANON_KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI",
               "type": "string"
             },
             {
               "id": "k3",
               "name": "dbSheetId",
-              "value": "PEGAR_DB_SHEET_ID",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
               "type": "string"
             }
           ]
