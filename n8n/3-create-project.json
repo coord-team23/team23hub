@@ -39,25 +39,25 @@
             {
               "id": "k4",
               "name": "dbSheetId",
-              "value": "PEGAR_DB_SHEET_ID",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
               "type": "string"
             },
             {
               "id": "k5",
               "name": "frameAccountId",
-              "value": "PEGAR_FRAME_ACCOUNT_ID",
+              "value": "6d46597e-55cc-4300-ae24-22625452eb1d",
               "type": "string"
             },
             {
               "id": "k6",
               "name": "frameWorkspaceId",
-              "value": "PEGAR_FRAME_WORKSPACE_ID",
+              "value": "0af44ea1-03b4-483d-99ff-88106ee46f0e",
               "type": "string"
             },
             {
               "id": "drv-members",
               "name": "driveMembers",
-              "value": "PEGAR_MAILS_DEL_EQUIPO_SEPARADOS_POR_COMA",
+              "value": "biz@team23.online, coord@team23.online",
               "type": "string"
             },
             {
@@ -386,30 +386,8 @@
           "value": "Projects"
         },
         "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "id": "={{ $json.row.id }}",
-            "nombre": "={{ $json.row.nombre }}",
-            "cliente": "={{ $json.row.cliente }}",
-            "agencia": "={{ $json.row.agencia }}",
-            "productora": "={{ $json.row.productora }}",
-            "director": "={{ $json.row.director }}",
-            "ep_nombre": "={{ $json.row.ep_nombre }}",
-            "ep_email": "={{ $json.row.ep_email }}",
-            "prod_nombre": "={{ $json.row.prod_nombre }}",
-            "prod_email": "={{ $json.row.prod_email }}",
-            "coord_nombre": "={{ $json.row.coord_nombre }}",
-            "coord_email": "={{ $json.row.coord_email }}",
-            "tareas_json": "={{ $json.row.tareas_json }}",
-            "asignaciones_json": "={{ $json.row.asignaciones_json }}",
-            "status": "={{ $json.row.status }}",
-            "year": "={{ $json.row.year }}",
-            "links_json": "={{ $json.row.links_json }}",
-            "created_at": "={{ $json.row.created_at }}",
-            "taskDates_json": "={{ $json.row.taskDates_json }}",
-            "sintesis": "={{ $json.row.sintesis }}",
-            "storyboard_url": "={{ $json.row.storyboard_url }}"
-          },
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [],
           "schema": []
         },
@@ -623,6 +601,19 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $('Armar registro').first().json.row }];"
+      },
+      "id": "db000003-0000-0000-0000-000000000001",
+      "name": "Aplanar fila",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        -120
+      ]
     }
   ],
   "connections": {
@@ -773,7 +764,7 @@
       "main": [
         [
           {
-            "node": "Guardar en DB",
+            "node": "Aplanar fila",
             "type": "main",
             "index": 0
           }
@@ -878,6 +869,17 @@
         [
           {
             "node": "Armar registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aplanar fila": {
+      "main": [
+        [
+          {
+            "node": "Guardar en DB",
             "type": "main",
             "index": 0
           }
