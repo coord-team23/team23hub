@@ -1,0 +1,50 @@
+/* TEAM23 — Color tokens
+   Primitives + semantic aliases sourced from the mounted Figma file's
+   Variable collections ($primitive, $semantic, Ungrouped) — see
+   tokens/fig-tokens.css for the raw generated output. This file adds
+   short, human-friendly aliases on top for use across the system. */
+
+:root {
+  /* ---- Primitive: Neutrals (= --neutral-000..600 in fig-tokens.css) ---- */
+  --n-000: var(--neutral-000); /* #FFFFFF */
+  --n-100: var(--neutral-100); /* #ECECEC */
+  --n-200: var(--neutral-200); /* #CAC9CF */
+  --n-300: var(--neutral-300); /* #616161 */
+  --n-400: var(--neutral-400); /* #424146 */
+  --n-500: var(--neutral-500); /* #1F1F21 */
+  --n-600: var(--neutral-600); /* #000000 */
+
+  /* ---- Primitive: Supportive Brand (neon accents) ---- */
+  --brand-red:    var(--supportive-red);    /* #FF0000 */
+  --brand-purple: var(--supportive-purple); /* #AA8CF8 */
+  --brand-cyan:   var(--supportive-cyan);   /* #00F7FF */
+  --brand-pink:   var(--supportive-pink);   /* #FF61F7 */
+  --brand-yellow: var(--supportive-yellow); /* #F8FF2E */
+  --brand-green:  var(--supportive-green);  /* #33FF00 */
+
+  /* ---- Semantic (real Figma $semantic collection — swaps via [data-theme]) ---- */
+  --tx-primary:   var(--text-tx-primary);
+  --tx-secondary: var(--text-tx-secondary);
+  --bg-primary:   var(--backgrounds-bg-primary);
+  --brd-primary:  var(--borders-brd-primary);
+  --brd-secondary: var(--borders-brd-secondary);
+
+  /* ---- Convenience aliases used across this system's guideline cards ---- */
+  --tx-on-light-primary:   var(--n-600);
+  --tx-on-light-secondary: var(--n-400);
+  --tx-on-light-tertiary:  var(--n-300);
+  --tx-on-dark-primary:   var(--n-000);
+  --tx-on-dark-secondary: var(--n-200);
+  --tx-on-dark-tertiary:  var(--n-300);
+  --bg-light-primary:   var(--n-600);
+  --bg-light-secondary: var(--n-100);
+  --bg-light-tertiary:  var(--n-300);
+  --bg-dark-primary:   var(--n-000);
+  --bg-dark-secondary: var(--n-500);
+  --bg-dark-tertiary:  var(--n-400);
+  --surface-page:   var(--n-000);
+  --surface-card:   var(--n-000);
+  --surface-sunken: var(--n-100);
+  --border-default: var(--n-600);
+  --border-subtle:  var(--n-200);
+}

@@ -1,0 +1,318 @@
+{
+  "name": "Team23 — 8. Portal de Proveedores (login Supabase)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "team23/provider-portal",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "hh000007-0000-0000-0000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "k1",
+              "name": "supabaseUrl",
+              "value": "https://PEGAR_REF.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "k2",
+              "name": "supabaseAnonKey",
+              "value": "PEGAR_ANON_KEY",
+              "type": "string"
+            },
+            {
+              "id": "k3",
+              "name": "dbSheetId",
+              "value": "PEGAR_DB_SHEET_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "hh000007-0000-0000-0000-000000000002",
+      "name": "CONFIG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('CONFIG').first().json.supabaseUrl }}/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('CONFIG').first().json.supabaseAnonKey }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Webhook').first().json.body.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "hh000007-0000-0000-0000-000000000003",
+      "name": "Validar login",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "hh000007-0000-0000-0000-000000000004",
+      "name": "¿Login válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "options": {}
+      },
+      "id": "hh000007-0000-0000-0000-672469065734",
+      "name": "Leer Projects",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        -100
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Calendar"
+        },
+        "options": {}
+      },
+      "id": "hh000007-0000-0000-0000-766387863782",
+      "name": "Leer Calendario",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1000,
+        -100
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const email = String($('Validar login').first().json.email || '').toLowerCase();\nconst projRows = $('Leer Projects').all().map(i => i.json);\nconst calRows = $('Leer Calendario').all().map(i => i.json);\nconst safe = (v, fb) => { try { const x = JSON.parse(v); return x ?? fb; } catch(e) { return fb; } };\nconst out = [];\nfor (const p of projRows) {\n  if (!p || !p.id) continue;\n  const asigs = safe(p.asignaciones_json, {});\n  const roles = [];\n  Object.entries(asigs).forEach(([tarea, rows]) => {\n    (rows || []).forEach(r => {\n      if (r && r.email && String(r.email).trim().toLowerCase() === email && (!r.estado || r.estado === 'confirmado')) roles.push(tarea);\n    });\n  });\n  if (!roles.length) continue;\n  const links = safe(p.links_json, {});\n  const taskDates = safe(p.taskDates_json, {});\n  const cal = calRows.filter(c => c.projectId === p.id).map(c => ({ tipo: c.tipo === 'hito' ? 'hito' : 'fase', fase: c.fase || '', inicio: c.inicio || '', fin: c.fin || '', notas: c.notas || '' }));\n  Object.entries(taskDates).forEach(([tarea, d]) => {\n    if (d && (d.inicio || d.fin)) cal.push({ tipo: 'fase', fase: tarea, inicio: d.inicio || '', fin: d.fin || d.inicio || '', notas: d.notas || '' });\n  });\n  out.push({\n    id: p.id, nombre: p.nombre || '', cliente: p.cliente || '', agencia: p.agencia || '', productora: p.productora || '',\n    status: p.status || 'activo', year: p.year || '', sintesis: p.sintesis || '', storyboard_url: p.storyboard_url || '',\n    misRoles: [...new Set(roles)],\n    links: { driveRoot: links.driveRoot || '', frameio: links.frameio || '', notas: links.notas || '' },\n    calendario: cal\n  });\n}\nreturn [{ json: { projects: out } }];"
+      },
+      "id": "hh000007-0000-0000-0000-000000000005",
+      "name": "Filtrar por proveedor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "hh000007-0000-0000-0000-000000000006",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: 'login inválido' }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "hh000007-0000-0000-0000-000000000007",
+      "name": "Responder 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        150
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "Validar login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar login": {
+      "main": [
+        [
+          {
+            "node": "¿Login válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Login válido?": {
+      "main": [
+        [
+          {
+            "node": "Leer Projects",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Projects": {
+      "main": [
+        [
+          {
+            "node": "Leer Calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Calendario": {
+      "main": [
+        [
+          {
+            "node": "Filtrar por proveedor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar por proveedor": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
