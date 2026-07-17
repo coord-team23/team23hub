@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
-<link rel="icon" type="image/png" href="assets/footer-mark.png">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%230A0A0A"/><text x="32" y="46" font-family="Arial Black,Arial,sans-serif" font-size="28" font-weight="900" fill="white" text-anchor="middle" letter-spacing="-2">t23</text></svg>'>
 <title>TEAM23 — Production Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="design-system/styles.css">
@@ -653,7 +653,7 @@
 <!-- ============ MODAL: DETALLE ============ -->
 <div class="overlay" id="ovDetail">
   <div class="modal" role="dialog" aria-modal="true">
-    <button class="close" onclick="closeModal('ovDetail')" aria-label="Cerrar">✕</button>
+    <button class="close" onclick="requestCloseDetail()" aria-label="Cerrar">✕</button>
     <div id="detailBody"></div>
   </div>
 </div>
@@ -700,6 +700,18 @@
 </div>
 
 <!-- ============ MODAL: ELEGIR FLUJO DE CREACIÓN ============ -->
+<div class="overlay" id="ovConfirm" style="z-index:1200">
+  <div class="modal" role="dialog" aria-modal="true" style="width:min(480px,100%)">
+    <h2 style="font-size:22px">Cambios sin guardar</h2>
+    <div class="kicker">Hiciste cambios en este proyecto que todavía no se guardaron</div>
+    <div class="actions" style="flex-wrap:wrap;gap:10px">
+      <button class="btn primary" onclick="confirmSaveExit(this)">Guardar y salir</button>
+      <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="confirmDiscard()">Descartar cambios</button>
+      <button class="btn" onclick="closeModal('ovConfirm')">Seguir editando</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="ovChooser">
   <div class="modal" role="dialog" aria-modal="true" style="width:min(720px,100%)">
     <button class="close" onclick="closeModal('ovChooser')" aria-label="Cerrar">✕</button>
@@ -888,6 +900,13 @@ async function loadProjects(){
     autoAdvanceOverdue();
     onProjectsLoaded(); return;
   }
+  /* cache local: pinta al instante lo último conocido mientras llega lo fresco */
+  if(!projects.length){
+    try{
+      const c = JSON.parse(localStorage.getItem("t23_projects")||"null");
+      if(Array.isArray(c) && c.length){ projects = c; onProjectsLoaded(); }
+    }catch(e){}
+  }
   try{
     const data = await api("/webhook/team23/projects");
     projects = (data.projects||[]).map(p=>({
@@ -900,6 +919,7 @@ async function loadProjects(){
     }));
     autoAdvanceOverdue();
     onProjectsLoaded();
+    try{ localStorage.setItem("t23_projects", JSON.stringify(projects)); }catch(e){}
   }catch(e){
     toast("No pude cargar los proyectos, revisá n8n ("+e.message+")", true);
   }
@@ -1151,6 +1171,8 @@ let selDay = null;    // 'YYYY-MM-DD' del día seleccionado
 function openDetail(id, readOnly=false){
   detailProject = projects.find(p=>p.id===id);
   if(!detailProject) return;
+  detailSnapshot = JSON.parse(JSON.stringify(detailProject));
+  detailDirty = false; calDirty = false;
   detailReadOnly = readOnly;
   detailProject.tareas = detailProject.tareas||[];
   detailProject.asignaciones = detailProject.asignaciones||{};
@@ -1353,7 +1375,7 @@ function renderDetail(){
         <div><label class="f">Agencia</label><input type="text" value="${esc(p.agencia||"")}" oninput="detailProject.agencia=this.value"></div>
       </div>
       <div class="actions" style="justify-content:flex-start;margin-top:14px">
-        <button class="btn small" onclick="saveProjectInfo()">Guardar datos del proyecto</button>
+        <button class="btn small" onclick="saveProjectInfo(this)">Guardar datos del proyecto</button>
       </div>
       ${sintesisContent}
     </div>`)}
@@ -1403,7 +1425,7 @@ function renderDetail(){
       <div class="${lockTareas?"pills":"task-pills"}">${taskPills}</div>
       ${assigns}
       ${lockTareas?"":`<div class="actions" style="justify-content:flex-start;margin-top:14px">
-        <button class="btn small" onclick="saveTeam()">Guardar cambios de equipo</button>
+        <button class="btn small" onclick="saveTeam(this)">Guardar cambios de equipo</button>
       </div>`}
     </div>`}
 
@@ -1428,7 +1450,7 @@ function renderDetail(){
         ${dayPanelHTML(p, lookMap, lockFields)}
 
         <div class="actions" style="justify-content:flex-start;margin-top:16px">
-          ${lockFields?"":`<button class="btn primary small" onclick="saveCalendar(false)">Guardar calendario y avisar al equipo</button>`}
+          ${lockFields?"":`<button class="btn primary small" onclick="saveCalendar(false,this)">Guardar calendario y avisar al equipo</button>`}
           <button class="btn small" onclick="printCalendar()">Descargar PDF</button>
         </div>
       `}
@@ -1979,9 +2001,9 @@ function notifyDiscord(payload){
   api("/webhook/team23/notify",{method:"POST",body:JSON.stringify(payload)}).catch(()=>{});
 }
 
-function calSet(i,k,v){ detailProject.calendario[i][k]=v; if(k==="inicio" && detailProject.calendario[i].tipo==="hito") detailProject.calendario[i].fin=v; }
-function calAdd(){ detailProject.calendario.push({id:uid(), tipo:"fase", fase:"", inicio:"", fin:"", notas:""}); renderDetail(); }
-function calDel(i){
+function calSet(i,k,v){ calDirty = true; detailProject.calendario[i][k]=v; if(k==="inicio" && detailProject.calendario[i].tipo==="hito") detailProject.calendario[i].fin=v; }
+function calAdd(){ calDirty = true; detailProject.calendario.push({id:uid(), tipo:"fase", fase:"", inicio:"", fin:"", notas:""}); renderDetail(); }
+function calDel(i){ calDirty = true;
   const [removed] = detailProject.calendario.splice(i,1);
   if(removed && removed.id){
     detailProject._deletedCalIds = detailProject._deletedCalIds || [];
@@ -2170,7 +2192,10 @@ function renderTracker(){
   $("#trkBody").innerHTML = trackerHTML(trkProject);
 }
 
-async function saveProjectInfo(){
+async function saveProjectInfo(btn){
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
   const p = detailProject;
   if(!p.nombre.trim()){ toast("El proyecto necesita un nombre", true); return; }
   if(DEMO){ toast("✔ Datos del proyecto actualizados (demo)"); onProjectsLoaded(); renderDetail(); return; }
@@ -2178,10 +2203,12 @@ async function saveProjectInfo(){
     await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({
       id:p.id, nombre:p.nombre, cliente:p.cliente, agencia:p.agencia, productora:p.productora, director:p.director||""
     })});
+    detailDirty = false; snapDetail();
     toast("✔ Datos del proyecto actualizados");
     onProjectsLoaded();
     renderDetail();
   }catch(e){ toast("Error al guardar: "+e.message,true); }
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
 async function deleteProject(){
@@ -2198,7 +2225,10 @@ async function deleteProject(){
   toast("✔ Proyecto eliminado");
 }
 
-async function saveTeam(){
+async function saveTeam(btn){
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
   const p = detailProject;
   if(DEMO){ toast("✔ Equipo actualizado (demo)"); onProjectsLoaded(); return; }
   try{
@@ -2208,9 +2238,11 @@ async function saveTeam(){
       tareas_json: JSON.stringify(p.tareas), asignaciones_json: JSON.stringify(p.asignaciones),
       taskDates_json: JSON.stringify(p.taskDates||{})
     })});
+    detailDirty = false; snapDetail();
     toast("✔ Equipo actualizado");
     onProjectsLoaded();
   }catch(e){ toast("Error al guardar: "+e.message,true); }
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
 function projectRecipients(p){
@@ -2226,7 +2258,10 @@ function projectRecipients(p){
    por id (1 evento por fase/hito) en lugar de duplicarlos en cada guardado.
    deletedEventIds son los ids de fases/hitos borrados desde el último guardado,
    para que ese mismo workflow borre sus eventos correspondientes en Calendar. */
-async function saveCalendar(isFirst){
+async function saveCalendar(isFirst, btn){
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
   const p = detailProject;
   // entries = unión (fases-desde-tareas + fases/hitos independientes), con id estable
   const entries = allCalEntries(p).filter(e=>e.fase).map(e=>({
@@ -2243,8 +2278,10 @@ async function saveCalendar(isFirst){
       recipients: projectRecipients(p), isFirst
     })});
     p._deletedCalIds = [];
+    detailDirty = false; calDirty = false; snapDetail();
     toast("✔ Calendario guardado, se avisó por mail al equipo");
   }catch(e){ toast("Error al guardar el calendario: "+e.message, true); }
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
 function printCalendar(){
@@ -2557,7 +2594,42 @@ async function createProject2(){
   }
 }
 
-document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{ if(e.target===ov) closeModal(ov.id); }));
+/* ---------- cambios sin guardar en la ficha ---------- */
+let detailDirty = false, calDirty = false, detailSnapshot = null;
+function snapDetail(){ if(detailProject) detailSnapshot = JSON.parse(JSON.stringify(detailProject)); }
+function requestCloseDetail(){
+  if(detailDirty || calDirty){ openModal("ovConfirm"); return; }
+  closeModal("ovDetail");
+}
+async function confirmSaveExit(btn){
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
+    if(detailDirty){ await saveProjectInfo(); await saveTeam(); }
+    if(calDirty){ await saveCalendar(false); }
+    detailDirty = false; calDirty = false;
+    closeModal("ovConfirm"); closeModal("ovDetail");
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
+}
+function confirmDiscard(){
+  if(detailSnapshot){
+    const i = projects.findIndex(p=>p.id===detailSnapshot.id);
+    if(i>=0) projects[i] = JSON.parse(JSON.stringify(detailSnapshot));
+  }
+  detailDirty = false; calDirty = false;
+  closeModal("ovConfirm"); closeModal("ovDetail");
+  onProjectsLoaded();
+}
+const _ovDet = $("#ovDetail");
+if(_ovDet){
+  _ovDet.addEventListener("input", ()=>{ detailDirty = true; });
+  _ovDet.addEventListener("change", ()=>{ detailDirty = true; });
+}
+document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{
+  if(e.target!==ov) return;
+  if(ov.id==="ovDetail"){ requestCloseDetail(); return; }
+  closeModal(ov.id);
+}));
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id)); });
 
 let toastTimer;
