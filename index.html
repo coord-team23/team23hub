@@ -539,8 +539,12 @@
     <div class="kicker" style="margin-bottom:14px">Production Hub · acceso del equipo</div>
     <p id="agMsg" style="font-size:14px;line-height:1.5;margin:0 0 14px">Verificando sesión…</p>
     <div id="agForm" style="display:none">
-      <input id="agEmail" type="email" placeholder="tu@team23.online" style="width:100%;margin-bottom:10px" onkeydown="if(event.key==='Enter')authSend(document.getElementById('agBtn'))">
-      <button class="btn primary" id="agBtn" style="width:100%" onclick="authSend(this)">Enviarme el link de acceso</button>
+      <button class="btn" style="width:100%;margin-bottom:14px" onclick="authGoogle(this)">Continuar con Google</button>
+      <div style="font-size:10px;letter-spacing:.18em;color:var(--gray);text-align:center;margin-bottom:14px">— O CON MAIL Y CONTRASEÑA —</div>
+      <input id="agEmail" type="email" placeholder="tu@team23.online" style="width:100%;margin-bottom:10px" autocomplete="email">
+      <input id="agPass" type="password" placeholder="Contraseña" style="width:100%;margin-bottom:12px" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSignIn(document.getElementById('agBtn'))">
+      <button class="btn primary" id="agBtn" style="width:100%" onclick="authSignIn(this)">Entrar</button>
+      <button class="btn small" style="width:100%;margin-top:10px" onclick="authSignUp(this)">Crear cuenta (primera vez)</button>
     </div>
   </div>
 </div>
@@ -2687,7 +2691,7 @@ async function initAuth(){
     const { data:{ session } } = await sb.auth.getSession();
     if(session){ authEnter(session); return; }
     sb.auth.onAuthStateChange((ev, s)=>{ if(s && !authUser) authEnter(s); });
-    $("#agMsg").textContent = "Ingresá con tu mail del equipo y te mandamos un link de acceso.";
+    $("#agMsg").textContent = "Ingresá con tu cuenta del equipo.";
     $("#agForm").style.display = "block";
   }catch(e){ $("#agMsg").textContent = "No pude conectar con el login ("+e.message+"). Recargá la página."; }
 }
@@ -2709,19 +2713,43 @@ async function authEnter(session){
     $("#agMsg").textContent = "No pude verificar tu cuenta ("+e.message+"). Probá recargar.";
   }
 }
-async function authSend(btn){
-  const email = $("#agEmail").value.trim();
-  if(!email){ toast("Escribí tu mail", true); return; }
-  btn.disabled = true; btn.textContent = "Enviando…";
+function agCreds(){
+  const email = $("#agEmail").value.trim(), password = $("#agPass").value;
+  if(!email || !password){ toast("Completá mail y contraseña", true); return null; }
+  return { email, password };
+}
+async function authSignIn(btn){
+  const c = agCreds(); if(!c) return;
+  btn.disabled = true; btn.textContent = "Entrando…";
   try{
-    const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.origin + location.pathname } });
+    const { data, error } = await sb.auth.signInWithPassword(c);
     if(error) throw error;
-    $("#agMsg").textContent = "Listo, revisá tu casilla y abrí el link para entrar.";
+    if(data.session) authEnter(data.session);
+  }catch(e){
+    toast(/invalid/i.test(e.message) ? "Mail o contraseña incorrectos" : "No pude entrar: "+e.message, true);
+    btn.disabled = false; btn.textContent = "Entrar";
+  }
+}
+async function authSignUp(btn){
+  const c = agCreds(); if(!c) return;
+  if(c.password.length < 6){ toast("La contraseña necesita al menos 6 caracteres", true); return; }
+  btn.disabled = true; btn.textContent = "Creando…";
+  try{
+    const { data, error } = await sb.auth.signUp({ ...c, options:{ emailRedirectTo: location.origin + location.pathname } });
+    if(error) throw error;
+    if(data.session){ authEnter(data.session); return; }
+    $("#agMsg").textContent = "Cuenta creada. Revisá tu mail para confirmarla y después entrá con tu contraseña.";
     $("#agForm").style.display = "none";
   }catch(e){
-    toast("No pude enviar el link: "+e.message, true);
-    btn.disabled = false; btn.textContent = "Enviarme el link de acceso";
+    toast("No pude crear la cuenta: "+e.message, true);
+    btn.disabled = false; btn.textContent = "Crear cuenta (primera vez)";
   }
+}
+async function authGoogle(btn){
+  btn.disabled = true;
+  try{
+    await sb.auth.signInWithOAuth({ provider:"google", options:{ redirectTo: location.origin + location.pathname } });
+  }catch(e){ toast("No pude iniciar con Google: "+e.message, true); btn.disabled = false; }
 }
 function authLogout(){ if(sb) sb.auth.signOut().then(()=>location.reload()); else location.reload(); }
 initAuth();
