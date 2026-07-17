@@ -828,7 +828,7 @@ const demoProjects = [
     asignaciones:{"Online":[{nombre:"Edi Uno",email:"edi@team23.online"}],"VFX":[{nombre:"Comp Dos",email:"vfx@team23.online"}]},
     taskDates:{"Online":{inicio:"2026-07-06",fin:"2026-07-14",notas:""},"VFX":{inicio:"2026-07-13",fin:"2026-07-24",notas:""},"Color":{inicio:"2026-07-16",fin:"2026-07-22",notas:""}},
     status:"activo", year:"2026",
-    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
     calendario:[
       {tipo:"fase",fase:"Entrega Masters",inicio:"2026-07-27",fin:"2026-07-28",notas:""},
       {tipo:"hito",fase:"Corte 1 al cliente",inicio:"2026-07-10",fin:"2026-07-10",notas:""},
@@ -839,14 +839,14 @@ const demoProjects = [
     id:"p_demo2", nombre:"BRAHMA - Te la mereSED", cliente:"Brahma", agencia:"", productora:"",
     ep_nombre:"N4rf", ep_email:"ep@team23.online", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
     tareas:["VFX","Online"], asignaciones:{}, taskDates:{}, status:"completado", year:"2026",
-    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
     calendario:[]
   },
   {
     id:"p_demo3", nombre:"PROYECTO X - TVC", cliente:"Cliente X", agencia:"Agencia Y", productora:"Prod Z",
     ep_nombre:"", ep_email:"", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
     tareas:["Retoque","SFX/Mezcla"], asignaciones:{}, taskDates:{}, status:"por_activarse", year:"2026",
-    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
     calendario:[]
   }
 ];
@@ -1120,7 +1120,7 @@ async function createProject(){
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"}, calendario:[] };
+        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"}, calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
       proj.tareas = proj.tareas||body.tareas; proj.asignaciones = proj.asignaciones||body.asignaciones;
@@ -1174,13 +1174,12 @@ function openDetail(id, readOnly=false){
 }
 
 const DRIVE_FOLDERS = [
-  ["driveRoot","Carpeta raíz"],
-  ["coord","00. COORD"],
-  ["supervision","01. SUPERVISION - PRE"],
-  ["footage","02. FOOTAGE"],
-  ["recursos","03. RECURSOS"],
-  ["edicion","04. EDICIÓN"],
-  ["delivery","05. DELIVERY"]
+  ["driveRoot","Unidad del proyecto"],
+  ["coord","0. COORD"],
+  ["supervision","1. SUPERVISION"],
+  ["footage","2. FOOTAGE"],
+  ["recursos","3. RECURSOS"],
+  ["editables","4. EDITABLES"]
 ];
 const DRIVE_DOCS = [
   ["desglose","📊 Desglose"]
@@ -1249,10 +1248,10 @@ function renderDetail(){
   const finalesLink = p.links?.finales;
   const finalesHref = finalesLink && finalesLink!=='#';
   const finalesBtn = cierre
-    ? `<a class="finales-btn on" href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 06. FINALES <span>↗</span></a>`
+    ? `<a class="finales-btn on" href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 5. FINALES <span>↗</span></a>`
     : completado
-    ? `<a href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 06. FINALES <span>↗</span></a>`
-    : `<span class="finales-btn off" title="Se habilita cuando el proyecto pasa a cierre">📁 06. FINALES</span>`;
+    ? `<a href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 5. FINALES <span>↗</span></a>`
+    : `<span class="finales-btn off" title="Se habilita cuando el proyecto pasa a cierre">📁 5. FINALES</span>`;
   const docLinks = DRIVE_DOCS
     .filter(([k])=>p.links && p.links[k])
     .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
@@ -2531,7 +2530,7 @@ async function createProject2(){
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
         calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
