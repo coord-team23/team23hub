@@ -286,20 +286,11 @@
         "method": "POST",
         "url": "=https://api.frame.io/v4/accounts/{{ $('CONFIG').first().json.frameAccountId }}/workspaces/{{ $('CONFIG').first().json.frameWorkspaceId }}/projects",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "genericAuthType": "oAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ data: { name: $('Webhook').first().json.body.nombre } }) }}",
-        "options": {},
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "x-frameio-legacy-token-auth",
-              "value": "true"
-            }
-          ]
-        }
+        "options": {}
       },
       "id": "c3000003-0000-0000-0000-00000000000d",
       "name": "Frame: Crear proyecto",
@@ -310,9 +301,9 @@
         0
       ],
       "credentials": {
-        "httpHeaderAuth": {
+        "oAuth2Api": {
           "id": "REEMPLAZAR",
-          "name": "Frame.io Token"
+          "name": "Frame.io OAuth2"
         }
       }
     },
@@ -334,20 +325,11 @@
         "method": "POST",
         "url": "=https://api.frame.io/v4/accounts/{{ $('CONFIG').first().json.frameAccountId }}/folders/{{ $json.rootFolderId }}/folders",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "genericAuthType": "oAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ data: { name: $json.name } }) }}",
-        "options": {},
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "x-frameio-legacy-token-auth",
-              "value": "true"
-            }
-          ]
-        }
+        "options": {}
       },
       "id": "c3000003-0000-0000-0000-00000000000f",
       "name": "Frame: Crear carpetas",
@@ -358,9 +340,9 @@
         0
       ],
       "credentials": {
-        "httpHeaderAuth": {
+        "oAuth2Api": {
           "id": "REEMPLAZAR",
-          "name": "Frame.io Token"
+          "name": "Frame.io OAuth2"
         }
       }
     },
@@ -597,20 +579,11 @@
         "method": "POST",
         "url": "=https://api.frame.io/v4/accounts/{{ $('CONFIG').first().json.frameAccountId }}/folders/{{ $json.parentId }}/folders",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "genericAuthType": "oAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ data: { name: $json.name } }) }}",
-        "options": {},
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "x-frameio-legacy-token-auth",
-              "value": "true"
-            }
-          ]
-        }
+        "options": {}
       },
       "id": "ff000003-0000-0000-0000-000000000006",
       "name": "Frame: Crear subcarpetas",
@@ -622,9 +595,9 @@
       ],
       "onError": "continueRegularOutput",
       "credentials": {
-        "httpHeaderAuth": {
+        "oAuth2Api": {
           "id": "REEMPLAZAR",
-          "name": "Frame.io Token"
+          "name": "Frame.io OAuth2"
         }
       }
     }
