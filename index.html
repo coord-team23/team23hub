@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
+<link rel="icon" type="image/png" href="assets/footer-mark.png">
 <title>TEAM23 — Production Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="design-system/styles.css">
@@ -679,11 +680,11 @@
     <button class="close" onclick="closeModal('ovGate')" aria-label="Cerrar">✕</button>
     <h2>Activar proyecto</h2>
     <div class="kicker" id="gateName"></div>
-    <div class="gate-warn">⚠️ <b>Checklist de activación.</b> Confirmá cada punto antes de que el proyecto entre en ejecución: a partir de acá el equipo empieza a recibir los avisos de calendario.</div>
+    <div class="gate-warn"><b>Checklist de activación.</b> Confirmá cada punto antes de que el proyecto entre en ejecución: a partir de acá el equipo empieza a recibir los avisos de calendario.</div>
     <div id="gateItems"></div>
     <div class="actions">
       <button class="btn" onclick="closeModal('ovGate')">Todavía no</button>
-      <button class="btn primary" id="btnGate" disabled onclick="confirmGate()">🚀 Pasar a Ejecutando</button>
+      <button class="btn primary" id="btnGate" disabled onclick="confirmGate()">Pasar a Ejecutando</button>
     </div>
   </div>
 </div>
@@ -732,7 +733,7 @@
       <div class="glabel">1 · Debrief <small>pegá el documento completo</small></div>
       <textarea id="n2Debrief" style="min-height:130px" placeholder="Pegá acá el debrief completo del proyecto…"></textarea>
       <div class="actions" style="justify-content:flex-start;margin-top:10px">
-        <button class="btn primary small" id="btnParse2" onclick="parseDebrief2()">✨ Analizar debrief</button>
+        <button class="btn primary small" id="btnParse2" onclick="parseDebrief2()">Analizar debrief</button>
         <button class="btn small" onclick="skipDebrief2()">Cargar a mano</button>
       </div>
     </div>
@@ -1182,7 +1183,7 @@ const DRIVE_FOLDERS = [
   ["editables","4. EDITABLES"]
 ];
 const DRIVE_DOCS = [
-  ["desglose","📊 Desglose"]
+  ["desglose","Desglose"]
 ];
 /* pipeline de estados (orden = flujo del proyecto). color de marca por etapa,
    texto oscuro sobre neón / blanco sobre negro. activo→entregando→cierre son la
@@ -1243,15 +1244,15 @@ function renderDetail(){
   const folders = completado ? DRIVE_FOLDERS.filter(([k])=>k==="driveRoot") : DRIVE_FOLDERS;
   const driveLinks = folders
     .filter(([k])=>p.links && p.links[k])
-    .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">📁 ${l} <span>↗</span></a>`).join("");
+    .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
   // carpeta de finales: desactivada hasta cierre; en cierre roja (acción); en completado, link normal
   const finalesLink = p.links?.finales;
   const finalesHref = finalesLink && finalesLink!=='#';
   const finalesBtn = cierre
-    ? `<a class="finales-btn on" href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 5. FINALES <span>↗</span></a>`
+    ? `<a class="finales-btn on" href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>5. FINALES <span>↗</span></a>`
     : completado
-    ? `<a href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 5. FINALES <span>↗</span></a>`
-    : `<span class="finales-btn off" title="Se habilita cuando el proyecto pasa a cierre">📁 5. FINALES</span>`;
+    ? `<a href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>5. FINALES <span>↗</span></a>`
+    : `<span class="finales-btn off" title="Se habilita cuando el proyecto pasa a cierre">5. FINALES</span>`;
   const docLinks = DRIVE_DOCS
     .filter(([k])=>p.links && p.links[k])
     .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
@@ -1259,11 +1260,11 @@ function renderDetail(){
   const feedbackLink = p.links?.feedback;
   const feedbackHref = feedbackLink && feedbackLink!=='#';
   const feedbackBtn = p.status==="entregando"
-    ? `<a class="finales-btn on" href="${esc(feedbackLink||'#')}"${feedbackHref ? ' target="_blank"' : ' onclick="return false"'}>📝 FEEDBACK <span>↗</span></a>`
-    : `<a href="${esc(feedbackLink||'#')}"${feedbackHref ? ' target="_blank"' : ' onclick="return false"'}>📝 FEEDBACK <span>↗</span></a>`;
-  const trackerBtn = `<a href="#" onclick="openTracker('${p.id}');return false">📊 Tracker de jornadas <span>↗</span></a>`;
+    ? `<a class="finales-btn on" href="${esc(feedbackLink||'#')}"${feedbackHref ? ' target="_blank"' : ' onclick="return false"'}>FEEDBACK <span>↗</span></a>`
+    : `<a href="${esc(feedbackLink||'#')}"${feedbackHref ? ' target="_blank"' : ' onclick="return false"'}>FEEDBACK <span>↗</span></a>`;
+  const trackerBtn = `<a href="#" onclick="openTracker('${p.id}');return false">Tracker de jornadas <span>↗</span></a>`;
   const frameLink = p.links?.frameio
-    ? `<a class="frame-cta" href="${esc(p.links.frameio)}" target="_blank">🎬 Abrir proyecto en Frame.io ↗</a>
+    ? `<a class="frame-cta" href="${esc(p.links.frameio)}" target="_blank">Abrir proyecto en Frame.io ↗</a>
        <div class="sublabel" style="margin-top:10px">Adentro: 1. Footage · 2. Offline · 3. Online · 4. Masters</div>`
     : `<span style="font-size:12.5px;color:var(--gray)">Sin link de Frame.io</span>`;
 
@@ -1315,8 +1316,8 @@ function renderDetail(){
   const sintesisContent = (p.sintesis || p.storyboard_url || p.tratamiento_url) ? `
     <div style="margin-top:var(--space-5)">
       ${p.sintesis?`<p style="font-size:16.5px;white-space:pre-line;margin:0">${esc(p.sintesis)}</p>`:""}
-      ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">🎨 Storyboard ↗</a></p>`:""}
-      ${p.tratamiento_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.tratamiento_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">🎨 Tratamiento/Referencias ↗</a></p>`:""}
+      ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Storyboard ↗</a></p>`:""}
+      ${p.tratamiento_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.tratamiento_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Tratamiento/Referencias ↗</a></p>`:""}
     </div>` : "";
   const checklistBlock = checklistHTML(p, ro);
 
@@ -1892,7 +1893,7 @@ function openGate(target){
   $("#gateName").textContent = p.nombre+" → "+(STATUS_LABEL[target]||target);
   $("#gateItems").innerHTML = (pend?`<div class="gate-warn" style="border-color:var(--ink);background:var(--soft)">Ojo: quedan <b>${pend} candidato${pend>1?"s":""}</b> sin confirmar ni rechazar.</div>`:"") +
     ACT_CHECKLIST.map((t,i)=>`<div class="gate-item"><button class="chk-box" id="gate${i}" onclick="toggleGate(${i})"></button><span class="txt">${esc(t)}</span></div>`).join("");
-  $("#btnGate").textContent = "🚀 Pasar a "+(STATUS_LABEL[target]||target);
+  $("#btnGate").textContent = "Pasar a "+(STATUS_LABEL[target]||target);
   updateGateBtn();
   openModal("ovGate");
 }
@@ -2127,7 +2128,7 @@ function trackerHTML(p){
     return `<div class="trk-empty">Todavía no hay nadie asignado. Cargá Equipo interno y/o asignaciones por tarea en la ficha del proyecto — acá van a aparecer solos.</div>`;
   }
 
-  const rangeLine = `<div class="trk-range">📅 Del calendario del proyecto: <b>${fmtShort(ymd(range.start))} → ${fmtShort(ymd(range.end))}</b> · ${days.length} días</div>`;
+  const rangeLine = `<div class="trk-range">Del calendario del proyecto: <b>${fmtShort(ymd(range.start))} → ${fmtShort(ymd(range.end))}</b> · ${days.length} días</div>`;
 
   const head = `<tr>
     <th class="trk-day">Día</th><th class="trk-date">Fecha</th>
@@ -2470,7 +2471,7 @@ async function parseDebrief2(){
     $("#n2Form").style.display="block";
     toast("✔ Debrief analizado, revisá y ajustá antes de crear");
   }catch(e){ toast("No pude analizar el debrief: "+e.message, true); }
-  finally{ btn.disabled=false; btn.textContent="✨ Analizar debrief"; }
+  finally{ btn.disabled=false; btn.textContent="Analizar debrief"; }
 }
 function skipDebrief2(){ $("#n2Form").style.display="block"; }
 
