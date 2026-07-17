@@ -23,7 +23,7 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 |---|----------|---------|----------|
 | 1 | Setup DB | (manual, se corre 1 vez) | Crea el spreadsheet TEAM23_DB con tabs Projects y Calendar |
 | 2 | Get Projects | `GET /webhook/team23/projects` | Devuelve todos los proyectos + calendarios a la página |
-| 3 | Crear Proyecto | `POST /webhook/team23/create` | Crea carpeta raíz en Drive + las 6 carpetas + subcarpetas de FOOTAGE y DELIVERY + copia Desglose y Tracker + crea el proyecto en Frame.io con sus 4 carpetas + guarda el registro (incluye `director`, `taskDates_json`, `sintesis`, `storyboard_url` si vienen en el body) |
+| 3 | Crear Proyecto | `POST /webhook/team23/create` | Crea una **Unidad compartida** de Drive por proyecto (y suma al equipo como miembros) + las 6 carpetas + subcarpetas de FOOTAGE y DELIVERY + copia Desglose y Tracker + crea el proyecto en Frame.io con sus 4 carpetas + guarda el registro (incluye `director`, `taskDates_json`, `sintesis`, `storyboard_url` si vienen en el body) |
 | 4 | Actualizar Proyecto | `POST /webhook/team23/update` | Edita nombre/cliente/agencia/productora/**director**, equipo, tareas, asignaciones (incluye `estado` de candidatos), **`taskDates_json`**, `checklist_json` y estado (según qué campos vengan en el body) |
 | 5 | Guardar Calendario | `POST /webhook/team23/calendar` | Guarda el calendario y manda mail a todos los involucrados |
 | 6 | Parse Debrief (IA) | `POST /webhook/team23/parse` | Analiza el texto de un debrief con Claude y devuelve nombre/cliente/agencia/productora/síntesis/tareas/timeline sugeridos, para precargar el alta de proyecto (Opción 2) |
@@ -32,10 +32,10 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 
 **Eliminar proyecto** (`POST /webhook/team23/delete`, recibe `{id}`) todavía no tiene un workflow armado en esta carpeta — hay que crearlo a mano en n8n (borra la fila del Sheet por `id`; no borra la carpeta de Drive ni el proyecto en Frame.io, eso se hace aparte si corresponde).
 
-**Estructura que crea en Drive por cada proyecto:**
+**Estructura que crea en Drive por cada proyecto** (la raíz es una **Unidad compartida**, no una carpeta):
 
 ```
-{NOMBRE DEL PROYECTO}/
+{NOMBRE DEL PROYECTO}/        ← Unidad compartida
 ├── 00. COORD/
 │   ├── {Proyecto} — Desglose     (copia de tu planilla de desglose)
 │   └── {Proyecto} — Tracker      (copia de tu tracker)
@@ -63,7 +63,7 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 
 Entrá a tu n8n → **Credentials** → creá estas (las de Google probablemente ya las tenés):
 
-1. **Google Drive OAuth2** — la misma cuenta donde querés que vivan los proyectos.
+1. **Google Drive OAuth2** — la misma cuenta donde querés que vivan los proyectos. ⚠️ Como el workflow 3 crea **Unidades compartidas**, tiene que ser una cuenta de **Google Workspace** (Business Standard o superior) con permiso para crear unidades; una cuenta @gmail.com personal no puede y la creación de proyectos va a fallar.
 2. **Google Sheets OAuth2** — misma cuenta.
 3. **Google Docs OAuth2** — misma cuenta.
 4. **Gmail OAuth2** — la casilla desde la que salen los avisos de calendario.
@@ -94,7 +94,7 @@ En los workflows **2, 3, 4, 5 y 6** hay un nodo llamado **CONFIG**. Pegá ahí:
 
 - `dbSheetId` → el ID del paso 3 (en los 4 workflows).
 - Solo en el workflow 3, además:
-  - `parentFolderId` → ID de la carpeta madre de Drive donde van a vivir todos los proyectos (creá una carpeta "PROYECTOS TEAM23", abrila, y el ID es lo que está después de `/folders/` en la URL).
+  - `driveMembers` → los mails del equipo separados por coma (ej: `vos@team23.online, eyal@team23.online`). Cada proyecto nuevo crea su propia Unidad compartida, y como las unidades **no heredan permisos de ninguna carpeta madre**, el workflow agrega estos mails como Administradores de la unidad al crearla. Si queda vacío, la unidad solo la ve la cuenta de Google conectada en n8n. (Ya no existe `parentFolderId`: las unidades no viven adentro de una carpeta.)
   - `desgloseTemplateId` y `trackerTemplateId` → **ya están precargados** con tus dos planillas. La cuenta de Google conectada en n8n tiene que tener acceso a esas planillas para poder copiarlas.
   - `frameAccountId` y `frameWorkspaceId` → ver abajo.
 
@@ -158,7 +158,7 @@ Listo. Entrás, creás un proyecto, y en ~15 segundos tenés Drive + Frame.io + 
 - **Completar**: tocás **COMPLETADO** → pasa a la sección de completados agrupado por año.
 - **Editar equipo/tareas**: en **PRE-PRODUCCIÓN** el equipo interno es editable; las tareas (con equipo + fechas) se editan mientras el proyecto está activo → "Guardar cambios de equipo".
 - **Editar datos del proyecto**: se editan en "Datos del proyecto" solo en PRE-PRODUCCIÓN → "Guardar datos del proyecto". La creación de carpetas guarda además `taskDates_json` (fechas por tarea) y `director`; el workflow de n8n debe persistir esos campos.
-- **Eliminar proyecto**: al fondo del detalle, en "Zona de riesgo" → pide confirmación antes de borrar. Solo borra el registro del hub; las carpetas de Drive y el proyecto en Frame.io quedan (borralos a mano si corresponde).
+- **Eliminar proyecto**: al fondo del detalle, en "Zona de riesgo" → pide confirmación antes de borrar. Solo borra el registro del hub; la Unidad de Drive y el proyecto en Frame.io quedan (borralos a mano si corresponde).
 
 ---
 
