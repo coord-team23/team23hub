@@ -305,7 +305,10 @@
           "id": "REEMPLAZAR",
           "name": "Frame.io OAuth2"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -329,7 +332,14 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ data: { name: $json.name } }) }}",
-        "options": {}
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
       },
       "id": "c3000003-0000-0000-0000-00000000000f",
       "name": "Frame: Crear carpetas",
@@ -344,7 +354,10 @@
           "id": "REEMPLAZAR",
           "name": "Frame.io OAuth2"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -583,7 +596,14 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ data: { name: $json.name } }) }}",
-        "options": {}
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
       },
       "id": "ff000003-0000-0000-0000-000000000006",
       "name": "Frame: Crear subcarpetas",
@@ -599,7 +619,10 @@
           "id": "REEMPLAZAR",
           "name": "Frame.io OAuth2"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     }
   ],
   "connections": {
