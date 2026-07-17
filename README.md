@@ -23,7 +23,7 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 |---|----------|---------|----------|
 | 1 | Setup DB | (manual, se corre 1 vez) | Crea el spreadsheet TEAM23_DB con tabs Projects y Calendar |
 | 2 | Get Projects | `GET /webhook/team23/projects` | Devuelve todos los proyectos + calendarios a la página |
-| 3 | Crear Proyecto | `POST /webhook/team23/create` | Crea una **Unidad compartida** de Drive por proyecto (y suma al equipo como miembros) + las 6 carpetas + subcarpetas de FOOTAGE y DELIVERY + copia Desglose y Tracker + crea el proyecto en Frame.io con sus 4 carpetas + guarda el registro (incluye `director`, `taskDates_json`, `sintesis`, `storyboard_url` si vienen en el body) |
+| 3 | Crear Proyecto | `POST /webhook/team23/create` | Crea una **Unidad compartida** de Drive por proyecto (y suma al equipo como miembros) + las 6 carpetas + subcarpetas de FOOTAGE y DELIVERY + copia Desglose, Brief y Feedback + crea el proyecto en Frame.io con sus 4 carpetas + guarda el registro (incluye `director`, `taskDates_json`, `sintesis`, `storyboard_url` si vienen en el body) |
 | 4 | Actualizar Proyecto | `POST /webhook/team23/update` | Edita nombre/cliente/agencia/productora/**director**, equipo, tareas, asignaciones (incluye `estado` de candidatos), **`taskDates_json`**, `checklist_json` y estado (según qué campos vengan en el body) |
 | 5 | Guardar Calendario | `POST /webhook/team23/calendar` | Guarda el calendario y manda mail a todos los involucrados |
 | 6 | Parse Debrief (IA) | `POST /webhook/team23/parse` | Analiza el texto de un debrief con Claude y devuelve nombre/cliente/agencia/productora/síntesis/tareas/timeline sugeridos, para precargar el alta de proyecto (Opción 2) |
@@ -38,7 +38,8 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 {NOMBRE DEL PROYECTO}/        ← Unidad compartida
 ├── 00. COORD/
 │   ├── {Proyecto} — Desglose     (copia de tu planilla de desglose)
-│   └── {Proyecto} — Tracker      (copia de tu tracker)
+│   ├── {Proyecto} — Brief        (copia de tu template de brief)
+│   └── {Proyecto} — Feedback     (copia de tu template de feedback)
 ├── 01. SUPERVISION - PRE/
 ├── 02. FOOTAGE/
 │   ├── 00. Armados/  01. Cámara/  02. Animaciones/  03. Sobreimpresos/
@@ -51,7 +52,7 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 
 > El botón **06. FINALES** de la ficha abre `links.finales`. Para que funcione, el workflow de creación (y/o el de Get Projects) debe crear esa carpeta y devolver su URL en `links.finales` junto al resto de los links. Si no viene, el botón igual aparece: desactivado fuera de cierre y en rojo (sin destino) al entrar en cierre.
 >
-> El botón **FEEDBACK** abre `links.feedback` — un doc de Drive para centralizar feedback del cliente. Siempre está visible, pero solo se resalta en rojo mientras el proyecto está en **Entregando**; en el resto de las etapas se ve como un link normal. Si el workflow de creación no crea ese doc todavía, el botón queda visible pero sin destino real (podés crearlo a mano y pegar el link en `links_json` del Sheet mientras tanto).
+> El botón **FEEDBACK** abre `links.feedback` — un doc de Drive para centralizar feedback del cliente. Siempre está visible, pero solo se resalta en rojo mientras el proyecto está en **Entregando**; en el resto de las etapas se ve como un link normal. El workflow de creación ya lo genera solo: copia tu template de Feedback en `00. COORD` y guarda el link, así el botón apunta a un doc real desde el día uno.
 
 **En Frame.io:** proyecto con carpetas `1. Footage / 2. Offline / 3. Online / 4. Masters`.
 
@@ -95,7 +96,7 @@ En los workflows **2, 3, 4, 5 y 6** hay un nodo llamado **CONFIG**. Pegá ahí:
 - `dbSheetId` → el ID del paso 3 (en los 4 workflows).
 - Solo en el workflow 3, además:
   - `driveMembers` → los mails del equipo separados por coma (ej: `vos@team23.online, eyal@team23.online`). Cada proyecto nuevo crea su propia Unidad compartida, y como las unidades **no heredan permisos de ninguna carpeta madre**, el workflow agrega estos mails como Administradores de la unidad al crearla. Si queda vacío, la unidad solo la ve la cuenta de Google conectada en n8n. (Ya no existe `parentFolderId`: las unidades no viven adentro de una carpeta.)
-  - `desgloseTemplateId` y `trackerTemplateId` → **ya están precargados** con tus dos planillas. La cuenta de Google conectada en n8n tiene que tener acceso a esas planillas para poder copiarlas.
+  - `desgloseTemplateId`, `briefTemplateId` y `feedbackTemplateId` → **ya están precargados** con tus tres plantillas actuales (desglose, brief y feedback). La cuenta de Google conectada en n8n tiene que tener acceso a esas plantillas para poder copiarlas. (Ya no existe `trackerTemplateId`: el tracker de jornadas vive dentro del hub.)
   - `frameAccountId` y `frameWorkspaceId` → ver abajo.
 
 **Cómo obtener los IDs de Frame.io (API v4):**
