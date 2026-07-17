@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
+<link rel="icon" type="image/png" href="assets/footer-mark.png">
 <title>TEAM23 — Proveedores</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="design-system/styles.css">
@@ -493,7 +494,7 @@ function renderDetail(){
   const stepper=`<div class="stepper">${ETAPAS.map((e,i)=>
     `<span class="step ${i<idx?"done":""}" style="${i===idx?statusPillStyle(e):""}">${ETIQ[e]}</span>`
   ).join("")}</div>`;
-  const linkDefs=[["driveRoot","📁 Drive del proyecto"],["frameio","🎬 Frame.io"],["feedback","📝 Feedback"]];
+  const linkDefs=[["driveRoot","Drive del proyecto"],["frameio","Frame.io"],["feedback","Feedback"]];
   const links=linkDefs.filter(([k])=>p.links&&p.links[k]).map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
   const lookMap={}; let n=0;
   (p.calendario||[]).forEach((r,i)=>{ if(r.tipo!=="hito"){ lookMap[i]=n%PHASE_LOOKS.length; n++; } });
