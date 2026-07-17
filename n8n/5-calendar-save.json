@@ -33,7 +33,7 @@
             {
               "id": "c1",
               "name": "dbSheetId",
-              "value": "PEGAR_DB_SHEET_ID",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
               "type": "string"
             }
           ]
@@ -219,11 +219,8 @@
           "value": "Projects"
         },
         "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "id": "={{ $('Reconstruir').first().json.projectId || $('Webhook').first().json.body.projectId }}",
-            "taskDates_json": "={{ $('Webhook').first().json.body.taskDates_json || '{}' }}"
-          },
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [
             "id"
           ],
@@ -247,6 +244,20 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const w = $('Webhook').first().json.body;\nreturn [{ json: { id: w.id, taskDates_json: JSON.stringify(w.taskDates || {}) } }];"
+      },
+      "id": "db000005-0000-0000-0000-000000000001",
+      "name": "Fila taskDates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1260,
+        -240
+      ],
+      "executeOnce": true
     }
   ],
   "connections": {
@@ -333,6 +344,17 @@
       ]
     },
     "Guardar Calendario": {
+      "main": [
+        [
+          {
+            "node": "Fila taskDates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fila taskDates": {
       "main": [
         [
           {
