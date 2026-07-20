@@ -184,6 +184,13 @@
   /* el chooser (elegir opción 1/2) se queda grande; kick off y formularios van a la escala de la ficha de detalle */
   #ovChooser .modal{zoom:1.4}
   #ovKickOff .modal,#ovNew .modal,#ovNew2 .modal{zoom:0.9}
+  main{max-width:none}
+  .usr-table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .usr-table th{text-align:left;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);padding:6px 8px;border-bottom:2px solid var(--ink)}
+  .usr-table td{padding:10px 8px;border-bottom:1px solid #E5E5E5;vertical-align:middle}
+  .usr-badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.08em;padding:3px 10px;border-radius:999px;border:1.5px solid var(--ink)}
+  .usr-badge.in{background:var(--ink);color:#fff}
+  .usr-badge.out{background:#fff;color:var(--ink)}
   .kickoff-q{
     font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .727);color:var(--gray);
     text-transform:uppercase;letter-spacing:var(--tracking-tight);line-height:1.05;margin-bottom:var(--space-7);
@@ -538,14 +545,7 @@
     </div>
     <div class="kicker" style="margin-bottom:14px">Production Hub · acceso del equipo</div>
     <p id="agMsg" style="font-size:14px;line-height:1.5;margin:0 0 14px">Verificando sesión…</p>
-    <div id="agForm" style="display:none">
-      <button class="btn" style="width:100%;margin-bottom:14px" onclick="authGoogle(this)">Continuar con Google</button>
-      <div style="font-size:10px;letter-spacing:.18em;color:var(--gray);text-align:center;margin-bottom:14px">— O CON MAIL Y CONTRASEÑA —</div>
-      <input id="agEmail" type="email" placeholder="tu@team23.online" style="width:100%;margin-bottom:10px" autocomplete="email">
-      <input id="agPass" type="password" placeholder="Contraseña" style="width:100%;margin-bottom:12px" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSignIn(document.getElementById('agBtn'))">
-      <button class="btn primary" id="agBtn" style="width:100%" onclick="authSignIn(this)">Entrar</button>
-      <button class="btn small" style="width:100%;margin-top:10px" onclick="authSignUp(this)">Crear cuenta (primera vez)</button>
-    </div>
+
   </div>
 </div>
 
@@ -566,8 +566,11 @@
       <button class="status-opt" data-view="proyectos" onclick="switchView('proyectos')">Proyectos</button>
       <button class="status-opt" data-view="calendario" onclick="switchView('calendario')">Calendario</button>
     </nav>
-    <button class="btn small" id="btnNew">+ NUEVO PROYECTO</button>
-    <button class="btn small" id="btnLogout" style="display:none" onclick="authLogout()">Salir</button>
+    <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
+      <button class="btn small" id="btnUsers" style="display:none" onclick="openUsers()">Usuarios</button>
+      <button class="btn small" id="btnNew">+ NUEVO PROYECTO</button>
+      <button class="btn small" id="btnLogout" style="display:none" onclick="authLogout()">Salir</button>
+    </div>
   </div>
 </header>
 
@@ -719,6 +722,15 @@
 </div>
 
 <!-- ============ MODAL: ELEGIR FLUJO DE CREACIÓN ============ -->
+<div class="overlay" id="ovUsers">
+  <div class="modal" role="dialog" aria-modal="true" style="width:min(640px,100%)">
+    <button class="close" onclick="closeModal('ovUsers')" aria-label="Cerrar">✕</button>
+    <h2>Usuarios</h2>
+    <div class="kicker">Todos los que se registraron alguna vez · cambiá roles desde acá</div>
+    <div id="usersBody" style="margin-top:14px"></div>
+  </div>
+</div>
+
 <div class="overlay" id="ovConfirm" style="z-index:1200">
   <div class="modal" role="dialog" aria-modal="true" style="width:min(480px,100%)">
     <h2 style="font-size:22px">Cambios sin guardar</h2>
@@ -2690,9 +2702,7 @@ async function initAuth(){
     sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
     const { data:{ session } } = await sb.auth.getSession();
     if(session){ authEnter(session); return; }
-    sb.auth.onAuthStateChange((ev, s)=>{ if(s && !authUser) authEnter(s); });
-    $("#agMsg").textContent = "Ingresá con tu cuenta del equipo.";
-    $("#agForm").style.display = "block";
+    location.replace("/login");
   }catch(e){ $("#agMsg").textContent = "No pude conectar con el login ("+e.message+"). Recargá la página."; }
 }
 async function authEnter(session){
@@ -2700,58 +2710,56 @@ async function authEnter(session){
   try{
     const { data, error } = await sb.from("profiles").select("role,subrol").eq("id", authUser.id).single();
     if(error) throw error;
-    if(data.role !== "interno"){
-      $("#agForm").style.display = "none";
-      $("#agMsg").innerHTML = 'Tu cuenta es de proveedor, este panel es del equipo interno. Entrá por el <a href="/proveedores">portal de proveedores</a>.<br><br><a href="#" onclick="authLogout();return false">Cerrar sesión</a>';
-      return;
-    }
+    if(data.role !== "interno"){ location.replace("/proveedores"); return; }
     $("#authGate").style.display = "none";
     $("#btnLogout").style.display = "";
+    $("#btnUsers").style.display = "";
     startApp();
   }catch(e){
-    $("#agForm").style.display = "none";
     $("#agMsg").textContent = "No pude verificar tu cuenta ("+e.message+"). Probá recargar.";
   }
 }
-function agCreds(){
-  const email = $("#agEmail").value.trim(), password = $("#agPass").value;
-  if(!email || !password){ toast("Completá mail y contraseña", true); return null; }
-  return { email, password };
-}
-async function authSignIn(btn){
-  const c = agCreds(); if(!c) return;
-  btn.disabled = true; btn.textContent = "Entrando…";
+
+function authLogout(){ if(sb) sb.auth.signOut().then(()=>location.replace("/login")); else location.replace("/login"); }
+
+/* ---------------- panel de usuarios ---------------- */
+async function openUsers(){
+  openModal("ovUsers");
+  $("#usersBody").innerHTML = '<p style="font-size:13px;color:var(--gray)">Cargando…</p>';
   try{
-    const { data, error } = await sb.auth.signInWithPassword(c);
+    const { data, error } = await sb.from("profiles").select("id,email,nombre,role,subrol,created_at").order("created_at",{ascending:false});
     if(error) throw error;
-    if(data.session) authEnter(data.session);
-  }catch(e){
-    toast(/invalid/i.test(e.message) ? "Mail o contraseña incorrectos" : "No pude entrar: "+e.message, true);
-    btn.disabled = false; btn.textContent = "Entrar";
-  }
+    renderUsers(data || []);
+  }catch(e){ $("#usersBody").innerHTML = '<p style="font-size:13px;color:var(--red)">No pude cargar los usuarios ('+esc(e.message)+'). ¿Corriste la migración SQL del panel?</p>'; }
 }
-async function authSignUp(btn){
-  const c = agCreds(); if(!c) return;
-  if(c.password.length < 6){ toast("La contraseña necesita al menos 6 caracteres", true); return; }
-  btn.disabled = true; btn.textContent = "Creando…";
+function renderUsers(rows){
+  if(!rows.length){ $("#usersBody").innerHTML = '<p style="font-size:13px;color:var(--gray)">Todavía no se registró nadie.</p>'; return; }
+  $("#usersBody").innerHTML = `<table class="usr-table"><thead><tr><th>Usuario</th><th>Rol</th><th></th></tr></thead><tbody>` +
+    rows.map(u=>{
+      const interno = u.role === "interno";
+      const self = authUser && u.id === authUser.id;
+      return `<tr>
+        <td><b>${esc(u.nombre || u.email)}</b><br><span style="color:var(--gray);font-size:12px">${esc(u.email)}</span></td>
+        <td><span class="usr-badge ${interno?'in':'out'}">${interno?"PRODUCTOR"+(u.subrol?" · "+esc(u.subrol.toUpperCase()):""):"PROVEEDOR"}</span></td>
+        <td style="text-align:right">${self ? '<span style="font-size:11.5px;color:var(--gray)">Sos vos</span>'
+          : `<button class="btn small" onclick="setUserRole('${u.id}','${esc(u.email)}','${interno?"proveedor":"interno"}',this)">${interno?"Pasar a proveedor":"Pasar a productor"}</button>`}</td>
+      </tr>`;
+    }).join("") + `</tbody></table>`;
+}
+async function setUserRole(id, email, role, btn){
+  btn.disabled = true; btn.textContent = "Guardando…";
   try{
-    const { data, error } = await sb.auth.signUp({ ...c, options:{ emailRedirectTo: location.origin + location.pathname } });
+    const { error } = await sb.from("profiles").update({ role }).eq("id", id);
     if(error) throw error;
-    if(data.session){ authEnter(data.session); return; }
-    $("#agMsg").textContent = "Cuenta creada. Revisá tu mail para confirmarla y después entrá con tu contraseña.";
-    $("#agForm").style.display = "none";
-  }catch(e){
-    toast("No pude crear la cuenta: "+e.message, true);
-    btn.disabled = false; btn.textContent = "Crear cuenta (primera vez)";
-  }
+    if(role === "interno"){
+      await sb.from("internal_emails").upsert({ email: email.toLowerCase(), subrol: "productor" });
+    }else{
+      await sb.from("internal_emails").delete().eq("email", email.toLowerCase());
+    }
+    toast("✔ Rol actualizado. El cambio aplica en su próximo ingreso.");
+    openUsers();
+  }catch(e){ toast("No pude cambiar el rol: "+e.message, true); btn.disabled = false; }
 }
-async function authGoogle(btn){
-  btn.disabled = true;
-  try{
-    await sb.auth.signInWithOAuth({ provider:"google", options:{ redirectTo: location.origin + location.pathname } });
-  }catch(e){ toast("No pude iniciar con Google: "+e.message, true); btn.disabled = false; }
-}
-function authLogout(){ if(sb) sb.auth.signOut().then(()=>location.reload()); else location.reload(); }
 initAuth();
 </script>
 </body>
