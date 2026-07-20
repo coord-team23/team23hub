@@ -250,21 +250,7 @@
   </div>
 </header>
 
-<div id="loginView">
-  <div class="login-card">
-    <h2>Portal de proveedores</h2>
-    <div class="kicker">TEAM23</div>
-    <button class="btn primary" style="width:100%" onclick="loginGoogle()">Entrar con Google</button>
-    <div class="or">— O CON TU MAIL —</div>
-    <label class="f">Tu mail (el que usás con TEAM23)</label>
-    <input type="email" id="loginEmail" placeholder="vos@tuestudio.com" autocomplete="email">
-    <label class="f" style="margin-top:8px">Contraseña</label>
-    <input type="password" id="loginPass" placeholder="Tu contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginPassword()">
-    <button class="btn primary" style="width:100%;margin-top:12px" onclick="loginPassword()">Entrar</button>
-    <button class="btn small" style="width:100%;margin-top:10px" onclick="signupPassword()">Crear cuenta (primera vez)</button>
-    <p style="font-size:11.5px;color:var(--gray);margin-top:14px">Usá el mail con el que TEAM23 te asigna a los proyectos: vas a ver solo aquellos donde estás confirmado.</p>
-  </div>
-</div>
+<div id="loginView" style="display:none"></div>
 
 <div id="appView" style="display:none">
   <div class="hero">
@@ -374,34 +360,13 @@ async function initApp(){
   boot();
 }
 async function boot(){
-  if(!session){ $("#loginView").style.display="flex"; $("#appView").style.display="none"; $("#userBox").style.display="none"; return; }
+  if(!session){ location.replace("/login"); return; }
   $("#loginView").style.display="none"; $("#appView").style.display="block";
   $("#userBox").style.display="flex"; $("#userEmail").textContent = session.user.email;
   await loadAll();
 }
-async function loginGoogle(){
-  try{ await sb.auth.signInWithOAuth({provider:"google", options:{redirectTo: location.origin+location.pathname}}); }
-  catch(e){ toast("No pude iniciar con Google: "+e.message, true); }
-}
-async function loginPassword(){
-  const email=$("#loginEmail").value.trim(), password=$("#loginPass").value;
-  if(!email || !password){ toast("Completá mail y contraseña", true); return; }
-  try{
-    const { data, error } = await sb.auth.signInWithPassword({email, password});
-    if(error) throw error;
-  }catch(e){ toast(/invalid/i.test(e.message) ? "Mail o contraseña incorrectos" : "Error: "+e.message, true); }
-}
-async function signupPassword(){
-  const email=$("#loginEmail").value.trim(), password=$("#loginPass").value;
-  if(!email || !password){ toast("Completá mail y contraseña", true); return; }
-  if(password.length < 6){ toast("La contraseña necesita al menos 6 caracteres", true); return; }
-  try{
-    const { data, error } = await sb.auth.signUp({email, password, options:{emailRedirectTo: location.origin+location.pathname}});
-    if(error) throw error;
-    if(!data.session) toast("✔ Cuenta creada, revisá tu mail para confirmarla");
-  }catch(e){ toast("Error: "+e.message, true); }
-}
-async function logout(){ if(sb) await sb.auth.signOut(); location.reload(); }
+
+async function logout(){ if(sb) await sb.auth.signOut(); location.replace("/login"); }
 
 async function loadAll(){
   try{
