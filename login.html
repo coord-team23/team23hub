@@ -6,20 +6,58 @@
 <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="18" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="46" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="21" cy="36" r="7.5" fill="%230A0A0A"/><circle cx="49" cy="36" r="7.5" fill="%230A0A0A"/></svg>'>
 <title>TEAM23 · Acceso</title>
 <link rel="stylesheet" href="design-system/styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="design-system/styles.css">
 <style>
-  body{display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#fff}
-  .login-card{width:min(430px,92vw);border:2px solid var(--ink);border-radius:var(--radius-lg,16px);padding:30px;box-shadow:8px 8px 0 var(--ink);background:#fff}
-  .login-card input{width:100%;box-sizing:border-box}
-  .lg-or{font-size:10px;letter-spacing:.18em;color:var(--gray);text-align:center;margin:14px 0}
+  :root{
+    --ink:var(--n-600,#0A0A0A); --paper:var(--n-000,#fff); --red:var(--brand-red,#FF2B1E);
+    --gray:var(--tx-on-light-secondary,#6b6b6b);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:var(--font-primary,'Helvetica Neue',Helvetica,Arial,sans-serif);
+    background:var(--paper); color:var(--ink);
+    display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;
+  }
+  .login-card{
+    width:min(430px,92vw); background:#fff;
+    border:var(--stroke-md,3px) solid var(--ink); border-radius:var(--radius-lg,16px);
+    padding:30px; box-shadow:8px 8px 0 var(--ink);
+  }
+  .lc-word{font-family:var(--font-primary,sans-serif);font-weight:var(--weight-bold,700);font-size:24px;letter-spacing:var(--tracking-tight,-0.5px)}
+  .kicker{
+    font-family:var(--font-secondary,sans-serif);font-size:var(--text-c2-size,11px);font-weight:var(--weight-bold,700);
+    letter-spacing:.16em;text-transform:uppercase;color:var(--gray);
+  }
   .lg-msg{font-size:14px;line-height:1.5;margin:0 0 14px}
+  .btn{
+    font-family:var(--font-secondary,sans-serif);font-weight:var(--weight-bold,700);font-size:var(--text-c2-size,12px);
+    letter-spacing:.06em;text-transform:uppercase;
+    border:var(--stroke-sm,2px) solid var(--ink);background:var(--paper);color:var(--ink);
+    border-radius:var(--radius-full,999px);padding:12px 24px;cursor:pointer;
+    transition:transform .15s ease, background .15s ease, color .15s ease;white-space:nowrap;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn.primary:hover{background:#2b2b2b;border-color:#2b2b2b}
+  .btn.small{padding:9px 16px;font-size:11px}
+  .btn[disabled]{opacity:.5;cursor:wait;transform:none}
+  input[type=email],input[type=password]{
+    width:100%;font-family:var(--font-primary,sans-serif);font-size:var(--text-b1-size,15px);
+    padding:11px 12px;border:2px solid var(--ink);border-radius:var(--radius-md,10px);background:#fff;color:var(--ink);
+  }
+  input:focus{outline:3px solid rgba(255,43,30,.35)}
+  .lg-or{font-family:var(--font-secondary,sans-serif);font-size:10px;font-weight:700;letter-spacing:.18em;color:var(--gray);text-align:center;margin:14px 0}
   .lg-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;display:none;z-index:10}
-  .lg-toast.err{background:var(--red,#FF2B1E)}
+  .lg-toast.err{background:var(--red)}
+  @media(max-width:640px){ input[type=email],input[type=password]{font-size:16px} }
 </style>
 </head>
 <body>
 <div class="login-card">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-    <span style="font-family:var(--font-primary);font-weight:900;font-size:24px;letter-spacing:-0.5px">TEAM23</span>
+    <span class="lc-word">TEAM23</span>
     <svg width="34" height="22" viewBox="0 0 64 40" aria-hidden="true"><circle cx="18" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="46" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="21" cy="24" r="7.5" fill="#0A0A0A"/><circle cx="49" cy="24" r="7.5" fill="#0A0A0A"/></svg>
   </div>
   <div class="kicker" style="margin-bottom:14px">Production Hub · Acceso</div>
