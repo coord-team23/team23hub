@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="18" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="46" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="21" cy="36" r="7.5" fill="%230A0A0A"/><circle cx="49" cy="36" r="7.5" fill="%230A0A0A"/></svg>'>
+<title>TEAM23 · Acceso</title>
+<link rel="stylesheet" href="design-system/styles.css">
+<style>
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#fff}
+  .login-card{width:min(430px,92vw);border:2px solid var(--ink);border-radius:var(--radius-lg,16px);padding:30px;box-shadow:8px 8px 0 var(--ink);background:#fff}
+  .login-card input{width:100%;box-sizing:border-box}
+  .lg-or{font-size:10px;letter-spacing:.18em;color:var(--gray);text-align:center;margin:14px 0}
+  .lg-msg{font-size:14px;line-height:1.5;margin:0 0 14px}
+  .lg-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;display:none;z-index:10}
+  .lg-toast.err{background:var(--red,#FF2B1E)}
+</style>
+</head>
+<body>
+<div class="login-card">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+    <span style="font-family:var(--font-primary);font-weight:900;font-size:24px;letter-spacing:-0.5px">TEAM23</span>
+    <svg width="34" height="22" viewBox="0 0 64 40" aria-hidden="true"><circle cx="18" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="46" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="21" cy="24" r="7.5" fill="#0A0A0A"/><circle cx="49" cy="24" r="7.5" fill="#0A0A0A"/></svg>
+  </div>
+  <div class="kicker" style="margin-bottom:14px">Production Hub · Acceso</div>
+  <p class="lg-msg" id="lgMsg">Verificando sesión…</p>
+  <div id="lgForm" style="display:none">
+    <button class="btn" style="width:100%;margin-bottom:2px" onclick="lgGoogle(this)">Continuar con Google</button>
+    <div class="lg-or">— O CON MAIL Y CONTRASEÑA —</div>
+    <input id="lgEmail" type="email" placeholder="tu@mail.com" style="margin-bottom:10px" autocomplete="email">
+    <input id="lgPass" type="password" placeholder="Contraseña" style="margin-bottom:12px" autocomplete="current-password" onkeydown="if(event.key==='Enter')lgSignIn(document.getElementById('lgBtn'))">
+    <button class="btn primary" id="lgBtn" style="width:100%" onclick="lgSignIn(this)">Entrar</button>
+    <button class="btn small" style="width:100%;margin-top:10px" onclick="lgSignUp(this)">Crear cuenta (primera vez)</button>
+  </div>
+</div>
+<div class="lg-toast" id="lgToast"></div>
+<script>
+const CONFIG = {
+  SUPABASE_URL: "https://muvmrkacjhygfuialpyn.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI"
+};
+const $ = s=>document.querySelector(s);
+let sb = null, routed = false;
+function toast(m, err){ const t=$("#lgToast"); t.textContent=m; t.className="lg-toast"+(err?" err":""); t.style.display="block"; setTimeout(()=>t.style.display="none", 4000); }
+async function routeByRole(session){
+  if(routed) return; routed = true;
+  $("#lgForm").style.display = "none";
+  $("#lgMsg").textContent = "Entrando…";
+  try{
+    const { data, error } = await sb.from("profiles").select("role").eq("id", session.user.id).single();
+    if(error) throw error;
+    location.replace(data.role === "interno" ? "/productores" : "/proveedores");
+  }catch(e){
+    routed = false;
+    $("#lgMsg").textContent = "No pude verificar tu cuenta ("+e.message+"). Probá recargar.";
+  }
+}
+async function init(){
+  if(!CONFIG.SUPABASE_URL){ $("#lgMsg").textContent = "Login sin configurar (falta Supabase en CONFIG)."; return; }
+  try{
+    const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+    sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session){ routeByRole(session); return; }
+    sb.auth.onAuthStateChange((ev, s)=>{ if(s) routeByRole(s); });
+    $("#lgMsg").textContent = "Ingresá con tu cuenta.";
+    $("#lgForm").style.display = "block";
+  }catch(e){ $("#lgMsg").textContent = "No pude conectar con el login ("+e.message+"). Recargá la página."; }
+}
+function lgCreds(){
+  const email = $("#lgEmail").value.trim(), password = $("#lgPass").value;
+  if(!email || !password){ toast("Completá mail y contraseña", true); return null; }
+  return { email, password };
+}
+async function lgSignIn(btn){
+  const c = lgCreds(); if(!c) return;
+  btn.disabled = true; btn.textContent = "Entrando…";
+  try{
+    const { data, error } = await sb.auth.signInWithPassword(c);
+    if(error) throw error;
+    if(data.session) routeByRole(data.session);
+  }catch(e){
+    toast(/invalid/i.test(e.message) ? "Mail o contraseña incorrectos" : "No pude entrar: "+e.message, true);
+    btn.disabled = false; btn.textContent = "Entrar";
+  }
+}
+async function lgSignUp(btn){
+  const c = lgCreds(); if(!c) return;
+  if(c.password.length < 6){ toast("La contraseña necesita al menos 6 caracteres", true); return; }
+  btn.disabled = true; btn.textContent = "Creando…";
+  try{
+    const { data, error } = await sb.auth.signUp({ ...c, options:{ emailRedirectTo: location.origin + "/login" } });
+    if(error) throw error;
+    if(data.session){ routeByRole(data.session); return; }
+    $("#lgForm").style.display = "none";
+    $("#lgMsg").textContent = "Cuenta creada. Revisá tu mail para confirmarla y después entrá con tu contraseña.";
+  }catch(e){
+    toast("No pude crear la cuenta: "+e.message, true);
+    btn.disabled = false; btn.textContent = "Crear cuenta (primera vez)";
+  }
+}
+async function lgGoogle(btn){
+  btn.disabled = true;
+  try{
+    await sb.auth.signInWithOAuth({ provider:"google", options:{ redirectTo: location.origin + "/login" } });
+  }catch(e){ toast("No pude iniciar con Google: "+e.message, true); btn.disabled = false; }
+}
+init();
+</script>
+</body>
+</html>
