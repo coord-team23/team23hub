@@ -534,6 +534,21 @@
   @media (prefers-reduced-motion: reduce){
     *{transition:none !important;animation:none !important}
   }
+
+/* ---- sincronización de proyectos ---- */
+.sync-pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--gray);margin-top:6px}
+.sync-spin{width:12px;height:12px;border:2px solid var(--gray);border-top-color:transparent;border-radius:50%;animation:t23spin .7s linear infinite}
+@keyframes t23spin{to{transform:rotate(360deg)}}
+/* ---- directorio ---- */
+.dir-tools{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.dir-tools input{flex:1;min-width:220px}
+.dir-wrap{max-height:62vh;overflow:auto;border:2px solid var(--ink);margin-top:10px}
+.dir-table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:1500px}
+.dir-table th{position:sticky;top:0;z-index:1;background:var(--ink);color:#fff;padding:8px 10px;text-align:left;cursor:pointer;white-space:nowrap;user-select:none}
+.dir-table td{border-bottom:1px solid #ddd;border-right:1px solid #eee;padding:6px 10px;min-width:110px;vertical-align:top}
+.dir-table td:last-child{min-width:280px}
+.dir-table td[contenteditable]:focus{outline:2px solid var(--red);background:#fff}
+.dir-count{font-size:12px;color:var(--gray)}
 </style>
 </head>
 <body>
@@ -567,6 +582,7 @@
       <button class="status-opt" data-view="calendario" onclick="switchView('calendario')">Calendario</button>
     </nav>
     <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
+      <button class="btn small" id="btnDirectorio" style="display:none" onclick="openDirectorio()">Directorio</button>
       <button class="btn small" id="btnUsers" style="display:none" onclick="openUsers()">Usuarios</button>
       <button class="btn small" id="btnNew">+ NUEVO PROYECTO</button>
       <button class="btn small" id="btnLogout" style="display:none" onclick="authLogout()">Salir</button>
@@ -577,6 +593,7 @@
 <div class="hero">
   <div>
     <h1 id="heroTitle">Proyectos</h1>
+    <span class="sync-pill" id="syncPill" style="display:none"><span class="sync-spin"></span>Buscando proyectos nuevos…</span>
   </div>
 </div>
 
@@ -722,6 +739,21 @@
 </div>
 
 <!-- ============ MODAL: ELEGIR FLUJO DE CREACIÓN ============ -->
+<div class="overlay" id="ovDirectorio">
+  <div class="modal" role="dialog" aria-modal="true" style="width:min(1240px,96vw)">
+    <button class="close" onclick="closeModal('ovDirectorio')" aria-label="Cerrar">✕</button>
+    <h2>Directorio Team23</h2>
+    <div class="kicker">Sincronizado con el spreadsheet de proveedores · editá una celda y se guarda al salir de ella · solo productores</div>
+    <div class="dir-tools">
+      <input id="dirSearch" type="text" placeholder="Buscar por nombre, especialidad, mail…" oninput="dirRender()">
+      <span class="dir-count" id="dirCount"></span>
+      <button class="btn small" onclick="dirLoad(true)">Refrescar</button>
+      <a class="btn small" href="https://docs.google.com/spreadsheets/d/1jMs5xUhFKrp5z_LHMOdkJia7vKJsrtKdSB20g9KHsp0/edit" target="_blank" rel="noopener">Abrir sheet ↗</a>
+    </div>
+    <div class="dir-wrap" id="dirBody"><p style="font-size:13px;color:var(--gray);padding:12px">Cargando…</p></div>
+  </div>
+</div>
+
 <div class="overlay" id="ovUsers">
   <div class="modal" role="dialog" aria-modal="true" style="width:min(640px,100%)">
     <button class="close" onclick="closeModal('ovUsers')" aria-label="Cerrar">✕</button>
@@ -940,6 +972,9 @@ async function loadProjects(){
       if(Array.isArray(c) && c.length){ projects = c; onProjectsLoaded(); }
     }catch(e){}
   }
+  const prevIds = new Set(projects.map(p=>p.id));
+  const hadCache = projects.length > 0;
+  syncPillShow(true);
   try{
     const data = await api("/webhook/team23/projects");
     projects = (data.projects||[]).map(p=>({
@@ -953,8 +988,14 @@ async function loadProjects(){
     autoAdvanceOverdue();
     onProjectsLoaded();
     try{ localStorage.setItem("t23_projects", JSON.stringify(projects)); }catch(e){}
+    if(hadCache){
+      const nuevos = projects.filter(p=>!prevIds.has(p.id)).length;
+      if(nuevos) toast("✔ "+nuevos+(nuevos>1?" proyectos nuevos":" proyecto nuevo"));
+    }
   }catch(e){
     toast("No pude cargar los proyectos, revisá n8n ("+e.message+")", true);
+  }finally{
+    syncPillShow(false);
   }
 }
 
@@ -2705,6 +2746,7 @@ async function authEnter(session){
     $("#authGate").style.display = "none";
     $("#btnLogout").style.display = "";
     $("#btnUsers").style.display = "";
+    $("#btnDirectorio").style.display = "";
     startApp();
   }catch(e){
     $("#agMsg").textContent = "No pude verificar tu cuenta ("+e.message+"). Probá recargar.";
@@ -2712,6 +2754,86 @@ async function authEnter(session){
 }
 
 function authLogout(){ if(sb) sb.auth.signOut().then(()=>location.replace("/login")); else location.replace("/login"); }
+
+/* ---------------- directorio (base de proveedores) ---------------- */
+let dirData = null;            /* {headers, rows:[{n,v,check}]} */
+let dirSortCol = -1, dirSortAsc = true, dirOld = "";
+
+function syncPillShow(on){ const el = document.getElementById("syncPill"); if(el) el.style.display = on ? "" : "none"; }
+
+async function dirToken(){
+  if(!sb) throw new Error("sin sesión");
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session) throw new Error("sin sesión");
+  return session.access_token;
+}
+function openDirectorio(){
+  openModal("ovDirectorio");
+  if(!dirData) dirLoad(); else dirRender();
+}
+async function dirLoad(force){
+  $("#dirBody").innerHTML = '<p style="font-size:13px;color:var(--gray);padding:12px">Cargando el directorio…</p>';
+  try{
+    const token = await dirToken();
+    const data = await api("/webhook/team23/roster",{method:"POST",body:JSON.stringify({accion:"listar",token})});
+    if(!data.ok) throw new Error(data.error||"respuesta inválida");
+    dirData = { headers: data.headers||[], rows: (data.rows||[]).map(r=>({ n:r.n, v:r.v, check:String(r.v[0]||"") })) };
+    dirSortCol = -1; dirSortAsc = true;
+    dirRender();
+  }catch(e){
+    const msg = /403/.test(e.message) ? "solo productores pueden ver esta lista" : e.message;
+    $("#dirBody").innerHTML = '<p style="font-size:13px;color:var(--red);padding:12px">No pude cargar el directorio ('+esc(msg)+')</p>';
+  }
+}
+function dirSort(c){
+  if(!dirData) return;
+  if(dirSortCol===c) dirSortAsc = !dirSortAsc; else { dirSortCol = c; dirSortAsc = true; }
+  const num = v => { const x = parseFloat(String(v).replace(",", ".")); return isNaN(x) ? null : x; };
+  dirData.rows.sort((a,b)=>{
+    const va = a.v[c]||"", vb = b.v[c]||"";
+    if(va==="" && vb!=="") return 1;   /* vacíos al final, siempre */
+    if(vb==="" && va!=="") return -1;
+    const na = num(va), nb = num(vb);
+    const r = (na!==null && nb!==null) ? na-nb : String(va).localeCompare(String(vb),"es",{sensitivity:"base"});
+    return dirSortAsc ? r : -r;
+  });
+  dirRender();
+}
+function dirRender(){
+  if(!dirData) return;
+  const q = ($("#dirSearch").value||"").trim().toLowerCase();
+  const rows = q ? dirData.rows.filter(r=>r.v.some(x=>String(x).toLowerCase().includes(q))) : dirData.rows;
+  $("#dirCount").textContent = rows.length + " de " + dirData.rows.length;
+  const flecha = i => dirSortCol===i ? (dirSortAsc?" ▲":" ▼") : "";
+  const thead = "<tr>"+dirData.headers.map((h,i)=>`<th onclick="dirSort(${i})">${esc(h)}${flecha(i)}</th>`).join("")+"</tr>";
+  const body = rows.map(r=>{
+    const idx = dirData.rows.indexOf(r);
+    return "<tr>"+r.v.map((cell,c)=>`<td contenteditable="true" data-r="${idx}" data-c="${c}" onfocus="dirFocus(this)" onblur="dirBlur(this)" onkeydown="dirKey(event)">${esc(cell)}</td>`).join("")+"</tr>";
+  }).join("");
+  $("#dirBody").innerHTML = `<table class="dir-table"><thead>${thead}</thead><tbody>${body}</tbody></table>`;
+}
+function dirFocus(td){ dirOld = td.textContent; }
+function dirKey(e){ if(e.key==="Enter"){ e.preventDefault(); e.target.blur(); } }
+async function dirBlur(td){
+  const val = td.textContent.trim();
+  if(val === dirOld) return;
+  const r = Number(td.dataset.r), c = Number(td.dataset.c);
+  const row = dirData.rows[r];
+  const previo = row.v[c];
+  row.v[c] = val;
+  td.style.opacity = ".45";
+  try{
+    const token = await dirToken();
+    const data = await api("/webhook/team23/roster",{method:"POST",body:JSON.stringify({accion:"actualizar",token,fila:row.n,check:row.check,valores:row.v})});
+    if(!data.ok) throw new Error(data.error||"no se pudo guardar");
+    if(c===0) row.check = val;
+    toast("✔ Directorio actualizado");
+  }catch(e){
+    row.v[c] = previo;
+    toast("No pude guardar: "+e.message, true);
+    dirLoad(true);   /* algo cambió en el sheet: traer la verdad de nuevo */
+  }finally{ td.style.opacity = ""; }
+}
 
 /* ---------------- panel de usuarios ---------------- */
 async function openUsers(){
