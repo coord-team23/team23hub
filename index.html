@@ -549,6 +549,18 @@
 .dir-table td:last-child{min-width:280px}
 .dir-table td[contenteditable]:focus{outline:2px solid var(--red);background:#fff}
 .dir-count{font-size:12px;color:var(--gray)}
+
+/* ---- chips del directorio ---- */
+.dir-chipcell{cursor:pointer}
+.dchip{display:inline-block;background:var(--ink);color:#fff;border-radius:20px;padding:2px 9px;font-size:11.5px;margin:1px 3px 1px 0;white-space:nowrap}
+.dchip-empty{font-size:11.5px;color:var(--gray)}
+#dirChipPanel{display:none;position:fixed;z-index:9999;width:340px;max-height:320px;overflow:auto;background:#fff;border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:12px}
+.dchip-title{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:8px}
+.dchip-opts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.dchip-opt{display:inline-block;border:2px solid var(--ink);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;user-select:none;background:#fff}
+.dchip-opt.on{background:var(--ink);color:#fff}
+.dchip-addrow{display:flex;gap:6px}
+.dchip-addrow input{flex:1}
 </style>
 </head>
 <body>
@@ -1120,7 +1132,7 @@ function renderNPAssigns(){
   Object.keys(npAssignData).forEach(k=>{ if(!npSelected.has(k)) delete npAssignData[k]; });
   Object.keys(npTaskDates).forEach(k=>{ if(!npSelected.has(k)) delete npTaskDates[k]; });
   npSelected.forEach(t=>{
-    if(!npAssignData[t]) npAssignData[t]=[{nombre:"",email:""}];
+    if(!npAssignData[t]) npAssignData[t]=[{nombre:"",email:"",discord:"",telefono:""}];
     if(!npTaskDates[t]) npTaskDates[t]={inicio:"",fin:"",notas:""};
   });
   $("#npAssigns").innerHTML = [...npSelected].map(t=>assignBlockHTML(t, npAssignData[t], "np")).join("");
@@ -1142,9 +1154,11 @@ function assignBlockHTML(tarea, rows, ctx){
     <div class="ttl">${esc(tarea)} — ${ctx==="n2"?"candidatos":"equipo"} + fechas</div>
     ${rows.map((r,i)=>`
       <div class="assign-row">
-        <input type="text" placeholder="Nombre" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tarea}',${i},'nombre',this.value)">
-        <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tarea}',${i},'email',this.value)">
-        <button class="icon-btn" onclick="delAssign('${ctx}','${tarea}',${i})" title="Quitar">✕</button>
+        <input type="text" list="dlRoster" placeholder="Nombre" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tq}',${i},'nombre',this.value);asigAutofill(this,'${ctx}','${tq}',${i})">
+        <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tq}',${i},'email',this.value)">
+        <button class="icon-btn" onclick="delAssign('${ctx}','${tq}',${i})" title="Quitar">✕</button>
+        <input type="text" placeholder="Discord" value="${esc(r.discord||'')}" oninput="setAssign('${ctx}','${tq}',${i},'discord',this.value)">
+        <input type="tel" placeholder="Teléfono" value="${esc(r.telefono||'')}" oninput="setAssign('${ctx}','${tq}',${i},'telefono',this.value)">
       </div>${stateRow(r,i)}`).join("")}
     <button class="addline" onclick="addAssign('${ctx}','${tarea}')">+ agregar persona</button>
     <div class="frow" style="margin-top:var(--space-4)">
@@ -1174,8 +1188,8 @@ function setTaskDate(ctx,t,field,val){
 }
 function assignStore(ctx){ return ctx==="np" ? npAssignData : ctx==="n2" ? n2AssignData : detailProject.asignaciones; }
 function setAssign(ctx,t,i,k,v){ assignStore(ctx)[t][i][k]=v; }
-function addAssign(ctx,t){ assignStore(ctx)[t].push({nombre:"",email:""}); ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
-function delAssign(ctx,t,i){ assignStore(ctx)[t].splice(i,1); if(!assignStore(ctx)[t].length) assignStore(ctx)[t]=[{nombre:"",email:""}]; ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
+function addAssign(ctx,t){ assignStore(ctx)[t].push({nombre:"",email:"",discord:"",telefono:""}); ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
+function delAssign(ctx,t,i){ assignStore(ctx)[t].splice(i,1); if(!assignStore(ctx)[t].length) assignStore(ctx)[t]=[{nombre:"",email:"",discord:"",telefono:""}]; ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
 
 async function createProject(){
   const nombre = $("#npNombre").value.trim();
@@ -1228,6 +1242,7 @@ async function createProject(){
     if(currentView!=="proyectos") switchView("proyectos");
     openDetail(proj.id);
     toast("✔ Proyecto creado, carpetas de Drive y Frame.io listas");
+    rosterSyncFromAsigs(asigs);
   }catch(e){
     toast("Error al crear: "+e.message, true);
   }finally{
@@ -1253,7 +1268,7 @@ function openDetail(id, readOnly=false){
   detailProject.taskDates = detailProject.taskDates||{};
   detailProject.calendario = detailProject.calendario||[];
   detailProject.tareas.forEach(t=>{
-    if(!detailProject.asignaciones[t]) detailProject.asignaciones[t]=[{nombre:"",email:""}];
+    if(!detailProject.asignaciones[t]) detailProject.asignaciones[t]=[{nombre:"",email:"",discord:"",telefono:""}];
     if(!detailProject.taskDates[t]) detailProject.taskDates[t]={inicio:"",fin:"",notas:""};
   });
   // sembrar "Entrega Masters" como fase independiente: se carga desde pre-producción, no recién al activar
@@ -1377,7 +1392,7 @@ function renderDetail(){
         return `<div class="assign-block"><div class="ttl">${esc(t)} — asignados${range}</div>${rows.map(r=>
           `<div style="font-size:${"var(--fs-caption)"};margin-bottom:4px">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}</div>`).join("")}</div>`;
       }).join("")
-    : p.tareas.map(t=>assignBlockHTML(t, p.asignaciones[t]||[{nombre:"",email:""}], "dt")).join("");
+    : p.tareas.map(t=>assignBlockHTML(t, p.asignaciones[t]||[{nombre:"",email:"",discord:"",telefono:""}], "dt")).join("");
 
   const statusBtns = Object.entries(STATUS_META)
     .filter(([k])=> k!=="por_activarse" || p.status==="por_activarse")   /* en curso: no se vuelve a pre-producción */
@@ -1915,7 +1930,7 @@ function dToggleTask(t){
     if(p.taskDates) delete p.taskDates[t];
   } else {
     p.tareas.push(t);
-    if(!p.asignaciones[t]) p.asignaciones[t]=[{nombre:"",email:""}];
+    if(!p.asignaciones[t]) p.asignaciones[t]=[{nombre:"",email:"",discord:"",telefono:""}];
     p.taskDates = p.taskDates||{}; if(!p.taskDates[t]) p.taskDates[t]={inicio:"",fin:"",notas:""};
   }
   renderDetail();
@@ -2305,6 +2320,7 @@ async function saveTeam(btn){
     })});
     detailDirty = false; snapDetail();
     toast("✔ Equipo actualizado");
+    rosterSyncFromAsigs(p.asignaciones);
     onProjectsLoaded();
   }catch(e){ toast("Error al guardar: "+e.message,true); }
   }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
@@ -2587,7 +2603,7 @@ function renderN2Assigns(){
   Object.keys(n2AssignData).forEach(k=>{ if(!n2Selected.has(k)) delete n2AssignData[k]; });
   Object.keys(n2TaskDates).forEach(k=>{ if(!n2Selected.has(k)) delete n2TaskDates[k]; });
   n2Selected.forEach(t=>{
-    if(!n2AssignData[t]) n2AssignData[t]=[{nombre:"",email:""}];
+    if(!n2AssignData[t]) n2AssignData[t]=[{nombre:"",email:"",discord:"",telefono:""}];
     if(!n2TaskDates[t]) n2TaskDates[t]={inicio:"",fin:"",notas:""};
   });
   // misma tarjeta de equipo + fechas que se usa en el alta manual y en la ficha, para no cargar la fecha dos veces
@@ -2747,6 +2763,7 @@ async function authEnter(session){
     $("#btnLogout").style.display = "";
     $("#btnUsers").style.display = "";
     $("#btnDirectorio").style.display = "";
+    rosterDatalist();   /* precarga el directorio para el autocompletado de asignaciones */
     startApp();
   }catch(e){
     $("#agMsg").textContent = "No pude verificar tu cuenta ("+e.message+"). Probá recargar.";
@@ -2808,31 +2825,192 @@ function dirRender(){
   const thead = "<tr>"+dirData.headers.map((h,i)=>`<th onclick="dirSort(${i})">${esc(h)}${flecha(i)}</th>`).join("")+"</tr>";
   const body = rows.map(r=>{
     const idx = dirData.rows.indexOf(r);
-    return "<tr>"+r.v.map((cell,c)=>`<td contenteditable="true" data-r="${idx}" data-c="${c}" onfocus="dirFocus(this)" onblur="dirBlur(this)" onkeydown="dirKey(event)">${esc(cell)}</td>`).join("")+"</tr>";
+    return "<tr>"+r.v.map((cell,c)=>{
+      if(dirChipCfg(c)){
+        const chips = String(cell||"").split(",").map(s=>s.trim()).filter(Boolean).map(s=>`<span class="dchip">${esc(s)}</span>`).join("") || '<span class="dchip-empty">+ elegir</span>';
+        return `<td class="dir-chipcell" data-r="${idx}" data-c="${c}" onclick="dirChipOpen(this)">${chips}</td>`;
+      }
+      return `<td contenteditable="true" data-r="${idx}" data-c="${c}" onfocus="dirFocus(this)" onblur="dirBlur(this)" onkeydown="dirKey(event)">${esc(cell)}</td>`;
+    }).join("")+"</tr>";
   }).join("");
   $("#dirBody").innerHTML = `<table class="dir-table"><thead>${thead}</thead><tbody>${body}</tbody></table>`;
 }
 function dirFocus(td){ dirOld = td.textContent; }
 function dirKey(e){ if(e.key==="Enter"){ e.preventDefault(); e.target.blur(); } }
-async function dirBlur(td){
-  const val = td.textContent.trim();
-  if(val === dirOld) return;
-  const r = Number(td.dataset.r), c = Number(td.dataset.c);
+async function dirSaveCellRemote(r, c, val, el){
   const row = dirData.rows[r];
   const previo = row.v[c];
+  if(val === previo) return true;
   row.v[c] = val;
-  td.style.opacity = ".45";
+  if(el) el.style.opacity = ".45";
   try{
     const token = await dirToken();
     const data = await api("/webhook/team23/roster",{method:"POST",body:JSON.stringify({accion:"actualizar",token,fila:row.n,check:row.check,valores:row.v})});
     if(!data.ok) throw new Error(data.error||"no se pudo guardar");
     if(c===0) row.check = val;
     toast("✔ Directorio actualizado");
+    return true;
   }catch(e){
     row.v[c] = previo;
     toast("No pude guardar: "+e.message, true);
     dirLoad(true);   /* algo cambió en el sheet: traer la verdad de nuevo */
-  }finally{ td.style.opacity = ""; }
+    return false;
+  }finally{ if(el) el.style.opacity = ""; }
+}
+async function dirBlur(td){
+  const val = td.textContent.trim();
+  if(val === dirOld) return;
+  await dirSaveCellRemote(Number(td.dataset.r), Number(td.dataset.c), val, td);
+}
+
+/* ---------------- roster: autocompletar, sync y chips ---------------- */
+let rosterLoading = null;
+function rosterNorm(s){ return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase(); }
+function rosterCols(){
+  const h = (dirData ? dirData.headers : []).map(rosterNorm);
+  const find = (...keys) => h.findIndex(x => keys.some(k => x.includes(k)));
+  return { nombre: find("nombre"), mail: find("mail","correo"), discord: find("discord"), tel: find("tel") };
+}
+function rosterEnsure(){
+  if(dirData) return Promise.resolve(dirData);
+  if(rosterLoading) return rosterLoading;
+  rosterLoading = (async ()=>{
+    const token = await dirToken();
+    const data = await api("/webhook/team23/roster",{method:"POST",body:JSON.stringify({accion:"listar",token})});
+    if(!data.ok) throw new Error(data.error||"no pude leer el directorio");
+    dirData = { headers: data.headers||[], rows: (data.rows||[]).map(r=>({ n:r.n, v:r.v, check:String(r.v[0]||"") })) };
+    return dirData;
+  })().finally(()=>{ rosterLoading = null; });
+  return rosterLoading;
+}
+async function rosterDatalist(){
+  try{
+    await rosterEnsure();
+    const cols = rosterCols();
+    if(cols.nombre < 0) return;
+    let dl = document.getElementById("dlRoster");
+    if(!dl){ dl = document.createElement("datalist"); dl.id = "dlRoster"; document.body.appendChild(dl); }
+    dl.innerHTML = dirData.rows.map(r=>`<option value="${esc(r.v[cols.nombre]||"")}">`).join("");
+  }catch(e){ /* sin roster no hay autocompletado, nada más */ }
+}
+function rosterFind(nombre){
+  if(!dirData) return null;
+  const cols = rosterCols();
+  const q = rosterNorm(nombre);
+  if(!q || cols.nombre < 0) return null;
+  return dirData.rows.find(r=>rosterNorm(r.v[cols.nombre])===q) || null;
+}
+function asigAutofill(input, ctx, t, i){
+  const fila = rosterFind(input.value);
+  if(!fila) return;
+  const cols = rosterCols();
+  const rowEl = input.closest(".assign-row");
+  const setIf = (selector, campo, colIdx) => {
+    if(colIdx < 0) return;
+    const el = rowEl.querySelector(selector);
+    const val = String(fila.v[colIdx]||"").trim();
+    if(el && !el.value && val){ el.value = val; setAssign(ctx, t, i, campo, val); }
+  };
+  setIf('input[type=email]', 'email', cols.mail);
+  setIf('input[placeholder="Discord"]', 'discord', cols.discord);
+  setIf('input[type=tel]', 'telefono', cols.tel);
+}
+async function rosterSyncFromAsigs(asigs){
+  try{
+    await rosterEnsure();
+    const cols = rosterCols();
+    const porFila = new Map();
+    Object.values(asigs||{}).forEach(rows=>(rows||[]).forEach(r=>{
+      const fila = rosterFind(r.nombre); if(!fila) return;
+      const pend = porFila.get(fila) || {};
+      [["email",cols.mail],["discord",cols.discord],["telefono",cols.tel]].forEach(([campo,c])=>{
+        const val = String(r[campo]||"").trim();
+        if(c>=0 && val && !String(fila.v[c]||"").trim()) pend[c] = val;   /* solo completa celdas vacías del sheet */
+      });
+      if(Object.keys(pend).length) porFila.set(fila, pend);
+    }));
+    if(!porFila.size) return;
+    const token = await dirToken();
+    let okCount = 0;
+    for(const [fila, pend] of porFila){
+      const valores = fila.v.slice();
+      Object.entries(pend).forEach(([c,val])=>{ valores[Number(c)] = val; });
+      const data = await api("/webhook/team23/roster",{method:"POST",body:JSON.stringify({accion:"actualizar",token,fila:fila.n,check:fila.check,valores})});
+      if(data.ok){ fila.v = valores; okCount++; }
+    }
+    if(okCount) toast("✔ Directorio completado con datos del proyecto ("+okCount+(okCount>1?" filas":" fila")+")");
+  }catch(e){ /* sync en segundo plano: si falla, no molesta al guardado del proyecto */ }
+}
+
+/* chips desplegables del directorio */
+const DIR_CHIP_COLS = { "especialidad":{multi:true}, "herramientas":{multi:true}, "acuerdo":{multi:false}, "pais":{multi:false} };
+function dirChipCfg(c){ if(!dirData) return null; return DIR_CHIP_COLS[rosterNorm(dirData.headers[c])] || null; }
+let dirChip = null;
+function dirChipPanel(){
+  let p = document.getElementById("dirChipPanel");
+  if(!p){ p = document.createElement("div"); p.id = "dirChipPanel"; document.body.appendChild(p); }
+  return p;
+}
+function dirChipOptions(c){
+  const map = new Map();
+  dirData.rows.forEach(r=>String(r.v[c]||"").split(",").map(s=>s.trim()).filter(Boolean).forEach(v=>{
+    const k = rosterNorm(v); if(!map.has(k)) map.set(k, v);
+  }));
+  return [...map.values()].sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base"}));
+}
+function dirChipOpen(td){
+  dirChipClose(true);
+  const r = Number(td.dataset.r), c = Number(td.dataset.c);
+  const cfg = dirChipCfg(c); if(!cfg) return;
+  const sel = new Set(String(dirData.rows[r].v[c]||"").split(",").map(s=>s.trim()).filter(Boolean));
+  const opts = dirChipOptions(c);
+  sel.forEach(v=>{ if(!opts.some(o=>rosterNorm(o)===rosterNorm(v))) opts.push(v); });
+  dirChip = { r, c, multi: cfg.multi, sel, opts, original: String(dirData.rows[r].v[c]||"") };
+  dirChipRenderPanel();
+  const panel = dirChipPanel();
+  const rect = td.getBoundingClientRect();
+  panel.style.display = "block";
+  panel.style.left = Math.max(8, Math.min(rect.left, window.innerWidth-360)) + "px";
+  panel.style.top = Math.max(8, Math.min(rect.bottom+4, window.innerHeight-330)) + "px";
+  setTimeout(()=>document.addEventListener("mousedown", dirChipOutside), 0);
+}
+function dirChipRenderPanel(){
+  const opts = dirChip.opts.map((v,i)=>`<span class="dchip-opt ${dirChip.sel.has(v)?"on":""}" onclick="dirChipToggle(${i})">${esc(v)}</span>`).join("");
+  dirChipPanel().innerHTML = `
+    <div class="dchip-title">${esc(dirData.headers[dirChip.c])} · ${dirChip.multi?"varias opciones":"una opción"}</div>
+    <div class="dchip-opts">${opts||'<span style="font-size:12px;color:var(--gray)">Sin valores todavía</span>'}</div>
+    <div class="dchip-addrow"><input id="dirChipNew" type="text" placeholder="Agregar otro valor…" onkeydown="if(event.key==='Enter'){event.preventDefault();dirChipAdd()}"><button class="btn small" onclick="dirChipAdd()">+</button></div>
+    <div style="text-align:right;margin-top:8px"><button class="btn small" onclick="dirChipClose(true)">Listo ✓</button></div>`;
+}
+function dirChipToggle(i){
+  const v = dirChip.opts[i];
+  if(dirChip.multi){ dirChip.sel.has(v) ? dirChip.sel.delete(v) : dirChip.sel.add(v); }
+  else { const ya = dirChip.sel.has(v); dirChip.sel.clear(); if(!ya) dirChip.sel.add(v); }
+  dirChipRenderPanel();
+}
+function dirChipAdd(){
+  const inp = document.getElementById("dirChipNew");
+  const v = (inp.value||"").trim();
+  if(!v) return;
+  if(!dirChip.opts.some(o=>rosterNorm(o)===rosterNorm(v))) dirChip.opts.push(v);
+  if(!dirChip.multi) dirChip.sel.clear();
+  dirChip.sel.add(dirChip.opts.find(o=>rosterNorm(o)===rosterNorm(v)));
+  inp.value = "";
+  dirChipRenderPanel();
+}
+function dirChipOutside(e){ if(!dirChipPanel().contains(e.target)) dirChipClose(true); }
+function dirChipClose(save){
+  document.removeEventListener("mousedown", dirChipOutside);
+  const panel = document.getElementById("dirChipPanel");
+  if(panel) panel.style.display = "none";
+  if(!dirChip) return;
+  const chip = dirChip; dirChip = null;
+  if(save){
+    const nuevo = chip.opts.filter(v=>chip.sel.has(v)).join(", ");
+    if(nuevo !== chip.original){
+      dirSaveCellRemote(chip.r, chip.c, nuevo).then(()=>dirRender());
+    }
+  }
 }
 
 /* ---------------- panel de usuarios ---------------- */
