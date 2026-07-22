@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="18" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="46" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="21" cy="36" r="7.5" fill="%230A0A0A"/><circle cx="49" cy="36" r="7.5" fill="%230A0A0A"/></svg>'>
+<title>Team23 Hub · Gestión de post-producción</title>
+<meta name="description" content="Team23 Hub es la plataforma de gestión de post-producción del estudio Team23: proyectos, calendarios, entregas y coordinación entre el equipo y sus colaboradores.">
+<link rel="stylesheet" href="design-system/styles.css">
+<style>
+  :root{
+    /* app-level aliases onto the TEAM23 design-system tokens (design-system/tokens/) */
+    --ink:var(--n-600);
+    --paper:var(--n-000);
+    --red:var(--brand-red);
+    --gray:var(--tx-on-light-secondary);
+    --soft:var(--n-100);
+    --hair:var(--n-200);
+
+    /* type-scale rungs used across the hub — compact end of the DS scale,
+       capped at the token for that step (a dense dashboard uses the low rungs,
+       Header/Display sizes stay reserved for real marketing moments) */
+    --fs-hero:clamp(32px,6vw,var(--text-s1-size));       /* Subtitle S1 (48) · page title */
+    --fs-section:clamp(20px,3vw,var(--text-b3-size));    /* Body B3 (32) · section heads */
+    --fs-modal-title:clamp(24px,3.6vw,var(--text-s1-size)); /* Subtitle S1 (48) · modal titles */
+    --fs-card-title:clamp(16px,1.6vw,18px);              /* ~Body B1 (16) · card / component titles */
+    --fs-body:var(--text-b1-size);   /* Body B1 · buttons, inputs, running text */
+    --fs-caption:var(--text-c2-size); /* Caption C2 · labels, meta, kickers */
+  }
+  .kicker{font-size:var(--fs-caption);letter-spacing:.16em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin-bottom:var(--space-5)}
+  .btn{
+    font-family:var(--font-secondary);font-weight:var(--weight-bold);font-size:var(--fs-caption);
+    border:var(--stroke-sm) solid var(--ink);background:var(--paper);color:var(--ink);
+    border-radius:var(--radius-full);padding:var(--space-4) var(--space-9);cursor:pointer;
+    transition:transform .15s ease, background .15s ease, color .15s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  body{font-family:var(--font-primary);color:var(--ink);background:#fff;margin:0;line-height:1.35;-webkit-font-smoothing:antialiased}
+  .hm-wrap{max-width:860px;margin:0 auto;padding:34px 22px 60px}
+  .hm-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:52px}
+  .hm-mark{display:flex;align-items:center;gap:10px}
+  .hm-mark b{font-weight:900;font-size:22px;letter-spacing:-0.5px}
+  h1{font-weight:900;font-size:clamp(38px,7vw,62px);line-height:1.02;letter-spacing:-1px;margin:0 0 14px;text-transform:uppercase}
+  h1 .rojo{color:var(--red)}
+  .hm-sub{font-size:17.5px;line-height:1.55;max-width:640px;margin:0 0 26px;color:var(--ink)}
+  .hm-cta{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:56px}
+  .hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:56px}
+  .hm-card{border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:18px}
+  .hm-card h3{margin:0 0 8px;font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.3px}
+  .hm-card p{margin:0;font-size:13.5px;line-height:1.55;color:var(--gray)}
+  .hm-quien{border:2px solid var(--ink);background:var(--ink);color:#fff;padding:22px 20px;margin-bottom:56px}
+  .hm-quien h2{margin:0 0 8px;font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:.4px}
+  .hm-quien p{margin:0;font-size:14px;line-height:1.6;color:#ddd}
+  .hm-quien a{color:#fff}
+  .hm-foot{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:12.5px;color:var(--gray);border-top:1px solid var(--hair,#ddd);padding-top:18px}
+  .hm-foot a{color:var(--gray)}
+</style>
+</head>
+<body>
+<div class="hm-wrap">
+  <div class="hm-top">
+    <div class="hm-mark">
+      <b>TEAM23</b>
+      <svg width="34" height="22" viewBox="0 0 64 40" aria-hidden="true"><circle cx="18" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="46" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="21" cy="24" r="7.5" fill="#0A0A0A"/><circle cx="49" cy="24" r="7.5" fill="#0A0A0A"/></svg>
+    </div>
+    <a class="btn" href="/login">Ingresar</a>
+  </div>
+
+  <div class="kicker" style="margin-bottom:10px">Estudio de post-producción</div>
+  <h1>Team23 Hub<span class="rojo">.</span></h1>
+  <p class="hm-sub"><b>Team23 Hub</b> es la plataforma de gestión de post-producción del estudio <b>Team23</b>. Acá el equipo y sus colaboradores organizan cada proyecto de principio a fin: calendarios, entregas, materiales y coordinación, todo en un solo lugar.</p>
+  <div class="hm-cta">
+    <a class="btn primary" href="/login">Ingresar al hub</a>
+    <span style="font-size:12.5px;color:var(--gray)">Acceso con cuenta · el estudio da de alta a sus colaboradores</span>
+  </div>
+
+  <div class="hm-grid">
+    <div class="hm-card">
+      <h3>Proyectos y calendarios</h3>
+      <p>Cada proyecto con sus fases, hitos y fechas de entrega, visibles para todos los que participan.</p>
+    </div>
+    <div class="hm-card">
+      <h3>Entregas y material</h3>
+      <p>Carpetas de trabajo, revisión de cortes y masters organizados con la misma estructura en todos los proyectos.</p>
+    </div>
+    <div class="hm-card">
+      <h3>Equipo y colaboradores</h3>
+      <p>Asignaciones claras: quién hace qué, en qué fechas, y avisos automáticos cuando algo importante cambia.</p>
+    </div>
+  </div>
+
+  <div class="hm-quien">
+    <h2>¿Quién puede entrar?</h2>
+    <p>Team23 Hub es una herramienta de trabajo del estudio: la usan el equipo interno de Team23 y los proveedores que colaboran en sus proyectos. Si trabajás con nosotros y necesitás acceso, escribinos a <a href="mailto:coord@team23.online">coord@team23.online</a>.</p>
+  </div>
+
+  <div class="hm-foot">
+    <span>© Team23 · Post Production</span>
+    <span><a href="/privacidad">Política de privacidad</a> · <a href="mailto:coord@team23.online">Contacto</a></span>
+  </div>
+</div>
+</body>
+</html>
