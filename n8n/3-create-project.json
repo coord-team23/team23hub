@@ -89,6 +89,12 @@
               "name": "discordViewerRoleIds",
               "value": "IDS_DE_ROLES_SEPARADOS_POR_COMA_O_VACIO",
               "type": "string"
+            },
+            {
+              "id": "portada-tpl",
+              "name": "portadaTemplateId",
+              "value": "PEGAR_ID_DEL_TEMPLATE_DE_PORTADA",
+              "type": "string"
             }
           ]
         },
@@ -761,10 +767,7 @@
           "id": "REEMPLAZAR",
           "name": "Discord Bot"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
+      }
     },
     {
       "parameters": {
@@ -790,7 +793,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -804,6 +808,287 @@
         2960,
         260
       ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('CONFIG').first().json.portadaTemplateId }}/copy?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre + ' — Portada', parents: [ $('Buscar COORD').first().json.coordId ] }) }}",
+        "options": {}
+      },
+      "id": "p0817001-0000-0000-0000-000000000001",
+      "name": "Portada: copiar template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        440
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://slides.googleapis.com/v1/presentations/{{ $('Portada: copiar template').first().json.id }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSlidesOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ requests: [ { replaceAllText: { containsText: { text: '{{NOMBRE}}', matchCase: false }, replaceText: $('Webhook').first().json.body.nombre } }, { replaceAllText: { containsText: { text: '{{CLIENTE}}', matchCase: false }, replaceText: $('Webhook').first().json.body.cliente || '' } }, { replaceAllText: { containsText: { text: '{{ANIO}}', matchCase: false }, replaceText: String(new Date().getFullYear()) } } ] }) }}",
+        "options": {}
+      },
+      "id": "p0817002-0000-0000-0000-000000000002",
+      "name": "Portada: título",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3820,
+        440
+      ],
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://slides.googleapis.com/v1/presentations/{{ $('Portada: copiar template').first().json.id }}?fields=slides.objectId",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSlidesOAuth2Api",
+        "options": {}
+      },
+      "id": "p0817003-0000-0000-0000-000000000003",
+      "name": "Portada: primera página",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4040,
+        440
+      ],
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://slides.googleapis.com/v1/presentations/{{ $('Portada: copiar template').first().json.id }}/pages/{{ $('Portada: primera página').first().json.slides[0].objectId }}/thumbnail?thumbnailProperties.thumbnailSize=LARGE",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSlidesOAuth2Api",
+        "options": {}
+      },
+      "id": "p0817004-0000-0000-0000-000000000004",
+      "name": "Portada: thumbnail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4260,
+        440
+      ],
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Portada: thumbnail').first().json.contentUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "p0817005-0000-0000-0000-000000000005",
+      "name": "Portada: descargar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4480,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=media&fields=id,parents",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "p0817006-0000-0000-0000-000000000006",
+      "name": "Portada: subir a Drive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4700,
+        440
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('Portada: subir a Drive').first().json.id }}?addParents={{ $('Buscar COORD').first().json.coordId }}&removeParents={{ ($('Portada: subir a Drive').first().json.parents || [])[0] || 'root' }}&supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre + ' — portada.png' }) }}",
+        "options": {}
+      },
+      "id": "p0817007-0000-0000-0000-000000000007",
+      "name": "Portada: mover y nombrar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4920,
+        440
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/drives/{{ $('Drive: Crear Unidad').first().json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ backgroundImageFile: { id: $('Portada: subir a Drive').first().json.id, xCoordinate: 0, yCoordinate: 0.39, width: 1 } }) }}",
+        "options": {}
+      },
+      "id": "p0817008-0000-0000-0000-000000000008",
+      "name": "Portada: fondo de la unidad",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5140,
+        440
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nitems[0].json = { fileSize: buf.length };\nreturn items;"
+      },
+      "id": "p0817009-0000-0000-0000-000000000009",
+      "name": "Portada: tamaño",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4700,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.frame.io/v4/accounts/{{ $('CONFIG').first().json.frameAccountId }}/folders/{{ $('Frame: carpetas').first().json.rootFolderId }}/files",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: { name: '00 PORTADA — ' + $('Webhook').first().json.body.nombre + '.png', file_size: $('Portada: tamaño').first().json.fileSize } }) }}",
+        "options": {}
+      },
+      "id": "p081700a-0000-0000-0000-00000000000a",
+      "name": "Portada Frame: crear archivo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4920,
+        640
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Frame.io OAuth2"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json.data || $json;\nconst urls = d.upload_urls || d.upload_uris || (d.media_links && d.media_links.upload ? [d.media_links.upload] : []);\nif (!urls.length) return [];   /* si la API no devolvio URL de subida, se salta sin romper */\nreturn [{ json: { uploadUrl: typeof urls[0] === 'string' ? urls[0] : (urls[0].url || '') },\n          binary: $('Portada: tamaño').first().binary }];"
+      },
+      "id": "p081700b-0000-0000-0000-00000000000b",
+      "name": "Portada Frame: preparar subida",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5140,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $json.uploadUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "image/png"
+            },
+            {
+              "name": "x-amz-acl",
+              "value": "private"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "p081700c-0000-0000-0000-00000000000c",
+      "name": "Portada Frame: subir",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5360,
+        640
+      ],
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -984,6 +1269,11 @@
             "node": "Aviso inicial: mensaje",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Portada: copiar template",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -1152,6 +1442,121 @@
         [
           {
             "node": "Discord: Crear categoría",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: copiar template": {
+      "main": [
+        [
+          {
+            "node": "Portada: título",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: título": {
+      "main": [
+        [
+          {
+            "node": "Portada: primera página",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: primera página": {
+      "main": [
+        [
+          {
+            "node": "Portada: thumbnail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: thumbnail": {
+      "main": [
+        [
+          {
+            "node": "Portada: descargar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: descargar": {
+      "main": [
+        [
+          {
+            "node": "Portada: subir a Drive",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Portada: tamaño",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: subir a Drive": {
+      "main": [
+        [
+          {
+            "node": "Portada: mover y nombrar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: mover y nombrar": {
+      "main": [
+        [
+          {
+            "node": "Portada: fondo de la unidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: tamaño": {
+      "main": [
+        [
+          {
+            "node": "Portada Frame: crear archivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada Frame: crear archivo": {
+      "main": [
+        [
+          {
+            "node": "Portada Frame: preparar subida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada Frame: preparar subida": {
+      "main": [
+        [
+          {
+            "node": "Portada Frame: subir",
             "type": "main",
             "index": 0
           }
