@@ -1958,9 +1958,6 @@ function toggleGate(i){
   b.classList.toggle("done", gateChecked[i]);
   b.textContent = gateChecked[i] ? "✓" : "";
   updateGateBtn();
-  if(!DEMO){
-    notifyDiscord({ proyecto:detailProject.nombre, etapa:"gate", item:ACT_CHECKLIST[i], done:gateChecked[i], por:"interno" });
-  }
 }
 function updateGateBtn(){ $("#btnGate").disabled = !gateChecked.every(Boolean); }
 function confirmGate(){
@@ -2026,14 +2023,8 @@ async function toggleChk(etapa, id){
   if(!DEMO){
     try{ await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, checklist_json: JSON.stringify(p.checklist||{}) })}); }
     catch(e){ toast("No pude guardar el checklist: "+e.message, true); }
-    notifyDiscord({ proyecto:p.nombre, etapa, item:it.texto, responsable:it.responsable, done:it.done, por:it.done_por||"interno" });
   }
 }
-/* aviso a Discord (best-effort): si no está configurado el workflow 7, no rompe nada */
-function notifyDiscord(payload){
-  api("/webhook/team23/notify",{method:"POST",body:JSON.stringify(payload)}).catch(()=>{});
-}
-
 function calSet(i,k,v){ calDirty = true; detailProject.calendario[i][k]=v; if(k==="inicio" && detailProject.calendario[i].tipo==="hito") detailProject.calendario[i].fin=v; }
 function calAdd(){ calDirty = true; detailProject.calendario.push({id:uid(), tipo:"fase", fase:"", inicio:"", fin:"", notas:""}); renderDetail(); }
 function calDel(i){ calDirty = true;
