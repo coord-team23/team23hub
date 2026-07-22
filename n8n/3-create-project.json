@@ -664,7 +664,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const b = $('Webhook').first().json.body;\nconst cat = $('Discord: Crear categoría').first().json;\nconst slug = String(b.nombre || 'proyecto').toLowerCase()\n  .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'proyecto';\n/* Mapa tarea del hub -> sufijo de canal. Agregar lineas aca para mas canales. */\nconst MAPA = { 'Online': 'online', 'VFX': 'vfx', 'Color': 'color' };\nconst tareas = Array.isArray(b.tareas) ? b.tareas : [];\nconst sufijos = ['coord', 'avisos'];\ntareas.forEach(t => { const s = MAPA[t]; if (s && !sufijos.includes(s)) sufijos.push(s); });\nreturn sufijos.map(s => ({ json: { name: slug + '-' + s, parent_id: String(cat.id) } }));"
+        "jsCode": "const b = $('Webhook').first().json.body;\nconst cat = $('Discord: Crear categoría').first().json;\nconst slug = String(b.nombre || 'proyecto').toLowerCase()\n  .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'proyecto';\n/* Mapa tarea del hub -> sufijo de canal. Agregar lineas aca para mas canales. */\nconst MAPA = { 'Online': 'online', 'VFX': 'vfx', 'Color': 'color' };\nconst tareas = Array.isArray(b.tareas) ? b.tareas : [];\nconst sufijos = ['prod', 'coord', 'general'];\ntareas.forEach(t => { const s = MAPA[t]; if (s && !sufijos.includes(s)) sufijos.push(s); });\nreturn sufijos.map(s => ({ json: { name: slug + '-' + s, parent_id: String(cat.id) } }));"
       },
       "id": "d15c0002-0000-0000-0000-000000000002",
       "name": "Discord: armar canales",
@@ -713,7 +713,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const cat = $('Discord: Crear categoría').first().json;\nconst creados = $('Discord: Crear canales').all().map(i => i.json);\nconst avisos = creados.find(c => (c.name || '').endsWith('-avisos'));\nreturn [{ json: {\n  discord_category_id: String(cat.id || ''),\n  discord_avisos_id: avisos ? String(avisos.id) : ''\n} }];"
+        "jsCode": "const cat = $('Discord: Crear categoría').first().json;\nconst creados = $('Discord: Crear canales').all().map(i => i.json);\nconst general = creados.find(c => (c.name || '').endsWith('-general'));\n/* La columna del sheet se sigue llamando discord_avisos_id, pero guarda el canal -general del proyecto */\nreturn [{ json: {\n  discord_category_id: String(cat.id || ''),\n  discord_avisos_id: general ? String(general.id) : ''\n} }];"
       },
       "id": "d15c0004-0000-0000-0000-000000000004",
       "name": "Discord: IDs",

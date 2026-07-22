@@ -1,0 +1,676 @@
+{
+  "name": "Team23 — 10. Directorio (roster)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "team23/roster",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "ea00000a-0000-0000-0000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Team23 Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "k1",
+              "name": "supabaseUrl",
+              "value": "https://muvmrkacjhygfuialpyn.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "k2",
+              "name": "supabaseAnonKey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI",
+              "type": "string"
+            },
+            {
+              "id": "k3",
+              "name": "rosterSheetId",
+              "value": "1jMs5xUhFKrp5z_LHMOdkJia7vKJsrtKdSB20g9KHsp0",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-000000000002",
+      "name": "CONFIG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('CONFIG').first().json.supabaseUrl }}/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('CONFIG').first().json.supabaseAnonKey }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Webhook').first().json.body.token }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "ea00000a-0000-0000-0000-000000000003",
+      "name": "Validar login",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.email || '' }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-000000000004",
+      "name": "¿Login válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: 'login inválido' }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "ea00000a-0000-0000-0000-000000000005",
+      "name": "Responder 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('CONFIG').first().json.supabaseUrl }}/rest/v1/profiles?id=eq.{{ $('Validar login').first().json.id }}&select=role",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('CONFIG').first().json.supabaseAnonKey }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Webhook').first().json.body.token }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "ea00000a-0000-0000-0000-000000000006",
+      "name": "Leer rol",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.role || '' }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "interno"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-000000000007",
+      "name": "¿Es interno?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: 'solo productores' }) }}",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "id": "ea00000a-0000-0000-0000-000000000008",
+      "name": "Responder 403",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('CONFIG').first().json.rosterSheetId }}?fields=sheets(properties(sheetId,title))",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-000000000009",
+      "name": "Roster: metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const meta = $('Roster: metadata').first().json;\nconst hojas = meta.sheets || [];\nconst hoja = hojas.find(s => s.properties && s.properties.sheetId === 0) || hojas[0];\nif (!hoja) throw new Error('El spreadsheet del directorio no tiene pesta\\u00f1as');\nconst title = hoja.properties.title;\nconst b = $('Webhook').first().json.body || {};\nconst base = 'https://sheets.googleapis.com/v4/spreadsheets/' + $('CONFIG').first().json.rosterSheetId + '/values/';\nconst fila = Number(b.fila || 0);\nreturn [{ json: {\n  title,\n  accion: b.accion === 'actualizar' ? 'actualizar' : 'listar',\n  urlLeer: base + encodeURIComponent(title + '!A1:Z2000'),\n  urlLeerFila: base + encodeURIComponent(title + '!A' + fila + ':A' + fila),\n  urlEscribir: base + encodeURIComponent(title + '!A' + fila + ':Z' + fila) + '?valueInputOption=USER_ENTERED'\n} }];"
+      },
+      "id": "ea00000a-0000-0000-0000-00000000000a",
+      "name": "Roster: pestaña",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.accion }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "actualizar"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-00000000000b",
+      "name": "¿Qué acción?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Roster: pestaña').first().json.urlLeer }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-00000000000c",
+      "name": "Roster: leer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Roster: leer').first().json;\nconst values = data.values || [];\nif (!values.length) return [{ json: { ok: true, headers: [], rows: [] } }];\nconst headers = values[0].map(h => String(h || ''));\nconst ancho = headers.length;\nconst rows = values.slice(1).map((v, i) => {\n  const fila = (v || []).map(x => String(x == null ? '' : x));\n  while (fila.length < ancho) fila.push('');\n  return { n: i + 2, v: fila.slice(0, ancho) };\n}).filter(r => r.v.some(x => x !== ''));\nreturn [{ json: { ok: true, headers, rows } }];"
+      },
+      "id": "ea00000a-0000-0000-0000-00000000000d",
+      "name": "Armar lista",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-00000000000e",
+      "name": "Responder lista",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Roster: pestaña').first().json.urlLeerFila }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-00000000000f",
+      "name": "Roster: leer fila",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        -200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body || {};\nconst data = $('Roster: leer fila').first().json || {};\nconst actual = String((((data.values || [])[0]) || [])[0] || '').trim();\nconst esperado = String(b.check || '').trim();\nconst valores = Array.isArray(b.valores) ? b.valores.map(x => String(x == null ? '' : x)) : null;\nif (!b.fila || !valores) return [{ json: { ok: false, motivo: 'Pedido incompleto (falta fila o valores)' } }];\nif (actual !== esperado) return [{ json: { ok: false, motivo: 'La fila cambi\\u00f3 en el spreadsheet (esperaba \"' + esperado + '\", hay \"' + actual + '\"). Refresc\\u00e1 la lista y volv\\u00e9 a intentar.' } }];\nreturn [{ json: { ok: true, valores } }];"
+      },
+      "id": "ea00000a-0000-0000-0000-000000000010",
+      "name": "Verificar fila",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.ok }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-000000000011",
+      "name": "¿Coincide?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Roster: pestaña').first().json.urlEscribir }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: [ $('Verificar fila').first().json.valores ] }) }}",
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-000000000012",
+      "name": "Roster: escribir",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        -300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true }) }}",
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-000000000013",
+      "name": "Responder ok",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2600,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: $('Verificar fila').first().json.motivo }) }}",
+        "options": {}
+      },
+      "id": "ea00000a-0000-0000-0000-000000000014",
+      "name": "Responder conflicto",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2400,
+        -100
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "Validar login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar login": {
+      "main": [
+        [
+          {
+            "node": "¿Login válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Login válido?": {
+      "main": [
+        [
+          {
+            "node": "Leer rol",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer rol": {
+      "main": [
+        [
+          {
+            "node": "¿Es interno?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es interno?": {
+      "main": [
+        [
+          {
+            "node": "Roster: metadata",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 403",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: metadata": {
+      "main": [
+        [
+          {
+            "node": "Roster: pestaña",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: pestaña": {
+      "main": [
+        [
+          {
+            "node": "¿Qué acción?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Qué acción?": {
+      "main": [
+        [
+          {
+            "node": "Roster: leer fila",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Roster: leer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: leer": {
+      "main": [
+        [
+          {
+            "node": "Armar lista",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar lista": {
+      "main": [
+        [
+          {
+            "node": "Responder lista",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: leer fila": {
+      "main": [
+        [
+          {
+            "node": "Verificar fila",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar fila": {
+      "main": [
+        [
+          {
+            "node": "¿Coincide?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Coincide?": {
+      "main": [
+        [
+          {
+            "node": "Roster: escribir",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder conflicto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: escribir": {
+      "main": [
+        [
+          {
+            "node": "Responder ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "pinData": {}
+}
