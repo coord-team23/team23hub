@@ -234,6 +234,11 @@
     .foot-right{text-align:left}
   }
   @media (prefers-reduced-motion: reduce){*{transition:none !important}}
+
+/* ---- estado de carga ---- */
+.loading-state{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--gray,#777);padding:26px 6px}
+.sync-spin{width:14px;height:14px;border:2px solid var(--gray,#777);border-top-color:transparent;border-radius:50%;animation:t23spin .7s linear infinite;flex:none}
+@keyframes t23spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -369,6 +374,8 @@ async function boot(){
 async function logout(){ if(sb) await sb.auth.signOut(); location.replace("/login"); }
 
 async function loadAll(){
+  $("#listProjects").innerHTML = '<div class="loading-state"><span class="sync-spin"></span>Cargando tus proyectos…</div>';
+  $("#emptyState").innerHTML = "";
   try{
     const res = await fetch(CONFIG.N8N_BASE + "/webhook/team23/provider-portal", {
       method: "POST",
@@ -386,7 +393,11 @@ async function loadAll(){
         .sort((a,b) => String(a.inicio||"").localeCompare(String(b.inicio||"")))
     }));
     renderList();
-  }catch(e){ toast("No pude cargar tus proyectos: " + e.message, true); }
+  }catch(e){
+    $("#listProjects").innerHTML = "";
+    $("#emptyState").innerHTML = '<div class="empty">No pude cargar tus proyectos. Recargá la página o avisá al estudio.</div>';
+    toast("No pude cargar tus proyectos: " + e.message, true);
+  }
 }
 
 function hitoUrgency(target, today){
