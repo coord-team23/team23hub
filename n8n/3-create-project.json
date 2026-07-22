@@ -77,6 +77,18 @@
               "name": "discordGuildId",
               "value": "PEGAR_ID_DEL_SERVIDOR_DE_DISCORD",
               "type": "string"
+            },
+            {
+              "id": "dsc-view-u",
+              "name": "discordViewerUserIds",
+              "value": "IDS_DE_USUARIOS_SEPARADOS_POR_COMA_O_VACIO",
+              "type": "string"
+            },
+            {
+              "id": "dsc-view-r",
+              "name": "discordViewerRoleIds",
+              "value": "IDS_DE_ROLES_SEPARADOS_POR_COMA_O_VACIO",
+              "type": "string"
             }
           ]
         },
@@ -629,7 +641,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ name: String($('Webhook').first().json.body.nombre || 'Proyecto').slice(0, 95), type: 4 }) }}",
+        "jsonBody": "={{ JSON.stringify({ name: String($('Webhook').first().json.body.nombre || 'Proyecto').slice(0, 95), type: 4, permission_overwrites: $('Discord: permisos').first().json.overwrites }) }}",
         "options": {}
       },
       "id": "d15c0001-0000-0000-0000-000000000001",
@@ -671,7 +683,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ name: $json.name, type: 0, parent_id: $json.parent_id }) }}",
+        "jsonBody": "={{ JSON.stringify({ name: $json.name, type: 0, parent_id: $json.parent_id, permission_overwrites: $('Discord: permisos').first().json.overwrites }) }}",
         "options": {
           "batching": {
             "batch": {
@@ -753,6 +765,45 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://discord.com/api/v10/users/@me",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "d15c0007-0000-0000-0000-000000000007",
+      "name": "Discord: Quién soy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2740,
+        260
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('CONFIG').first().json;\nconst guild = String(cfg.discordGuildId || '').trim();\nconst bot = $('Discord: Qui\\u00e9n soy').first().json;\nconst VIEW = '1024';           /* VIEW_CHANNEL */\nconst VIEW_SEND = '3072';      /* VIEW_CHANNEL + SEND_MESSAGES */\nconst parseIds = v => String(v || '').split(',').map(s => s.trim()).filter(s => /^\\d{5,}$/.test(s));\nconst users = parseIds(cfg.discordViewerUserIds);\nconst roles = parseIds(cfg.discordViewerRoleIds);\nconst overwrites = [\n  { id: guild, type: 0, deny: VIEW },                 /* @everyone: no ve la categoria ni los canales */\n  { id: String(bot.id), type: 1, allow: VIEW_SEND }   /* el bot se garantiza ver y escribir */\n];\nroles.forEach(id => overwrites.push({ id, type: 0, allow: VIEW }));\nusers.forEach(id => overwrites.push({ id, type: 1, allow: VIEW }));\nreturn [{ json: { overwrites } }];"
+      },
+      "id": "d15c0008-0000-0000-0000-000000000008",
+      "name": "Discord: permisos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        260
+      ]
     }
   ],
   "connections": {
@@ -1012,7 +1063,7 @@
       "main": [
         [
           {
-            "node": "Discord: Crear categoría",
+            "node": "Discord: Quién soy",
             "type": "main",
             "index": 0
           }
@@ -1079,6 +1130,28 @@
         [
           {
             "node": "Discord: Aviso inicial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: Quién soy": {
+      "main": [
+        [
+          {
+            "node": "Discord: permisos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: permisos": {
+      "main": [
+        [
+          {
+            "node": "Discord: Crear categoría",
             "type": "main",
             "index": 0
           }
