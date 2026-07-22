@@ -1957,6 +1957,7 @@ const REQUIRED_FOR_ACTIVATION = [
 
 async function setStatus(s, skipGate=false){
   const p = detailProject;
+  if(s === p.status) return;   /* re-click del mismo estado: no dispara nada */
   /* gate: salir de pre-producción hacia un estado en curso pasa por el checklist de activación */
   if(!skipGate && p.status==="por_activarse" && inProgress(s)){
     const missing = REQUIRED_FOR_ACTIVATION.filter(f=>!String(p[f.key]||"").trim()).map(f=>f.label);

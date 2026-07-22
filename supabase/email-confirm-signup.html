@@ -1,0 +1,63 @@
+<!--
+TEAM23 HUB · Plantilla de mail de confirmación de cuenta (Supabase)
+
+Dónde pegarla: Supabase → Authentication → Emails (Email Templates) → "Confirm signup".
+- Subject sugerido:  Confirmá tu cuenta · Team23 Hub
+- Pegar el HTML de abajo (desde <table hasta </table>) en el cuerpo del template.
+- Variables de Supabase usadas: {{ .ConfirmationURL }} (obligatoria). También existen {{ .Email }} y {{ .SiteURL }} si querés usarlas.
+
+Para que el remitente sea @team23.online (y no noreply@mail.app.supabase.io) y no tener el límite
+de ~3 mails por hora del servicio incluido: Supabase → Project Settings → Authentication → SMTP Settings
+→ Enable Custom SMTP. Con Google Workspace: host smtp.gmail.com, puerto 465, usuario coord@team23.online,
+contraseña = App Password (se genera en myaccount.google.com → Seguridad → Verificación en dos pasos → App passwords).
+
+Nota de diseño: los clientes de mail no cargan Archivo Black, así que se usa Arial Black como
+fallback del titular. Colores de marca: tinta #0A0A0A y rojo #FF2B1E. Sin imágenes externas
+para que no caiga en spam ni muestre bloques rotos.
+-->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F4F4F4;padding:32px 12px;">
+  <tr>
+    <td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
+        <!-- header -->
+        <tr>
+          <td style="padding:0 0 14px 4px;font-family:'Arial Black',Arial,Helvetica,sans-serif;font-size:20px;letter-spacing:1px;color:#0A0A0A;">
+            TEAM23 <span style="color:#FF2B1E;">&#9673;&#9673;</span>
+          </td>
+        </tr>
+        <!-- card -->
+        <tr>
+          <td style="background-color:#FFFFFF;border:3px solid #0A0A0A;padding:34px 30px;">
+            <div style="font-family:'Arial Black',Arial,Helvetica,sans-serif;font-size:26px;line-height:1.15;color:#0A0A0A;text-transform:uppercase;">
+              Una cosa más y<br>estás adentro
+            </div>
+            <div style="font-family:Arial,Helvetica,sans-serif;font-size:14.5px;line-height:1.6;color:#333333;padding:18px 0 26px 0;">
+              Creaste tu cuenta en el <b>Team23 Production Hub</b>. Confirmá tu mail con el botón de abajo y ya podés entrar.
+            </div>
+            <table cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="background-color:#FF2B1E;border:3px solid #0A0A0A;">
+                  <a href="{{ .ConfirmationURL }}" target="_blank"
+                     style="display:inline-block;padding:13px 30px;font-family:'Arial Black',Arial,Helvetica,sans-serif;font-size:14px;letter-spacing:1px;color:#FFFFFF;text-decoration:none;text-transform:uppercase;">
+                    Confirmar mi cuenta
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#888888;padding-top:26px;">
+              Si el botón no funciona, copiá y pegá este link en el navegador:<br>
+              <a href="{{ .ConfirmationURL }}" style="color:#FF2B1E;word-break:break-all;">{{ .ConfirmationURL }}</a>
+            </div>
+          </td>
+        </tr>
+        <!-- footer -->
+        <tr>
+          <td style="padding:16px 4px 0 4px;font-family:Arial,Helvetica,sans-serif;font-size:11.5px;line-height:1.6;color:#999999;">
+            Recibiste este mail porque alguien creó una cuenta en el hub de Team23 con esta dirección.
+            Si no fuiste vos, ignoralo y la cuenta no se activa.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
