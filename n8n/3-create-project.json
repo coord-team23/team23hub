@@ -71,6 +71,12 @@
               "name": "feedbackTemplateId",
               "value": "1tdcjx9st0kwJKE9VjTvPEpuRPKABcB8g4wEtMlfgVyg",
               "type": "string"
+            },
+            {
+              "id": "dsc-guild",
+              "name": "discordGuildId",
+              "value": "PEGAR_ID_DEL_SERVIDOR_DE_DISCORD",
+              "type": "string"
             }
           ]
         },
@@ -361,7 +367,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $('Webhook').first().json.body;\nconst root = $('Drive: Crear Unidad').first().json;\nconst l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst find = (kw) => { const f = l1.find(x => (x.name || '').includes(kw)); return f ? f.id : ''; };\nconst desglose = $('Copia Desglose').first().json;\nconst brief = $('Copia Brief').first().json;\nconst feedback = $('Copia Feedback').first().json;\nconst notas = $('Crear Doc Notas').first().json;\nconst frame = $('Frame: carpetas').first().json;\nconst folderUrl = (id) => id ? 'https://drive.google.com/drive/folders/' + id : '';\nconst links = {\n  driveRoot: folderUrl(root.id),\n  coord: folderUrl(find('COORD')),\n  supervision: folderUrl(find('SUPERVISION')),\n  footage: folderUrl(find('FOOTAGE')),\n  recursos: folderUrl(find('RECURSOS')),\n  editables: folderUrl(find('EDITABLES')),\n  finales: folderUrl(find('FINALES')),\n  notas: 'https://docs.google.com/document/d/' + notas.id,\n  desglose: 'https://docs.google.com/spreadsheets/d/' + desglose.id,\n  brief: 'https://docs.google.com/presentation/d/' + brief.id,\n  feedback: 'https://docs.google.com/presentation/d/' + feedback.id,\n  frameio: 'https://next.frame.io/project/' + frame.frameProjectId\n};\nconst id = 'p_' + Date.now();\nconst now = new Date().toISOString();\nconst year = String(new Date().getFullYear());\nconst row = {\n  id,\n  nombre: body.nombre,\n  cliente: body.cliente || '',\n  agencia: body.agencia || '',\n  productora: body.productora || '',\n  director: body.director || '',\n  ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '',\n  prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '',\n  coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '',\n  tareas_json: JSON.stringify(body.tareas || []),\n  asignaciones_json: JSON.stringify(body.asignaciones || {}),\n  status: 'por_activarse',\n  year,\n  links_json: JSON.stringify(links),\n  created_at: now,\n  taskDates_json: JSON.stringify(body.taskDates || {}),\n  sintesis: body.sintesis || '',\n  storyboard_url: body.storyboard_url || ''\n};\nconst project = { id, nombre: body.nombre, cliente: body.cliente || '', agencia: body.agencia || '', productora: body.productora || '', director: body.director || '', ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '', prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '', coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '', tareas: body.tareas || [], asignaciones: body.asignaciones || {}, status: 'por_activarse', year, links, calendario: [], taskDates: body.taskDates || {}, sintesis: body.sintesis || '', storyboard_url: body.storyboard_url || '' };\nreturn [{ json: { row, project } }];"
+        "jsCode": "const body = $('Webhook').first().json.body;\nconst root = $('Drive: Crear Unidad').first().json;\nconst l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst find = (kw) => { const f = l1.find(x => (x.name || '').includes(kw)); return f ? f.id : ''; };\nconst desglose = $('Copia Desglose').first().json;\nconst brief = $('Copia Brief').first().json;\nconst feedback = $('Copia Feedback').first().json;\nconst notas = $('Crear Doc Notas').first().json;\nconst frame = $('Frame: carpetas').first().json;\nconst dsc = $('Discord: IDs').first().json;\nconst folderUrl = (id) => id ? 'https://drive.google.com/drive/folders/' + id : '';\nconst links = {\n  driveRoot: folderUrl(root.id),\n  coord: folderUrl(find('COORD')),\n  supervision: folderUrl(find('SUPERVISION')),\n  footage: folderUrl(find('FOOTAGE')),\n  recursos: folderUrl(find('RECURSOS')),\n  editables: folderUrl(find('EDITABLES')),\n  finales: folderUrl(find('FINALES')),\n  notas: 'https://docs.google.com/document/d/' + notas.id,\n  desglose: 'https://docs.google.com/spreadsheets/d/' + desglose.id,\n  brief: 'https://docs.google.com/presentation/d/' + brief.id,\n  feedback: 'https://docs.google.com/presentation/d/' + feedback.id,\n  frameio: 'https://next.frame.io/project/' + frame.frameProjectId\n};\nconst id = 'p_' + Date.now();\nconst now = new Date().toISOString();\nconst year = String(new Date().getFullYear());\nconst row = {\n  id,\n  nombre: body.nombre,\n  cliente: body.cliente || '',\n  agencia: body.agencia || '',\n  productora: body.productora || '',\n  director: body.director || '',\n  ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '',\n  prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '',\n  coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '',\n  tareas_json: JSON.stringify(body.tareas || []),\n  asignaciones_json: JSON.stringify(body.asignaciones || {}),\n  status: 'por_activarse',\n  year,\n  links_json: JSON.stringify(links),\n  created_at: now,\n  taskDates_json: JSON.stringify(body.taskDates || {}),\n  sintesis: body.sintesis || '',\n  storyboard_url: body.storyboard_url || '',\n  tratamiento_url: body.tratamiento_url || '',\n  discord_category_id: dsc.discord_category_id ? \"'\" + dsc.discord_category_id : '',\n  discord_avisos_id: dsc.discord_avisos_id ? \"'\" + dsc.discord_avisos_id : ''\n};\nconst project = { id, nombre: body.nombre, cliente: body.cliente || '', agencia: body.agencia || '', productora: body.productora || '', director: body.director || '', ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '', prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '', coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '', tareas: body.tareas || [], asignaciones: body.asignaciones || {}, status: 'por_activarse', year, links, calendario: [], taskDates: body.taskDates || {}, sintesis: body.sintesis || '', storyboard_url: body.storyboard_url || '' };\nreturn [{ json: { row, project } }];"
       },
       "id": "c3000003-0000-0000-0000-000000000010",
       "name": "Armar registro",
@@ -614,6 +620,139 @@
         3040,
         -120
       ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/channels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: String($('Webhook').first().json.body.nombre || 'Proyecto').slice(0, 95), type: 4 }) }}",
+        "options": {}
+      },
+      "id": "d15c0001-0000-0000-0000-000000000001",
+      "name": "Discord: Crear categoría",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3180,
+        260
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body;\nconst cat = $('Discord: Crear categoría').first().json;\nconst slug = String(b.nombre || 'proyecto').toLowerCase()\n  .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'proyecto';\n/* Mapa tarea del hub -> sufijo de canal. Agregar lineas aca para mas canales. */\nconst MAPA = { 'Online': 'online', 'VFX': 'vfx', 'Color': 'color' };\nconst tareas = Array.isArray(b.tareas) ? b.tareas : [];\nconst sufijos = ['coord', 'avisos'];\ntareas.forEach(t => { const s = MAPA[t]; if (s && !sufijos.includes(s)) sufijos.push(s); });\nreturn sufijos.map(s => ({ json: { name: slug + '-' + s, parent_id: String(cat.id) } }));"
+      },
+      "id": "d15c0002-0000-0000-0000-000000000002",
+      "name": "Discord: armar canales",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3400,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/channels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $json.name, type: 0, parent_id: $json.parent_id }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1000
+            }
+          }
+        }
+      },
+      "id": "d15c0003-0000-0000-0000-000000000003",
+      "name": "Discord: Crear canales",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3620,
+        260
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const cat = $('Discord: Crear categoría').first().json;\nconst creados = $('Discord: Crear canales').all().map(i => i.json);\nconst avisos = creados.find(c => (c.name || '').endsWith('-avisos'));\nreturn [{ json: {\n  discord_category_id: String(cat.id || ''),\n  discord_avisos_id: avisos ? String(avisos.id) : ''\n} }];"
+      },
+      "id": "d15c0004-0000-0000-0000-000000000004",
+      "name": "Discord: IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3840,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ids = $('Discord: IDs').first().json;\nif (!ids.discord_avisos_id) return [];\nconst r = $('Armar registro').first().json.row;\nlet links = {}; try { links = JSON.parse(r.links_json || '{}'); } catch (e) {}\nconst lineas = ['\\ud83d\\ude80 **' + (r.nombre || 'Proyecto') + '** entr\\u00f3 a pre-producci\\u00f3n'];\nconst meta = [];\nif (r.cliente) meta.push('Cliente: ' + r.cliente);\nif (r.agencia) meta.push('Agencia: ' + r.agencia);\nif (meta.length) lineas.push(meta.join(' \\u00b7 '));\nif (links.driveRoot) lineas.push('Drive: <' + links.driveRoot + '>');\nif (links.frameio) lineas.push('Frame.io: <' + links.frameio + '>');\nreturn [{ json: { channelId: ids.discord_avisos_id, content: lineas.join('\\n') } }];"
+      },
+      "id": "d15c0005-0000-0000-0000-000000000005",
+      "name": "Aviso inicial: mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+        "options": {}
+      },
+      "id": "d15c0006-0000-0000-0000-000000000006",
+      "name": "Discord: Aviso inicial",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3820,
+        220
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     }
   ],
   "connections": {
@@ -789,6 +928,11 @@
             "node": "Armar propuestas",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Aviso inicial: mensaje",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -868,7 +1012,7 @@
       "main": [
         [
           {
-            "node": "Armar registro",
+            "node": "Discord: Crear categoría",
             "type": "main",
             "index": 0
           }
@@ -880,6 +1024,61 @@
         [
           {
             "node": "Guardar en DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: Crear categoría": {
+      "main": [
+        [
+          {
+            "node": "Discord: armar canales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: armar canales": {
+      "main": [
+        [
+          {
+            "node": "Discord: Crear canales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: Crear canales": {
+      "main": [
+        [
+          {
+            "node": "Discord: IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: IDs": {
+      "main": [
+        [
+          {
+            "node": "Armar registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso inicial: mensaje": {
+      "main": [
+        [
+          {
+            "node": "Discord: Aviso inicial",
             "type": "main",
             "index": 0
           }

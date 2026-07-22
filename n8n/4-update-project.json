@@ -35,6 +35,12 @@
               "name": "dbSheetId",
               "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
               "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "discordGeneralId",
+              "value": "PEGAR_ID_DEL_CANAL_GENERAL",
+              "type": "string"
             }
           ]
         },
@@ -115,6 +121,120 @@
         800,
         0
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body || {};\nif (!b.status || !b.id) return [];\nreturn [{ json: { id: String(b.id), status: String(b.status) } }];"
+      },
+      "id": "d4d00001-0000-0000-0000-00000000a001",
+      "name": "¿Cambió la etapa?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "options": {}
+      },
+      "id": "d4d00002-0000-0000-0000-00000000a002",
+      "name": "Leer Projects",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1240,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cambio = $('\\u00bfCambi\\u00f3 la etapa?').first().json;\nconst filas = $('Leer Projects').all().map(i => i.json);\nconst p = filas.find(r => String(r.id) === cambio.id);\nif (!p) return [];\nconst LABELS = { por_activarse: 'Pre-producci\\u00f3n', activo: 'Ejecutando', entregando: 'Entregando', cierre: 'Listo para cierre', completado: 'Completado' };\nconst EMOJI = { activo: '\\ud83d\\udfe2', entregando: '\\ud83d\\udce6', cierre: '\\ud83d\\udd34', completado: '\\ud83c\\udfc1' };\nconst label = LABELS[cambio.status] || cambio.status;\nconst emoji = EMOJI[cambio.status] || '\\ud83d\\udd01';\nconst out = [];\n\n/* 1. Aviso en el canal -avisos del proyecto (igual que antes) */\nconst canal = String(p.discord_avisos_id || '').replace(/^'+/, '');\nif (canal) out.push({ json: { channelId: canal, content: emoji + ' **' + (p.nombre || 'Proyecto') + '** pas\\u00f3 a **' + label + '**' } });\n\n/* 2. Hito en el canal general, solo etapas principales, con m\\u00ednima info de fechas */\nconst HITOS_GENERAL = ['activo', 'entregando', 'cierre', 'completado'];\nconst general = String($('CONFIG').first().json.discordGeneralId || '').trim();\nif (general && general !== 'PEGAR_ID_DEL_CANAL_GENERAL' && HITOS_GENERAL.includes(cambio.status)) {\n  const cal = $('Leer Calendario').all().map(i => i.json).filter(r => r && String(r.project_id) === cambio.id);\n  const fases = cal.filter(r => (r.tipo || 'fase') !== 'hito');\n  const hitos = cal.filter(r => r.tipo === 'hito');\n  const dmy = s => { const t = String(s || '').slice(0, 10).split('-'); return t.length === 3 ? t[2] + '/' + t[1] : String(s || ''); };\n  const inicios = fases.map(r => r.inicio).filter(Boolean).sort();\n  const fines = fases.map(r => r.fin || r.inicio).filter(Boolean).sort();\n  const partes = [];\n  if (inicios.length && fines.length) partes.push('\\ud83d\\udcc5 ' + dmy(inicios[0]) + ' al ' + dmy(fines[fines.length - 1]));\n  if (cambio.status !== 'completado') {\n    const hoy = new Date().toISOString().slice(0, 10);\n    const prox = hitos.filter(h => (h.inicio || '') >= hoy).sort((a, b) => String(a.inicio).localeCompare(String(b.inicio)))[0];\n    if (prox) partes.push('Pr\\u00f3ximo hito: ' + (prox.fase || 'Hito') + ' ' + dmy(prox.inicio));\n  }\n  const lineas = [emoji + ' **' + (p.nombre || 'Proyecto') + '** \\u2192 ' + label];\n  if (partes.length) lineas.push(partes.join(' \\u00b7 '));\n  out.push({ json: { channelId: general, content: lineas.join('\\n') } });\n}\nreturn out;"
+      },
+      "id": "d4d00003-0000-0000-0000-00000000a003",
+      "name": "Aviso de etapa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+        "options": {}
+      },
+      "id": "d4d00004-0000-0000-0000-00000000a004",
+      "name": "Discord: avisar etapa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Calendar"
+        },
+        "options": {}
+      },
+      "id": "d4d00005-0000-0000-0000-00000000a005",
+      "name": "Leer Calendario",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1460,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true
     }
   ],
   "connections": {
@@ -156,6 +276,61 @@
         [
           {
             "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder": {
+      "main": [
+        [
+          {
+            "node": "¿Cambió la etapa?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Cambió la etapa?": {
+      "main": [
+        [
+          {
+            "node": "Leer Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Projects": {
+      "main": [
+        [
+          {
+            "node": "Leer Calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso de etapa": {
+      "main": [
+        [
+          {
+            "node": "Discord: avisar etapa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Calendario": {
+      "main": [
+        [
+          {
+            "node": "Aviso de etapa",
             "type": "main",
             "index": 0
           }
