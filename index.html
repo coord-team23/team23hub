@@ -218,7 +218,7 @@
   .sublabel{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin:var(--space-3) 0 var(--space-2)}
   .frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:var(--space-3);margin-bottom:var(--space-3)}
   label.f{display:block;font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--gray);margin-bottom:var(--space-1)}
-  input[type=text],input[type=email],input[type=date],select,textarea{
+  input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{
     width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3) var(--space-3);
     border:2px solid var(--ink);border-radius:var(--radius-md);background:#fff;color:var(--ink);
   }
@@ -507,7 +507,7 @@
     .modal .actions .btn{flex:1}
 
     /* inputs: 16px evita el auto-zoom de iOS al enfocar */
-    input[type=text],input[type=email],input[type=date],select,textarea{font-size:16px}
+    input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{font-size:16px}
     .assign-row{grid-template-columns:1fr 44px}
     .assign-row input[type=email]{grid-column:1 / -1}
     .icon-btn{width:44px;height:42px}
@@ -561,6 +561,12 @@
 .dchip-opt.on{background:var(--ink);color:#fff}
 .dchip-addrow{display:flex;gap:6px}
 .dchip-addrow input{flex:1}
+
+/* ---- autocompletado de nombres ---- */
+#acPanel{display:none;position:fixed;z-index:9999;background:#fff;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);max-height:236px;overflow:auto}
+#acPanel .ac-item{padding:8px 10px;font-size:13px;cursor:pointer;border-bottom:1px solid #eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#acPanel .ac-item:last-child{border-bottom:none}
+#acPanel .ac-item:hover,#acPanel .ac-item.on{background:var(--ink);color:#fff}
 </style>
 </head>
 <body>
@@ -1154,7 +1160,7 @@ function assignBlockHTML(tarea, rows, ctx){
     <div class="ttl">${esc(tarea)} — ${ctx==="n2"?"candidatos":"equipo"} + fechas</div>
     ${rows.map((r,i)=>`
       <div class="assign-row">
-        <input type="text" list="dlRoster" placeholder="Nombre" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tq}',${i},'nombre',this.value);asigAutofill(this,'${ctx}','${tq}',${i})">
+        <input type="text" placeholder="Nombre" autocomplete="off" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tq}',${i},'nombre',this.value);acOpen(this,'${ctx}','${tq}',${i})" onkeydown="acKey(event)" onblur="acBlur(this,'${ctx}','${tq}',${i})">
         <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tq}',${i},'email',this.value)">
         <button class="icon-btn" onclick="delAssign('${ctx}','${tq}',${i})" title="Quitar">✕</button>
         <input type="text" placeholder="Discord" value="${esc(r.discord||'')}" oninput="setAssign('${ctx}','${tq}',${i},'discord',this.value)">
@@ -2420,7 +2426,7 @@ function printCalendar(){
 
 /* ---------------- helpers UI ---------------- */
 function openModal(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; }
-function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; }
+function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; if(id==="ovDirectorio") dirChipClose(true); acClose(); }
 
 /* kick off wizard */
 const KICKOFF_QUESTIONS = [
@@ -2763,7 +2769,7 @@ async function authEnter(session){
     $("#btnLogout").style.display = "";
     $("#btnUsers").style.display = "";
     $("#btnDirectorio").style.display = "";
-    rosterDatalist();   /* precarga el directorio para el autocompletado de asignaciones */
+    rosterEnsure().catch(()=>{});   /* precarga el directorio para el autocompletado de asignaciones */
     startApp();
   }catch(e){
     $("#agMsg").textContent = "No pude verificar tu cuenta ("+e.message+"). Probá recargar.";
@@ -2883,15 +2889,62 @@ function rosterEnsure(){
   })().finally(()=>{ rosterLoading = null; });
   return rosterLoading;
 }
-async function rosterDatalist(){
-  try{
-    await rosterEnsure();
-    const cols = rosterCols();
-    if(cols.nombre < 0) return;
-    let dl = document.getElementById("dlRoster");
-    if(!dl){ dl = document.createElement("datalist"); dl.id = "dlRoster"; document.body.appendChild(dl); }
-    dl.innerHTML = dirData.rows.map(r=>`<option value="${esc(r.v[cols.nombre]||"")}">`).join("");
-  }catch(e){ /* sin roster no hay autocompletado, nada más */ }
+/* autocompletado de nombres: aparece recién desde la primera letra, ancho del input, estilo del hub */
+let acState = null;
+function acPanel(){
+  let p = document.getElementById("acPanel");
+  if(!p){ p = document.createElement("div"); p.id = "acPanel"; document.body.appendChild(p); }
+  return p;
+}
+function acClose(){ const p = document.getElementById("acPanel"); if(p) p.style.display = "none"; acState = null; }
+function acOpen(input, ctx, t, i){
+  const q = rosterNorm(input.value);
+  if(!q || !dirData){ acClose(); return; }   /* con el cuadro vacío no se muestra nada */
+  const cols = rosterCols();
+  if(cols.nombre < 0){ acClose(); return; }
+  const vistos = new Set(), empiezan = [], contienen = [];
+  dirData.rows.forEach(r=>{
+    const n = String(r.v[cols.nombre]||"").trim();
+    if(!n) return;
+    const k = rosterNorm(n);
+    if(vistos.has(k)) return;
+    vistos.add(k);
+    if(k.startsWith(q)) empiezan.push(n);
+    else if(k.includes(q)) contienen.push(n);
+  });
+  const items = empiezan.concat(contienen).slice(0, 8);
+  if(!items.length){ acClose(); return; }
+  acState = { input, ctx, t, i, items, hi: -1 };
+  const p = acPanel();
+  p.innerHTML = items.map((n,ix)=>`<div class="ac-item" onmousedown="event.preventDefault();acPick(${ix})">${esc(n)}</div>`).join("");
+  const r = input.getBoundingClientRect();
+  p.style.display = "block";
+  p.style.left = r.left + "px";
+  p.style.top = (r.bottom + 2) + "px";
+  p.style.width = r.width + "px";
+}
+function acPick(ix){
+  if(!acState) return;
+  const { input, ctx, t, i, items } = acState;
+  input.value = items[ix];
+  setAssign(ctx, t, i, "nombre", items[ix]);
+  asigAutofill(input, ctx, t, i);
+  acClose();
+}
+function acKey(e){
+  if(!acState || acState.input !== e.target) return;
+  const n = acState.items.length;
+  if(e.key === "ArrowDown" || e.key === "ArrowUp"){
+    e.preventDefault();
+    acState.hi = ((acState.hi + (e.key === "ArrowDown" ? 1 : -1)) + n) % n;
+    [...acPanel().children].forEach((el,ix)=>el.classList.toggle("on", ix === acState.hi));
+  }else if(e.key === "Enter" && acState.hi >= 0){
+    e.preventDefault(); acPick(acState.hi);
+  }else if(e.key === "Escape"){ acClose(); }
+}
+function acBlur(input, ctx, t, i){
+  setTimeout(acClose, 150);
+  asigAutofill(input, ctx, t, i);   /* si tipeaste el nombre completo sin elegir, igual autocompleta el resto */
 }
 function rosterFind(nombre){
   if(!dirData) return null;
