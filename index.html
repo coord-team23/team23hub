@@ -1366,10 +1366,10 @@ function renderDetail(){
   const finalesLink = p.links?.finales;
   const finalesHref = finalesLink && finalesLink!=='#';
   const finalesBtn = cierre
-    ? `<a class="finales-btn on" href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>5. FINALES <span>↗</span></a>`
+    ? `<a class="finales-btn on" href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 5. FINALES <span>↗</span></a>`
     : completado
-    ? `<a href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>5. FINALES <span>↗</span></a>`
-    : `<span class="finales-btn off" title="Se habilita cuando el proyecto pasa a cierre">5. FINALES</span>`;
+    ? `<a href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 5. FINALES <span>↗</span></a>`
+    : `<span class="finales-btn off" title="Se habilita cuando el proyecto pasa a cierre">📁 5. FINALES</span>`;
   const docLinks = DRIVE_DOCS
     .filter(([k])=>p.links && p.links[k])
     .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
