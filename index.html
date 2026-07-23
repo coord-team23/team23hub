@@ -2676,7 +2676,7 @@ async function createProject2(){
   const asigs = {};
   Object.entries(n2AssignData).forEach(([t,rows])=>{
     const clean = rows.filter(r=>r.nombre||r.email);
-    if(clean.length) asigs[t]=clean.map(r=>({ nombre:r.nombre, email:r.email, estado:"candidato" }));
+    if(clean.length) asigs[t]=clean.map(r=>({ nombre:r.nombre, email:r.email, discord:r.discord||"", telefono:r.telefono||"", estado:"candidato" }));
   });
   // misma lógica que el alta manual: fecha por tarea, sin timeline aparte
   const tDates = {};
@@ -2724,6 +2724,7 @@ async function createProject2(){
     openDetail(proj.id);
     const nCand = Object.values(asigs).flat().filter(r=>r.email).length;
     toast(nCand ? "✔ Proyecto creado, propuestas enviadas a "+nCand+" candidato"+(nCand>1?"s":"") : "✔ Proyecto creado, carpetas de Drive y Frame.io listas");
+    rosterSyncFromAsigs(asigs);
   }catch(e){
     toast("Error al crear: "+e.message, true);
   }finally{
