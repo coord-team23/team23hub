@@ -568,6 +568,19 @@
 #acPanel .ac-item:last-child{border-bottom:none}
 #acPanel .ac-item:hover,#acPanel .ac-item.on{background:var(--ink);color:#fff}
 
+  /* ---- confirm + loader del hub ---- */
+  .t23-ov{position:fixed;inset:0;background:rgba(10,10,10,.45);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px}
+  .t23-card{background:#fff;border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:22px 24px;max-width:440px;width:100%}
+  .t23-load{text-align:center;max-width:380px}
+  .t23-eyes{display:flex;gap:10px;justify-content:center;margin-bottom:18px}
+  .t23-eye{width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid var(--ink);position:relative;overflow:hidden}
+  .t23-eye::after{content:"";position:absolute;top:12px;left:5px;width:13px;height:13px;border-radius:50%;background:var(--ink);animation:t23look 2.6s ease-in-out infinite}
+  @keyframes t23look{0%,20%{transform:translateX(0)}40%,60%{transform:translateX(11px)}80%,100%{transform:translateX(0)}}
+  .t23-bar{height:14px;border:2px solid var(--ink);position:relative;overflow:hidden;background:#fff;margin-bottom:14px}
+  .t23-bar::after{content:"";position:absolute;top:0;bottom:0;width:34%;background:var(--red);animation:t23sweep 1.15s cubic-bezier(.45,0,.55,1) infinite alternate}
+  @keyframes t23sweep{0%{left:-4%}100%{left:70%}}
+  .t23-frase{font-size:13px;color:var(--gray);min-height:18px;transition:opacity .25s}
+
   /* ---- síntesis formateada ---- */
   .sx .sx-p{margin:0 0 var(--space-3);line-height:1.55}
   .sx .sx-label{font-size:var(--fs-caption);letter-spacing:.14em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--gray);margin:var(--space-4) 0 var(--space-2)}
@@ -1240,6 +1253,7 @@ async function createProject(){
 
   const btn = $("#btnCreate");
   btn.disabled = true; btn.textContent = "Creando Drive + Frame.io…";
+  t23LoadShow("crear");
 
   try{
     let proj;
@@ -1263,6 +1277,7 @@ async function createProject(){
   }catch(e){
     toast("Error al crear: "+e.message, true);
   }finally{
+    t23LoadHide();
     btn.disabled = false; btn.textContent = "Crear proyecto";
   }
 }
@@ -2371,13 +2386,73 @@ async function saveProjectInfo(btn){
   }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
+/* ---------------- confirm + loader con estética del hub ---------------- */
+function t23Confirm(msg, opts={}){
+  return new Promise(res=>{
+    const ov = document.createElement("div");
+    ov.className = "t23-ov";
+    ov.innerHTML = `<div class="t23-card">
+      <div class="kicker" style="margin-bottom:10px">${esc(opts.titulo||"CONFIRMAR")}</div>
+      <p style="font-size:15px;margin:0 0 18px;line-height:1.5">${esc(msg)}</p>
+      <div class="actions" style="justify-content:flex-end;margin:0">
+        <button class="btn small" data-a="no">${esc(opts.cancelar||"Cancelar")}</button>
+        <button class="btn small ${opts.peligro?"danger":"primary"}" data-a="si">${esc(opts.ok||"Aceptar")}</button>
+      </div></div>`;
+    const done = v=>{ ov.remove(); res(v); };
+    ov.addEventListener("click", e=>{
+      const a = e.target.closest("[data-a]");
+      if(a) done(a.dataset.a==="si");
+      else if(e.target===ov) done(false);
+    });
+    document.body.appendChild(ov);
+  });
+}
+
+const FRASES_CARGA = [
+  "Sincronizando el caos",
+  "Un segundo, que esto quede prolijo",
+  "Cargando… ponete cómodo, pero no tanto",
+  "Acomodando los pixeles uno por uno",
+  "Negociando con la nube",
+  "No apagues el equipo, actualización 3 de 47",
+  "Tiempo estimado: 4 minutos… 2 horas… 30 segundos"
+];
+const FRASES_ACCION = { crear: "Convenciendo a Drive y a Frame de trabajar juntos" };
+let t23LoadEl = null, t23LoadTimer = null;
+function t23LoadShow(accion){
+  t23LoadHide();
+  const pool = [...FRASES_CARGA].sort(()=>Math.random()-.5);
+  if(accion && FRASES_ACCION[accion]) pool.unshift(FRASES_ACCION[accion]);
+  let i = 0;
+  t23LoadEl = document.createElement("div");
+  t23LoadEl.className = "t23-ov";
+  t23LoadEl.innerHTML = `<div class="t23-card t23-load">
+    <div class="t23-eyes"><div class="t23-eye"></div><div class="t23-eye"></div></div>
+    <div class="t23-bar"></div>
+    <div class="t23-frase">${esc(pool[0])}</div>
+  </div>`;
+  document.body.appendChild(t23LoadEl);
+  const fr = t23LoadEl.querySelector(".t23-frase");
+  t23LoadTimer = setInterval(()=>{
+    i = (i+1) % pool.length;
+    fr.style.opacity = 0;
+    setTimeout(()=>{ if(t23LoadEl){ fr.textContent = pool[i]; fr.style.opacity = 1; } }, 250);
+  }, 3000);
+}
+function t23LoadHide(){
+  if(t23LoadTimer){ clearInterval(t23LoadTimer); t23LoadTimer = null; }
+  if(t23LoadEl){ t23LoadEl.remove(); t23LoadEl = null; }
+}
+
 async function deleteProject(){
   const p = detailProject;
-  if(!confirm(`¿Eliminar "${p.nombre}"? Esta acción no se puede deshacer.`)) return;
+  if(!await t23Confirm(`Vas a eliminar "${p.nombre}" con sus canales de Discord y su registro. Las carpetas de Drive y Frame quedan intactas.`, {titulo:"ELIMINAR PROYECTO", ok:"Eliminar", peligro:true})) return;
   if(!DEMO){
+    t23LoadShow();
     try{
       await api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id:p.id})});
     }catch(e){ toast("Error al eliminar: "+e.message, true); return; }
+    finally{ t23LoadHide(); }
   }
   projects = projects.filter(x=>x.id!==p.id);
   closeModal("ovDetail");
@@ -2648,6 +2723,7 @@ async function parseDebrief2(){
   const text = $("#n2Debrief").value.trim();
   if(!text){ toast("Pegá el debrief primero", true); return; }
   const btn = $("#btnParse2"); btn.disabled=true; btn.textContent="Analizando…";
+  t23LoadShow();
   try{
     let r;
     if(DEMO){
@@ -2671,7 +2747,7 @@ async function parseDebrief2(){
     $("#n2Form").style.display="block";
     toast("✔ Debrief analizado, revisá y ajustá antes de crear");
   }catch(e){ toast("No pude analizar el debrief: "+e.message, true); }
-  finally{ btn.disabled=false; btn.textContent="Analizar debrief"; }
+  finally{ t23LoadHide(); btn.disabled=false; btn.textContent="Analizar debrief"; }
 }
 function skipDebrief2(){ $("#n2Form").style.display="block"; }
 
@@ -2728,6 +2804,7 @@ async function createProject2(){
 
   const btn = $("#btnCreate2");
   btn.disabled = true; btn.textContent = "Creando Drive + Frame.io…";
+  t23LoadShow("crear");
   try{
     let proj;
     if(DEMO){
@@ -2755,6 +2832,7 @@ async function createProject2(){
   }catch(e){
     toast("Error al crear: "+e.message, true);
   }finally{
+    t23LoadHide();
     btn.disabled = false; btn.textContent = "Crear proyecto";
   }
 }
