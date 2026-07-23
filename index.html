@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="18" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="46" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="21" cy="36" r="7.5" fill="%230A0A0A"/><circle cx="49" cy="36" r="7.5" fill="%230A0A0A"/></svg>'>
 <title>TEAM23 — Production Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="design-system/styles.css">
@@ -183,6 +184,13 @@
   /* el chooser (elegir opción 1/2) se queda grande; kick off y formularios van a la escala de la ficha de detalle */
   #ovChooser .modal{zoom:1.4}
   #ovKickOff .modal,#ovNew .modal,#ovNew2 .modal{zoom:0.9}
+  main{max-width:none}
+  .usr-table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .usr-table th{text-align:left;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);padding:6px 8px;border-bottom:2px solid var(--ink)}
+  .usr-table td{padding:10px 8px;border-bottom:1px solid #E5E5E5;vertical-align:middle}
+  .usr-badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.08em;padding:3px 10px;border-radius:999px;border:1.5px solid var(--ink)}
+  .usr-badge.in{background:var(--ink);color:#fff}
+  .usr-badge.out{background:#fff;color:var(--ink)}
   .kickoff-q{
     font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .727);color:var(--gray);
     text-transform:uppercase;letter-spacing:var(--tracking-tight);line-height:1.05;margin-bottom:var(--space-7);
@@ -210,7 +218,7 @@
   .sublabel{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin:var(--space-3) 0 var(--space-2)}
   .frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:var(--space-3);margin-bottom:var(--space-3)}
   label.f{display:block;font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--gray);margin-bottom:var(--space-1)}
-  input[type=text],input[type=email],input[type=date],select,textarea{
+  input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{
     width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3) var(--space-3);
     border:2px solid var(--ink);border-radius:var(--radius-md);background:#fff;color:var(--ink);
   }
@@ -499,7 +507,7 @@
     .modal .actions .btn{flex:1}
 
     /* inputs: 16px evita el auto-zoom de iOS al enfocar */
-    input[type=text],input[type=email],input[type=date],select,textarea{font-size:16px}
+    input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{font-size:16px}
     .assign-row{grid-template-columns:1fr 44px}
     .assign-row input[type=email]{grid-column:1 / -1}
     .icon-btn{width:44px;height:42px}
@@ -526,9 +534,53 @@
   @media (prefers-reduced-motion: reduce){
     *{transition:none !important;animation:none !important}
   }
+
+/* ---- sincronización de proyectos ---- */
+.sync-pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--gray);margin-top:6px}
+.sync-spin{width:12px;height:12px;border:2px solid var(--gray);border-top-color:transparent;border-radius:50%;animation:t23spin .7s linear infinite}
+@keyframes t23spin{to{transform:rotate(360deg)}}
+/* ---- directorio ---- */
+.dir-tools{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.dir-tools input{flex:1;min-width:220px}
+.dir-wrap{max-height:62vh;overflow:auto;border:2px solid var(--ink);margin-top:10px}
+.dir-table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:1500px}
+.dir-table th{position:sticky;top:0;z-index:1;background:var(--ink);color:#fff;padding:8px 10px;text-align:left;cursor:pointer;white-space:nowrap;user-select:none}
+.dir-table td{border-bottom:1px solid #ddd;border-right:1px solid #eee;padding:6px 10px;min-width:110px;vertical-align:top}
+.dir-table td:last-child{min-width:280px}
+.dir-table td[contenteditable]:focus{outline:2px solid var(--red);background:#fff}
+.dir-count{font-size:12px;color:var(--gray)}
+
+/* ---- chips del directorio ---- */
+.dir-chipcell{cursor:pointer}
+.dchip{display:inline-block;background:var(--ink);color:#fff;border-radius:20px;padding:2px 9px;font-size:11.5px;margin:1px 3px 1px 0;white-space:nowrap}
+.dchip-empty{font-size:11.5px;color:var(--gray)}
+#dirChipPanel{display:none;position:fixed;z-index:9999;width:340px;max-height:320px;overflow:auto;background:#fff;border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:12px}
+.dchip-title{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:8px}
+.dchip-opts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.dchip-opt{display:inline-block;border:2px solid var(--ink);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;user-select:none;background:#fff}
+.dchip-opt.on{background:var(--ink);color:#fff}
+.dchip-addrow{display:flex;gap:6px}
+.dchip-addrow input{flex:1}
+
+/* ---- autocompletado de nombres ---- */
+#acPanel{display:none;position:fixed;z-index:9999;background:#fff;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);max-height:236px;overflow:auto}
+#acPanel .ac-item{padding:8px 10px;font-size:13px;cursor:pointer;border-bottom:1px solid #eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#acPanel .ac-item:last-child{border-bottom:none}
+#acPanel .ac-item:hover,#acPanel .ac-item.on{background:var(--ink);color:#fff}
 </style>
 </head>
 <body>
+<div id="authGate" style="display:none;position:fixed;inset:0;z-index:2000;background:#fff;align-items:center;justify-content:center">
+  <div style="width:min(430px,92%);border:2px solid var(--ink);border-radius:var(--radius-lg,16px);padding:30px;box-shadow:8px 8px 0 var(--ink);background:#fff">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <span style="font-family:var(--font-primary);font-weight:900;font-size:24px;letter-spacing:-0.5px">TEAM23</span>
+      <svg width="34" height="22" viewBox="0 0 64 40" aria-hidden="true"><circle cx="18" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="46" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="21" cy="24" r="7.5" fill="#0A0A0A"/><circle cx="49" cy="24" r="7.5" fill="#0A0A0A"/></svg>
+    </div>
+    <div class="kicker" style="margin-bottom:14px">Production Hub · acceso del equipo</div>
+    <p id="agMsg" style="font-size:14px;line-height:1.5;margin:0 0 14px">Verificando sesión…</p>
+
+  </div>
+</div>
 
 <header>
   <div class="header-top">
@@ -546,15 +598,20 @@
       <button class="status-opt" data-view="dashboard" onclick="switchView('dashboard')">Status</button>
       <button class="status-opt" data-view="proyectos" onclick="switchView('proyectos')">Proyectos</button>
       <button class="status-opt" data-view="calendario" onclick="switchView('calendario')">Calendario</button>
-      <button class="status-opt" data-view="equipo" onclick="switchView('equipo')">Equipo</button>
     </nav>
-    <button class="btn small" id="btnNew">+ NUEVO PROYECTO</button>
+    <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
+      <button class="btn small" id="btnDirectorio" style="display:none" onclick="openDirectorio()">Directorio</button>
+      <button class="btn small" id="btnUsers" style="display:none" onclick="openUsers()">Usuarios</button>
+      <button class="btn small" id="btnNew">+ NUEVO PROYECTO</button>
+      <button class="btn small" id="btnLogout" style="display:none" onclick="authLogout()">Salir</button>
+    </div>
   </div>
 </header>
 
 <div class="hero">
   <div>
     <h1 id="heroTitle">Proyectos</h1>
+    <span class="sync-pill" id="syncPill" style="display:none"><span class="sync-spin"></span>Buscando proyectos nuevos…</span>
   </div>
 </div>
 
@@ -653,7 +710,7 @@
 <!-- ============ MODAL: DETALLE ============ -->
 <div class="overlay" id="ovDetail">
   <div class="modal" role="dialog" aria-modal="true">
-    <button class="close" onclick="closeModal('ovDetail')" aria-label="Cerrar">✕</button>
+    <button class="close" onclick="requestCloseDetail()" aria-label="Cerrar">✕</button>
     <div id="detailBody"></div>
   </div>
 </div>
@@ -680,11 +737,11 @@
     <button class="close" onclick="closeModal('ovGate')" aria-label="Cerrar">✕</button>
     <h2>Activar proyecto</h2>
     <div class="kicker" id="gateName"></div>
-    <div class="gate-warn">⚠️ <b>Checklist de activación.</b> Confirmá cada punto antes de que el proyecto entre en ejecución: a partir de acá el equipo empieza a recibir los avisos de calendario.</div>
+    <div class="gate-warn"><b>Checklist de activación.</b> Confirmá cada punto antes de que el proyecto entre en ejecución: a partir de acá el equipo empieza a recibir los avisos de calendario.</div>
     <div id="gateItems"></div>
     <div class="actions">
       <button class="btn" onclick="closeModal('ovGate')">Todavía no</button>
-      <button class="btn primary" id="btnGate" disabled onclick="confirmGate()">🚀 Pasar a Ejecutando</button>
+      <button class="btn primary" id="btnGate" disabled onclick="confirmGate()">Pasar a Ejecutando</button>
     </div>
   </div>
 </div>
@@ -700,6 +757,42 @@
 </div>
 
 <!-- ============ MODAL: ELEGIR FLUJO DE CREACIÓN ============ -->
+<div class="overlay" id="ovDirectorio">
+  <div class="modal" role="dialog" aria-modal="true" style="width:min(1240px,96vw)">
+    <button class="close" onclick="closeModal('ovDirectorio')" aria-label="Cerrar">✕</button>
+    <h2>Directorio Team23</h2>
+    <div class="kicker">Sincronizado con el spreadsheet de proveedores · editá una celda y se guarda al salir de ella · solo productores</div>
+    <div class="dir-tools">
+      <input id="dirSearch" type="text" placeholder="Buscar por nombre, especialidad, mail…" oninput="dirRender()">
+      <span class="dir-count" id="dirCount"></span>
+      <button class="btn small" onclick="dirLoad(true)">Refrescar</button>
+      <a class="btn small" href="https://docs.google.com/spreadsheets/d/1jMs5xUhFKrp5z_LHMOdkJia7vKJsrtKdSB20g9KHsp0/edit" target="_blank" rel="noopener">Abrir sheet ↗</a>
+    </div>
+    <div class="dir-wrap" id="dirBody"><p style="font-size:13px;color:var(--gray);padding:12px">Cargando…</p></div>
+  </div>
+</div>
+
+<div class="overlay" id="ovUsers">
+  <div class="modal" role="dialog" aria-modal="true" style="width:min(640px,100%)">
+    <button class="close" onclick="closeModal('ovUsers')" aria-label="Cerrar">✕</button>
+    <h2>Usuarios</h2>
+    <div class="kicker">Todos los que se registraron alguna vez · cambiá roles desde acá</div>
+    <div id="usersBody" style="margin-top:14px"></div>
+  </div>
+</div>
+
+<div class="overlay" id="ovConfirm" style="z-index:1200">
+  <div class="modal" role="dialog" aria-modal="true" style="width:min(480px,100%)">
+    <h2 style="font-size:22px">Cambios sin guardar</h2>
+    <div class="kicker">Hiciste cambios en este proyecto que todavía no se guardaron</div>
+    <div class="actions" style="flex-wrap:wrap;gap:10px">
+      <button class="btn primary" onclick="confirmSaveExit(this)">Guardar y salir</button>
+      <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="confirmDiscard()">Descartar cambios</button>
+      <button class="btn" onclick="closeModal('ovConfirm')">Seguir editando</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="ovChooser">
   <div class="modal" role="dialog" aria-modal="true" style="width:min(720px,100%)">
     <button class="close" onclick="closeModal('ovChooser')" aria-label="Cerrar">✕</button>
@@ -733,7 +826,7 @@
       <div class="glabel">1 · Debrief <small>pegá el documento completo</small></div>
       <textarea id="n2Debrief" style="min-height:130px" placeholder="Pegá acá el debrief completo del proyecto…"></textarea>
       <div class="actions" style="justify-content:flex-start;margin-top:10px">
-        <button class="btn primary small" id="btnParse2" onclick="parseDebrief2()">✨ Analizar debrief</button>
+        <button class="btn primary small" id="btnParse2" onclick="parseDebrief2()">Analizar debrief</button>
         <button class="btn small" onclick="skipDebrief2()">Cargar a mano</button>
       </div>
     </div>
@@ -793,8 +886,10 @@
    API_KEY : el valor que definiste en la credencial "Team23 Key" (header x-team23-key)
 ================================================================ */
 const CONFIG = {
-  N8N_BASE: "",
-  API_KEY: ""
+  N8N_BASE: "https://coordteam23.app.n8n.cloud",
+  API_KEY: "coordHUBt23",
+  SUPABASE_URL: "https://muvmrkacjhygfuialpyn.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI"
 };
 
 /* id estable por entrada de calendario — necesario para poder sincronizar cada
@@ -829,7 +924,7 @@ const demoProjects = [
     asignaciones:{"Online":[{nombre:"Edi Uno",email:"edi@team23.online"}],"VFX":[{nombre:"Comp Dos",email:"vfx@team23.online"}]},
     taskDates:{"Online":{inicio:"2026-07-06",fin:"2026-07-14",notas:""},"VFX":{inicio:"2026-07-13",fin:"2026-07-24",notas:""},"Color":{inicio:"2026-07-16",fin:"2026-07-22",notas:""}},
     status:"activo", year:"2026",
-    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
     calendario:[
       {tipo:"fase",fase:"Entrega Masters",inicio:"2026-07-27",fin:"2026-07-28",notas:""},
       {tipo:"hito",fase:"Corte 1 al cliente",inicio:"2026-07-10",fin:"2026-07-10",notas:""},
@@ -840,14 +935,14 @@ const demoProjects = [
     id:"p_demo2", nombre:"BRAHMA - Te la mereSED", cliente:"Brahma", agencia:"", productora:"",
     ep_nombre:"N4rf", ep_email:"ep@team23.online", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
     tareas:["VFX","Online"], asignaciones:{}, taskDates:{}, status:"completado", year:"2026",
-    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
     calendario:[]
   },
   {
     id:"p_demo3", nombre:"PROYECTO X - TVC", cliente:"Cliente X", agencia:"Agencia Y", productora:"Prod Z",
     ep_nombre:"", ep_email:"", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
     tareas:["Retoque","SFX/Mezcla"], asignaciones:{}, taskDates:{}, status:"por_activarse", year:"2026",
-    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
     calendario:[]
   }
 ];
@@ -888,6 +983,16 @@ async function loadProjects(){
     autoAdvanceOverdue();
     onProjectsLoaded(); return;
   }
+  /* cache local: pinta al instante lo último conocido mientras llega lo fresco */
+  if(!projects.length){
+    try{
+      const c = JSON.parse(localStorage.getItem("t23_projects")||"null");
+      if(Array.isArray(c) && c.length){ projects = c; onProjectsLoaded(); }
+    }catch(e){}
+  }
+  const prevIds = new Set(projects.map(p=>p.id));
+  const hadCache = projects.length > 0;
+  syncPillShow(true);
   try{
     const data = await api("/webhook/team23/projects");
     projects = (data.projects||[]).map(p=>({
@@ -900,8 +1005,15 @@ async function loadProjects(){
     }));
     autoAdvanceOverdue();
     onProjectsLoaded();
+    try{ localStorage.setItem("t23_projects", JSON.stringify(projects)); }catch(e){}
+    if(hadCache){
+      const nuevos = projects.filter(p=>!prevIds.has(p.id)).length;
+      if(nuevos) toast("✔ "+nuevos+(nuevos>1?" proyectos nuevos":" proyecto nuevo"));
+    }
   }catch(e){
     toast("No pude cargar los proyectos, revisá n8n ("+e.message+")", true);
+  }finally{
+    syncPillShow(false);
   }
 }
 
@@ -990,48 +1102,20 @@ window.addEventListener("hashchange", ()=>{
   if(VIEW_TITLES[h] && h!==currentView) switchView(h);
 });
 
-/* ---------------- vista equipo = base de talentos (derivada, solo lectura) ---------------- */
-/* Se arma sola a partir de Equipo interno (EP/Prod/Coord) + asignaciones confirmadas de
-   todos los proyectos en memoria. No hay carga manual: si alguien trabajó en algún proyecto,
-   aparece acá con sus roles e historial. Los rechazados quedan afuera. */
-function computeTalentos(){
-  const map = {};
-  const add = (nombre, email, rol, proyecto) => {
-    if(!nombre || !nombre.trim()) return;
-    const key = (email && email.trim()) ? "e:"+email.trim().toLowerCase() : "n:"+nombre.trim().toLowerCase();
-    if(!map[key]) map[key] = {nombre:nombre.trim(), email:"", roles:new Set(), proyectos:new Set()};
-    if(email && !map[key].email) map[key].email = email.trim();
-    if(rol) map[key].roles.add(rol);
-    if(proyecto) map[key].proyectos.add(proyecto);
-  };
-  projects.forEach(p=>{
-    if(p.ep_nombre) add(p.ep_nombre, p.ep_email, "EP", p.nombre);
-    if(p.prod_nombre) add(p.prod_nombre, p.prod_email, "Prod", p.nombre);
-    if(p.coord_nombre) add(p.coord_nombre, p.coord_email, "Coord", p.nombre);
-    Object.entries(p.asignaciones||{}).forEach(([tarea, rows])=>{
-      (rows||[]).forEach(r=>{
-        if(!r || !r.nombre) return;
-        if(r.estado==="rechazado") return;
-        add(r.nombre, r.email, tarea, p.nombre);
-      });
-    });
-  });
-  return Object.values(map)
-    .map(t=>({nombre:t.nombre, email:t.email, roles:[...t.roles].sort(), proyectos:[...t.proyectos]}))
-    .sort((a,b)=>b.proyectos.length-a.proyectos.length || a.nombre.localeCompare(b.nombre));
-}
-
+/* ---------------- vista equipo (solo lectura) ---------------- */
 function renderEquipo(){
-  const talentos = computeTalentos();
-  $("#equipoBody").innerHTML = talentos.length ? `
-    <div class="grid">${talentos.map(t=>`
-      <div class="card" style="cursor:default">
-        <h3>${esc(t.nombre)}</h3>
-        <div class="meta">${t.proyectos.length} proyecto${t.proyectos.length===1?"":"s"}${t.email?" · "+esc(t.email):""}</div>
-        <div class="pills">${t.roles.map(r=>`<span class="pill">${esc(r)}</span>`).join("")}</div>
-        <div class="links" style="margin-top:var(--space-3)"><span style="font-size:12.5px;color:var(--gray)">${t.proyectos.map(esc).join(" · ")}</span></div>
-      </div>`).join("")}</div>`
-    : `<div class="empty">Todavía no hay nadie cargado en ningún proyecto.</div>`;
+  const pend = projects.filter(p=>p.status==="por_activarse");
+  const act  = projects.filter(p=>inProgress(p.status));
+  const done = projects.filter(p=>p.status==="completado");
+  const group = (label, dotClass, list) => `
+    <section class="status-block">
+      <div class="section-head"><span class="dot ${dotClass}"></span><h2>${label}</h2><span class="count">(${list.length})</span></div>
+      <div class="grid">${list.length ? list.map(p=>cardHTML(p,true)).join("") : `<div class="empty">Nada acá por ahora.</div>`}</div>
+    </section>`;
+  $("#equipoBody").innerHTML =
+    group("Pre-producción","",pend) +
+    group("Activos","act",act) +
+    group("Completados","done",done);
 }
 
 /* ---------------- nuevo proyecto ---------------- */
@@ -1054,7 +1138,7 @@ function renderNPAssigns(){
   Object.keys(npAssignData).forEach(k=>{ if(!npSelected.has(k)) delete npAssignData[k]; });
   Object.keys(npTaskDates).forEach(k=>{ if(!npSelected.has(k)) delete npTaskDates[k]; });
   npSelected.forEach(t=>{
-    if(!npAssignData[t]) npAssignData[t]=[{nombre:"",email:""}];
+    if(!npAssignData[t]) npAssignData[t]=[{nombre:"",email:"",discord:"",telefono:""}];
     if(!npTaskDates[t]) npTaskDates[t]={inicio:"",fin:"",notas:""};
   });
   $("#npAssigns").innerHTML = [...npSelected].map(t=>assignBlockHTML(t, npAssignData[t], "np")).join("");
@@ -1076,9 +1160,11 @@ function assignBlockHTML(tarea, rows, ctx){
     <div class="ttl">${esc(tarea)} — ${ctx==="n2"?"candidatos":"equipo"} + fechas</div>
     ${rows.map((r,i)=>`
       <div class="assign-row">
-        <input type="text" placeholder="Nombre" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tarea}',${i},'nombre',this.value)">
-        <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tarea}',${i},'email',this.value)">
-        <button class="icon-btn" onclick="delAssign('${ctx}','${tarea}',${i})" title="Quitar">✕</button>
+        <input type="text" placeholder="Nombre" autocomplete="off" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tq}',${i},'nombre',this.value);acOpen(this,'${ctx}','${tq}',${i})" onkeydown="acKey(event)" onblur="acBlur(this,'${ctx}','${tq}',${i})">
+        <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tq}',${i},'email',this.value)">
+        <button class="icon-btn" onclick="delAssign('${ctx}','${tq}',${i})" title="Quitar">✕</button>
+        <input type="text" placeholder="Discord" value="${esc(r.discord||'')}" oninput="setAssign('${ctx}','${tq}',${i},'discord',this.value)">
+        <input type="tel" placeholder="Teléfono" value="${esc(r.telefono||'')}" oninput="setAssign('${ctx}','${tq}',${i},'telefono',this.value)">
       </div>${stateRow(r,i)}`).join("")}
     <button class="addline" onclick="addAssign('${ctx}','${tarea}')">+ agregar persona</button>
     <div class="frow" style="margin-top:var(--space-4)">
@@ -1108,8 +1194,8 @@ function setTaskDate(ctx,t,field,val){
 }
 function assignStore(ctx){ return ctx==="np" ? npAssignData : ctx==="n2" ? n2AssignData : detailProject.asignaciones; }
 function setAssign(ctx,t,i,k,v){ assignStore(ctx)[t][i][k]=v; }
-function addAssign(ctx,t){ assignStore(ctx)[t].push({nombre:"",email:""}); ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
-function delAssign(ctx,t,i){ assignStore(ctx)[t].splice(i,1); if(!assignStore(ctx)[t].length) assignStore(ctx)[t]=[{nombre:"",email:""}]; ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
+function addAssign(ctx,t){ assignStore(ctx)[t].push({nombre:"",email:"",discord:"",telefono:""}); ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
+function delAssign(ctx,t,i){ assignStore(ctx)[t].splice(i,1); if(!assignStore(ctx)[t].length) assignStore(ctx)[t]=[{nombre:"",email:"",discord:"",telefono:""}]; ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
 
 async function createProject(){
   const nombre = $("#npNombre").value.trim();
@@ -1149,7 +1235,7 @@ async function createProject(){
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"}, calendario:[] };
+        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"}, calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
       proj.tareas = proj.tareas||body.tareas; proj.asignaciones = proj.asignaciones||body.asignaciones;
@@ -1162,6 +1248,7 @@ async function createProject(){
     if(currentView!=="proyectos") switchView("proyectos");
     openDetail(proj.id);
     toast("✔ Proyecto creado, carpetas de Drive y Frame.io listas");
+    rosterSyncFromAsigs(asigs);
   }catch(e){
     toast("Error al crear: "+e.message, true);
   }finally{
@@ -1179,13 +1266,15 @@ let selDay = null;    // 'YYYY-MM-DD' del día seleccionado
 function openDetail(id, readOnly=false){
   detailProject = projects.find(p=>p.id===id);
   if(!detailProject) return;
+  detailSnapshot = JSON.parse(JSON.stringify(detailProject));
+  detailDirty = false; calDirty = false;
   detailReadOnly = readOnly;
   detailProject.tareas = detailProject.tareas||[];
   detailProject.asignaciones = detailProject.asignaciones||{};
   detailProject.taskDates = detailProject.taskDates||{};
   detailProject.calendario = detailProject.calendario||[];
   detailProject.tareas.forEach(t=>{
-    if(!detailProject.asignaciones[t]) detailProject.asignaciones[t]=[{nombre:"",email:""}];
+    if(!detailProject.asignaciones[t]) detailProject.asignaciones[t]=[{nombre:"",email:"",discord:"",telefono:""}];
     if(!detailProject.taskDates[t]) detailProject.taskDates[t]={inicio:"",fin:"",notas:""};
   });
   // sembrar "Entrega Masters" como fase independiente: se carga desde pre-producción, no recién al activar
@@ -1203,16 +1292,15 @@ function openDetail(id, readOnly=false){
 }
 
 const DRIVE_FOLDERS = [
-  ["driveRoot","Carpeta raíz"],
-  ["coord","00. COORD"],
-  ["supervision","01. SUPERVISION - PRE"],
-  ["footage","02. FOOTAGE"],
-  ["recursos","03. RECURSOS"],
-  ["edicion","04. EDICIÓN"],
-  ["delivery","05. DELIVERY"]
+  ["driveRoot","Unidad del proyecto"],
+  ["coord","0. COORD"],
+  ["supervision","1. SUPERVISION"],
+  ["footage","2. FOOTAGE"],
+  ["recursos","3. RECURSOS"],
+  ["editables","4. EDITABLES"]
 ];
 const DRIVE_DOCS = [
-  ["desglose","📊 Desglose"]
+  ["desglose","Desglose"]
 ];
 /* pipeline de estados (orden = flujo del proyecto). color de marca por etapa,
    texto oscuro sobre neón / blanco sobre negro. activo→entregando→cierre son la
@@ -1273,15 +1361,15 @@ function renderDetail(){
   const folders = completado ? DRIVE_FOLDERS.filter(([k])=>k==="driveRoot") : DRIVE_FOLDERS;
   const driveLinks = folders
     .filter(([k])=>p.links && p.links[k])
-    .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">📁 ${l} <span>↗</span></a>`).join("");
+    .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
   // carpeta de finales: desactivada hasta cierre; en cierre roja (acción); en completado, link normal
   const finalesLink = p.links?.finales;
   const finalesHref = finalesLink && finalesLink!=='#';
   const finalesBtn = cierre
-    ? `<a class="finales-btn on" href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 06. FINALES <span>↗</span></a>`
+    ? `<a class="finales-btn on" href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>5. FINALES <span>↗</span></a>`
     : completado
-    ? `<a href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 06. FINALES <span>↗</span></a>`
-    : `<span class="finales-btn off" title="Se habilita cuando el proyecto pasa a cierre">📁 06. FINALES</span>`;
+    ? `<a href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>5. FINALES <span>↗</span></a>`
+    : `<span class="finales-btn off" title="Se habilita cuando el proyecto pasa a cierre">5. FINALES</span>`;
   const docLinks = DRIVE_DOCS
     .filter(([k])=>p.links && p.links[k])
     .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
@@ -1289,11 +1377,11 @@ function renderDetail(){
   const feedbackLink = p.links?.feedback;
   const feedbackHref = feedbackLink && feedbackLink!=='#';
   const feedbackBtn = p.status==="entregando"
-    ? `<a class="finales-btn on" href="${esc(feedbackLink||'#')}"${feedbackHref ? ' target="_blank"' : ' onclick="return false"'}>📝 FEEDBACK <span>↗</span></a>`
-    : `<a href="${esc(feedbackLink||'#')}"${feedbackHref ? ' target="_blank"' : ' onclick="return false"'}>📝 FEEDBACK <span>↗</span></a>`;
-  const trackerBtn = `<a href="#" onclick="openTracker('${p.id}');return false">📊 Tracker de jornadas <span>↗</span></a>`;
+    ? `<a class="finales-btn on" href="${esc(feedbackLink||'#')}"${feedbackHref ? ' target="_blank"' : ' onclick="return false"'}>FEEDBACK <span>↗</span></a>`
+    : `<a href="${esc(feedbackLink||'#')}"${feedbackHref ? ' target="_blank"' : ' onclick="return false"'}>FEEDBACK <span>↗</span></a>`;
+  const trackerBtn = `<a href="#" onclick="openTracker('${p.id}');return false">Tracker de jornadas <span>↗</span></a>`;
   const frameLink = p.links?.frameio
-    ? `<a class="frame-cta" href="${esc(p.links.frameio)}" target="_blank">🎬 Abrir proyecto en Frame.io ↗</a>
+    ? `<a class="frame-cta" href="${esc(p.links.frameio)}" target="_blank">Abrir proyecto en Frame.io ↗</a>
        <div class="sublabel" style="margin-top:10px">Adentro: 1. Footage · 2. Offline · 3. Online · 4. Masters</div>`
     : `<span style="font-size:12.5px;color:var(--gray)">Sin link de Frame.io</span>`;
 
@@ -1310,7 +1398,7 @@ function renderDetail(){
         return `<div class="assign-block"><div class="ttl">${esc(t)} — asignados${range}</div>${rows.map(r=>
           `<div style="font-size:${"var(--fs-caption)"};margin-bottom:4px">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}</div>`).join("")}</div>`;
       }).join("")
-    : p.tareas.map(t=>assignBlockHTML(t, p.asignaciones[t]||[{nombre:"",email:""}], "dt")).join("");
+    : p.tareas.map(t=>assignBlockHTML(t, p.asignaciones[t]||[{nombre:"",email:"",discord:"",telefono:""}], "dt")).join("");
 
   const statusBtns = Object.entries(STATUS_META)
     .filter(([k])=> k!=="por_activarse" || p.status==="por_activarse")   /* en curso: no se vuelve a pre-producción */
@@ -1345,8 +1433,8 @@ function renderDetail(){
   const sintesisContent = (p.sintesis || p.storyboard_url || p.tratamiento_url) ? `
     <div style="margin-top:var(--space-5)">
       ${p.sintesis?`<p style="font-size:16.5px;white-space:pre-line;margin:0">${esc(p.sintesis)}</p>`:""}
-      ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">🎨 Storyboard ↗</a></p>`:""}
-      ${p.tratamiento_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.tratamiento_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">🎨 Tratamiento/Referencias ↗</a></p>`:""}
+      ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Storyboard ↗</a></p>`:""}
+      ${p.tratamiento_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.tratamiento_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Tratamiento/Referencias ↗</a></p>`:""}
     </div>` : "";
   const checklistBlock = checklistHTML(p, ro);
 
@@ -1382,7 +1470,7 @@ function renderDetail(){
         <div><label class="f">Agencia</label><input type="text" value="${esc(p.agencia||"")}" oninput="detailProject.agencia=this.value"></div>
       </div>
       <div class="actions" style="justify-content:flex-start;margin-top:14px">
-        <button class="btn small" onclick="saveProjectInfo()">Guardar datos del proyecto</button>
+        <button class="btn small" onclick="saveProjectInfo(this)">Guardar datos del proyecto</button>
       </div>
       ${sintesisContent}
     </div>`)}
@@ -1432,7 +1520,7 @@ function renderDetail(){
       <div class="${lockTareas?"pills":"task-pills"}">${taskPills}</div>
       ${assigns}
       ${lockTareas?"":`<div class="actions" style="justify-content:flex-start;margin-top:14px">
-        <button class="btn small" onclick="saveTeam()">Guardar cambios de equipo</button>
+        <button class="btn small" onclick="saveTeam(this)">Guardar cambios de equipo</button>
       </div>`}
     </div>`}
 
@@ -1457,7 +1545,7 @@ function renderDetail(){
         ${dayPanelHTML(p, lookMap, lockFields)}
 
         <div class="actions" style="justify-content:flex-start;margin-top:16px">
-          ${lockFields?"":`<button class="btn primary small" onclick="saveCalendar(false)">Guardar calendario y avisar al equipo</button>`}
+          ${lockFields?"":`<button class="btn primary small" onclick="saveCalendar(false,this)">Guardar calendario y avisar al equipo</button>`}
           <button class="btn small" onclick="printCalendar()">Descargar PDF</button>
         </div>
       `}
@@ -1848,7 +1936,7 @@ function dToggleTask(t){
     if(p.taskDates) delete p.taskDates[t];
   } else {
     p.tareas.push(t);
-    if(!p.asignaciones[t]) p.asignaciones[t]=[{nombre:"",email:""}];
+    if(!p.asignaciones[t]) p.asignaciones[t]=[{nombre:"",email:"",discord:"",telefono:""}];
     p.taskDates = p.taskDates||{}; if(!p.taskDates[t]) p.taskDates[t]={inicio:"",fin:"",notas:""};
   }
   renderDetail();
@@ -1869,6 +1957,7 @@ const REQUIRED_FOR_ACTIVATION = [
 
 async function setStatus(s, skipGate=false){
   const p = detailProject;
+  if(s === p.status) return;   /* re-click del mismo estado: no dispara nada */
   /* gate: salir de pre-producción hacia un estado en curso pasa por el checklist de activación */
   if(!skipGate && p.status==="por_activarse" && inProgress(s)){
     const missing = REQUIRED_FOR_ACTIVATION.filter(f=>!String(p[f.key]||"").trim()).map(f=>f.label);
@@ -1922,7 +2011,7 @@ function openGate(target){
   $("#gateName").textContent = p.nombre+" → "+(STATUS_LABEL[target]||target);
   $("#gateItems").innerHTML = (pend?`<div class="gate-warn" style="border-color:var(--ink);background:var(--soft)">Ojo: quedan <b>${pend} candidato${pend>1?"s":""}</b> sin confirmar ni rechazar.</div>`:"") +
     ACT_CHECKLIST.map((t,i)=>`<div class="gate-item"><button class="chk-box" id="gate${i}" onclick="toggleGate(${i})"></button><span class="txt">${esc(t)}</span></div>`).join("");
-  $("#btnGate").textContent = "🚀 Pasar a "+(STATUS_LABEL[target]||target);
+  $("#btnGate").textContent = "Pasar a "+(STATUS_LABEL[target]||target);
   updateGateBtn();
   openModal("ovGate");
 }
@@ -1932,9 +2021,6 @@ function toggleGate(i){
   b.classList.toggle("done", gateChecked[i]);
   b.textContent = gateChecked[i] ? "✓" : "";
   updateGateBtn();
-  if(!DEMO){
-    notifyDiscord({ proyecto:detailProject.nombre, etapa:"gate", item:ACT_CHECKLIST[i], done:gateChecked[i], por:"interno" });
-  }
 }
 function updateGateBtn(){ $("#btnGate").disabled = !gateChecked.every(Boolean); }
 function confirmGate(){
@@ -2000,17 +2086,11 @@ async function toggleChk(etapa, id){
   if(!DEMO){
     try{ await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, checklist_json: JSON.stringify(p.checklist||{}) })}); }
     catch(e){ toast("No pude guardar el checklist: "+e.message, true); }
-    notifyDiscord({ proyecto:p.nombre, etapa, item:it.texto, responsable:it.responsable, done:it.done, por:it.done_por||"interno" });
   }
 }
-/* aviso a Discord (best-effort): si no está configurado el workflow 7, no rompe nada */
-function notifyDiscord(payload){
-  api("/webhook/team23/notify",{method:"POST",body:JSON.stringify(payload)}).catch(()=>{});
-}
-
-function calSet(i,k,v){ detailProject.calendario[i][k]=v; if(k==="inicio" && detailProject.calendario[i].tipo==="hito") detailProject.calendario[i].fin=v; }
-function calAdd(){ detailProject.calendario.push({id:uid(), tipo:"fase", fase:"", inicio:"", fin:"", notas:""}); renderDetail(); }
-function calDel(i){
+function calSet(i,k,v){ calDirty = true; detailProject.calendario[i][k]=v; if(k==="inicio" && detailProject.calendario[i].tipo==="hito") detailProject.calendario[i].fin=v; }
+function calAdd(){ calDirty = true; detailProject.calendario.push({id:uid(), tipo:"fase", fase:"", inicio:"", fin:"", notas:""}); renderDetail(); }
+function calDel(i){ calDirty = true;
   const [removed] = detailProject.calendario.splice(i,1);
   if(removed && removed.id){
     detailProject._deletedCalIds = detailProject._deletedCalIds || [];
@@ -2157,7 +2237,7 @@ function trackerHTML(p){
     return `<div class="trk-empty">Todavía no hay nadie asignado. Cargá Equipo interno y/o asignaciones por tarea en la ficha del proyecto — acá van a aparecer solos.</div>`;
   }
 
-  const rangeLine = `<div class="trk-range">📅 Del calendario del proyecto: <b>${fmtShort(ymd(range.start))} → ${fmtShort(ymd(range.end))}</b> · ${days.length} días</div>`;
+  const rangeLine = `<div class="trk-range">Del calendario del proyecto: <b>${fmtShort(ymd(range.start))} → ${fmtShort(ymd(range.end))}</b> · ${days.length} días</div>`;
 
   const head = `<tr>
     <th class="trk-day">Día</th><th class="trk-date">Fecha</th>
@@ -2199,7 +2279,10 @@ function renderTracker(){
   $("#trkBody").innerHTML = trackerHTML(trkProject);
 }
 
-async function saveProjectInfo(){
+async function saveProjectInfo(btn){
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
   const p = detailProject;
   if(!p.nombre.trim()){ toast("El proyecto necesita un nombre", true); return; }
   if(DEMO){ toast("✔ Datos del proyecto actualizados (demo)"); onProjectsLoaded(); renderDetail(); return; }
@@ -2207,10 +2290,12 @@ async function saveProjectInfo(){
     await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({
       id:p.id, nombre:p.nombre, cliente:p.cliente, agencia:p.agencia, productora:p.productora, director:p.director||""
     })});
+    detailDirty = false; snapDetail();
     toast("✔ Datos del proyecto actualizados");
     onProjectsLoaded();
     renderDetail();
   }catch(e){ toast("Error al guardar: "+e.message,true); }
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
 async function deleteProject(){
@@ -2227,7 +2312,10 @@ async function deleteProject(){
   toast("✔ Proyecto eliminado");
 }
 
-async function saveTeam(){
+async function saveTeam(btn){
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
   const p = detailProject;
   if(DEMO){ toast("✔ Equipo actualizado (demo)"); onProjectsLoaded(); return; }
   try{
@@ -2237,9 +2325,12 @@ async function saveTeam(){
       tareas_json: JSON.stringify(p.tareas), asignaciones_json: JSON.stringify(p.asignaciones),
       taskDates_json: JSON.stringify(p.taskDates||{})
     })});
+    detailDirty = false; snapDetail();
     toast("✔ Equipo actualizado");
+    rosterSyncFromAsigs(p.asignaciones);
     onProjectsLoaded();
   }catch(e){ toast("Error al guardar: "+e.message,true); }
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
 function projectRecipients(p){
@@ -2255,7 +2346,10 @@ function projectRecipients(p){
    por id (1 evento por fase/hito) en lugar de duplicarlos en cada guardado.
    deletedEventIds son los ids de fases/hitos borrados desde el último guardado,
    para que ese mismo workflow borre sus eventos correspondientes en Calendar. */
-async function saveCalendar(isFirst){
+async function saveCalendar(isFirst, btn){
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
   const p = detailProject;
   // entries = unión (fases-desde-tareas + fases/hitos independientes), con id estable
   const entries = allCalEntries(p).filter(e=>e.fase).map(e=>({
@@ -2272,8 +2366,10 @@ async function saveCalendar(isFirst){
       recipients: projectRecipients(p), isFirst
     })});
     p._deletedCalIds = [];
+    detailDirty = false; calDirty = false; snapDetail();
     toast("✔ Calendario guardado, se avisó por mail al equipo");
   }catch(e){ toast("Error al guardar el calendario: "+e.message, true); }
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
 function printCalendar(){
@@ -2331,7 +2427,7 @@ function printCalendar(){
 
 /* ---------------- helpers UI ---------------- */
 function openModal(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; }
-function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; }
+function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; if(id==="ovDirectorio") dirChipClose(true); acClose(); }
 
 /* kick off wizard */
 const KICKOFF_QUESTIONS = [
@@ -2454,6 +2550,7 @@ let kickOffTargetOption = 1;
 function openChooser(){ openModal("ovChooser"); }
 function chooseOption(n){
   closeModal("ovChooser");
+  if(n===2){ openDebrief(); return; }   /* Opción 2: directo al debrief IA, sin kickoff previo */
   kickOffTargetOption = n;
   openKickOff();
 }
@@ -2499,7 +2596,7 @@ async function parseDebrief2(){
     $("#n2Form").style.display="block";
     toast("✔ Debrief analizado, revisá y ajustá antes de crear");
   }catch(e){ toast("No pude analizar el debrief: "+e.message, true); }
-  finally{ btn.disabled=false; btn.textContent="✨ Analizar debrief"; }
+  finally{ btn.disabled=false; btn.textContent="Analizar debrief"; }
 }
 function skipDebrief2(){ $("#n2Form").style.display="block"; }
 
@@ -2513,7 +2610,7 @@ function renderN2Assigns(){
   Object.keys(n2AssignData).forEach(k=>{ if(!n2Selected.has(k)) delete n2AssignData[k]; });
   Object.keys(n2TaskDates).forEach(k=>{ if(!n2Selected.has(k)) delete n2TaskDates[k]; });
   n2Selected.forEach(t=>{
-    if(!n2AssignData[t]) n2AssignData[t]=[{nombre:"",email:""}];
+    if(!n2AssignData[t]) n2AssignData[t]=[{nombre:"",email:"",discord:"",telefono:""}];
     if(!n2TaskDates[t]) n2TaskDates[t]={inicio:"",fin:"",notas:""};
   });
   // misma tarjeta de equipo + fechas que se usa en el alta manual y en la ficha, para no cargar la fecha dos veces
@@ -2560,7 +2657,7 @@ async function createProject2(){
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",edicion:"#",delivery:"#",notas:"#",desglose:"#",tracker:"#",frameio:"#"},
+        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
         calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
@@ -2585,7 +2682,42 @@ async function createProject2(){
   }
 }
 
-document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{ if(e.target===ov) closeModal(ov.id); }));
+/* ---------- cambios sin guardar en la ficha ---------- */
+let detailDirty = false, calDirty = false, detailSnapshot = null;
+function snapDetail(){ if(detailProject) detailSnapshot = JSON.parse(JSON.stringify(detailProject)); }
+function requestCloseDetail(){
+  if(detailDirty || calDirty){ openModal("ovConfirm"); return; }
+  closeModal("ovDetail");
+}
+async function confirmSaveExit(btn){
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
+    if(detailDirty){ await saveProjectInfo(); await saveTeam(); }
+    if(calDirty){ await saveCalendar(false); }
+    detailDirty = false; calDirty = false;
+    closeModal("ovConfirm"); closeModal("ovDetail");
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
+}
+function confirmDiscard(){
+  if(detailSnapshot){
+    const i = projects.findIndex(p=>p.id===detailSnapshot.id);
+    if(i>=0) projects[i] = JSON.parse(JSON.stringify(detailSnapshot));
+  }
+  detailDirty = false; calDirty = false;
+  closeModal("ovConfirm"); closeModal("ovDetail");
+  onProjectsLoaded();
+}
+const _ovDet = $("#ovDetail");
+if(_ovDet){
+  _ovDet.addEventListener("input", ()=>{ detailDirty = true; });
+  _ovDet.addEventListener("change", ()=>{ detailDirty = true; });
+}
+document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{
+  if(e.target!==ov) return;
+  if(ov.id==="ovDetail"){ requestCloseDetail(); return; }
+  closeModal(ov.id);
+}));
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id)); });
 
 let toastTimer;
@@ -2613,7 +2745,367 @@ $("#yr").textContent = new Date().getFullYear();
 if(DEMO) $("#demoBanner").style.display="block";
 currentView = VIEW_TITLES[location.hash.slice(1)] ? location.hash.slice(1) : "dashboard";
 applyViewUI(currentView);
-loadProjects();
+/* ---------------- login (Supabase) ---------------- */
+let sb = null, authUser = null;
+const AUTH_ON = !!CONFIG.SUPABASE_URL;
+function startApp(){ loadProjects(); }
+async function initAuth(){
+  if(!AUTH_ON){ startApp(); return; }
+  const gate = $("#authGate"); gate.style.display = "flex";
+  try{
+    const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+    sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session){ authEnter(session); return; }
+    location.replace("/login");
+  }catch(e){ $("#agMsg").textContent = "No pude conectar con el login ("+e.message+"). Recargá la página."; }
+}
+async function authEnter(session){
+  authUser = session.user;
+  try{
+    const { data, error } = await sb.from("profiles").select("role,subrol").eq("id", authUser.id).single();
+    if(error) throw error;
+    if(data.role !== "interno"){ location.replace("/proveedores"); return; }
+    $("#authGate").style.display = "none";
+    $("#btnLogout").style.display = "";
+    $("#btnUsers").style.display = "";
+    $("#btnDirectorio").style.display = "";
+    rosterEnsure().catch(()=>{});   /* precarga el directorio para el autocompletado de asignaciones */
+    startApp();
+  }catch(e){
+    $("#agMsg").textContent = "No pude verificar tu cuenta ("+e.message+"). Probá recargar.";
+  }
+}
+
+function authLogout(){ if(sb) sb.auth.signOut().then(()=>location.replace("/login")); else location.replace("/login"); }
+
+/* ---------------- directorio (base de proveedores) ---------------- */
+let dirData = null;            /* {headers, rows:[{n,v,check}]} */
+let dirSortCol = -1, dirSortAsc = true, dirOld = "";
+
+function syncPillShow(on){ const el = document.getElementById("syncPill"); if(el) el.style.display = on ? "" : "none"; }
+
+async function dirToken(){
+  if(!sb) throw new Error("sin sesión");
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session) throw new Error("sin sesión");
+  return session.access_token;
+}
+function openDirectorio(){
+  openModal("ovDirectorio");
+  if(!dirData) dirLoad(); else dirRender();
+}
+async function dirLoad(force){
+  $("#dirBody").innerHTML = '<p style="font-size:13px;color:var(--gray);padding:12px">Cargando el directorio…</p>';
+  try{
+    const token = await dirToken();
+    const data = await api("/webhook/team23/roster",{method:"POST",body:JSON.stringify({accion:"listar",token})});
+    if(!data.ok) throw new Error(data.error||"respuesta inválida");
+    dirData = { headers: data.headers||[], rows: (data.rows||[]).map(r=>({ n:r.n, v:r.v, check:String(r.v[0]||"") })) };
+    dirSortCol = -1; dirSortAsc = true;
+    dirRender();
+  }catch(e){
+    const msg = /403/.test(e.message) ? "solo productores pueden ver esta lista" : e.message;
+    $("#dirBody").innerHTML = '<p style="font-size:13px;color:var(--red);padding:12px">No pude cargar el directorio ('+esc(msg)+')</p>';
+  }
+}
+function dirSort(c){
+  if(!dirData) return;
+  if(dirSortCol===c) dirSortAsc = !dirSortAsc; else { dirSortCol = c; dirSortAsc = true; }
+  const num = v => { const x = parseFloat(String(v).replace(",", ".")); return isNaN(x) ? null : x; };
+  dirData.rows.sort((a,b)=>{
+    const va = a.v[c]||"", vb = b.v[c]||"";
+    if(va==="" && vb!=="") return 1;   /* vacíos al final, siempre */
+    if(vb==="" && va!=="") return -1;
+    const na = num(va), nb = num(vb);
+    const r = (na!==null && nb!==null) ? na-nb : String(va).localeCompare(String(vb),"es",{sensitivity:"base"});
+    return dirSortAsc ? r : -r;
+  });
+  dirRender();
+}
+function dirRender(){
+  if(!dirData) return;
+  const q = ($("#dirSearch").value||"").trim().toLowerCase();
+  const rows = q ? dirData.rows.filter(r=>r.v.some(x=>String(x).toLowerCase().includes(q))) : dirData.rows;
+  $("#dirCount").textContent = rows.length + " de " + dirData.rows.length;
+  const flecha = i => dirSortCol===i ? (dirSortAsc?" ▲":" ▼") : "";
+  const thead = "<tr>"+dirData.headers.map((h,i)=>`<th onclick="dirSort(${i})">${esc(h)}${flecha(i)}</th>`).join("")+"</tr>";
+  const body = rows.map(r=>{
+    const idx = dirData.rows.indexOf(r);
+    return "<tr>"+r.v.map((cell,c)=>{
+      if(dirChipCfg(c)){
+        const chips = String(cell||"").split(",").map(s=>s.trim()).filter(Boolean).map(s=>`<span class="dchip">${esc(s)}</span>`).join("") || '<span class="dchip-empty">+ elegir</span>';
+        return `<td class="dir-chipcell" data-r="${idx}" data-c="${c}" onclick="dirChipOpen(this)">${chips}</td>`;
+      }
+      return `<td contenteditable="true" data-r="${idx}" data-c="${c}" onfocus="dirFocus(this)" onblur="dirBlur(this)" onkeydown="dirKey(event)">${esc(cell)}</td>`;
+    }).join("")+"</tr>";
+  }).join("");
+  $("#dirBody").innerHTML = `<table class="dir-table"><thead>${thead}</thead><tbody>${body}</tbody></table>`;
+}
+function dirFocus(td){ dirOld = td.textContent; }
+function dirKey(e){ if(e.key==="Enter"){ e.preventDefault(); e.target.blur(); } }
+async function dirSaveCellRemote(r, c, val, el){
+  const row = dirData.rows[r];
+  const previo = row.v[c];
+  if(val === previo) return true;
+  row.v[c] = val;
+  if(el) el.style.opacity = ".45";
+  try{
+    const token = await dirToken();
+    const data = await api("/webhook/team23/roster",{method:"POST",body:JSON.stringify({accion:"actualizar",token,fila:row.n,check:row.check,valores:row.v})});
+    if(!data.ok) throw new Error(data.error||"no se pudo guardar");
+    if(c===0) row.check = val;
+    toast("✔ Directorio actualizado");
+    return true;
+  }catch(e){
+    row.v[c] = previo;
+    toast("No pude guardar: "+e.message, true);
+    dirLoad(true);   /* algo cambió en el sheet: traer la verdad de nuevo */
+    return false;
+  }finally{ if(el) el.style.opacity = ""; }
+}
+async function dirBlur(td){
+  const val = td.textContent.trim();
+  if(val === dirOld) return;
+  await dirSaveCellRemote(Number(td.dataset.r), Number(td.dataset.c), val, td);
+}
+
+/* ---------------- roster: autocompletar, sync y chips ---------------- */
+let rosterLoading = null;
+function rosterNorm(s){ return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase(); }
+function rosterCols(){
+  const h = (dirData ? dirData.headers : []).map(rosterNorm);
+  const find = (...keys) => h.findIndex(x => keys.some(k => x.includes(k)));
+  return { nombre: find("nombre"), mail: find("mail","correo"), discord: find("discord"), tel: find("tel") };
+}
+function rosterEnsure(){
+  if(dirData) return Promise.resolve(dirData);
+  if(rosterLoading) return rosterLoading;
+  rosterLoading = (async ()=>{
+    const token = await dirToken();
+    const data = await api("/webhook/team23/roster",{method:"POST",body:JSON.stringify({accion:"listar",token})});
+    if(!data.ok) throw new Error(data.error||"no pude leer el directorio");
+    dirData = { headers: data.headers||[], rows: (data.rows||[]).map(r=>({ n:r.n, v:r.v, check:String(r.v[0]||"") })) };
+    return dirData;
+  })().finally(()=>{ rosterLoading = null; });
+  return rosterLoading;
+}
+/* autocompletado de nombres: aparece recién desde la primera letra, ancho del input, estilo del hub */
+let acState = null;
+function acPanel(){
+  let p = document.getElementById("acPanel");
+  if(!p){ p = document.createElement("div"); p.id = "acPanel"; document.body.appendChild(p); }
+  return p;
+}
+function acClose(){ const p = document.getElementById("acPanel"); if(p) p.style.display = "none"; acState = null; }
+function acOpen(input, ctx, t, i){
+  const q = rosterNorm(input.value);
+  if(!q || !dirData){ acClose(); return; }   /* con el cuadro vacío no se muestra nada */
+  const cols = rosterCols();
+  if(cols.nombre < 0){ acClose(); return; }
+  const vistos = new Set(), empiezan = [], contienen = [];
+  dirData.rows.forEach(r=>{
+    const n = String(r.v[cols.nombre]||"").trim();
+    if(!n) return;
+    const k = rosterNorm(n);
+    if(vistos.has(k)) return;
+    vistos.add(k);
+    if(k.startsWith(q)) empiezan.push(n);
+    else if(k.includes(q)) contienen.push(n);
+  });
+  const items = empiezan.concat(contienen).slice(0, 8);
+  if(!items.length){ acClose(); return; }
+  acState = { input, ctx, t, i, items, hi: -1 };
+  const p = acPanel();
+  p.innerHTML = items.map((n,ix)=>`<div class="ac-item" onmousedown="event.preventDefault();acPick(${ix})">${esc(n)}</div>`).join("");
+  const r = input.getBoundingClientRect();
+  p.style.display = "block";
+  p.style.left = r.left + "px";
+  p.style.top = (r.bottom + 2) + "px";
+  p.style.width = r.width + "px";
+}
+function acPick(ix){
+  if(!acState) return;
+  const { input, ctx, t, i, items } = acState;
+  input.value = items[ix];
+  setAssign(ctx, t, i, "nombre", items[ix]);
+  asigAutofill(input, ctx, t, i);
+  acClose();
+}
+function acKey(e){
+  if(!acState || acState.input !== e.target) return;
+  const n = acState.items.length;
+  if(e.key === "ArrowDown" || e.key === "ArrowUp"){
+    e.preventDefault();
+    acState.hi = ((acState.hi + (e.key === "ArrowDown" ? 1 : -1)) + n) % n;
+    [...acPanel().children].forEach((el,ix)=>el.classList.toggle("on", ix === acState.hi));
+  }else if(e.key === "Enter" && acState.hi >= 0){
+    e.preventDefault(); acPick(acState.hi);
+  }else if(e.key === "Escape"){ acClose(); }
+}
+function acBlur(input, ctx, t, i){
+  setTimeout(acClose, 150);
+  asigAutofill(input, ctx, t, i);   /* si tipeaste el nombre completo sin elegir, igual autocompleta el resto */
+}
+function rosterFind(nombre){
+  if(!dirData) return null;
+  const cols = rosterCols();
+  const q = rosterNorm(nombre);
+  if(!q || cols.nombre < 0) return null;
+  return dirData.rows.find(r=>rosterNorm(r.v[cols.nombre])===q) || null;
+}
+function asigAutofill(input, ctx, t, i){
+  const fila = rosterFind(input.value);
+  if(!fila) return;
+  const cols = rosterCols();
+  const rowEl = input.closest(".assign-row");
+  const setIf = (selector, campo, colIdx) => {
+    if(colIdx < 0) return;
+    const el = rowEl.querySelector(selector);
+    const val = String(fila.v[colIdx]||"").trim();
+    if(el && !el.value && val){ el.value = val; setAssign(ctx, t, i, campo, val); }
+  };
+  setIf('input[type=email]', 'email', cols.mail);
+  setIf('input[placeholder="Discord"]', 'discord', cols.discord);
+  setIf('input[type=tel]', 'telefono', cols.tel);
+}
+async function rosterSyncFromAsigs(asigs){
+  try{
+    await rosterEnsure();
+    const cols = rosterCols();
+    const porFila = new Map();
+    Object.values(asigs||{}).forEach(rows=>(rows||[]).forEach(r=>{
+      const fila = rosterFind(r.nombre); if(!fila) return;
+      const pend = porFila.get(fila) || {};
+      [["email",cols.mail],["discord",cols.discord],["telefono",cols.tel]].forEach(([campo,c])=>{
+        const val = String(r[campo]||"").trim();
+        if(c>=0 && val && !String(fila.v[c]||"").trim()) pend[c] = val;   /* solo completa celdas vacías del sheet */
+      });
+      if(Object.keys(pend).length) porFila.set(fila, pend);
+    }));
+    if(!porFila.size) return;
+    const token = await dirToken();
+    let okCount = 0;
+    for(const [fila, pend] of porFila){
+      const valores = fila.v.slice();
+      Object.entries(pend).forEach(([c,val])=>{ valores[Number(c)] = val; });
+      const data = await api("/webhook/team23/roster",{method:"POST",body:JSON.stringify({accion:"actualizar",token,fila:fila.n,check:fila.check,valores})});
+      if(data.ok){ fila.v = valores; okCount++; }
+    }
+    if(okCount) toast("✔ Directorio completado con datos del proyecto ("+okCount+(okCount>1?" filas":" fila")+")");
+  }catch(e){ /* sync en segundo plano: si falla, no molesta al guardado del proyecto */ }
+}
+
+/* chips desplegables del directorio */
+const DIR_CHIP_COLS = { "especialidad":{multi:true}, "herramientas":{multi:true}, "acuerdo":{multi:false}, "pais":{multi:false} };
+function dirChipCfg(c){ if(!dirData) return null; return DIR_CHIP_COLS[rosterNorm(dirData.headers[c])] || null; }
+let dirChip = null;
+function dirChipPanel(){
+  let p = document.getElementById("dirChipPanel");
+  if(!p){ p = document.createElement("div"); p.id = "dirChipPanel"; document.body.appendChild(p); }
+  return p;
+}
+function dirChipOptions(c){
+  const map = new Map();
+  dirData.rows.forEach(r=>String(r.v[c]||"").split(",").map(s=>s.trim()).filter(Boolean).forEach(v=>{
+    const k = rosterNorm(v); if(!map.has(k)) map.set(k, v);
+  }));
+  return [...map.values()].sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base"}));
+}
+function dirChipOpen(td){
+  dirChipClose(true);
+  const r = Number(td.dataset.r), c = Number(td.dataset.c);
+  const cfg = dirChipCfg(c); if(!cfg) return;
+  const sel = new Set(String(dirData.rows[r].v[c]||"").split(",").map(s=>s.trim()).filter(Boolean));
+  const opts = dirChipOptions(c);
+  sel.forEach(v=>{ if(!opts.some(o=>rosterNorm(o)===rosterNorm(v))) opts.push(v); });
+  dirChip = { r, c, multi: cfg.multi, sel, opts, original: String(dirData.rows[r].v[c]||"") };
+  dirChipRenderPanel();
+  const panel = dirChipPanel();
+  const rect = td.getBoundingClientRect();
+  panel.style.display = "block";
+  panel.style.left = Math.max(8, Math.min(rect.left, window.innerWidth-360)) + "px";
+  panel.style.top = Math.max(8, Math.min(rect.bottom+4, window.innerHeight-330)) + "px";
+  setTimeout(()=>document.addEventListener("mousedown", dirChipOutside), 0);
+}
+function dirChipRenderPanel(){
+  const opts = dirChip.opts.map((v,i)=>`<span class="dchip-opt ${dirChip.sel.has(v)?"on":""}" onclick="dirChipToggle(${i})">${esc(v)}</span>`).join("");
+  dirChipPanel().innerHTML = `
+    <div class="dchip-title">${esc(dirData.headers[dirChip.c])} · ${dirChip.multi?"varias opciones":"una opción"}</div>
+    <div class="dchip-opts">${opts||'<span style="font-size:12px;color:var(--gray)">Sin valores todavía</span>'}</div>
+    <div class="dchip-addrow"><input id="dirChipNew" type="text" placeholder="Agregar otro valor…" onkeydown="if(event.key==='Enter'){event.preventDefault();dirChipAdd()}"><button class="btn small" onclick="dirChipAdd()">+</button></div>
+    <div style="text-align:right;margin-top:8px"><button class="btn small" onclick="dirChipClose(true)">Listo ✓</button></div>`;
+}
+function dirChipToggle(i){
+  const v = dirChip.opts[i];
+  if(dirChip.multi){ dirChip.sel.has(v) ? dirChip.sel.delete(v) : dirChip.sel.add(v); }
+  else { const ya = dirChip.sel.has(v); dirChip.sel.clear(); if(!ya) dirChip.sel.add(v); }
+  dirChipRenderPanel();
+}
+function dirChipAdd(){
+  const inp = document.getElementById("dirChipNew");
+  const v = (inp.value||"").trim();
+  if(!v) return;
+  if(!dirChip.opts.some(o=>rosterNorm(o)===rosterNorm(v))) dirChip.opts.push(v);
+  if(!dirChip.multi) dirChip.sel.clear();
+  dirChip.sel.add(dirChip.opts.find(o=>rosterNorm(o)===rosterNorm(v)));
+  inp.value = "";
+  dirChipRenderPanel();
+}
+function dirChipOutside(e){ if(!dirChipPanel().contains(e.target)) dirChipClose(true); }
+function dirChipClose(save){
+  document.removeEventListener("mousedown", dirChipOutside);
+  const panel = document.getElementById("dirChipPanel");
+  if(panel) panel.style.display = "none";
+  if(!dirChip) return;
+  const chip = dirChip; dirChip = null;
+  if(save){
+    const nuevo = chip.opts.filter(v=>chip.sel.has(v)).join(", ");
+    if(nuevo !== chip.original){
+      dirSaveCellRemote(chip.r, chip.c, nuevo).then(()=>dirRender());
+    }
+  }
+}
+
+/* ---------------- panel de usuarios ---------------- */
+async function openUsers(){
+  openModal("ovUsers");
+  $("#usersBody").innerHTML = '<p style="font-size:13px;color:var(--gray)">Cargando…</p>';
+  try{
+    const { data, error } = await sb.from("profiles").select("id,email,nombre,role,subrol,created_at").order("created_at",{ascending:false});
+    if(error) throw error;
+    renderUsers(data || []);
+  }catch(e){ $("#usersBody").innerHTML = '<p style="font-size:13px;color:var(--red)">No pude cargar los usuarios ('+esc(e.message)+'). ¿Corriste la migración SQL del panel?</p>'; }
+}
+function renderUsers(rows){
+  if(!rows.length){ $("#usersBody").innerHTML = '<p style="font-size:13px;color:var(--gray)">Todavía no se registró nadie.</p>'; return; }
+  $("#usersBody").innerHTML = `<table class="usr-table"><thead><tr><th>Usuario</th><th>Rol</th><th></th></tr></thead><tbody>` +
+    rows.map(u=>{
+      const interno = u.role === "interno";
+      const self = authUser && u.id === authUser.id;
+      return `<tr>
+        <td><b>${esc(u.nombre || u.email)}</b><br><span style="color:var(--gray);font-size:12px">${esc(u.email)}</span></td>
+        <td><span class="usr-badge ${interno?'in':'out'}">${interno?"PRODUCTOR"+(u.subrol?" · "+esc(u.subrol.toUpperCase()):""):"PROVEEDOR"}</span></td>
+        <td style="text-align:right">${self ? '<span style="font-size:11.5px;color:var(--gray)">Sos vos</span>'
+          : `<button class="btn small" onclick="setUserRole('${u.id}','${esc(u.email)}','${interno?"proveedor":"interno"}',this)">${interno?"Pasar a proveedor":"Pasar a productor"}</button>`}</td>
+      </tr>`;
+    }).join("") + `</tbody></table>`;
+}
+async function setUserRole(id, email, role, btn){
+  btn.disabled = true; btn.textContent = "Guardando…";
+  try{
+    const { error } = await sb.from("profiles").update({ role }).eq("id", id);
+    if(error) throw error;
+    if(role === "interno"){
+      await sb.from("internal_emails").upsert({ email: email.toLowerCase(), subrol: "productor" });
+    }else{
+      await sb.from("internal_emails").delete().eq("email", email.toLowerCase());
+    }
+    toast("✔ Rol actualizado. El cambio aplica en su próximo ingreso.");
+    openUsers();
+  }catch(e){ toast("No pude cambiar el rol: "+e.message, true); btn.disabled = false; }
+}
+initAuth();
 </script>
 </body>
 </html>

@@ -33,7 +33,7 @@
             {
               "id": "c1",
               "name": "dbSheetId",
-              "value": "PEGAR_DB_SHEET_ID",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
               "type": "string"
             }
           ]
@@ -219,11 +219,8 @@
           "value": "Projects"
         },
         "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "id": "={{ $('Reconstruir').first().json.projectId || $('Webhook').first().json.body.projectId }}",
-            "taskDates_json": "={{ $('Webhook').first().json.body.taskDates_json || '{}' }}"
-          },
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [
             "id"
           ],
@@ -245,6 +242,88 @@
         "googleSheetsOAuth2Api": {
           "id": "REEMPLAZAR",
           "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const w = $('Webhook').first().json.body;\nreturn [{ json: { id: w.id, taskDates_json: JSON.stringify(w.taskDates || {}) } }];"
+      },
+      "id": "db000005-0000-0000-0000-000000000001",
+      "name": "Fila taskDates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1260,
+        -240
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "options": {}
+      },
+      "id": "d5d00001-0000-0000-0000-00000000b001",
+      "name": "Leer Projects",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1640,
+        -120
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook').first().json.body || {};\nconst filas = $('Leer Projects').all().map(i => i.json);\nconst p = filas.find(r => String(r.id) === String(body.projectId));\nconst canal = p ? String(p.discord_avisos_id || '').replace(/^'+/, '') : '';\nif (!canal) return [];\nconst rec = $('Reconstruir').first().json;\nconst entradas = body.entries || [];\nconst fases = entradas.filter(e => e.tipo !== 'hito');\nconst hitos = entradas.filter(e => e.tipo === 'hito');\nconst fmt = d => d || 'sin fecha';\nconst lineas = ['\\ud83d\\udcc5 **' + (rec.projectName || p.nombre || 'Proyecto') + '**: ' + (rec.isFirst ? 'calendario definido' : 'calendario actualizado')];\nfases.slice(0, 12).forEach(e => lineas.push('\\u2022 ' + (e.fase || 'Fase') + ': ' + fmt(e.inicio) + ' a ' + fmt(e.fin)));\nhitos.slice(0, 8).forEach(e => lineas.push('\\u25c6 ' + (e.fase || 'Hito') + ': ' + fmt(e.inicio)));\nconst resto = Math.max(0, fases.length - 12) + Math.max(0, hitos.length - 8);\nif (resto > 0) lineas.push('y ' + resto + ' m\\u00e1s en el hub');\nlet content = lineas.join('\\n');\nif (content.length > 1900) content = content.slice(0, 1900) + '\\u2026';\nreturn [{ json: { channelId: canal, content } }];"
+      },
+      "id": "d5d00002-0000-0000-0000-00000000b002",
+      "name": "Aviso de calendario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1860,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+        "options": {}
+      },
+      "id": "d5d00003-0000-0000-0000-00000000b003",
+      "name": "Discord: avisar calendario",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2080,
+        -120
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
         }
       }
     }
@@ -336,7 +415,51 @@
       "main": [
         [
           {
+            "node": "Fila taskDates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fila taskDates": {
+      "main": [
+        [
+          {
             "node": "Guardar taskDates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar taskDates": {
+      "main": [
+        [
+          {
+            "node": "Leer Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Projects": {
+      "main": [
+        [
+          {
+            "node": "Aviso de calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso de calendario": {
+      "main": [
+        [
+          {
+            "node": "Discord: avisar calendario",
             "type": "main",
             "index": 0
           }

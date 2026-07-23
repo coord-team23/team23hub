@@ -23,7 +23,7 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 |---|----------|---------|----------|
 | 1 | Setup DB | (manual, se corre 1 vez) | Crea el spreadsheet TEAM23_DB con tabs Projects y Calendar |
 | 2 | Get Projects | `GET /webhook/team23/projects` | Devuelve todos los proyectos + calendarios a la página |
-| 3 | Crear Proyecto | `POST /webhook/team23/create` | Crea carpeta raíz en Drive + las 6 carpetas + subcarpetas de FOOTAGE y DELIVERY + copia Desglose y Tracker + crea el proyecto en Frame.io con sus 4 carpetas + guarda el registro (incluye `director`, `taskDates_json`, `sintesis`, `storyboard_url` si vienen en el body) |
+| 3 | Crear Proyecto | `POST /webhook/team23/create` | Crea una **Unidad compartida** de Drive por proyecto (y suma al equipo como miembros) con toda la estructura modelo + copia Desglose, Brief y Feedback en `00. PLANTILLAS-DOCUMENTOS` + crea el proyecto en Frame.io con sus 4 carpetas + guarda el registro (incluye `director`, `taskDates_json`, `sintesis`, `storyboard_url` si vienen en el body) |
 | 4 | Actualizar Proyecto | `POST /webhook/team23/update` | Edita nombre/cliente/agencia/productora/**director**, equipo, tareas, asignaciones (incluye `estado` de candidatos), **`taskDates_json`**, `checklist_json` y estado (según qué campos vengan en el body) |
 | 5 | Guardar Calendario | `POST /webhook/team23/calendar` | Guarda el calendario y manda mail a todos los involucrados |
 | 6 | Parse Debrief (IA) | `POST /webhook/team23/parse` | Analiza el texto de un debrief con Claude y devuelve nombre/cliente/agencia/productora/síntesis/tareas/timeline sugeridos, para precargar el alta de proyecto (Opción 2) |
@@ -32,26 +32,45 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 
 **Eliminar proyecto** (`POST /webhook/team23/delete`, recibe `{id}`) todavía no tiene un workflow armado en esta carpeta — hay que crearlo a mano en n8n (borra la fila del Sheet por `id`; no borra la carpeta de Drive ni el proyecto en Frame.io, eso se hace aparte si corresponde).
 
-**Estructura que crea en Drive por cada proyecto:**
+**Estructura que crea en Drive por cada proyecto** (la raíz es una **Unidad compartida**, no una carpeta):
 
 ```
-{NOMBRE DEL PROYECTO}/
-├── 00. COORD/
-│   ├── {Proyecto} — Desglose     (copia de tu planilla de desglose)
-│   └── {Proyecto} — Tracker      (copia de tu tracker)
-├── 01. SUPERVISION - PRE/
-├── 02. FOOTAGE/
-│   ├── 00. Armados/  01. Cámara/  02. Animaciones/  03. Sobreimpresos/
-├── 03. RECURSOS/
-├── 04. EDICIÓN/
-├── 05. DELIVERY/
-│   ├── 00. Pre-Online/  01. VFX/  02. Para Color/  03. WIP pCliente/  04. Masters/
-└── 06. FINALES/                    (entregas finales; el hub la muestra como botón)
+{NOMBRE DEL PROYECTO}/            ← Unidad compartida
+├── 0. COORD/
+│   ├── 00. PLANTILLAS-DOCUMENTOS/
+│   │   ├── {Proyecto} — Desglose    (copia de tu planilla)
+│   │   ├── {Proyecto} — Brief       (copia de tu template)
+│   │   ├── {Proyecto} — Feedback    (copia de tu template)
+│   │   └── {Proyecto} — Notas       (doc nuevo)
+│   └── 01. KIT DE POST/
+├── 1. SUPERVISION/
+│   └── 00. OCF/  01. PROXY/  03. CC/
+├── 2. FOOTAGE/
+│   └── 00. OCF/  01. PROXY/  03. CC/
+├── 3. RECURSOS/
+│   └── 1. [3D]_{Proyecto}/  2. [GRÁFICAS]_{Proyecto}/  3. [VFX]_{Proyecto}/  4. [MOTION]_{Proyecto}/  5. [CONFORMADO]_{Proyecto}/
+├── 4. EDITABLES/
+└── 5. FINALES/
 ```
+
+Las carpetas por plano (dentro de GRÁFICAS y VFX) no se crean automáticamente: esas las arma el equipo a medida que se definen los planos.
+
+**Estructura que crea en Frame.io por cada proyecto:**
+
+```
+{NOMBRE DEL PROYECTO}
+├── 00. OFFLINE
+├── 01. POST
+│   ├── 00.WIP
+│   └── 01.FINALES
+├── 02. ONLINE
+└── 03. MASTERS
+```
+
 
 > El botón **06. FINALES** de la ficha abre `links.finales`. Para que funcione, el workflow de creación (y/o el de Get Projects) debe crear esa carpeta y devolver su URL en `links.finales` junto al resto de los links. Si no viene, el botón igual aparece: desactivado fuera de cierre y en rojo (sin destino) al entrar en cierre.
 >
-> El botón **FEEDBACK** abre `links.feedback` — un doc de Drive para centralizar feedback del cliente. Siempre está visible, pero solo se resalta en rojo mientras el proyecto está en **Entregando**; en el resto de las etapas se ve como un link normal. Si el workflow de creación no crea ese doc todavía, el botón queda visible pero sin destino real (podés crearlo a mano y pegar el link en `links_json` del Sheet mientras tanto).
+> El botón **FEEDBACK** abre `links.feedback` — un doc de Drive para centralizar feedback del cliente. Siempre está visible, pero solo se resalta en rojo mientras el proyecto está en **Entregando**; en el resto de las etapas se ve como un link normal. El workflow de creación ya lo genera solo: copia tu template de Feedback en `00. COORD` y guarda el link, así el botón apunta a un doc real desde el día uno.
 
 **En Frame.io:** proyecto con carpetas `1. Footage / 2. Offline / 3. Online / 4. Masters`.
 
@@ -63,7 +82,7 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 
 Entrá a tu n8n → **Credentials** → creá estas (las de Google probablemente ya las tenés):
 
-1. **Google Drive OAuth2** — la misma cuenta donde querés que vivan los proyectos.
+1. **Google Drive OAuth2** — la misma cuenta donde querés que vivan los proyectos. ⚠️ Como el workflow 3 crea **Unidades compartidas**, tiene que ser una cuenta de **Google Workspace** (Business Standard o superior) con permiso para crear unidades; una cuenta @gmail.com personal no puede y la creación de proyectos va a fallar.
 2. **Google Sheets OAuth2** — misma cuenta.
 3. **Google Docs OAuth2** — misma cuenta.
 4. **Gmail OAuth2** — la casilla desde la que salen los avisos de calendario.
@@ -94,24 +113,42 @@ En los workflows **2, 3, 4, 5 y 6** hay un nodo llamado **CONFIG**. Pegá ahí:
 
 - `dbSheetId` → el ID del paso 3 (en los 4 workflows).
 - Solo en el workflow 3, además:
-  - `parentFolderId` → ID de la carpeta madre de Drive donde van a vivir todos los proyectos (creá una carpeta "PROYECTOS TEAM23", abrila, y el ID es lo que está después de `/folders/` en la URL).
-  - `desgloseTemplateId` y `trackerTemplateId` → **ya están precargados** con tus dos planillas. La cuenta de Google conectada en n8n tiene que tener acceso a esas planillas para poder copiarlas.
+  - `driveMembers` → los mails del equipo separados por coma (ej: `vos@team23.online, eyal@team23.online`). Cada proyecto nuevo crea su propia Unidad compartida, y como las unidades **no heredan permisos de ninguna carpeta madre**, el workflow agrega estos mails como Administradores de la unidad al crearla. Si queda vacío, la unidad solo la ve la cuenta de Google conectada en n8n. (Ya no existe `parentFolderId`: las unidades no viven adentro de una carpeta.)
+  - `desgloseTemplateId`, `briefTemplateId` y `feedbackTemplateId` → **ya están precargados** con tus tres plantillas actuales (desglose, brief y feedback). La cuenta de Google conectada en n8n tiene que tener acceso a esas plantillas para poder copiarlas. (Ya no existe `trackerTemplateId`: el tracker de jornadas vive dentro del hub.)
   - `frameAccountId` y `frameWorkspaceId` → ver abajo.
 
-**Cómo obtener los IDs de Frame.io (API v4):**
+**Autenticación con Frame.io (API v4 · OAuth de usuario):**
+
+Los tres nodos de Frame del workflow 3 (Crear proyecto, Crear carpetas, Crear subcarpetas) usan los endpoints **v4** con **OAuth Web App** (autenticación de usuario de Adobe). Este método no requiere el entitlement enterprise que pide Server-to-Server, así que se puede crear con una cuenta normal. La credencial actúa "como vos" (con tus permisos de Frame) y n8n renueva el token solo.
+
+**En el Adobe Developer Console** ([developer.adobe.com/console](https://developer.adobe.com/console)):
+1. Abrí tu proyecto de Frame.io → **Add API → Frame.io API** → credencial **OAuth Web App**.
+2. Te va a pedir un **Redirect URI**: lo sacás de n8n (ver abajo), pegalo acá y guardá.
+3. Copiá el **Client ID** y el **Client Secret** que te da.
+
+**En n8n:**
+1. **Credentials → Add credential → OAuth2 API**, nombre `Frame.io OAuth2`.
+2. Copiá el **OAuth Redirect URL** que muestra n8n (tipo `https://n8n.rawmarketing.co/rest/oauth2-credential/callback`) y pegalo como Redirect URI en Adobe (paso 2 de arriba).
+3. Completá:
+   - **Grant Type**: `Authorization Code`
+   - **Authorization URL**: `https://ims-na1.adobelogin.com/ims/authorize/v2`
+   - **Access Token URL**: `https://ims-na1.adobelogin.com/ims/token/v3`
+   - **Client ID / Client Secret**: los de Adobe
+   - **Scope**: `openid email profile offline_access additional_info.roles`
+   - **Authentication**: `Header`
+4. Tocá **Connect**, iniciá sesión en la ventana de Adobe y autorizá. Queda conectada.
+5. Asigná la credencial `Frame.io OAuth2` a los tres nodos de Frame del workflow 3.
+
+El scope `offline_access` es el que hace que Adobe devuelva un refresh token; sin él, el acceso se corta al rato y hay que volver a loguearse. Como la credencial actúa como tu usuario, los proyectos y carpetas creados por el workflow figuran a tu nombre en Frame.io.
+
+**Cómo obtener los IDs para el CONFIG:**
 
 ```
-curl -H "Authorization: Bearer TU_TOKEN" https://api.frame.io/v4/accounts
-curl -H "Authorization: Bearer TU_TOKEN" https://api.frame.io/v4/accounts/{account_id}/workspaces
+curl -H "Authorization: Bearer TU_ACCESS_TOKEN" https://api.frame.io/v4/accounts
+curl -H "Authorization: Bearer TU_ACCESS_TOKEN" https://api.frame.io/v4/accounts/{account_id}/workspaces
 ```
 
-El primer comando te da el `account_id`, el segundo el `workspace_id` del workspace donde querés que se creen los proyectos.
-
-> **Si tu cuenta usa la API legacy (v2):** los endpoints cambian. En el workflow 3, editá los dos nodos de Frame:
-> - Crear proyecto: `POST https://api.frame.io/v2/teams/{team_id}/projects` con body `{"name": "..."}`
-> - Crear carpetas: `POST https://api.frame.io/v2/assets/{root_asset_id}/children` con body `{"name": "...", "type": "folder"}` (el `root_asset_id` viene en la respuesta del proyecto)
-> Avisame y te paso los nodos ya armados para v2.
-
+El primer comando te da el `account_id`, el segundo el `workspace_id` del workspace donde querés que se creen los proyectos. El `TU_ACCESS_TOKEN` es un token de acceso OAuth ya emitido: la forma más simple de conseguirlo es, en n8n, abrir uno de los nodos de Frame con la credencial ya conectada y ejecutarlo una vez (o usar el API Explorer de Frame). Es solo para este trámite de descubrir los IDs; después el workflow maneja los tokens solo. 
 ### Paso 5 — Activar los workflows
 
 Prendé el toggle **Active** en los workflows 2, 3, 4, 5 y 6 (el 1 no hace falta, es manual).
@@ -158,7 +195,7 @@ Listo. Entrás, creás un proyecto, y en ~15 segundos tenés Drive + Frame.io + 
 - **Completar**: tocás **COMPLETADO** → pasa a la sección de completados agrupado por año.
 - **Editar equipo/tareas**: en **PRE-PRODUCCIÓN** el equipo interno es editable; las tareas (con equipo + fechas) se editan mientras el proyecto está activo → "Guardar cambios de equipo".
 - **Editar datos del proyecto**: se editan en "Datos del proyecto" solo en PRE-PRODUCCIÓN → "Guardar datos del proyecto". La creación de carpetas guarda además `taskDates_json` (fechas por tarea) y `director`; el workflow de n8n debe persistir esos campos.
-- **Eliminar proyecto**: al fondo del detalle, en "Zona de riesgo" → pide confirmación antes de borrar. Solo borra el registro del hub; las carpetas de Drive y el proyecto en Frame.io quedan (borralos a mano si corresponde).
+- **Eliminar proyecto**: al fondo del detalle, en "Zona de riesgo" → pide confirmación antes de borrar. Solo borra el registro del hub; la Unidad de Drive y el proyecto en Frame.io quedan (borralos a mano si corresponde).
 
 ---
 

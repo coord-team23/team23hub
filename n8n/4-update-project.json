@@ -33,7 +33,19 @@
             {
               "id": "c1",
               "name": "dbSheetId",
-              "value": "PEGAR_DB_SHEET_ID",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "discordGeneralId",
+              "value": "PEGAR_ID_DEL_CANAL_GENERAL",
+              "type": "string"
+            },
+            {
+              "id": "c3",
+              "name": "rosterSheetId",
+              "value": "1jMs5xUhFKrp5z_LHMOdkJia7vKJsrtKdSB20g9KHsp0",
               "type": "string"
             }
           ]
@@ -115,6 +127,376 @@
         800,
         0
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body || {};\nif (!b.status || !b.id) return [];\nreturn [{ json: { id: String(b.id), status: String(b.status) } }];"
+      },
+      "id": "d4d00001-0000-0000-0000-00000000a001",
+      "name": "¿Cambió la etapa?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "options": {}
+      },
+      "id": "d4d00002-0000-0000-0000-00000000a002",
+      "name": "Leer Projects",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1240,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cambio = $('\\u00bfCambi\\u00f3 la etapa?').first().json;\nconst filas = $('Leer Projects').all().map(i => i.json);\nconst p = filas.find(r => String(r.id) === cambio.id);\nif (!p) return [];\nconst LABELS = { por_activarse: 'Pre-producci\\u00f3n', activo: 'Ejecutando', entregando: 'Entregando', cierre: 'Listo para cierre', completado: 'Completado' };\nconst EMOJI = { activo: '\\ud83d\\udfe2', entregando: '\\ud83d\\udce6', cierre: '\\ud83d\\udd34', completado: '\\ud83c\\udfc1' };\nconst label = LABELS[cambio.status] || cambio.status;\nconst emoji = EMOJI[cambio.status] || '\\ud83d\\udd01';\nconst out = [];\n\n/* 1. Aviso en el canal -avisos del proyecto (igual que antes) */\nconst canal = String(p.discord_avisos_id || '').replace(/^'+/, '');\nif (canal) out.push({ json: { channelId: canal, content: emoji + ' **' + (p.nombre || 'Proyecto') + '** pas\\u00f3 a **' + label + '**' } });\n\n/* 2. Hito en el canal general, solo etapas principales, con m\\u00ednima info de fechas */\nconst HITOS_GENERAL = ['activo', 'entregando', 'cierre', 'completado'];\nconst general = String($('CONFIG').first().json.discordGeneralId || '').trim();\nif (general && general !== 'PEGAR_ID_DEL_CANAL_GENERAL' && HITOS_GENERAL.includes(cambio.status)) {\n  const cal = $('Leer Calendario').all().map(i => i.json).filter(r => r && String(r.project_id) === cambio.id);\n  const fases = cal.filter(r => (r.tipo || 'fase') !== 'hito');\n  const hitos = cal.filter(r => r.tipo === 'hito');\n  const dmy = s => { const t = String(s || '').slice(0, 10).split('-'); return t.length === 3 ? t[2] + '/' + t[1] : String(s || ''); };\n  const inicios = fases.map(r => r.inicio).filter(Boolean).sort();\n  const fines = fases.map(r => r.fin || r.inicio).filter(Boolean).sort();\n  const partes = [];\n  if (inicios.length && fines.length) partes.push('\\ud83d\\udcc5 ' + dmy(inicios[0]) + ' al ' + dmy(fines[fines.length - 1]));\n  if (cambio.status !== 'completado') {\n    const hoy = new Date().toISOString().slice(0, 10);\n    const prox = hitos.filter(h => (h.inicio || '') >= hoy).sort((a, b) => String(a.inicio).localeCompare(String(b.inicio)))[0];\n    if (prox) partes.push('Pr\\u00f3ximo hito: ' + (prox.fase || 'Hito') + ' ' + dmy(prox.inicio));\n  }\n  const lineas = [emoji + ' **' + (p.nombre || 'Proyecto') + '** \\u2192 ' + label];\n  if (partes.length) lineas.push(partes.join(' \\u00b7 '));\n  out.push({ json: { channelId: general, content: lineas.join('\\n') } });\n}\nreturn out;"
+      },
+      "id": "d4d00003-0000-0000-0000-00000000a003",
+      "name": "Aviso de etapa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+        "options": {}
+      },
+      "id": "d4d00004-0000-0000-0000-00000000a004",
+      "name": "Discord: avisar etapa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Calendar"
+        },
+        "options": {}
+      },
+      "id": "d4d00005-0000-0000-0000-00000000a005",
+      "name": "Leer Calendario",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1460,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body || {};\nconst esActivacion = b.status === 'activo';\nconst esEquipo = b.asignaciones_json !== undefined && b.status === undefined;\nif ((!esActivacion && !esEquipo) || !b.id) return [];\nreturn [{ json: { id: String(b.id), motivo: esActivacion ? 'activacion' : 'equipo' } }];"
+      },
+      "id": "d4a00001-0000-0000-0000-00000000c001",
+      "name": "¿Dar accesos?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "options": {}
+      },
+      "id": "d4a00002-0000-0000-0000-00000000c002",
+      "name": "Projects (accesos)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        600,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('CONFIG').first().json.rosterSheetId }}?fields=sheets(properties(sheetId,title))",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "d4a00003-0000-0000-0000-00000000c003",
+      "name": "Roster: metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const meta = $('Roster: metadata').first().json || {};\nconst hojas = meta.sheets || [];\nconst hoja = hojas.find(s => s.properties && s.properties.sheetId === 0) || hojas[0];\nif (!hoja) return [{ json: { urlLeer: '' } }];   /* sin roster el flujo sigue, solo pierde el fallback */\nconst base = 'https://sheets.googleapis.com/v4/spreadsheets/' + $('CONFIG').first().json.rosterSheetId + '/values/';\nreturn [{ json: { urlLeer: base + encodeURIComponent(hoja.properties.title + '!A1:Z2000') } }];"
+      },
+      "id": "d4a00004-0000-0000-0000-00000000c004",
+      "name": "Roster: pestaña",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlLeer || 'https://sheets.googleapis.com/v4/spreadsheets/invalido' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "d4a00005-0000-0000-0000-00000000c005",
+      "name": "Roster: leer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/channels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "d4a00006-0000-0000-0000-00000000c006",
+      "name": "Discord: canales del guild",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/members?limit=1000",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "d4a00007-0000-0000-0000-00000000c007",
+      "name": "Discord: miembros",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const gate = $('\\u00bfDar accesos?').first().json;\nconst filas = $('Projects (accesos)').all().map(i => i.json).filter(r => r && r.id);\nconst p = filas.find(r => String(r.id) === gate.id);\nif (!p) return [];\nconst status = String(p.status || '');\nif (gate.motivo === 'equipo' && !['activo','entregando','cierre'].includes(status)) return [];\nconst catId = String(p.discord_category_id || '').replace(/^'+/, '');\nconst generalId = String(p.discord_avisos_id || '').replace(/^'+/, '');\nif (!catId && !generalId) return [];\nlet asigs = {}; try { asigs = JSON.parse(p.asignaciones_json || '{}'); } catch (e) {}\nconst norm = s => String(s || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim().toLowerCase();\nconst normTag = s => String(s || '').toLowerCase().replace(/^@+/, '').replace(/[^a-z0-9._]/g, '');\n/* fallback: tag de discord desde el roster, por nombre */\nconst rosterTag = new Map();\ntry {\n  const vals = ($('Roster: leer').first().json || {}).values || [];\n  if (vals.length) {\n    const heads = vals[0].map(norm);\n    const iN = heads.findIndex(h => h.includes('nombre'));\n    const iD = heads.findIndex(h => h.includes('discord'));\n    if (iN >= 0 && iD >= 0) vals.slice(1).forEach(v => {\n      const n = norm((v || [])[iN]); const d = normTag((v || [])[iD]);\n      if (n && d) rosterTag.set(n, d);\n    });\n  }\n} catch (e) {}\n/* canales del proyecto */\nconst canales = $('Discord: canales del guild').all().map(i => i.json).filter(c => c && c.id && String(c.parent_id || '') === catId);\nconst canalPor = suf => { const c = canales.find(x => String(x.name || '').endsWith('-' + suf)); return c ? String(c.id) : ''; };\nconst MAPA = { 'Online': 'online', 'VFX': 'vfx', 'Color': 'color' };   /* espejo del workflow 3 */\n/* miembros del servidor: username normalizado -> id */\nconst porUser = new Map();\n$('Discord: miembros').all().map(i => i.json).filter(m => m && m.user).forEach(m => {\n  porUser.set(normTag(m.user.username), String(m.user.id));\n  if (m.user.global_name && !porUser.has(normTag(m.user.global_name))) porUser.set(normTag(m.user.global_name), String(m.user.id));\n});\nconst grants = new Map(), conAcceso = new Set(), sinMatch = new Set(), sinTag = new Set();\nObject.entries(asigs).forEach(([tarea, rows]) => {\n  (rows || []).forEach(r => {\n    if (!r || (r.estado && r.estado !== 'confirmado')) return;   /* solo confirmados (sin estado = agregado directo) */\n    const nombre = String(r.nombre || '').trim();\n    if (!nombre) return;\n    const tag = normTag(r.discord) || rosterTag.get(norm(nombre)) || '';\n    if (!tag) { sinTag.add(nombre); return; }\n    const uid = porUser.get(tag);\n    if (!uid) { sinMatch.add(nombre + ' (' + tag + ')'); return; }\n    conAcceso.add(nombre);\n    const chs = [];\n    if (generalId) chs.push({ ch: generalId, allow: '3072' });   /* ver + escribir */\n    if (catId) chs.push({ ch: catId, allow: '1024' });           /* ver la categoria para que quede agrupado */\n    const suf = MAPA[tarea];\n    const tCh = suf ? canalPor(suf) : '';\n    if (tCh) chs.push({ ch: tCh, allow: '3072' });\n    chs.forEach(x => grants.set(x.ch + '|' + uid, { channelId: x.ch, userId: uid, allow: x.allow }));\n  });\n});\nreturn [{ json: { motivo: gate.motivo, nombreProyecto: p.nombre || 'Proyecto', generalId,\n  grants: [...grants.values()], conAcceso: [...conAcceso], sinMatch: [...sinMatch], sinTag: [...sinTag] } }];"
+      },
+      "id": "d4a00008-0000-0000-0000-00000000c008",
+      "name": "Armar accesos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const g = $('Armar accesos').first().json.grants || [];\nreturn g.map(x => ({ json: x }));"
+      },
+      "id": "d4a00009-0000-0000-0000-00000000c009",
+      "name": "Grants a items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/permissions/{{ $json.userId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 1, allow: $json.allow, deny: '0' }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1000
+            }
+          }
+        }
+      },
+      "id": "d4a0000a-0000-0000-0000-00000000c00a",
+      "name": "Discord: dar acceso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const a = $('Armar accesos').first().json;\nif (a.motivo !== 'activacion' || !a.generalId) return [];\nif (!a.conAcceso.length && !a.sinMatch.length && !a.sinTag.length) return [];\nconst lineas = ['\\ud83d\\udd13 **' + a.nombreProyecto + '**: accesos del equipo confirmado'];\nif (a.conAcceso.length) lineas.push('Con acceso: ' + a.conAcceso.join(', '));\nif (a.sinMatch.length) lineas.push('\\u26a0 No est\\u00e1n en el servidor o el tag no coincide: ' + a.sinMatch.join(', '));\nif (a.sinTag.length) lineas.push('\\u26a0 Sin tag de Discord cargado: ' + a.sinTag.join(', '));\nreturn [{ json: { channelId: a.generalId, content: lineas.join('\\n').slice(0, 1900) } }];"
+      },
+      "id": "d4a0000b-0000-0000-0000-00000000c00b",
+      "name": "Aviso de accesos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+        "options": {}
+      },
+      "id": "d4a0000c-0000-0000-0000-00000000c00c",
+      "name": "Discord: avisar accesos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        600
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      }
     }
   ],
   "connections": {
@@ -156,6 +538,181 @@
         [
           {
             "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder": {
+      "main": [
+        [
+          {
+            "node": "¿Cambió la etapa?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Dar accesos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Cambió la etapa?": {
+      "main": [
+        [
+          {
+            "node": "Leer Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Projects": {
+      "main": [
+        [
+          {
+            "node": "Leer Calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso de etapa": {
+      "main": [
+        [
+          {
+            "node": "Discord: avisar etapa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Calendario": {
+      "main": [
+        [
+          {
+            "node": "Aviso de etapa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Dar accesos?": {
+      "main": [
+        [
+          {
+            "node": "Projects (accesos)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Projects (accesos)": {
+      "main": [
+        [
+          {
+            "node": "Roster: metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: metadata": {
+      "main": [
+        [
+          {
+            "node": "Roster: pestaña",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: pestaña": {
+      "main": [
+        [
+          {
+            "node": "Roster: leer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: leer": {
+      "main": [
+        [
+          {
+            "node": "Discord: canales del guild",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: canales del guild": {
+      "main": [
+        [
+          {
+            "node": "Discord: miembros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: miembros": {
+      "main": [
+        [
+          {
+            "node": "Armar accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grants a items": {
+      "main": [
+        [
+          {
+            "node": "Discord: dar acceso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso de accesos": {
+      "main": [
+        [
+          {
+            "node": "Discord: avisar accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar accesos": {
+      "main": [
+        [
+          {
+            "node": "Grants a items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aviso de accesos",
             "type": "main",
             "index": 0
           }

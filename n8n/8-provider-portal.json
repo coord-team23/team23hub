@@ -26,19 +26,19 @@
             {
               "id": "k1",
               "name": "supabaseUrl",
-              "value": "https://PEGAR_REF.supabase.co",
+              "value": "https://muvmrkacjhygfuialpyn.supabase.co",
               "type": "string"
             },
             {
               "id": "k2",
               "name": "supabaseAnonKey",
-              "value": "PEGAR_ANON_KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI",
               "type": "string"
             },
             {
               "id": "k3",
               "name": "dbSheetId",
-              "value": "PEGAR_DB_SHEET_ID",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
               "type": "string"
             }
           ]
@@ -71,7 +71,13 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
       },
       "id": "hh000007-0000-0000-0000-000000000003",
       "name": "Validar login",
@@ -81,7 +87,8 @@
         400,
         0
       ],
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -180,7 +187,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const email = String($('Validar login').first().json.email || '').toLowerCase();\nconst projRows = $('Leer Projects').all().map(i => i.json);\nconst calRows = $('Leer Calendario').all().map(i => i.json);\nconst safe = (v, fb) => { try { const x = JSON.parse(v); return x ?? fb; } catch(e) { return fb; } };\nconst out = [];\nfor (const p of projRows) {\n  if (!p || !p.id) continue;\n  const asigs = safe(p.asignaciones_json, {});\n  const roles = [];\n  Object.entries(asigs).forEach(([tarea, rows]) => {\n    (rows || []).forEach(r => {\n      if (r && r.email && String(r.email).trim().toLowerCase() === email && (!r.estado || r.estado === 'confirmado')) roles.push(tarea);\n    });\n  });\n  if (!roles.length) continue;\n  const links = safe(p.links_json, {});\n  const taskDates = safe(p.taskDates_json, {});\n  const cal = calRows.filter(c => c.projectId === p.id).map(c => ({ tipo: c.tipo === 'hito' ? 'hito' : 'fase', fase: c.fase || '', inicio: c.inicio || '', fin: c.fin || '', notas: c.notas || '' }));\n  Object.entries(taskDates).forEach(([tarea, d]) => {\n    if (d && (d.inicio || d.fin)) cal.push({ tipo: 'fase', fase: tarea, inicio: d.inicio || '', fin: d.fin || d.inicio || '', notas: d.notas || '' });\n  });\n  out.push({\n    id: p.id, nombre: p.nombre || '', cliente: p.cliente || '', agencia: p.agencia || '', productora: p.productora || '',\n    status: p.status || 'activo', year: p.year || '', sintesis: p.sintesis || '', storyboard_url: p.storyboard_url || '',\n    misRoles: [...new Set(roles)],\n    links: { driveRoot: links.driveRoot || '', frameio: links.frameio || '', notas: links.notas || '' },\n    calendario: cal\n  });\n}\nreturn [{ json: { projects: out } }];"
+        "jsCode": "const email = String($('Validar login').first().json.email || '').toLowerCase();\nconst projRows = $('Leer Projects').all().map(i => i.json);\nconst calRows = $('Leer Calendario').all().map(i => i.json);\nconst safe = (v, fb) => { try { const x = JSON.parse(v); return x ?? fb; } catch(e) { return fb; } };\nconst out = [];\nfor (const p of projRows) {\n  if (!p || !p.id) continue;\n  const asigs = safe(p.asignaciones_json, {});\n  const roles = [];\n  Object.entries(asigs).forEach(([tarea, rows]) => {\n    (rows || []).forEach(r => {\n      if (r && r.email && String(r.email).trim().toLowerCase() === email && (!r.estado || r.estado === 'confirmado')) roles.push(tarea);\n    });\n  });\n  if (!roles.length) continue;\n  const links = safe(p.links_json, {});\n  const taskDates = safe(p.taskDates_json, {});\n  const cal = calRows.filter(c => String(c.project_id || '') === String(p.id)).map(c => ({ tipo: c.tipo === 'hito' ? 'hito' : 'fase', fase: c.fase || '', inicio: c.inicio || '', fin: c.fin || '', notas: c.notas || '' }));\n  Object.entries(taskDates).forEach(([tarea, d]) => {\n    if (d && (d.inicio || d.fin)) cal.push({ tipo: 'fase', fase: tarea, inicio: d.inicio || '', fin: d.fin || d.inicio || '', notas: d.notas || '' });\n  });\n  out.push({\n    id: p.id, nombre: p.nombre || '', cliente: p.cliente || '', agencia: p.agencia || '', productora: p.productora || '',\n    status: p.status || 'activo', year: p.year || '', sintesis: p.sintesis || '', storyboard_url: p.storyboard_url || '',\n    misRoles: [...new Set(roles)],\n    links: { driveRoot: links.driveRoot || '', frameio: links.frameio || '', notas: links.notas || '' },\n    calendario: cal\n  });\n}\nreturn [{ json: { projects: out } }];"
       },
       "id": "hh000007-0000-0000-0000-000000000005",
       "name": "Filtrar por proveedor",

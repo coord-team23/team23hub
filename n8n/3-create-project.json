@@ -31,39 +31,69 @@
         "assignments": {
           "assignments": [
             {
-              "id": "k1",
-              "name": "parentFolderId",
-              "value": "PEGAR_ID_CARPETA_MADRE_DRIVE",
-              "type": "string"
-            },
-            {
               "id": "k2",
               "name": "desgloseTemplateId",
-              "value": "1hMKi5R-tVpqQ_FF-KtfZsYgF_eIqUlhLFhfvZPCDkns",
-              "type": "string"
-            },
-            {
-              "id": "k3",
-              "name": "trackerTemplateId",
-              "value": "1Insg1VqfzpO4LKzi3pLOAcU9FkTOchU-t1O8B8kiWUA",
+              "value": "1cWnzuiWV2RLfTYCQNtSvRb7diMpi6HFPTUZNkTJuvOk",
               "type": "string"
             },
             {
               "id": "k4",
               "name": "dbSheetId",
-              "value": "PEGAR_DB_SHEET_ID",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
               "type": "string"
             },
             {
               "id": "k5",
               "name": "frameAccountId",
-              "value": "PEGAR_FRAME_ACCOUNT_ID",
+              "value": "6d46597e-55cc-4300-ae24-22625452eb1d",
               "type": "string"
             },
             {
               "id": "k6",
               "name": "frameWorkspaceId",
-              "value": "PEGAR_FRAME_WORKSPACE_ID",
+              "value": "0af44ea1-03b4-483d-99ff-88106ee46f0e",
+              "type": "string"
+            },
+            {
+              "id": "drv-members",
+              "name": "driveMembers",
+              "value": "biz@team23.online, coord@team23.online",
+              "type": "string"
+            },
+            {
+              "id": "tpl-brief",
+              "name": "briefTemplateId",
+              "value": "1wIzskZ8AJxqY07dfxZrbeowcJbfOtHucqCf1xu9NyO8",
+              "type": "string"
+            },
+            {
+              "id": "tpl-feedback",
+              "name": "feedbackTemplateId",
+              "value": "1tdcjx9st0kwJKE9VjTvPEpuRPKABcB8g4wEtMlfgVyg",
+              "type": "string"
+            },
+            {
+              "id": "dsc-guild",
+              "name": "discordGuildId",
+              "value": "PEGAR_ID_DEL_SERVIDOR_DE_DISCORD",
+              "type": "string"
+            },
+            {
+              "id": "dsc-view-u",
+              "name": "discordViewerUserIds",
+              "value": "IDS_DE_USUARIOS_SEPARADOS_POR_COMA_O_VACIO",
+              "type": "string"
+            },
+            {
+              "id": "dsc-view-r",
+              "name": "discordViewerRoleIds",
+              "value": "IDS_DE_ROLES_SEPARADOS_POR_COMA_O_VACIO",
+              "type": "string"
+            },
+            {
+              "id": "portada-tpl",
+              "name": "portadaTemplateId",
+              "value": "PEGAR_ID_DEL_TEMPLATE_DE_PORTADA",
               "type": "string"
             }
           ]
@@ -83,16 +113,16 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://www.googleapis.com/drive/v3/files?supportsAllDrives=true",
+        "url": "=https://www.googleapis.com/drive/v3/drives?requestId={{ $execution.id }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleDriveOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre, mimeType: 'application/vnd.google-apps.folder', parents: [ $('CONFIG').first().json.parentFolderId ] }) }}",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre }) }}",
         "options": {}
       },
       "id": "c3000003-0000-0000-0000-000000000003",
-      "name": "Drive: Carpeta raiz",
+      "name": "Drive: Crear Unidad",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -108,7 +138,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rootId = $json.id;\nconst names = ['00. COORD','01. SUPERVISION - PRE','02. FOOTAGE','03. RECURSOS','04. EDICIÓN','05. DELIVERY'];\nreturn names.map(name => ({ json: { name, parent: rootId } }));"
+        "jsCode": "const rootId = $('Drive: Crear Unidad').first().json.id;\nconst names = ['0. COORD','1. SUPERVISION','2. FOOTAGE','3. RECURSOS','4. EDITABLES','5. FINALES'];\nreturn names.map(name => ({ json: { name, parent: rootId } }));"
       },
       "id": "c3000003-0000-0000-0000-000000000004",
       "name": "Nivel 1: carpetas",
@@ -147,7 +177,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst footage = l1.find(f => (f.name || '').includes('FOOTAGE'));\nconst delivery = l1.find(f => (f.name || '').includes('DELIVERY'));\nconst items = [];\n['00. Armados','01. Cámara','02. Animaciones','03. Sobreimpresos'].forEach(name => items.push({ json: { name, parent: footage.id } }));\n['00. Pre-Online','01. VFX','02. Para Color','03. WIP pCliente','04. Masters'].forEach(name => items.push({ json: { name, parent: delivery.id } }));\nreturn items;"
+        "jsCode": "const nombre = $('Webhook').first().json.body.nombre;\nconst l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst idDe = (kw) => { const f = l1.find(x => (x.name || '').includes(kw)); return f ? f.id : null; };\nconst items = [];\nconst push = (parent, names) => { if (parent) names.forEach(name => items.push({ json: { name, parent } })); };\npush(idDe('COORD'), ['00. PLANTILLAS-DOCUMENTOS','01. KIT DE POST']);\npush(idDe('SUPERVISION'), ['00. OCF','01. PROXY','03. CC']);\npush(idDe('FOOTAGE'), ['00. OCF','01. PROXY','03. CC']);\npush(idDe('RECURSOS'), ['1. [3D]_' + nombre, '2. [GRÁFICAS]_' + nombre, '3. [VFX]_' + nombre, '4. [MOTION]_' + nombre, '5. [CONFORMADO]_' + nombre]);\nreturn items;"
       },
       "id": "c3000003-0000-0000-0000-000000000006",
       "name": "Nivel 2: carpetas",
@@ -186,7 +216,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst coord = l1.find(f => (f.name || '').includes('COORD'));\nreturn [{ json: { coordId: coord.id } }];"
+        "jsCode": "const l2 = $('Drive: Subcarpetas N2').all().map(i => i.json);\nconst plantillas = l2.find(f => (f.name || '').includes('PLANTILLAS'));\nif (plantillas) return [{ json: { coordId: plantillas.id } }];\nconst l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst coord = l1.find(f => (f.name || '').includes('COORD'));\nreturn [{ json: { coordId: coord.id } }];"
       },
       "id": "c3000003-0000-0000-0000-000000000008",
       "name": "Buscar COORD",
@@ -214,32 +244,6 @@
       "typeVersion": 4.2,
       "position": [
         1600,
-        0
-      ],
-      "credentials": {
-        "googleDriveOAuth2Api": {
-          "id": "REEMPLAZAR",
-          "name": "Google Drive account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('CONFIG').first().json.trackerTemplateId }}/copy?supportsAllDrives=true",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleDriveOAuth2Api",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre + ' — Tracker', parents: [ $('Buscar COORD').first().json.coordId ] }) }}",
-        "options": {}
-      },
-      "id": "c3000003-0000-0000-0000-00000000000a",
-      "name": "Copia Tracker",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1800,
         0
       ],
       "credentials": {
@@ -306,7 +310,7 @@
         "method": "POST",
         "url": "=https://api.frame.io/v4/accounts/{{ $('CONFIG').first().json.frameAccountId }}/workspaces/{{ $('CONFIG').first().json.frameWorkspaceId }}/projects",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "genericAuthType": "oAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ data: { name: $('Webhook').first().json.body.nombre } }) }}",
@@ -321,15 +325,18 @@
         0
       ],
       "credentials": {
-        "httpHeaderAuth": {
+        "oAuth2Api": {
           "id": "REEMPLAZAR",
-          "name": "Frame.io Token"
+          "name": "Frame.io OAuth2"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
-        "jsCode": "const proj = $json.data || $json;\nconst rootFolderId = proj.root_folder_id || (proj.root_asset && proj.root_asset.id) || proj.root_asset_id;\nconst frameProjectId = proj.id;\nreturn ['1. Footage','2. Offline','3. Online','4. Masters'].map(name => ({ json: { name, rootFolderId, frameProjectId } }));"
+        "jsCode": "const proj = $json.data || $json;\nconst rootFolderId = proj.root_folder_id || (proj.root_asset && proj.root_asset.id) || proj.root_asset_id;\nconst frameProjectId = proj.id;\nreturn ['00. OFFLINE','01. POST','02. ONLINE','03. MASTERS'].map(name => ({ json: { name, rootFolderId, frameProjectId } }));"
       },
       "id": "c3000003-0000-0000-0000-00000000000e",
       "name": "Frame: carpetas",
@@ -345,11 +352,18 @@
         "method": "POST",
         "url": "=https://api.frame.io/v4/accounts/{{ $('CONFIG').first().json.frameAccountId }}/folders/{{ $json.rootFolderId }}/folders",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "genericAuthType": "oAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ data: { name: $json.name } }) }}",
-        "options": {}
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
       },
       "id": "c3000003-0000-0000-0000-00000000000f",
       "name": "Frame: Crear carpetas",
@@ -360,15 +374,18 @@
         0
       ],
       "credentials": {
-        "httpHeaderAuth": {
+        "oAuth2Api": {
           "id": "REEMPLAZAR",
-          "name": "Frame.io Token"
+          "name": "Frame.io OAuth2"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
-        "jsCode": "const body = $('Webhook').first().json.body;\nconst root = $('Drive: Carpeta raiz').first().json;\nconst l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst find = (kw) => { const f = l1.find(x => (x.name || '').includes(kw)); return f ? f.id : ''; };\nconst desglose = $('Copia Desglose').first().json;\nconst tracker = $('Copia Tracker').first().json;\nconst notas = $('Crear Doc Notas').first().json;\nconst frame = $('Frame: carpetas').first().json;\nconst folderUrl = (id) => id ? 'https://drive.google.com/drive/folders/' + id : '';\nconst links = {\n  driveRoot: folderUrl(root.id),\n  coord: folderUrl(find('COORD')),\n  supervision: folderUrl(find('SUPERVISION')),\n  footage: folderUrl(find('FOOTAGE')),\n  recursos: folderUrl(find('RECURSOS')),\n  edicion: folderUrl(find('EDICI')),\n  delivery: folderUrl(find('DELIVERY')),\n  notas: 'https://docs.google.com/document/d/' + notas.id,\n  desglose: 'https://docs.google.com/spreadsheets/d/' + desglose.id,\n  tracker: 'https://docs.google.com/spreadsheets/d/' + tracker.id,\n  frameio: 'https://next.frame.io/project/' + frame.frameProjectId\n};\nconst id = 'p_' + Date.now();\nconst now = new Date().toISOString();\nconst year = String(new Date().getFullYear());\nconst row = {\n  id,\n  nombre: body.nombre,\n  cliente: body.cliente || '',\n  agencia: body.agencia || '',\n  productora: body.productora || '',\n  director: body.director || '',\n  ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '',\n  prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '',\n  coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '',\n  tareas_json: JSON.stringify(body.tareas || []),\n  asignaciones_json: JSON.stringify(body.asignaciones || {}),\n  status: 'por_activarse',\n  year,\n  links_json: JSON.stringify(links),\n  created_at: now,\n  taskDates_json: JSON.stringify(body.taskDates || {}),\n  sintesis: body.sintesis || '',\n  storyboard_url: body.storyboard_url || ''\n};\nconst project = { id, nombre: body.nombre, cliente: body.cliente || '', agencia: body.agencia || '', productora: body.productora || '', director: body.director || '', ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '', prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '', coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '', tareas: body.tareas || [], asignaciones: body.asignaciones || {}, status: 'por_activarse', year, links, calendario: [], taskDates: body.taskDates || {}, sintesis: body.sintesis || '', storyboard_url: body.storyboard_url || '' };\nreturn [{ json: { row, project } }];"
+        "jsCode": "const body = $('Webhook').first().json.body;\nconst root = $('Drive: Crear Unidad').first().json;\nconst l1 = $('Drive: Subcarpetas N1').all().map(i => i.json);\nconst find = (kw) => { const f = l1.find(x => (x.name || '').includes(kw)); return f ? f.id : ''; };\nconst desglose = $('Copia Desglose').first().json;\nconst brief = $('Copia Brief').first().json;\nconst feedback = $('Copia Feedback').first().json;\nconst notas = $('Crear Doc Notas').first().json;\nconst frame = $('Frame: carpetas').first().json;\nconst dsc = $('Discord: IDs').first().json;\nconst folderUrl = (id) => id ? 'https://drive.google.com/drive/folders/' + id : '';\nconst links = {\n  driveRoot: folderUrl(root.id),\n  coord: folderUrl(find('COORD')),\n  supervision: folderUrl(find('SUPERVISION')),\n  footage: folderUrl(find('FOOTAGE')),\n  recursos: folderUrl(find('RECURSOS')),\n  editables: folderUrl(find('EDITABLES')),\n  finales: folderUrl(find('FINALES')),\n  notas: 'https://docs.google.com/document/d/' + notas.id,\n  desglose: 'https://docs.google.com/spreadsheets/d/' + desglose.id,\n  brief: 'https://docs.google.com/presentation/d/' + brief.id,\n  feedback: 'https://docs.google.com/presentation/d/' + feedback.id,\n  frameio: 'https://next.frame.io/project/' + frame.frameProjectId\n};\nconst id = 'p_' + Date.now();\nconst now = new Date().toISOString();\nconst year = String(new Date().getFullYear());\nconst row = {\n  id,\n  nombre: body.nombre,\n  cliente: body.cliente || '',\n  agencia: body.agencia || '',\n  productora: body.productora || '',\n  director: body.director || '',\n  ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '',\n  prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '',\n  coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '',\n  tareas_json: JSON.stringify(body.tareas || []),\n  asignaciones_json: JSON.stringify(body.asignaciones || {}),\n  status: 'por_activarse',\n  year,\n  links_json: JSON.stringify(links),\n  created_at: now,\n  taskDates_json: JSON.stringify(body.taskDates || {}),\n  sintesis: body.sintesis || '',\n  storyboard_url: body.storyboard_url || '',\n  tratamiento_url: body.tratamiento_url || '',\n  discord_category_id: dsc.discord_category_id ? \"'\" + dsc.discord_category_id : '',\n  discord_avisos_id: dsc.discord_avisos_id ? \"'\" + dsc.discord_avisos_id : ''\n};\nconst project = { id, nombre: body.nombre, cliente: body.cliente || '', agencia: body.agencia || '', productora: body.productora || '', director: body.director || '', ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '', prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '', coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '', tareas: body.tareas || [], asignaciones: body.asignaciones || {}, status: 'por_activarse', year, links, calendario: [], taskDates: body.taskDates || {}, sintesis: body.sintesis || '', storyboard_url: body.storyboard_url || '' };\nreturn [{ json: { row, project } }];"
       },
       "id": "c3000003-0000-0000-0000-000000000010",
       "name": "Armar registro",
@@ -393,30 +410,8 @@
           "value": "Projects"
         },
         "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "id": "={{ $json.row.id }}",
-            "nombre": "={{ $json.row.nombre }}",
-            "cliente": "={{ $json.row.cliente }}",
-            "agencia": "={{ $json.row.agencia }}",
-            "productora": "={{ $json.row.productora }}",
-            "director": "={{ $json.row.director }}",
-            "ep_nombre": "={{ $json.row.ep_nombre }}",
-            "ep_email": "={{ $json.row.ep_email }}",
-            "prod_nombre": "={{ $json.row.prod_nombre }}",
-            "prod_email": "={{ $json.row.prod_email }}",
-            "coord_nombre": "={{ $json.row.coord_nombre }}",
-            "coord_email": "={{ $json.row.coord_email }}",
-            "tareas_json": "={{ $json.row.tareas_json }}",
-            "asignaciones_json": "={{ $json.row.asignaciones_json }}",
-            "status": "={{ $json.row.status }}",
-            "year": "={{ $json.row.year }}",
-            "links_json": "={{ $json.row.links_json }}",
-            "created_at": "={{ $json.row.created_at }}",
-            "taskDates_json": "={{ $json.row.taskDates_json }}",
-            "sintesis": "={{ $json.row.sintesis }}",
-            "storyboard_url": "={{ $json.row.storyboard_url }}"
-          },
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [],
           "schema": []
         },
@@ -488,6 +483,612 @@
           "name": "Gmail account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $('CONFIG').first().json.driveMembers || '';\nconst emails = raw.split(',').map(e => e.trim()).filter(e => e && e.includes('@'));\nreturn emails.map(email => ({ json: { email } }));"
+      },
+      "id": "mm000003-0000-0000-0000-000000000001",
+      "name": "Armar miembros",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('Drive: Crear Unidad').first().json.id }}/permissions?supportsAllDrives=true&sendNotificationEmail=false",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ role: 'organizer', type: 'user', emailAddress: $json.email }) }}",
+        "options": {}
+      },
+      "id": "mm000003-0000-0000-0000-000000000002",
+      "name": "Drive: Miembros",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        180
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('CONFIG').first().json.briefTemplateId }}/copy?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre + ' — Brief', parents: [ $('Buscar COORD').first().json.coordId ] }) }}",
+        "options": {}
+      },
+      "id": "tt000003-0000-0000-0000-000000000003",
+      "name": "Copia Brief",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('CONFIG').first().json.feedbackTemplateId }}/copy?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre + ' — Feedback', parents: [ $('Buscar COORD').first().json.coordId ] }) }}",
+        "options": {}
+      },
+      "id": "tt000003-0000-0000-0000-000000000004",
+      "name": "Copia Feedback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const creadas = $('Frame: Crear carpetas').all().map(i => i.json.data || i.json);\nconst post = creadas.find(f => (f.name || '').includes('POST'));\nif (!post) return [];\nreturn ['00.WIP','01.FINALES'].map(name => ({ json: { name, parentId: post.id } }));"
+      },
+      "id": "ff000003-0000-0000-0000-000000000005",
+      "name": "Frame: subcarpetas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2980,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.frame.io/v4/accounts/{{ $('CONFIG').first().json.frameAccountId }}/folders/{{ $json.parentId }}/folders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: { name: $json.name } }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
+      },
+      "id": "ff000003-0000-0000-0000-000000000006",
+      "name": "Frame: Crear subcarpetas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3180,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Frame.io OAuth2"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $('Armar registro').first().json.row }];"
+      },
+      "id": "db000003-0000-0000-0000-000000000001",
+      "name": "Aplanar fila",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/channels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: String($('Webhook').first().json.body.nombre || 'Proyecto').slice(0, 95), type: 4, permission_overwrites: $('Discord: permisos').first().json.overwrites }) }}",
+        "options": {}
+      },
+      "id": "d15c0001-0000-0000-0000-000000000001",
+      "name": "Discord: Crear categoría",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3180,
+        260
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body;\nconst cat = $('Discord: Crear categoría').first().json;\nconst slug = String(b.nombre || 'proyecto').toLowerCase()\n  .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'proyecto';\n/* Mapa tarea del hub -> sufijo de canal. Agregar lineas aca para mas canales. */\nconst MAPA = { 'Online': 'online', 'VFX': 'vfx', 'Color': 'color' };\nconst tareas = Array.isArray(b.tareas) ? b.tareas : [];\nconst sufijos = ['prod', 'coord', 'general'];\ntareas.forEach(t => { const s = MAPA[t]; if (s && !sufijos.includes(s)) sufijos.push(s); });\nreturn sufijos.map(s => ({ json: { name: slug + '-' + s, parent_id: String(cat.id) } }));"
+      },
+      "id": "d15c0002-0000-0000-0000-000000000002",
+      "name": "Discord: armar canales",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3400,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/channels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $json.name, type: 0, parent_id: $json.parent_id, permission_overwrites: $('Discord: permisos').first().json.overwrites }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1000
+            }
+          }
+        }
+      },
+      "id": "d15c0003-0000-0000-0000-000000000003",
+      "name": "Discord: Crear canales",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3620,
+        260
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const cat = $('Discord: Crear categoría').first().json;\nconst creados = $('Discord: Crear canales').all().map(i => i.json);\nconst general = creados.find(c => (c.name || '').endsWith('-general'));\n/* La columna del sheet se sigue llamando discord_avisos_id, pero guarda el canal -general del proyecto */\nreturn [{ json: {\n  discord_category_id: String(cat.id || ''),\n  discord_avisos_id: general ? String(general.id) : ''\n} }];"
+      },
+      "id": "d15c0004-0000-0000-0000-000000000004",
+      "name": "Discord: IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3840,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ids = $('Discord: IDs').first().json;\nif (!ids.discord_avisos_id) return [];\nconst r = $('Armar registro').first().json.row;\nlet links = {}; try { links = JSON.parse(r.links_json || '{}'); } catch (e) {}\nconst lineas = ['\\ud83d\\ude80 **' + (r.nombre || 'Proyecto') + '** entr\\u00f3 a pre-producci\\u00f3n'];\nconst meta = [];\nif (r.cliente) meta.push('Cliente: ' + r.cliente);\nif (r.agencia) meta.push('Agencia: ' + r.agencia);\nif (meta.length) lineas.push(meta.join(' \\u00b7 '));\nif (links.driveRoot) lineas.push('Drive: <' + links.driveRoot + '>');\nif (links.frameio) lineas.push('Frame.io: <' + links.frameio + '>');\nreturn [{ json: { channelId: ids.discord_avisos_id, content: lineas.join('\\n') } }];"
+      },
+      "id": "d15c0005-0000-0000-0000-000000000005",
+      "name": "Aviso inicial: mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+        "options": {}
+      },
+      "id": "d15c0006-0000-0000-0000-000000000006",
+      "name": "Discord: Aviso inicial",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3820,
+        220
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://discord.com/api/v10/users/@me",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "d15c0007-0000-0000-0000-000000000007",
+      "name": "Discord: Quién soy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2740,
+        260
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('CONFIG').first().json;\nconst guild = String(cfg.discordGuildId || '').trim();\nconst bot = $('Discord: Qui\\u00e9n soy').first().json;\nconst VIEW = '1024';           /* VIEW_CHANNEL */\nconst VIEW_SEND = '3072';      /* VIEW_CHANNEL + SEND_MESSAGES */\nconst parseIds = v => String(v || '').split(',').map(s => s.trim()).filter(s => /^\\d{5,}$/.test(s));\nconst users = parseIds(cfg.discordViewerUserIds);\nconst roles = parseIds(cfg.discordViewerRoleIds);\nconst overwrites = [\n  { id: guild, type: 0, deny: VIEW },                 /* @everyone: no ve la categoria ni los canales */\n  { id: String(bot.id), type: 1, allow: VIEW_SEND }   /* el bot se garantiza ver y escribir */\n];\nroles.forEach(id => overwrites.push({ id, type: 0, allow: VIEW }));\nusers.forEach(id => overwrites.push({ id, type: 1, allow: VIEW }));\nreturn [{ json: { overwrites } }];"
+      },
+      "id": "d15c0008-0000-0000-0000-000000000008",
+      "name": "Discord: permisos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('CONFIG').first().json.portadaTemplateId }}/copy?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre + ' — Portada', parents: [ $('Buscar COORD').first().json.coordId ] }) }}",
+        "options": {}
+      },
+      "id": "p0817001-0000-0000-0000-000000000001",
+      "name": "Portada: copiar template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        440
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://slides.googleapis.com/v1/presentations/{{ $('Portada: copiar template').first().json.id }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSlidesOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ requests: [ { replaceAllText: { containsText: { text: '{{NOMBRE}}', matchCase: false }, replaceText: $('Webhook').first().json.body.nombre } }, { replaceAllText: { containsText: { text: '{{CLIENTE}}', matchCase: false }, replaceText: $('Webhook').first().json.body.cliente || '' } }, { replaceAllText: { containsText: { text: '{{ANIO}}', matchCase: false }, replaceText: String(new Date().getFullYear()) } } ] }) }}",
+        "options": {}
+      },
+      "id": "p0817002-0000-0000-0000-000000000002",
+      "name": "Portada: título",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3820,
+        440
+      ],
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://slides.googleapis.com/v1/presentations/{{ $('Portada: copiar template').first().json.id }}?fields=slides.objectId",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSlidesOAuth2Api",
+        "options": {}
+      },
+      "id": "p0817003-0000-0000-0000-000000000003",
+      "name": "Portada: primera página",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4040,
+        440
+      ],
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://slides.googleapis.com/v1/presentations/{{ $('Portada: copiar template').first().json.id }}/pages/{{ $('Portada: primera página').first().json.slides[0].objectId }}/thumbnail?thumbnailProperties.thumbnailSize=LARGE",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSlidesOAuth2Api",
+        "options": {}
+      },
+      "id": "p0817004-0000-0000-0000-000000000004",
+      "name": "Portada: thumbnail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4260,
+        440
+      ],
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Portada: thumbnail').first().json.contentUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "p0817005-0000-0000-0000-000000000005",
+      "name": "Portada: descargar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4480,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=media&fields=id,parents",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "p0817006-0000-0000-0000-000000000006",
+      "name": "Portada: subir a Drive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4700,
+        440
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('Portada: subir a Drive').first().json.id }}?addParents={{ $('Buscar COORD').first().json.coordId }}&removeParents={{ ($('Portada: subir a Drive').first().json.parents || [])[0] || 'root' }}&supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Webhook').first().json.body.nombre + ' — portada.png' }) }}",
+        "options": {}
+      },
+      "id": "p0817007-0000-0000-0000-000000000007",
+      "name": "Portada: mover y nombrar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4920,
+        440
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/drives/{{ $('Drive: Crear Unidad').first().json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ backgroundImageFile: { id: $('Portada: subir a Drive').first().json.id, xCoordinate: 0, yCoordinate: 0.39, width: 1 } }) }}",
+        "options": {}
+      },
+      "id": "p0817008-0000-0000-0000-000000000008",
+      "name": "Portada: fondo de la unidad",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5140,
+        440
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nitems[0].json = { fileSize: buf.length };\nreturn items;"
+      },
+      "id": "p0817009-0000-0000-0000-000000000009",
+      "name": "Portada: tamaño",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4700,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.frame.io/v4/accounts/{{ $('CONFIG').first().json.frameAccountId }}/folders/{{ $('Frame: carpetas').first().json.rootFolderId }}/files",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: { name: '00 PORTADA — ' + $('Webhook').first().json.body.nombre + '.png', file_size: $('Portada: tamaño').first().json.fileSize } }) }}",
+        "options": {}
+      },
+      "id": "p081700a-0000-0000-0000-00000000000a",
+      "name": "Portada Frame: crear archivo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4920,
+        640
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Frame.io OAuth2"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json.data || $json;\nconst urls = d.upload_urls || d.upload_uris || (d.media_links && d.media_links.upload ? [d.media_links.upload] : []);\nif (!urls.length) return [];   /* si la API no devolvio URL de subida, se salta sin romper */\nreturn [{ json: { uploadUrl: typeof urls[0] === 'string' ? urls[0] : (urls[0].url || '') },\n          binary: $('Portada: tamaño').first().binary }];"
+      },
+      "id": "p081700b-0000-0000-0000-00000000000b",
+      "name": "Portada Frame: preparar subida",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5140,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $json.uploadUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "image/png"
+            },
+            {
+              "name": "x-amz-acl",
+              "value": "private"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "p081700c-0000-0000-0000-00000000000c",
+      "name": "Portada Frame: subir",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5360,
+        640
+      ],
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -506,18 +1107,7 @@
       "main": [
         [
           {
-            "node": "Drive: Carpeta raiz",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Drive: Carpeta raiz": {
-      "main": [
-        [
-          {
-            "node": "Nivel 1: carpetas",
+            "node": "Drive: Crear Unidad",
             "type": "main",
             "index": 0
           }
@@ -583,18 +1173,7 @@
       "main": [
         [
           {
-            "node": "Copia Tracker",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Copia Tracker": {
-      "main": [
-        [
-          {
-            "node": "Crear Doc Notas",
+            "node": "Copia Brief",
             "type": "main",
             "index": 0
           }
@@ -649,7 +1228,7 @@
       "main": [
         [
           {
-            "node": "Armar registro",
+            "node": "Frame: subcarpetas",
             "type": "main",
             "index": 0
           }
@@ -660,7 +1239,7 @@
       "main": [
         [
           {
-            "node": "Guardar en DB",
+            "node": "Aplanar fila",
             "type": "main",
             "index": 0
           }
@@ -685,6 +1264,16 @@
             "node": "Armar propuestas",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Aviso inicial: mensaje",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Portada: copiar template",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -694,6 +1283,280 @@
         [
           {
             "node": "Mail de propuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drive: Crear Unidad": {
+      "main": [
+        [
+          {
+            "node": "Nivel 1: carpetas",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Armar miembros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar miembros": {
+      "main": [
+        [
+          {
+            "node": "Drive: Miembros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copia Brief": {
+      "main": [
+        [
+          {
+            "node": "Copia Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copia Feedback": {
+      "main": [
+        [
+          {
+            "node": "Crear Doc Notas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frame: subcarpetas": {
+      "main": [
+        [
+          {
+            "node": "Frame: Crear subcarpetas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frame: Crear subcarpetas": {
+      "main": [
+        [
+          {
+            "node": "Discord: Quién soy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aplanar fila": {
+      "main": [
+        [
+          {
+            "node": "Guardar en DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: Crear categoría": {
+      "main": [
+        [
+          {
+            "node": "Discord: armar canales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: armar canales": {
+      "main": [
+        [
+          {
+            "node": "Discord: Crear canales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: Crear canales": {
+      "main": [
+        [
+          {
+            "node": "Discord: IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: IDs": {
+      "main": [
+        [
+          {
+            "node": "Armar registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso inicial: mensaje": {
+      "main": [
+        [
+          {
+            "node": "Discord: Aviso inicial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: Quién soy": {
+      "main": [
+        [
+          {
+            "node": "Discord: permisos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: permisos": {
+      "main": [
+        [
+          {
+            "node": "Discord: Crear categoría",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: copiar template": {
+      "main": [
+        [
+          {
+            "node": "Portada: título",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: título": {
+      "main": [
+        [
+          {
+            "node": "Portada: primera página",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: primera página": {
+      "main": [
+        [
+          {
+            "node": "Portada: thumbnail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: thumbnail": {
+      "main": [
+        [
+          {
+            "node": "Portada: descargar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: descargar": {
+      "main": [
+        [
+          {
+            "node": "Portada: subir a Drive",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Portada: tamaño",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: subir a Drive": {
+      "main": [
+        [
+          {
+            "node": "Portada: mover y nombrar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: mover y nombrar": {
+      "main": [
+        [
+          {
+            "node": "Portada: fondo de la unidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada: tamaño": {
+      "main": [
+        [
+          {
+            "node": "Portada Frame: crear archivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada Frame: crear archivo": {
+      "main": [
+        [
+          {
+            "node": "Portada Frame: preparar subida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portada Frame: preparar subida": {
+      "main": [
+        [
+          {
+            "node": "Portada Frame: subir",
             "type": "main",
             "index": 0
           }

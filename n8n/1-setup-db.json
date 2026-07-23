@@ -40,7 +40,7 @@
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ values: [[ 'id','nombre','cliente','agencia','productora','director','ep_nombre','ep_email','prod_nombre','prod_email','coord_nombre','coord_email','tareas_json','asignaciones_json','status','year','links_json','created_at','taskDates_json','sintesis','storyboard_url','checklist_json' ]] }) }}",
+        "jsonBody": "={{ JSON.stringify({ values: [[ 'id','nombre','cliente','agencia','productora','director','ep_nombre','ep_email','prod_nombre','prod_email','coord_nombre','coord_email','tareas_json','asignaciones_json','status','year','links_json','created_at','taskDates_json','sintesis','storyboard_url','checklist_json','tratamiento_url','tracker_json','discord_category_id','discord_avisos_id' ]] }) }}",
         "options": {}
       },
       "id": "a1000001-0000-0000-0000-000000000003",
