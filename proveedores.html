@@ -239,6 +239,11 @@
 .loading-state{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--gray,#777);padding:26px 6px}
 .sync-spin{width:14px;height:14px;border:2px solid var(--gray,#777);border-top-color:transparent;border-radius:50%;animation:t23spin .7s linear infinite;flex:none}
 @keyframes t23spin{to{transform:rotate(360deg)}}
+  .sx .sx-p{margin:0 0 10px;line-height:1.55}
+  .sx .sx-label{font-size:10.5px;letter-spacing:.14em;font-weight:800;text-transform:uppercase;color:var(--gray,#777);margin:12px 0 6px}
+  .sx .sx-list{margin:0 0 10px;padding-left:0;list-style:none}
+  .sx .sx-list li{position:relative;padding-left:18px;font-size:13px;line-height:1.55;margin-bottom:5px}
+  .sx .sx-list li::before{content:"";position:absolute;left:2px;top:7px;width:7px;height:7px;background:var(--red,#FF2B1E);border:1.5px solid var(--ink,#0A0A0A)}
 </style>
 </head>
 <body>
@@ -321,6 +326,26 @@ const DEMO = !CONFIG.SUPABASE_URL;
 let sb=null, session=null, projects=[];
 
 const $ = s=>document.querySelector(s);
+
+/* síntesis con estructura liviana: párrafos, etiquetas ("Puntos clave:") y bullets */
+function sintesisHTML(txt, small){
+  const fs = small ? "13.5px" : "15.5px";
+  const lines = String(txt||"").split(/\r?\n/);
+  let out = "", list = [];
+  const flush = ()=>{ if(list.length){ out += `<ul class="sx-list">${list.join("")}</ul>`; list = []; } };
+  lines.forEach(raw=>{
+    const l = raw.trim();
+    if(!l){ flush(); return; }
+    const m = l.match(/^[•·\-\*]\s+(.*)$/);
+    if(m){ list.push(`<li>${esc(m[1])}</li>`); return; }
+    flush();
+    if(/^[^:]{2,40}:$/.test(l)){ out += `<div class="sx-label">${esc(l.slice(0,-1))}</div>`; return; }
+    out += `<p class="sx-p" style="font-size:${fs}">${esc(l)}</p>`;
+  });
+  flush();
+  return `<div class="sx">${out}</div>`;
+}
+
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function parseYMD(s){ if(!s) return null; const p=String(s).split("-").map(Number); if(p.length<3||!p[0]) return null; return new Date(p[0],p[1]-1,p[2]); }
 function fmtShort(s){ const d=parseYMD(s); return d? d.toLocaleDateString("es-AR",{day:"2-digit",month:"short"}) : ""; }
@@ -490,7 +515,7 @@ function renderDetail(){
     <h2>${esc(p.nombre)}</h2>
     <div class="kicker">${esc(p.cliente)}${p.productora?" · "+esc(p.productora):""}${(p.misRoles||[]).length?" · Tu rol: "+p.misRoles.map(esc).join(", "):""}</div>
     ${stepper}
-    ${p.sintesis?`<div class="fgroup"><div class="glabel">Síntesis</div><p style="font-size:13.5px;white-space:pre-line">${esc(p.sintesis)}</p></div>`:""}
+    ${p.sintesis?`<div class="fgroup"><div class="glabel">Síntesis</div>${sintesisHTML(p.sintesis,true)}</div>`:""}
     ${links?`<div class="fgroup"><div class="glabel">Links</div><div class="linkgrid">${links}</div></div>`:""}
     ${(p.calendario||[]).some(r=>r.inicio)?`<div class="fgroup"><div class="glabel">Calendario</div>${monthHTML(p,lookMap)}</div>`:""}`;
 }

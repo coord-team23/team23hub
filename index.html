@@ -567,6 +567,13 @@
 #acPanel .ac-item{padding:8px 10px;font-size:13px;cursor:pointer;border-bottom:1px solid #eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #acPanel .ac-item:last-child{border-bottom:none}
 #acPanel .ac-item:hover,#acPanel .ac-item.on{background:var(--ink);color:#fff}
+
+  /* ---- síntesis formateada ---- */
+  .sx .sx-p{margin:0 0 var(--space-3);line-height:1.55}
+  .sx .sx-label{font-size:var(--fs-caption);letter-spacing:.14em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--gray);margin:var(--space-4) 0 var(--space-2)}
+  .sx .sx-list{margin:0 0 var(--space-3);padding-left:0;list-style:none}
+  .sx .sx-list li{position:relative;padding-left:18px;font-size:14px;line-height:1.55;margin-bottom:6px}
+  .sx .sx-list li::before{content:"";position:absolute;left:2px;top:8px;width:7px;height:7px;background:var(--red);border:1.5px solid var(--ink)}
 </style>
 </head>
 <body>
@@ -1330,6 +1337,25 @@ function statusBadge(s){
 /* entradas unificadas del calendario:
    fases-desde-tareas (tarea + fechas de taskDates) + fases/hitos independientes de calendario.
    src:"task" → se edita por nombre de tarea (taskDates); src:"cal" → por índice en calendario. */
+
+/* síntesis con estructura liviana: párrafos, etiquetas ("Puntos clave:") y bullets */
+function sintesisHTML(txt, small){
+  const fs = small ? "13.5px" : "15.5px";
+  const lines = String(txt||"").split(/\r?\n/);
+  let out = "", list = [];
+  const flush = ()=>{ if(list.length){ out += `<ul class="sx-list">${list.join("")}</ul>`; list = []; } };
+  lines.forEach(raw=>{
+    const l = raw.trim();
+    if(!l){ flush(); return; }
+    const m = l.match(/^[•·\-\*]\s+(.*)$/);
+    if(m){ list.push(`<li>${esc(m[1])}</li>`); return; }
+    flush();
+    if(/^[^:]{2,40}:$/.test(l)){ out += `<div class="sx-label">${esc(l.slice(0,-1))}</div>`; return; }
+    out += `<p class="sx-p" style="font-size:${fs}">${esc(l)}</p>`;
+  });
+  flush();
+  return `<div class="sx">${out}</div>`;
+}
 function allCalEntries(p){
   const out = [];
   (p.tareas||[]).forEach(t=>{
@@ -1439,7 +1465,7 @@ function renderDetail(){
 
   const sintesisContent = (p.sintesis || p.storyboard_url || p.tratamiento_url) ? `
     <div style="margin-top:var(--space-5)">
-      ${p.sintesis?`<p style="font-size:16.5px;white-space:pre-line;margin:0">${esc(p.sintesis)}</p>`:""}
+      ${p.sintesis?sintesisHTML(p.sintesis):""}
       ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Storyboard ↗</a></p>`:""}
       ${p.tratamiento_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.tratamiento_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Tratamiento/Referencias ↗</a></p>`:""}
     </div>` : "";
