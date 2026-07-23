@@ -698,6 +698,7 @@
       <div class="glabel">Tareas TEAM23 <small>elegí las que aplican</small></div>
       <div class="task-pills" id="npTasks"></div>
       <div id="npAssigns"></div>
+      <div id="npCalPrev"></div>
     </div>
 
     <div class="actions">
@@ -866,6 +867,7 @@
         <div class="glabel">4 · Tareas TEAM23, candidatos y fechas <small>varios por tarea para comparar presupuestos; les sale la propuesta por mail al crear</small></div>
         <div class="task-pills" id="n2Tasks"></div>
         <div id="n2Assigns"></div>
+        <div id="n2CalPrev"></div>
       </div>
 
       <div class="actions">
@@ -1142,6 +1144,7 @@ function renderNPAssigns(){
     if(!npTaskDates[t]) npTaskDates[t]={inicio:"",fin:"",notas:""};
   });
   $("#npAssigns").innerHTML = [...npSelected].map(t=>assignBlockHTML(t, npAssignData[t], "np")).join("");
+  renderCreationCal("np");
 }
 function assignBlockHTML(tarea, rows, ctx){
   const td = taskDatesStore(ctx)[tarea] || {};
@@ -1170,6 +1173,7 @@ function assignBlockHTML(tarea, rows, ctx){
     <div class="frow" style="margin-top:var(--space-4)">
       <div><label class="f">Inicio</label><input type="date" value="${esc(td.inicio||"")}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value)"></div>
       <div><label class="f">Fin</label><input type="date" value="${esc(td.fin||"")}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value)"></div>
+      <div style="flex:2;min-width:200px"><label class="f">Notas</label><input type="text" placeholder="A tener en cuenta para esta tarea" value="${esc(td.notas||"")}" onchange="setTaskDate('${ctx}','${tarea}','notas',this.value)"></div>
     </div>
   </div>`;
 }
@@ -1190,7 +1194,7 @@ async function candSet(tarea, i, estado){
 function taskDatesStore(ctx){ return ctx==="np" ? npTaskDates : ctx==="n2" ? n2TaskDates : (detailProject.taskDates = detailProject.taskDates||{}); }
 function setTaskDate(ctx,t,field,val){
   const s = taskDatesStore(ctx); s[t] = s[t]||{inicio:"",fin:"",notas:""}; s[t][field]=val;
-  if(ctx==="dt") renderDetail();   // refresca las barras del calendario
+  ctx==="dt" ? renderDetail() : renderCreationCal(ctx);   // refresca las barras del calendario
 }
 function assignStore(ctx){ return ctx==="np" ? npAssignData : ctx==="n2" ? n2AssignData : detailProject.asignaciones; }
 function setAssign(ctx,t,i,k,v){ assignStore(ctx)[t][i][k]=v; }
@@ -1262,8 +1266,11 @@ let detailReadOnly = false; // true cuando se abre desde la vista Equipo: oculta
 let calView = null;   // Date del mes visible
 let weekView = null;  // Date dentro de la semana visible (vista semanal de cierre)
 let selDay = null;    // 'YYYY-MM-DD' del día seleccionado
+let calCtx = "dt";    // dónde vive el calendario visible: dt (ficha) / np (alta manual) / n2 (debrief IA)
+let calAuto = true;   // saltar automáticamente al mes de la primera fecha en el armado
 
 function openDetail(id, readOnly=false){
+  calCtx = "dt";
   detailProject = projects.find(p=>p.id===id);
   if(!detailProject) return;
   detailSnapshot = JSON.parse(JSON.stringify(detailProject));
@@ -1565,10 +1572,23 @@ function renderDetail(){
 /* ---------------- calendario mensual ---------------- */
 function navMonth(delta){
   calView = new Date(calView.getFullYear(), calView.getMonth()+delta, 1);
-  renderDetail();
+  calAuto = false;
+  calCtx==="dt" ? renderDetail() : renderCreationCal(calCtx);
 }
-function selectDay(key){ selDay = key; renderDetail(); }
-function closeDayPanel(){ selDay = null; renderDetail(); }
+function selectDay(key){ selDay = key; calCtx==="dt" ? renderDetail() : renderCreationCal(calCtx); }
+function closeDayPanel(){ selDay = null; calCtx==="dt" ? renderDetail() : renderCreationCal(calCtx); }
+
+/* vista previa del calendario durante el armado (np = alta manual, n2 = debrief IA) */
+function renderCreationCal(ctx){
+  const el = $(ctx==="n2" ? "#n2CalPrev" : "#npCalPrev"); if(!el) return;
+  const sel = ctx==="n2" ? n2Selected : npSelected;
+  const store = taskDatesStore(ctx);
+  const p = { tareas:[...sel], taskDates: store, calendario: [] };
+  const dated = [...sel].map(t=>(store[t]&&store[t].inicio)||"").filter(Boolean).sort();
+  if(!dated.length){ el.innerHTML=""; return; }
+  if(calAuto || !calView){ const d = parseYMD(dated[0]); if(d) calView = new Date(d.getFullYear(), d.getMonth(), 1); }
+  el.innerHTML = `<div class="kicker" style="margin:var(--space-5) 0 var(--space-3)">Calendario del proyecto — vista previa</div>` + monthCalendarHTML(p, faseLookMap(p));
+}
 
 function buildMonthGrid(y, m){
   const first = new Date(y, m, 1);
@@ -2536,6 +2556,7 @@ function kickOffComplete(){
   npTratamientoUrl = kickOffLinks.tratamiento || "";
   ["npNombre","npCliente","npAgencia","npProductora","npDirector","npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"]
     .forEach(id=>$("#"+id).value="");
+  calCtx = "np"; calAuto = true;
   renderNPTasks();
   openModal("ovNew");
 }
@@ -2565,6 +2586,7 @@ function openDebrief(){
     .forEach(id=>{ const el=$("#"+id); if(el) el.value=""; });
   $("#n2Form").style.display="none";
   $("#n2DebriefStep").style.display="block";
+  calCtx = "n2"; calAuto = true;
   renderN2Tasks();
   openModal("ovNew2");
 }
@@ -2615,6 +2637,7 @@ function renderN2Assigns(){
   });
   // misma tarjeta de equipo + fechas que se usa en el alta manual y en la ficha, para no cargar la fecha dos veces
   $("#n2Assigns").innerHTML = [...n2Selected].map(t=>assignBlockHTML(t, n2AssignData[t], "n2")).join("");
+  renderCreationCal("n2");
 }
 
 async function createProject2(){
