@@ -1278,6 +1278,7 @@ let calAuto = true;   // saltar automáticamente al mes de la primera fecha en e
 
 function openDetail(id, readOnly=false){
   calCtx = "dt";
+  sxEditing = false;
   detailProject = projects.find(p=>p.id===id);
   if(!detailProject) return;
   detailSnapshot = JSON.parse(JSON.stringify(detailProject));
@@ -1463,9 +1464,17 @@ function renderDetail(){
     </tr>`;
   }).join("");
 
-  const sintesisContent = (p.sintesis || p.storyboard_url || p.tratamiento_url) ? `
+  const sxEditor = sxEditing ? `
+      <textarea id="sxEditTa" style="min-height:150px;width:100%">${esc(p.sintesis||"")}</textarea>
+      <div class="actions" style="justify-content:flex-start;margin-top:10px">
+        <button class="btn primary small" onclick="sxSave(this)">Guardar síntesis</button>
+        <button class="btn small" onclick="sxCancel()">Cancelar</button>
+      </div>` : "";
+  const sintesisContent = (p.sintesis || p.storyboard_url || p.tratamiento_url || !lockFields) ? `
     <div style="margin-top:var(--space-5)">
-      ${p.sintesis?sintesisHTML(p.sintesis):""}
+      ${sxEditing ? sxEditor
+        : p.sintesis ? sintesisHTML(p.sintesis) + (lockFields?"":`<button class="addline" onclick="sxEdit()">✎ editar síntesis</button>`)
+        : (lockFields?"":`<button class="addline" onclick="sxEdit()">+ agregar síntesis</button>`)}
       ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Storyboard ↗</a></p>`:""}
       ${p.tratamiento_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.tratamiento_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Tratamiento/Referencias ↗</a></p>`:""}
     </div>` : "";
@@ -2325,6 +2334,24 @@ function renderTracker(){
   $("#trkBody").innerHTML = trackerHTML(trkProject);
 }
 
+let sxEditing = false;
+function sxEdit(){ sxEditing = true; renderDetail(); }
+function sxCancel(){ sxEditing = false; renderDetail(); }
+async function sxSave(btn){
+  const p = detailProject;
+  const val = $("#sxEditTa").value.trim();
+  const prev = p.sintesis;
+  btn.disabled = true; btn.textContent = "Guardando…";
+  p.sintesis = val;
+  if(DEMO){ sxEditing = false; renderDetail(); toast("✔ Síntesis actualizada (demo)"); return; }
+  try{
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, sintesis: val })});
+    sxEditing = false; renderDetail(); toast("✔ Síntesis actualizada");
+  }catch(e){
+    p.sintesis = prev; btn.disabled = false; btn.textContent = "Guardar síntesis";
+    toast("No pude guardar la síntesis: "+e.message, true);
+  }
+}
 async function saveProjectInfo(btn){
   const _lbl = btn ? btn.textContent : "";
   if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
