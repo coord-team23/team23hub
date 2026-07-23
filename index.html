@@ -546,6 +546,7 @@
       <button class="status-opt" data-view="dashboard" onclick="switchView('dashboard')">Status</button>
       <button class="status-opt" data-view="proyectos" onclick="switchView('proyectos')">Proyectos</button>
       <button class="status-opt" data-view="calendario" onclick="switchView('calendario')">Calendario</button>
+      <button class="status-opt" data-view="equipo" onclick="switchView('equipo')">Equipo</button>
     </nav>
     <button class="btn small" id="btnNew">+ NUEVO PROYECTO</button>
   </div>
@@ -989,20 +990,48 @@ window.addEventListener("hashchange", ()=>{
   if(VIEW_TITLES[h] && h!==currentView) switchView(h);
 });
 
-/* ---------------- vista equipo (solo lectura) ---------------- */
+/* ---------------- vista equipo = base de talentos (derivada, solo lectura) ---------------- */
+/* Se arma sola a partir de Equipo interno (EP/Prod/Coord) + asignaciones confirmadas de
+   todos los proyectos en memoria. No hay carga manual: si alguien trabajó en algún proyecto,
+   aparece acá con sus roles e historial. Los rechazados quedan afuera. */
+function computeTalentos(){
+  const map = {};
+  const add = (nombre, email, rol, proyecto) => {
+    if(!nombre || !nombre.trim()) return;
+    const key = (email && email.trim()) ? "e:"+email.trim().toLowerCase() : "n:"+nombre.trim().toLowerCase();
+    if(!map[key]) map[key] = {nombre:nombre.trim(), email:"", roles:new Set(), proyectos:new Set()};
+    if(email && !map[key].email) map[key].email = email.trim();
+    if(rol) map[key].roles.add(rol);
+    if(proyecto) map[key].proyectos.add(proyecto);
+  };
+  projects.forEach(p=>{
+    if(p.ep_nombre) add(p.ep_nombre, p.ep_email, "EP", p.nombre);
+    if(p.prod_nombre) add(p.prod_nombre, p.prod_email, "Prod", p.nombre);
+    if(p.coord_nombre) add(p.coord_nombre, p.coord_email, "Coord", p.nombre);
+    Object.entries(p.asignaciones||{}).forEach(([tarea, rows])=>{
+      (rows||[]).forEach(r=>{
+        if(!r || !r.nombre) return;
+        if(r.estado==="rechazado") return;
+        add(r.nombre, r.email, tarea, p.nombre);
+      });
+    });
+  });
+  return Object.values(map)
+    .map(t=>({nombre:t.nombre, email:t.email, roles:[...t.roles].sort(), proyectos:[...t.proyectos]}))
+    .sort((a,b)=>b.proyectos.length-a.proyectos.length || a.nombre.localeCompare(b.nombre));
+}
+
 function renderEquipo(){
-  const pend = projects.filter(p=>p.status==="por_activarse");
-  const act  = projects.filter(p=>inProgress(p.status));
-  const done = projects.filter(p=>p.status==="completado");
-  const group = (label, dotClass, list) => `
-    <section class="status-block">
-      <div class="section-head"><span class="dot ${dotClass}"></span><h2>${label}</h2><span class="count">(${list.length})</span></div>
-      <div class="grid">${list.length ? list.map(p=>cardHTML(p,true)).join("") : `<div class="empty">Nada acá por ahora.</div>`}</div>
-    </section>`;
-  $("#equipoBody").innerHTML =
-    group("Pre-producción","",pend) +
-    group("Activos","act",act) +
-    group("Completados","done",done);
+  const talentos = computeTalentos();
+  $("#equipoBody").innerHTML = talentos.length ? `
+    <div class="grid">${talentos.map(t=>`
+      <div class="card" style="cursor:default">
+        <h3>${esc(t.nombre)}</h3>
+        <div class="meta">${t.proyectos.length} proyecto${t.proyectos.length===1?"":"s"}${t.email?" · "+esc(t.email):""}</div>
+        <div class="pills">${t.roles.map(r=>`<span class="pill">${esc(r)}</span>`).join("")}</div>
+        <div class="links" style="margin-top:var(--space-3)"><span style="font-size:12.5px;color:var(--gray)">${t.proyectos.map(esc).join(" · ")}</span></div>
+      </div>`).join("")}</div>`
+    : `<div class="empty">Todavía no hay nadie cargado en ningún proyecto.</div>`;
 }
 
 /* ---------------- nuevo proyecto ---------------- */
