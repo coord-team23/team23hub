@@ -306,6 +306,26 @@
   .chk-item .resp{font-size:14.8px;font-weight:800;letter-spacing:.1em;border:1.5px solid var(--ink);border-radius:var(--radius-full);padding:2px 8px;flex:none;margin-top:1px}
   .chk-item .by{font-size:16px;color:var(--gray);flex-basis:100%;padding-left:32px}
 
+  /* ---------- automatizaciones activables al crear un proyecto ---------- */
+  .auto-item{display:flex;gap:10px;align-items:flex-start;padding:9px 4px;border-bottom:1px solid var(--hair)}
+  .auto-item:last-child{border-bottom:none}
+  .auto-item .txt{font-size:15px;font-weight:var(--weight-bold);letter-spacing:.01em;flex:1}
+  .auto-item .txt small{display:block;font-size:12.5px;font-weight:var(--weight-regular);color:var(--gray);letter-spacing:0;margin-top:2px}
+  .auto-item.off .txt{color:var(--gray)}
+  .auto-note{font-size:12.5px;font-weight:var(--weight-bold);color:var(--red);margin-top:10px;line-height:1.45}
+
+  /* ---------- mails de propuesta a candidatos ---------- */
+  .mail-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-2px 0 10px 2px}
+  .mail-row .who{font-size:11px;font-weight:var(--weight-bold);letter-spacing:.04em;color:var(--gray)}
+  .mail-row .who.off{text-decoration:line-through}
+  #ovMail .modal{width:min(860px,100%)}
+  .mail-prev{width:100%;height:340px;border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);background:#fff;display:block}
+  .mail-adv{margin-bottom:var(--space-7)}
+  .mail-adv summary{font-size:11px;font-weight:var(--weight-bold);letter-spacing:.12em;text-transform:uppercase;color:var(--gray);cursor:pointer}
+  .mail-adv summary:hover{color:var(--ink)}
+  .mail-adv textarea{min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.5}
+  .mail-warn{font-size:12.5px;color:var(--red);font-weight:var(--weight-bold);margin:8px 0 6px;line-height:1.45}
+
   /* ---------- selector de flujo de creación (kick off vs. debrief IA) ---------- */
   .opt-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
   @media(min-width:640px){.opt-grid{grid-template-columns:1fr 1fr}}
@@ -568,6 +588,12 @@
 #acPanel .ac-item:last-child{border-bottom:none}
 #acPanel .ac-item:hover,#acPanel .ac-item.on{background:var(--ink);color:#fff}
 
+  /* ---- borradores ---- */
+  .draft-card{position:relative;border:2px dashed var(--red) !important;box-shadow:none !important}
+  .draft-card:hover{box-shadow:4px 4px 0 rgba(255,43,30,.25) !important}
+  .draft-card .draft-x{position:absolute;top:8px;right:10px;background:none;border:none;font-size:14px;cursor:pointer;color:var(--gray)}
+  .draft-card .draft-x:hover{color:var(--red)}
+
   /* ---- confirm + loader del hub ---- */
   .t23-ov{position:fixed;inset:0;background:rgba(10,10,10,.45);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px}
   .t23-card{background:#fff;border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:22px 24px;max-width:440px;width:100%}
@@ -721,6 +747,11 @@
       <div id="npCalPrev"></div>
     </div>
 
+    <div class="fgroup">
+      <div class="glabel">Automatizaciones <small>vienen todas activadas; desactivá solo si hace falta</small></div>
+      <div id="npAuto"></div>
+    </div>
+
     <div class="actions">
       <button class="btn" onclick="closeModal('ovNew')">Cancelar</button>
       <button class="btn primary" id="btnCreate" onclick="createProject()">Crear proyecto</button>
@@ -839,7 +870,7 @@
 <!-- ============ MODAL: NUEVO PROYECTO (OPCIÓN 2 · DEBRIEF IA) ============ -->
 <div class="overlay" id="ovNew2">
   <div class="modal" role="dialog" aria-modal="true">
-    <button class="close" onclick="closeModal('ovNew2')" aria-label="Cerrar">✕</button>
+    <button class="close" onclick="closeNew2()" aria-label="Cerrar">✕</button>
     <h2>Nuevo proyecto</h2>
     <div class="kicker">Opción 2 · Desde debrief — la IA arma el borrador, vos lo revisás</div>
 
@@ -884,16 +915,58 @@
       </div>
 
       <div class="fgroup">
-        <div class="glabel">4 · Tareas TEAM23, candidatos y fechas <small>varios por tarea para comparar presupuestos; les sale la propuesta por mail al crear</small></div>
+        <div class="glabel">4 · Tareas TEAM23, candidatos y fechas <small>varios por tarea para comparar presupuestos; a cada uno le sale la propuesta por mail al crear, y se puede apagar o editar por candidato</small></div>
         <div class="task-pills" id="n2Tasks"></div>
         <div id="n2Assigns"></div>
         <div id="n2CalPrev"></div>
       </div>
 
+      <div class="fgroup">
+        <div class="glabel">5 · Automatizaciones <small>vienen todas activadas; desactivá solo si hace falta</small></div>
+        <div id="n2Auto"></div>
+      </div>
+
       <div class="actions">
-        <button class="btn" onclick="closeModal('ovNew2')">Cancelar</button>
+        <button class="btn" onclick="closeNew2()">Cancelar</button>
+        <button class="btn" onclick="saveDraftBtn()">Guardar borrador</button>
         <button class="btn primary" id="btnCreate2" onclick="createProject2()">Crear proyecto</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: MAIL AL CANDIDATO ============ -->
+<div class="overlay" id="ovMail" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mailTitle">
+    <button class="close" onclick="mailClose()" aria-label="Cerrar">✕</button>
+    <h2 id="mailTitle">Mail al candidato</h2>
+    <div class="kicker" id="mailWho"></div>
+
+    <div class="fgroup">
+      <div class="glabel">Asunto</div>
+      <input type="text" id="mailSubject" oninput="mailLive()">
+    </div>
+
+    <div class="fgroup">
+      <div class="glabel">Apertura <small>reemplaza el saludo automático; el resto del mail se arma solo</small></div>
+      <textarea id="mailIntro" style="min-height:90px" oninput="mailLive()"></textarea>
+    </div>
+
+    <details class="mail-adv" id="mailAdvBox" ontoggle="mailAdvToggle()">
+      <summary>Editar el HTML completo</summary>
+      <div class="mail-warn" id="mailRawWarn" style="display:none">Mientras esta caja tenga contenido, el mail se manda tal cual: el asunto sigue valiendo, pero la apertura de arriba deja de aplicarse.</div>
+      <textarea id="mailHtml" oninput="mailLive()" placeholder="Se carga con el mail actual al abrir esta sección…"></textarea>
+    </details>
+
+    <div class="fgroup">
+      <div class="glabel">Vista previa <small>así sale el mail</small></div>
+      <iframe class="mail-prev" id="mailPrev" sandbox="" title="Vista previa del mail"></iframe>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="mailReset()">Restablecer</button>
+      <button class="btn" onclick="mailClose()">Cancelar</button>
+      <button class="btn primary" onclick="mailSave()">Guardar mail</button>
     </div>
   </div>
 </div>
@@ -1070,11 +1143,12 @@ function renderAll(){
   const act  = projects.filter(p=>inProgress(p.status));
   const done = projects.filter(p=>p.status==="completado");
 
-  $("#cPending").textContent = "("+pend.length+")";
+  const drafts = draftsAll();
+  $("#cPending").textContent = "("+(pend.length+drafts.length)+")";
   $("#cActive").textContent  = "("+act.length+")";
   $("#cDone").textContent    = "("+done.length+")";
 
-  $("#listPending").innerHTML = pend.length? pend.map(p=>cardHTML(p)).join("") : `<div class="empty">Nada en pre-producción. Los proyectos nuevos aparecen acá.</div>`;
+  $("#listPending").innerHTML = drafts.map(draftCardHTML).join("") + (pend.length? pend.map(p=>cardHTML(p)).join("") : (drafts.length? "" : `<div class="empty">Nada en pre-producción. Los proyectos nuevos aparecen acá.</div>`));
   $("#listActive").innerHTML  = act.length ? act.map(p=>cardHTML(p)).join("")  : `<div class="empty">Sin proyectos activos ahora mismo.</div>`;
 
   if(!done.length){ $("#listDone").innerHTML = `<div class="empty">Todavía no hay completados.</div>`; return; }
@@ -1140,6 +1214,217 @@ function renderEquipo(){
     group("Completados","done",done);
 }
 
+/* ================================================================
+   AUTOMATIZACIONES POR PROYECTO
+   Los tres bloques que dispara el workflow 3 al crear se pueden apagar
+   de a uno desde el armado. Por default vienen los tres encendidos; el
+   backend lee cada flag como "encendido salvo que llegue false", así que
+   un cliente viejo (o el guardado de borrador) sigue creando todo.
+   La portada viaja pegada a Drive: se copia dentro de la unidad nueva,
+   sin unidad no hay dónde ponerla.
+================================================================ */
+const AUTO_DEFS = [
+  ["drive",   "Crear unidad de Drive",     "Carpetas del proyecto, plantillas (desglose, brief, feedback, notas) y portada automática"],
+  ["frame",   "Crear proyecto de Frame.io","Proyecto + carpetas 1. Footage · 2. Offline · 3. Online · 4. Masters"],
+  ["discord", "Crear canales de Discord",  "Categoría privada, canales del proyecto y aviso inicial al equipo"]
+];
+const autoDefaults = () => ({ drive:true, frame:true, discord:true });
+let npAuto = autoDefaults();
+let n2Auto = autoDefaults();
+function autoStore(ctx){ return ctx==="n2" ? n2Auto : npAuto; }
+function renderAuto(ctx){
+  const box = $("#"+ctx+"Auto"); if(!box) return;
+  const st = autoStore(ctx);
+  const off = AUTO_DEFS.filter(([k])=>!st[k]).map(([,label])=>label.replace("Crear ",""));
+  box.innerHTML = AUTO_DEFS.map(([k,label,hint])=>`
+    <div class="auto-item ${st[k]?"":"off"}">
+      <button class="chk-box ${st[k]?"done":""}" onclick="toggleAuto('${ctx}','${k}')"
+              aria-pressed="${st[k]}" aria-label="${esc(label)}">${st[k]?"✓":""}</button>
+      <span class="txt">${esc(label)}<small>${esc(hint)}</small></span>
+    </div>`).join("") +
+    (off.length ? `<div class="auto-note">No se va a crear: ${esc(off.join(" · "))}. El proyecto se crea igual, pero desde el hub no hay forma de generarlo después: queda a mano.</div>` : "");
+}
+function toggleAuto(ctx,k){ const st = autoStore(ctx); st[k] = !st[k]; renderAuto(ctx); }
+/* etiqueta del botón mientras corre + texto del toast, según lo que quedó encendido */
+function autoNames(st){ return [st.drive&&"Drive", st.frame&&"Frame.io", st.discord&&"Discord"].filter(Boolean); }
+function autoBusyLabel(st){ const n = autoNames(st); return n.length ? "Creando "+n.join(" + ")+"…" : "Creando proyecto…"; }
+function autoDemoLinks(st){
+  const L = {};
+  if(st.drive) Object.assign(L,{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#"});
+  if(st.frame) L.frameio = "#";
+  return L;
+}
+
+/* ================================================================
+   MAILS DE PROPUESTA A CANDIDATOS
+   El armado (opción 2) es el único flujo que manda propuestas: cada
+   candidato con mail recibe una, con el timeline del proyecto y su rol
+   resaltado. Acá se puede apagar el envío uno por uno y editar el mail
+   antes de crear el proyecto.
+   El template es el mismo que tiene el workflow 3; el hub manda el HTML
+   ya armado en `body.mails`, así que lo que se ve en la vista previa es
+   literalmente lo que sale. El template de n8n queda como fallback para
+   clientes viejos: si tocás uno, tocá el otro.
+================================================================ */
+const mailFmtDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d||"") ? d.split("-").reverse().join("/") : (d||"a definir");
+function mailEsc(s){ return String(s??"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+/* datos del proyecto tal como están cargados en el formulario, en vivo */
+function mailProjectData(){
+  const timeline = [...n2Selected]
+    .map(t=>{ const d = n2TaskDates[t]||{}; return { fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||"" }; })
+    .filter(t=>t.inicio||t.fin||t.notas)
+    .sort((a,b)=>String(a.inicio||"9999").localeCompare(String(b.inicio||"9999")));
+  return {
+    proyecto: ($("#n2Nombre")||{}).value?.trim() || "",
+    cliente:  ($("#n2Cliente")||{}).value?.trim() || "",
+    sintesis: ($("#n2Sintesis")||{}).value?.trim() || "",
+    storyboard: ($("#n2Storyboard")||{}).value?.trim() || "",
+    timeline
+  };
+}
+function mailSubjectDefault(proyecto, rol){ return "🎬 Propuesta TEAM23 — " + (proyecto||"Proyecto nuevo") + " (" + rol + ")"; }
+function mailIntroDefault(nombre, cliente, rol){
+  return "Hola " + (nombre||"") + ", te contactamos por un proyecto nuevo" +
+         (cliente ? " para " + cliente : "") + ". Tu rol propuesto: " + rol + ".";
+}
+/* mismo HTML que arma el nodo "Armar propuestas" del wf3 */
+function mailBuildHTML(d, rol, nombre, intro){
+  const th = t => '<th style="text-align:left;padding:6px 10px;border-bottom:2px solid #0A0A0A;font-size:11px;letter-spacing:1px;">'+t+'</th>';
+  const conNotas = d.timeline.some(t=>t.notas);
+  const tl = d.timeline.length
+    ? '<table style="border-collapse:collapse;width:100%;font-size:14px;"><thead><tr>'+th("FASE")+th("INICIO")+th("FIN")+(conNotas?th("NOTAS"):"")+'</tr></thead><tbody>'+
+      d.timeline.map(t=>{
+        const mio = t.fase===rol;
+        const td = 'padding:6px 10px;border-bottom:1px solid #ddd;'+(mio?'background:#FFF3F2;':'');
+        return '<tr>'+
+          '<td style="'+td+(mio?'border-left:3px solid #FF2B1E;':'')+'"><b>'+mailEsc(t.fase)+'</b>'+(mio?' <span style="color:#FF2B1E;font-size:11px;font-weight:bold;">&larr; tu rol</span>':'')+'</td>'+
+          '<td style="'+td+'">'+mailFmtDate(t.inicio)+'</td>'+
+          '<td style="'+td+'">'+mailFmtDate(t.fin)+'</td>'+
+          (conNotas?'<td style="'+td+'font-size:12.5px;color:#555;">'+mailEsc(t.notas||"")+'</td>':'')+
+        '</tr>';
+      }).join("")+'</tbody></table>'
+    : '<p style="color:#8A8A8A;">Timeline a definir.</p>';
+  const sb = d.storyboard ? '<p><b>Storyboard / referencias:</b> <a href="'+mailEsc(d.storyboard)+'">'+mailEsc(d.storyboard)+'</a></p>' : "";
+  /* sin apertura propia va el saludo armado, igual que siempre (con cliente y rol
+     en negrita); con apertura propia va el texto tal cual lo escribieron */
+  const custom = (intro||"").trim();
+  const apertura = custom
+    ? '<p style="white-space:pre-line;">'+mailEsc(custom)+'</p>'
+    : '<p>Hola '+mailEsc(nombre||"")+', te contactamos por un proyecto nuevo'+(d.cliente?' para <b>'+mailEsc(d.cliente)+'</b>':"")+'. Tu rol propuesto: <b>'+mailEsc(rol)+'</b>.</p>';
+  return '<div style="font-family:Helvetica,Arial,sans-serif;color:#0A0A0A;max-width:640px;">'+
+    '<h2 style="margin:0 0 4px;font-size:22px;">'+mailEsc(d.proyecto)+'</h2>'+
+    '<p style="margin:0 0 16px;color:#FF2B1E;font-weight:bold;letter-spacing:2px;font-size:11px;">PROPUESTA DE PROYECTO · TEAM23</p>'+
+    apertura+
+    (d.sintesis?'<p style="margin:14px 0 6px;font-weight:bold;font-size:12px;letter-spacing:1px;">DE QUÉ SE TRATA</p><p style="white-space:pre-line;">'+mailEsc(d.sintesis)+'</p>':"")+sb+
+    '<p style="margin:14px 0 6px;font-weight:bold;font-size:12px;letter-spacing:1px;">TIMELINE TENTATIVO</p>'+tl+
+    '<p style="margin-top:18px;">Si te interesa, respondé este mail con tu disponibilidad y presupuesto para el rol.</p>'+
+    '<p style="margin-top:22px;font-size:10px;color:#8A8A8A;letter-spacing:2px;">TEAM23 PRODUCTION HUB</p></div>';
+}
+/* lo que realmente se manda para una fila: HTML crudo si lo editaron, si no el armado */
+function mailFinalHTML(r, rol){
+  if((r.mailHtml||"").trim()) return r.mailHtml;
+  return mailBuildHTML(mailProjectData(), rol, r.nombre||"", r.mailIntro||"");
+}
+function mailFinalSubject(r, rol){
+  return (r.mailSubject||"").trim() || mailSubjectDefault(mailProjectData().proyecto, rol);
+}
+function mailIsEdited(r){ return !!((r.mailIntro||"").trim() || (r.mailSubject||"").trim() || (r.mailHtml||"").trim()); }
+
+/* ---------- controles por fila, dentro del bloque de candidatos ---------- */
+function mailSlotId(ctx, tarea, i){ return "mrow-"+ctx+"-"+String(tarea).replace(/[^a-zA-Z0-9]/g,"")+"-"+i; }
+function mailRowInner(r, tarea, i, ctx){
+  if(ctx!=="n2" || !r || !(r.email||"").trim()) return "";
+  const on = r.mailOn !== false;
+  const tq = String(tarea).replace(/'/g,"\\'");
+  return `<div class="mail-row">
+    <span class="who ${on?"":"off"}">✉ Propuesta a ${esc(r.email)}</span>
+    <button class="mini-btn ${on?"on":"no"}" onclick="mailToggle('${tq}',${i})" aria-pressed="${on}">${on?"Envío activado":"Envío apagado"}</button>
+    <button class="mini-btn" onclick="mailOpen('${tq}',${i})">✎ Editar mail</button>
+    ${mailIsEdited(r)?'<span class="chipst conf">Editado</span>':""}
+  </div>`;
+}
+/* el mail aparece cuando se carga la dirección: refresco solo esta fila para no perder el foco */
+function mailSlotSync(ctx, tarea, i){
+  if(ctx!=="n2") return;
+  const el = $("#"+mailSlotId(ctx,tarea,i));
+  if(el) el.innerHTML = mailRowInner((n2AssignData[tarea]||[])[i], tarea, i, ctx);
+}
+function mailToggle(tarea, i){
+  const r = (n2AssignData[tarea]||[])[i]; if(!r) return;
+  r.mailOn = r.mailOn === false;
+  mailSlotSync("n2", tarea, i);
+  toast(r.mailOn ? "Se le manda la propuesta a "+(r.nombre||r.email) : "No se le manda mail a "+(r.nombre||r.email));
+}
+
+/* ---------- popup de edición ---------- */
+let mailEditing = null;   // { tarea, i, rol, nombre, email } — la fila en edición
+function mailOpen(tarea, i){
+  const r = (n2AssignData[tarea]||[])[i]; if(!r) return;
+  mailEditing = { tarea, i, rol:tarea, nombre:r.nombre||"", email:r.email||"" };
+  const d = mailProjectData();
+  $("#mailWho").textContent = (r.nombre||r.email) + " · " + tarea + " · " + r.email;
+  $("#mailSubject").value = (r.mailSubject||"").trim() || mailSubjectDefault(d.proyecto, tarea);
+  $("#mailIntro").value = (r.mailIntro||"").trim() || mailIntroDefault(r.nombre||"", d.cliente, tarea);
+  $("#mailHtml").value = (r.mailHtml||"");
+  $("#mailAdvBox").open = !!(r.mailHtml||"").trim();
+  mailLive();
+  $("#ovMail").classList.add("open");   // no toca el scroll del body: ovNew2 sigue abierto detrás
+}
+function mailClose(){ $("#ovMail").classList.remove("open"); mailEditing = null; }
+/* al desplegar el HTML lo precargo con el mail actual, para editar sobre algo real */
+function mailAdvToggle(){
+  const box = $("#mailAdvBox"), ta = $("#mailHtml");
+  if(box.open && !ta.value.trim() && mailEditing){
+    ta.value = mailBuildHTML(mailProjectData(), mailEditing.rol, mailEditing.nombre, $("#mailIntro").value);
+  }
+  mailLive();
+}
+function mailPreviewHTML(){
+  if(!mailEditing) return "";
+  const raw = $("#mailHtml").value.trim();
+  return raw || mailBuildHTML(mailProjectData(), mailEditing.rol, mailEditing.nombre, $("#mailIntro").value);
+}
+function mailLive(){
+  if(!mailEditing) return;
+  const raw = $("#mailHtml").value.trim();
+  $("#mailRawWarn").style.display = raw ? "block" : "none";
+  $("#mailIntro").disabled = !!raw;
+  const asunto = ($("#mailSubject").value||"").trim();
+  $("#mailPrev").srcdoc =
+    '<div style="font-family:Helvetica,Arial,sans-serif;padding:14px 16px;">'+
+    '<div style="font-size:11px;letter-spacing:1.5px;color:#8A8A8A;text-transform:uppercase;">Asunto</div>'+
+    '<div style="font-size:15px;font-weight:bold;margin:2px 0 14px;border-bottom:1px solid #ddd;padding-bottom:12px;">'+mailEsc(asunto||"(sin asunto)")+'</div>'+
+    mailPreviewHTML()+'</div>';
+}
+function mailReset(){
+  if(!mailEditing) return;
+  const d = mailProjectData();
+  $("#mailSubject").value = mailSubjectDefault(d.proyecto, mailEditing.rol);
+  $("#mailIntro").value = mailIntroDefault(mailEditing.nombre, d.cliente, mailEditing.rol);
+  $("#mailHtml").value = "";
+  $("#mailAdvBox").open = false;
+  mailLive();
+  toast("Mail vuelto al automático");
+}
+function mailSave(){
+  if(!mailEditing) return;
+  const { tarea, i, rol, nombre } = mailEditing;
+  const r = (n2AssignData[tarea]||[])[i];
+  if(!r){ mailClose(); return; }
+  const d = mailProjectData();
+  const subject = ($("#mailSubject").value||"").trim();
+  const intro = ($("#mailIntro").value||"").trim();
+  const raw = ($("#mailHtml").value||"").trim();
+  /* guardo solo lo que difiere del automático, así el mail sigue tomando los
+     cambios del formulario (nombre, síntesis, fechas) mientras no lo pisen */
+  r.mailSubject = subject === mailSubjectDefault(d.proyecto, rol) ? "" : subject;
+  r.mailIntro = intro === mailIntroDefault(nombre, d.cliente, rol) ? "" : intro;
+  r.mailHtml = (raw && raw !== mailBuildHTML(d, rol, nombre, intro)) ? raw : "";
+  mailSlotSync("n2", tarea, i);
+  mailClose();
+  toast(mailIsEdited(r) ? "✔ Mail guardado para "+(r.nombre||r.email) : "Mail sin cambios: queda el automático");
+}
+
 /* ---------------- nuevo proyecto ---------------- */
 let npSelected = new Set();
 function renderNPTasks(){
@@ -1184,11 +1469,12 @@ function assignBlockHTML(tarea, rows, ctx){
     ${rows.map((r,i)=>`
       <div class="assign-row">
         <input type="text" placeholder="Nombre" autocomplete="off" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tq}',${i},'nombre',this.value);acOpen(this,'${ctx}','${tq}',${i})" onkeydown="acKey(event)" onblur="acBlur(this,'${ctx}','${tq}',${i})">
-        <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tq}',${i},'email',this.value)">
+        <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tq}',${i},'email',this.value)" onblur="mailSlotSync('${ctx}','${tq}',${i})">
         <button class="icon-btn" onclick="delAssign('${ctx}','${tq}',${i})" title="Quitar">✕</button>
         <input type="text" placeholder="Discord" value="${esc(r.discord||'')}" oninput="setAssign('${ctx}','${tq}',${i},'discord',this.value)">
         <input type="tel" placeholder="Teléfono" value="${esc(r.telefono||'')}" oninput="setAssign('${ctx}','${tq}',${i},'telefono',this.value)">
-      </div>${stateRow(r,i)}`).join("")}
+      </div>
+      <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>${stateRow(r,i)}`).join("")}
     <button class="addline" onclick="addAssign('${ctx}','${tarea}')">+ agregar persona</button>
     <div class="frow" style="margin-top:var(--space-4)">
       <div><label class="f">Inicio</label><input type="date" value="${esc(td.inicio||"")}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value)"></div>
@@ -1248,11 +1534,12 @@ async function createProject(){
     prod_nombre: $("#npProdNombre").value.trim(), prod_email: $("#npProdEmail").value.trim(),
     coord_nombre: $("#npCoordNombre").value.trim(), coord_email: $("#npCoordEmail").value.trim(),
     tareas: [...npSelected], asignaciones: asigs, taskDates: tDates, sintesis: npSintesis,
-    storyboard_url: npStoryboardUrl, tratamiento_url: npTratamientoUrl
+    storyboard_url: npStoryboardUrl, tratamiento_url: npTratamientoUrl,
+    auto_drive: npAuto.drive, auto_frame: npAuto.frame, auto_discord: npAuto.discord
   };
 
   const btn = $("#btnCreate");
-  btn.disabled = true; btn.textContent = "Creando Drive + Frame.io…";
+  btn.disabled = true; btn.textContent = autoBusyLabel(npAuto);
   t23LoadShow("crear");
 
   try{
@@ -1260,7 +1547,7 @@ async function createProject(){
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"}, calendario:[] };
+        links:autoDemoLinks(npAuto), calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
       proj.tareas = proj.tareas||body.tareas; proj.asignaciones = proj.asignaciones||body.asignaciones;
@@ -1272,7 +1559,8 @@ async function createProject(){
     closeModal("ovNew");
     if(currentView!=="proyectos") switchView("proyectos");
     openDetail(proj.id);
-    toast("✔ Proyecto creado, carpetas de Drive y Frame.io listas");
+    const nOn = autoNames(npAuto);
+    toast(nOn.length ? "✔ Proyecto creado, "+nOn.join(" + ")+" listo" : "✔ Proyecto creado, sin automatizaciones");
     rosterSyncFromAsigs(asigs);
   }catch(e){
     toast("Error al crear: "+e.message, true);
@@ -2394,14 +2682,15 @@ function t23Confirm(msg, opts={}){
     ov.innerHTML = `<div class="t23-card">
       <div class="kicker" style="margin-bottom:10px">${esc(opts.titulo||"CONFIRMAR")}</div>
       <p style="font-size:15px;margin:0 0 18px;line-height:1.5">${esc(msg)}</p>
-      <div class="actions" style="justify-content:flex-end;margin:0">
+      <div class="actions" style="justify-content:flex-end;margin:0;flex-wrap:wrap">
         <button class="btn small" data-a="no">${esc(opts.cancelar||"Cancelar")}</button>
+        ${opts.extra?`<button class="btn small" data-a="extra">${esc(opts.extra)}</button>`:""}
         <button class="btn small ${opts.peligro?"danger":"primary"}" data-a="si">${esc(opts.ok||"Aceptar")}</button>
       </div></div>`;
     const done = v=>{ ov.remove(); res(v); };
     ov.addEventListener("click", e=>{
       const a = e.target.closest("[data-a]");
-      if(a) done(a.dataset.a==="si");
+      if(a) done(a.dataset.a==="si" ? true : a.dataset.a==="extra" ? "extra" : false);
       else if(e.target===ov) done(false);
     });
     document.body.appendChild(ov);
@@ -2679,6 +2968,7 @@ function kickOffComplete(){
   }
   // Inicializar el estado del nuevo proyecto
   npSelected = new Set(); npAssignData = {}; npTaskDates = {};
+  npAuto = autoDefaults(); renderAuto("np");
   npSintesis = kickOffResumen;
   npStoryboardUrl = kickOffLinks.storyboard || "";
   npTratamientoUrl = kickOffLinks.tratamiento || "";
@@ -2707,8 +2997,91 @@ function chooseOption(n){
 /* ---------------- Opción 2: crear desde debrief (IA) ---------------- */
 let n2Selected = new Set(), n2AssignData = {}, n2TaskDates = {};
 
+/* ---------------- borradores compartidos (viven en el sheet, los ve todo el equipo) ---------------- */
+let currentDraftId = null;
+function draftsAll(){ return (projects||[]).filter(p=>p.status==="borrador"); }
+function n2Snapshot(){
+  const ids = ["n2Nombre","n2Cliente","n2Agencia","n2Productora","n2Director","n2Sintesis","n2Storyboard",
+               "n2EpNombre","n2EpEmail","n2ProdNombre","n2ProdEmail","n2CoordNombre","n2CoordEmail"];
+  return {
+    debrief: ($("#n2Debrief")||{}).value||"",
+    campos: Object.fromEntries(ids.map(id=>[id, ($("#"+id)||{}).value||""])),
+    tareas: [...n2Selected], assign: n2AssignData, fechas: n2TaskDates,
+    auto: { ...n2Auto },
+    formVisible: $("#n2Form").style.display!=="none"
+  };
+}
+async function saveDraft(){
+  const s = n2Snapshot();
+  if(!s.campos.n2Nombre.trim() && !s.debrief.trim() && !s.tareas.length){
+    toast("No hay nada para guardar como borrador", true); return false;
+  }
+  const nombre = s.campos.n2Nombre.trim() || "Borrador sin nombre";
+  const cliente = s.campos.n2Cliente.trim();
+  if(DEMO){
+    const p = { id:"draft_demo_"+Date.now(), nombre, cliente, status:"borrador", year:String(new Date().getFullYear()),
+      draft_json: JSON.stringify(s), tareas:[], asignaciones:{}, links:{}, calendario:[], taskDates:{} };
+    if(currentDraftId) projects = projects.filter(x=>x.id!==currentDraftId);
+    projects.push(p); currentDraftId = p.id; renderAll();
+    toast("✔ Borrador guardado (demo)"); return true;
+  }
+  t23LoadShow();
+  try{
+    const p = await api("/webhook/team23/create",{method:"POST",
+      body: JSON.stringify({ modo:"borrador", nombre, cliente, draft: s })});
+    if(!p || !p.id) throw new Error("respuesta vacía");
+    const viejo = currentDraftId;
+    projects.push(p); currentDraftId = p.id;
+    if(viejo){
+      projects = projects.filter(x=>x.id!==viejo);
+      api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id:viejo})}).catch(()=>{});
+    }
+    renderAll();
+    toast("✔ Borrador guardado, lo ve todo el equipo");
+    return true;
+  }catch(e){ toast("No pude guardar el borrador: "+e.message, true); return false; }
+  finally{ t23LoadHide(); }
+}
+async function saveDraftBtn(){ if(await saveDraft()) closeModal("ovNew2"); }
+function openDraft(id){
+  const p = (projects||[]).find(x=>x.id===id); if(!p) return;
+  let d = {}; try{ d = JSON.parse(p.draft_json||"{}"); }catch(e){}
+  openDebrief();
+  currentDraftId = p.id;
+  $("#n2Debrief").value = d.debrief||"";
+  Object.entries(d.campos||{}).forEach(([k,v])=>{ const el=$("#"+k); if(el) el.value=v; });
+  n2Selected = new Set(d.tareas||[]);
+  n2AssignData = d.assign||{};
+  n2TaskDates = d.fechas||{};
+  n2Auto = Object.assign(autoDefaults(), d.auto||{});
+  renderAuto("n2");
+  renderN2Tasks();
+  if(d.formVisible || (d.campos||{}).n2Nombre) $("#n2Form").style.display="block";
+}
+async function deleteDraftUI(id){
+  if(await t23Confirm("Se elimina el borrador para todo el equipo. No tiene automatizaciones asociadas.", {titulo:"ELIMINAR BORRADOR", ok:"Eliminar", peligro:true}) !== true) return;
+  if(!DEMO){
+    try{ await api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id})}); }
+    catch(e){ toast("No pude eliminar el borrador: "+e.message, true); return; }
+  }
+  projects = projects.filter(x=>x.id!==id);
+  if(currentDraftId===id) currentDraftId = null;
+  renderAll();
+  toast("✔ Borrador eliminado");
+}
+function draftCardHTML(p){
+  return `<div class="card draft-card" onclick="openDraft('${p.id}')">
+    <button class="draft-x" onclick="event.stopPropagation();deleteDraftUI('${p.id}')" aria-label="Eliminar borrador">✕</button>
+    <h3>${esc(p.nombre||"Borrador sin nombre")}</h3>
+    <div class="meta">${p.cliente?esc(p.cliente)+" · ":""}borrador compartido</div>
+    <div class="pills"><span class="pill" style="background:#fff;border:1.5px dashed var(--red);color:var(--red)">BORRADOR · sin automatizaciones</span></div>
+  </div>`;
+}
+
 function openDebrief(){
+  currentDraftId = null;
   n2Selected = new Set(); n2AssignData = {}; n2TaskDates = {};
+  n2Auto = autoDefaults(); renderAuto("n2");
   ["n2Debrief","n2Nombre","n2Productora","n2Director","n2Cliente","n2Agencia","n2Sintesis","n2Storyboard",
    "n2EpNombre","n2EpEmail","n2ProdNombre","n2ProdEmail","n2CoordNombre","n2CoordEmail"]
     .forEach(id=>{ const el=$("#"+id); if(el) el.value=""; });
@@ -2733,7 +3106,11 @@ async function parseDebrief2(){
         timeline:[{fase:"Online",inicio:"2026-08-01",fin:"2026-08-10",notas:""},{fase:"VFX",inicio:"2026-08-05",fin:"2026-08-15",notas:""}],
         storyboard_url:"" };
     } else {
-      r = await api("/webhook/team23/parse", {method:"POST", body: JSON.stringify({debrief_text:text})});
+      const pedir = () => api("/webhook/team23/parse", {method:"POST", body: JSON.stringify({debrief_text:text})});
+      const vacio = o => !o || (!o.nombre && !o.cliente && !o.sintesis && !(o.tareas||[]).length);
+      r = await pedir();
+      if(vacio(r)){ await new Promise(res=>setTimeout(res,1500)); r = await pedir(); }  /* reintento silencioso ante un hipo */
+      if(vacio(r)) throw new Error("la respuesta llegó vacía dos veces. Esperá unos segundos y reintentá.");
     }
     $("#n2Nombre").value = r.nombre||"";       $("#n2Cliente").value = r.cliente||"";
     $("#n2Agencia").value = r.agencia||"";     $("#n2Productora").value = r.productora||"";
@@ -2748,6 +3125,15 @@ async function parseDebrief2(){
     toast("✔ Debrief analizado, revisá y ajustá antes de crear");
   }catch(e){ toast("No pude analizar el debrief: "+e.message, true); }
   finally{ t23LoadHide(); btn.disabled=false; btn.textContent="Analizar debrief"; }
+}
+function n2Dirty(){
+  return !!(($("#n2Debrief")&&$("#n2Debrief").value.trim()) || ($("#n2Nombre")&&$("#n2Nombre").value.trim()) || n2Selected.size);
+}
+async function closeNew2(){
+  if(!n2Dirty()){ closeModal("ovNew2"); return; }
+  const r = await t23Confirm("Vas a cerrar el armado sin crear el proyecto.", {titulo:"CERRAR SIN CREAR", ok:"Cerrar igual", peligro:true, extra:"Guardar borrador"});
+  if(r === "extra"){ if(await saveDraft()) closeModal("ovNew2"); return; }
+  if(r === true) closeModal("ovNew2");
 }
 function skipDebrief2(){ $("#n2Form").style.display="block"; }
 
@@ -2787,6 +3173,21 @@ async function createProject2(){
     const d = n2TaskDates[t];
     if(d && (d.inicio||d.fin||d.notas)) tDates[t]=d;
   });
+  /* un mail por candidato con dirección, ya redactado: lo que se ve en el
+     editor es lo que sale. Los apagados viajan con enviar:false para que
+     queden registrados en la ejecución del workflow. */
+  const mails = [];
+  [...n2Selected].forEach(t=>{
+    (n2AssignData[t]||[]).forEach(r=>{
+      if(!r || !(r.email||"").trim()) return;
+      mails.push({
+        rol: t, to: r.email.trim(), nombre: r.nombre||"",
+        enviar: r.mailOn !== false,
+        subject: mailFinalSubject(r, t),
+        html: mailFinalHTML(r, t)
+      });
+    });
+  });
 
   const body = {
     nombre, cliente,
@@ -2799,18 +3200,20 @@ async function createProject2(){
     tareas: [...n2Selected], asignaciones: asigs, taskDates: tDates,
     sintesis: $("#n2Sintesis").value.trim(),
     storyboard_url: $("#n2Storyboard").value.trim(),
-    debrief_raw: $("#n2Debrief").value.trim()
+    debrief_raw: $("#n2Debrief").value.trim(),
+    mails,
+    auto_drive: n2Auto.drive, auto_frame: n2Auto.frame, auto_discord: n2Auto.discord
   };
 
   const btn = $("#btnCreate2");
-  btn.disabled = true; btn.textContent = "Creando Drive + Frame.io…";
+  btn.disabled = true; btn.textContent = autoBusyLabel(n2Auto);
   t23LoadShow("crear");
   try{
     let proj;
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
+        links:autoDemoLinks(n2Auto),
         calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
@@ -2826,8 +3229,16 @@ async function createProject2(){
     closeModal("ovNew2");
     if(currentView!=="proyectos") switchView("proyectos");
     openDetail(proj.id);
-    const nCand = Object.values(asigs).flat().filter(r=>r.email).length;
-    toast(nCand ? "✔ Proyecto creado, propuestas enviadas a "+nCand+" candidato"+(nCand>1?"s":"") : "✔ Proyecto creado, carpetas de Drive y Frame.io listas");
+    const nCand = mails.filter(m=>m.enviar).length;
+    const nOn2 = autoNames(n2Auto);
+    toast(nCand ? "✔ Proyecto creado, propuestas enviadas a "+nCand+" candidato"+(nCand>1?"s":"")
+        : nOn2.length ? "✔ Proyecto creado, "+nOn2.join(" + ")+" listo"
+        : "✔ Proyecto creado, sin automatizaciones");
+    if(currentDraftId){
+      const viejoDraft = currentDraftId; currentDraftId = null;
+      projects = projects.filter(x=>x.id!==viejoDraft);
+      api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id:viejoDraft})}).catch(()=>{});
+    }
     rosterSyncFromAsigs(asigs);
   }catch(e){
     toast("Error al crear: "+e.message, true);
@@ -2868,12 +3279,27 @@ if(_ovDet){
   _ovDet.addEventListener("input", ()=>{ detailDirty = true; });
   _ovDet.addEventListener("change", ()=>{ detailDirty = true; });
 }
+/* cierre de overlays: cada uno con su salida (la ficha pregunta, el armado ofrece
+   guardar borrador, el editor de mails no toca el scroll porque queda uno abierto atrás) */
+function closeOverlayById(id){
+  if(id==="ovDetail"){ requestCloseDetail(); return; }
+  if(id==="ovNew2"){ closeNew2(); return; }
+  if(id==="ovMail"){ mailClose(); return; }
+  closeModal(id);
+}
 document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{
   if(e.target!==ov) return;
-  if(ov.id==="ovDetail"){ requestCloseDetail(); return; }
-  closeModal(ov.id);
+  closeOverlayById(ov.id);
 }));
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id)); });
+/* Escape cierra SOLO el overlay de arriba: con el editor de mails abierto sobre
+   el armado, cerrarlo no se puede llevar puesto el formulario entero */
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape") return;
+  const abiertos = [...document.querySelectorAll(".overlay.open")];
+  if(!abiertos.length) return;
+  const z = el => parseInt(getComputedStyle(el).zIndex,10) || 0;
+  closeOverlayById(abiertos.reduce((a,b)=> z(b) >= z(a) ? b : a).id);
+});
 
 let toastTimer;
 function toast(msg, err=false){
@@ -3123,6 +3549,7 @@ function asigAutofill(input, ctx, t, i){
   setIf('input[type=email]', 'email', cols.mail);
   setIf('input[placeholder="Discord"]', 'discord', cols.discord);
   setIf('input[type=tel]', 'telefono', cols.tel);
+  mailSlotSync(ctx, t, i);   /* si el roster completó el mail, aparecen los controles de propuesta */
 }
 async function rosterSyncFromAsigs(asigs){
   try{
