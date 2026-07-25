@@ -705,6 +705,8 @@
   </div>
 </div>
 
+<div class="demo-banner" id="staleBanner" style="display:none"></div>
+
 <div class="demo-banner" id="demoBanner" style="display:none">
   <b>MODO DEMO</b> — Estás viendo datos de ejemplo. Para conectarlo en serio: configurá <code>CONFIG.N8N_BASE</code> y <code>CONFIG.API_KEY</code> al inicio del archivo, con tus workflows de n8n importados (ver README).
 </div>
@@ -1202,6 +1204,37 @@ function autoAdvanceOverdue(){
   });
 }
 
+/* ---------- caché de proyectos + aviso de datos viejos ---------- */
+function cacheLeer(){
+  try{
+    const c = JSON.parse(localStorage.getItem("t23_projects")||"null");
+    if(Array.isArray(c)) return { ts:0, projects:c };                 // formato viejo, sin fecha
+    if(c && Array.isArray(c.projects)) return { ts:c.ts||0, projects:c.projects };
+  }catch(e){}
+  return null;
+}
+function cacheGuardar(list){
+  try{ localStorage.setItem("t23_projects", JSON.stringify({ ts:Date.now(), projects:list })); }catch(e){}
+}
+function haceCuanto(ts){
+  if(!ts) return "de una sesión anterior";
+  const min = Math.round((Date.now()-ts)/60000);
+  if(min < 2) return "de hace un momento";
+  if(min < 60) return "de hace "+min+" minutos";
+  const h = Math.round(min/60);
+  if(h < 24) return "de hace "+h+(h===1?" hora":" horas");
+  const d = Math.round(h/24);
+  return "de hace "+d+(d===1?" día":" días");
+}
+function staleBannerShow(motivo, ts){
+  const el = $("#staleBanner"); if(!el) return;
+  el.innerHTML = ts !== null
+    ? `<b>DATOS VIEJOS</b> — No pude conectar con n8n (${esc(motivo)}), así que esto es lo último guardado, ${esc(haceCuanto(ts))}. Puede faltar o sobrar algo. <button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar</button>`
+    : `<b>SIN DATOS</b> — No pude conectar con n8n (${esc(motivo)}) y no hay nada guardado. Revisá CONFIG y las credenciales del workflow 2, y que esté publicado. <button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar</button>`;
+  el.style.display = "block";
+}
+function staleBannerHide(){ const el = $("#staleBanner"); if(el) el.style.display = "none"; }
+
 async function loadProjects(){
   if(DEMO){
     projects = JSON.parse(JSON.stringify(demoProjects));
@@ -1209,15 +1242,18 @@ async function loadProjects(){
     autoAdvanceOverdue();
     onProjectsLoaded(); return;
   }
-  /* cache local: pinta al instante lo último conocido mientras llega lo fresco */
-  if(!projects.length){
-    try{
-      const c = JSON.parse(localStorage.getItem("t23_projects")||"null");
-      if(Array.isArray(c) && c.length){ projects = c; onProjectsLoaded(); }
-    }catch(e){}
+  /* Caché local: pinta al instante lo último conocido mientras llega lo fresco.
+     Ojo con esto: si el fetch falla, lo que queda en pantalla ES el caché. Sin un
+     aviso persistente el hub miente y parece que un proyecto no existe — pasó, con
+     el dbSheetId de wf2 en placeholder: el portal leía bien y el hub mostraba una
+     foto vieja sin decirlo. El toast de error duraba 4 segundos y se perdía. */
+  const cache = cacheLeer();
+  if(!projects.length && cache && cache.projects.length){
+    projects = cache.projects; onProjectsLoaded();
   }
   const prevIds = new Set(projects.map(p=>p.id));
   const hadCache = projects.length > 0;
+  const cacheTs = cache ? cache.ts : 0;
   syncPillShow(true);
   try{
     const data = await api("/webhook/team23/projects");
@@ -1231,13 +1267,15 @@ async function loadProjects(){
     }));
     autoAdvanceOverdue();
     onProjectsLoaded();
-    try{ localStorage.setItem("t23_projects", JSON.stringify(projects)); }catch(e){}
+    cacheGuardar(projects);
+    staleBannerHide();
     if(hadCache){
       const nuevos = projects.filter(p=>!prevIds.has(p.id)).length;
       if(nuevos) toast("✔ "+nuevos+(nuevos>1?" proyectos nuevos":" proyecto nuevo"));
     }
   }catch(e){
     toast("No pude cargar los proyectos, revisá n8n ("+e.message+")", true);
+    staleBannerShow(e.message, hadCache ? cacheTs : null);
   }finally{
     syncPillShow(false);
   }
@@ -1501,10 +1539,14 @@ function mailRowInner(r, tarea, i, ctx){
   const editado = mailIsEdited(r) ? '<span class="chipst conf">Editado</span>' : "";
   const editar = `<button class="mini-btn" onclick="mailOpen('${tq}',${i},'${ctx}')">✎ Editar mail</button>`;
   if(ctx==="dt"){
-    const enviado = !!r.mailSentAt;
+    /* La propuesta es para invitar a alguien que todavía no dijo que sí. Si ya se
+       la mandaste, o si la persona ya está confirmada / activa / inactiva en el
+       proyecto, el bloque no tiene nada que hacer ahí. La fecha del envío no se
+       pierde: pasa al chip de estado. */
+    if(r.mailSentAt || r.estado !== "candidato") return "";
     return `<div class="mail-row">
-      <span class="who">✉ ${enviado?"Propuesta enviada · "+esc(mailFechaCorta(r.mailSentAt)):"Propuesta"}</span>
-      <button class="mini-btn ${enviado?"":"on"}" onclick="mailSend('${tq}',${i})">${enviado?"Reenviar propuesta":"Enviar propuesta"}</button>
+      <span class="who">✉ Propuesta</span>
+      <button class="mini-btn on" onclick="mailSend('${tq}',${i})">Enviar propuesta</button>
       ${editar}${editado}
     </div>`;
   }
@@ -1677,6 +1719,9 @@ function assignBlockHTML(tarea, rows, ctx){
   const stateRow = (r,i)=>{
     if(!dt || vacia(r)) return "";
     const b = (estado, txt, clase="") => `<button class="mini-btn ${clase}" onclick="candSet('${tq}',${i},'${estado}')">${txt}</button>`;
+    /* si se le mandó la propuesta y todavía no contestó, la fecha queda a la vista */
+    const enviado = (dt && r.estado==="candidato" && r.mailSentAt)
+      ? `<span class="who" style="margin-left:2px">✉ enviada ${esc(mailFechaCorta(r.mailSentAt))}</span>` : "";
     if(!enCurso){
       /* pre-producción: se resuelve el candidato */
       if(!r.estado) return "";
@@ -1685,14 +1730,14 @@ function assignBlockHTML(tarea, rows, ctx){
       const acts = r.estado==="candidato"
         ? b("confirmado","✓ Confirmar") + b("rechazado","✕ Rechazar","no")
         : `<button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
-      return `<div class="cand-state">${c}${acts}</div>`;
+      return `<div class="cand-state">${c}${acts}${enviado}</div>`;
     }
     /* en curso: activo / inactivo. Sin estado (alta manual) cuenta como activo.
        Excepción: un candidato sigue siendo candidato — es gente que se sumó con
        el proyecto en marcha y todavía tiene que decir que sí. Si se rechaza,
        sale del cuadro igual que los rechazados de pre-producción. */
     if(r.estado==="candidato")
-      return `<div class="cand-state">${chip("cand","Candidato")}${b("confirmado","✓ Confirmar")}${b("rechazado","✕ Rechazar","no")}</div>`;
+      return `<div class="cand-state">${chip("cand","Candidato")}${b("confirmado","✓ Confirmar")}${b("rechazado","✕ Rechazar","no")}${enviado}</div>`;
     if(r.estado==="inactivo") return `<div class="cand-state">${chip("inact","Inactivo")}${b("confirmado","↺ Reactivar")}</div>`;
     return `<div class="cand-state">${chip("conf","Activo")}${b("inactivo","Desactivar","no")}</div>`;
   };
@@ -1762,7 +1807,14 @@ function setTaskDate(ctx,t,field,val){
 }
 function assignStore(ctx){ return ctx==="np" ? npAssignData : ctx==="n2" ? n2AssignData : detailProject.asignaciones; }
 function setAssign(ctx,t,i,k,v){ assignStore(ctx)[t][i][k]=v; }
-function addAssign(ctx,t){ assignStore(ctx)[t].push({nombre:"",email:"",discord:"",telefono:""}); ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
+function addAssign(ctx,t){
+  /* en la ficha, alguien que se suma al proyecto arranca como candidato: es lo que
+     habilita mandarle la propuesta y después confirmarlo o rechazarlo */
+  const fila = {nombre:"",email:"",discord:"",telefono:""};
+  if(ctx==="dt") fila.estado = "candidato";
+  assignStore(ctx)[t].push(fila);
+  ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail();
+}
 function delAssign(ctx,t,i){ assignStore(ctx)[t].splice(i,1); if(!assignStore(ctx)[t].length) assignStore(ctx)[t]=[{nombre:"",email:"",discord:"",telefono:""}]; ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
 
 async function createProject(){
@@ -3111,7 +3163,7 @@ function notaSave(){
    toca. El texto no se edita nunca en línea: siempre en el popup, que
    tiene lugar de sobra y muestra cómo va a quedar formateado.
 ================================================================ */
-const sxAbierta = { dt:true, np:true, n2:true };   // preferencia de la sesión, por contexto
+const sxAbierta = { dt:false, np:false, n2:false };   // arranca colapsada; la preferencia dura la sesión, por contexto
 function sxValue(ctx){
   if(ctx==="dt") return (detailProject && detailProject.sintesis) || "";
   if(ctx==="np") return npSintesis || "";
