@@ -137,6 +137,8 @@
     font-size:12px;font-weight:var(--weight-bold);letter-spacing:.04em;text-transform:uppercase;
     border:2px solid var(--ink);border-radius:var(--radius-full);padding:var(--space-2) var(--space-4);
   }
+  /* mismo tamaño que el badge de estado en la card de Proyectos */
+  .card .pills .pill{font-size:11px;padding:2px 10px}
   .card .links{margin-top:var(--space-5);display:flex;gap:var(--space-4);font-size:var(--fs-caption);font-weight:var(--weight-bold)}
   .card .links a{font-family:var(--font-secondary);color:var(--ink);text-decoration:none;border-bottom:2px solid var(--red)}
   .card .links a:hover{color:var(--red)}
@@ -209,12 +211,20 @@
   }
 
   .fgroup{margin-bottom:var(--space-7)}
-  .fgroup>.glabel{
+  .glabel{
     font-size:var(--fs-caption);letter-spacing:.12em;font-weight:var(--weight-bold);text-transform:uppercase;
     border-bottom:2px solid var(--ink);padding-bottom:var(--space-3);margin-bottom:var(--space-4);
     display:flex;justify-content:space-between;align-items:baseline;
   }
-  .fgroup>.glabel small{color:var(--gray);letter-spacing:0;font-weight:var(--weight-regular);text-transform:none}
+  .glabel small{color:var(--gray);letter-spacing:0;font-weight:var(--weight-regular);text-transform:none}
+  .glabel .dd-toggle{
+    background:var(--paper);border:2px solid var(--ink);border-radius:var(--radius-full);cursor:pointer;
+    width:26px;height:26px;padding:0;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;
+    font-size:13px;flex:none;
+  }
+  .glabel .dd-toggle:hover{background:var(--ink);color:#fff}
+  .glabel .dd-toggle span{display:inline-block;transition:transform .15s ease}
+  .glabel .dd-toggle.closed span{transform:rotate(-90deg)}
   .sublabel{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin:var(--space-3) 0 var(--space-2)}
   .frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:var(--space-3);margin-bottom:var(--space-3)}
   label.f{display:block;font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--gray);margin-bottom:var(--space-1)}
@@ -232,7 +242,7 @@
   }
   .task-pill.on{background:var(--red);border-color:var(--red);color:#fff}
 
-  .assign-block{border:2px solid var(--ink);border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);margin-top:var(--space-4)}
+  .assign-block{padding:var(--space-4) 0;margin-top:var(--space-4)}
   .assign-block .ttl{font-size:var(--fs-caption);font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--space-2)}
   .assign-row{display:grid;grid-template-columns:1fr 1fr 34px;gap:var(--space-2);margin-bottom:var(--space-2)}
   .icon-btn{
@@ -694,6 +704,8 @@
       </div>
     </div>
 
+    <div class="fgroup" id="npSintesisBlock"></div>
+
     <div class="fgroup">
       <div class="glabel">Tareas TEAM23 <small>elegí las que aplican</small></div>
       <div class="task-pills" id="npTasks"></div>
@@ -841,10 +853,10 @@
           <div><label class="f">Cliente *</label><input type="text" id="n2Cliente"></div>
           <div><label class="f">Agencia</label><input type="text" id="n2Agencia"></div>
         </div>
-        <label class="f">Síntesis</label>
-        <textarea id="n2Sintesis" style="min-height:80px"></textarea>
         <div style="margin-top:10px"><label class="f">Link a tratamiento - referencias (opcional)</label><input type="text" id="n2Storyboard" placeholder="https://…"></div>
       </div>
+
+      <div class="fgroup" id="n2SintesisBlock"></div>
 
       <div class="fgroup">
         <div class="glabel">3 · Equipo interno <small>nombre + mail (para los avisos de calendario)</small></div>
@@ -876,6 +888,20 @@
   </div>
 </div>
 
+<!-- ============ MODAL: EDITAR SÍNTESIS (popup grande, reusado por ficha/np/n2) ============ -->
+<div class="overlay" id="ovSintesisEdit">
+  <div class="modal" role="dialog" aria-modal="true" style="width:min(760px,100%)">
+    <button class="close" onclick="closeModal('ovSintesisEdit')" aria-label="Cerrar">✕</button>
+    <h2>Síntesis</h2>
+    <div class="kicker">Resumen del proyecto: de qué se trata y qué hay que hacer</div>
+    <textarea id="sxEditTa" style="min-height:320px;font-size:15px;line-height:1.5"></textarea>
+    <div class="actions">
+      <button class="btn" onclick="closeModal('ovSintesisEdit')">Cancelar</button>
+      <button class="btn primary" id="btnSxSave" onclick="saveSxEdit()">Guardar síntesis</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" role="status"></div>
 <div id="printArea"></div>
 
@@ -885,11 +911,14 @@
    N8N_BASE: la URL de tu instancia, p.ej. "https://n8n.rawmarketing.co"
    API_KEY : el valor que definiste en la credencial "Team23 Key" (header x-team23-key)
 ================================================================ */
+/* TEMP-DEMO: CONFIG vaciado a propósito para probar local en modo 100% demo, sin login real
+   ni pegarle a producción (n8n/Supabase). NO COMMITEAR así — antes de subir, restaurar los
+   valores reales de coordteam23.app.n8n.cloud + Supabase. */
 const CONFIG = {
-  N8N_BASE: "https://coordteam23.app.n8n.cloud",
-  API_KEY: "coordHUBt23",
-  SUPABASE_URL: "https://muvmrkacjhygfuialpyn.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI"
+  N8N_BASE: "",
+  API_KEY: "",
+  SUPABASE_URL: "",
+  SUPABASE_ANON_KEY: ""
 };
 
 /* id estable por entrada de calendario — necesario para poder sincronizar cada
@@ -919,12 +948,19 @@ let projects = [];
 const demoProjects = [
   {
     id:"p_demo1", nombre:"SPOTIFY - CDMX", cliente:"Spotify", agencia:"", productora:"LANDIA/TMMT", director:"Sofía Vargas",
-    ep_nombre:"N4rf", ep_email:"ep@team23.online", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
+    ep_nombre:"N4rf", ep_email:"ep@team23.online", prod_nombre:"Comp Dos", prod_email:"vfx@team23.online", coord_nombre:"Coord Uno", coord_email:"coord@team23.online",
     tareas:["Online","VFX","Color"],
-    asignaciones:{"Online":[{nombre:"Edi Uno",email:"edi@team23.online"}],"VFX":[{nombre:"Comp Dos",email:"vfx@team23.online"}]},
+    asignaciones:{
+      "Online":[{nombre:"Edi Uno",email:"edi@team23.online",discord:"edi#0451",telefono:"+52 55 1234 5678",estado:"confirmado"}],
+      "VFX":[{nombre:"Comp Dos",email:"vfx@team23.online",discord:"compdos#8821",telefono:"+52 55 8765 4321",estado:"confirmado"},{nombre:"Comp Tres (freelance)",email:"comptres@gmail.com",discord:"",telefono:"",estado:"candidato"}],
+      "Color":[{nombre:"Cole Cuatro",email:"color@team23.online",discord:"colecuatro#3310",telefono:"",estado:"confirmado"}]
+    },
     taskDates:{"Online":{inicio:"2026-07-06",fin:"2026-07-14",notas:""},"VFX":{inicio:"2026-07-13",fin:"2026-07-24",notas:""},"Color":{inicio:"2026-07-16",fin:"2026-07-22",notas:""}},
     status:"activo", year:"2026",
-    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
+    sintesis:"Hero film + 3 cutdowns para redes. Post completa: online, VFX de producto y color.\nPuntos clave:\n- Entrega en 2 tandas (corte de aprobación + masters)\n- Aprobación de cliente vía Frame.io",
+    storyboard_url:"https://drive.google.com/drive/folders/demo-storyboard",
+    tratamiento_url:"https://drive.google.com/drive/folders/demo-tratamiento",
+    links:{driveRoot:"https://drive.google.com/drive/folders/demo-spotify-root",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",feedback:"https://docs.google.com/document/d/demo-feedback",desglose:"https://docs.google.com/spreadsheets/d/demo-desglose",frameio:"https://next.frame.io/project/demo-spotify"},
     calendario:[
       {tipo:"fase",fase:"Entrega Masters",inicio:"2026-07-27",fin:"2026-07-28",notas:""},
       {tipo:"hito",fase:"Corte 1 al cliente",inicio:"2026-07-10",fin:"2026-07-10",notas:""},
@@ -935,14 +971,14 @@ const demoProjects = [
     id:"p_demo2", nombre:"BRAHMA - Te la mereSED", cliente:"Brahma", agencia:"", productora:"",
     ep_nombre:"N4rf", ep_email:"ep@team23.online", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
     tareas:["VFX","Online"], asignaciones:{}, taskDates:{}, status:"completado", year:"2026",
-    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
+    links:{driveRoot:"https://drive.google.com/drive/folders/demo-brahma-root",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"https://drive.google.com/drive/folders/demo-brahma-finales",feedback:"#",desglose:"#",frameio:"https://next.frame.io/project/demo-brahma"},
     calendario:[]
   },
   {
     id:"p_demo3", nombre:"PROYECTO X - TVC", cliente:"Cliente X", agencia:"Agencia Y", productora:"Prod Z",
     ep_nombre:"", ep_email:"", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
     tareas:["Retoque","SFX/Mezcla"], asignaciones:{}, taskDates:{}, status:"por_activarse", year:"2026",
-    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
+    links:{driveRoot:"https://drive.google.com/drive/folders/demo-x-root",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",feedback:"#",desglose:"https://docs.google.com/spreadsheets/d/demo-x-desglose",frameio:"https://next.frame.io/project/demo-x"},
     calendario:[]
   }
 ];
@@ -1035,10 +1071,13 @@ function cardHTML(p, readOnly=false){
   const dLink = p.links?.driveRoot && p.links.driveRoot!=="#" ? `<a href="${esc(p.links.driveRoot)}" target="_blank" onclick="event.stopPropagation()">DRIVE ↗</a>` : "";
   const fLink = p.links?.frameio && p.links.frameio!=="#" ? `<a href="${esc(p.links.frameio)}" target="_blank" onclick="event.stopPropagation()">FRAME.IO ↗</a>` : "";
   return `<div class="card" onclick="openDetail('${p.id}'${readOnly?",true":""})">
-    <h3>${esc(p.nombre)}</h3>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3)">
+      <h3 style="margin-bottom:0">${esc(p.nombre)}</h3>
+      ${pills?`<div class="pills" style="flex:none;justify-content:flex-end">${pills}</div>`:""}
+    </div>
     <div class="meta">${meta||"&nbsp;"}</div>
     ${inProgress(p.status)?`<div style="margin-bottom:var(--space-3)">${statusBadge(p.status)}</div>`:""}
-    <div class="pills">${pills}${candWarn}</div>
+    ${candWarn?`<div class="pills">${candWarn}</div>`:""}
     ${(dLink||fLink)?`<div class="links">${dLink}${fLink}</div>`:""}
   </div>`;
 }
@@ -1259,6 +1298,57 @@ async function createProject(){
 /* ---------------- detalle ---------------- */
 let detailProject = null;
 let detailReadOnly = false; // true cuando se abre desde la vista Equipo: oculta controles de edición
+let tareasOpen = false; // colapsa/expande la sección "Tareas TEAM23" en la ficha
+function toggleTareasOpen(){ tareasOpen = !tareasOpen; renderDetail(); }
+let calSectionOpen = false; // colapsa/expande la sección "Calendario" en la ficha
+function toggleCalSectionOpen(){ calSectionOpen = !calSectionOpen; renderDetail(); }
+
+/* ---------------- síntesis: colapsable + edición en popup grande (ficha/np/n2) ---------------- */
+let sxOpen = {dt:false, np:false, n2:false};
+let n2SintesisVal = "";
+function sxGet(ctx){ return ctx==="dt" ? (detailProject&&detailProject.sintesis||"") : ctx==="np" ? npSintesis : n2SintesisVal; }
+function sxRenderCtx(ctx){
+  if(ctx==="dt") renderDetail();
+  else if(ctx==="np") $("#npSintesisBlock").innerHTML = sintesisBlockHTML("np", npSintesis);
+  else $("#n2SintesisBlock").innerHTML = sintesisBlockHTML("n2", n2SintesisVal);
+}
+function toggleSx(ctx){ sxOpen[ctx] = !sxOpen[ctx]; sxRenderCtx(ctx); }
+function openSxEdit(ctx){
+  sxEditCtx = ctx;
+  $("#sxEditTa").value = sxGet(ctx);
+  openModal("ovSintesisEdit");
+  setTimeout(()=>$("#sxEditTa").focus(), 50);
+}
+async function saveSxEdit(){
+  const ctx = sxEditCtx, val = $("#sxEditTa").value.trim();
+  const btn = $("#btnSxSave");
+  if(ctx==="np"){ npSintesis = val; closeModal("ovSintesisEdit"); sxRenderCtx("np"); return; }
+  if(ctx==="n2"){ n2SintesisVal = val; closeModal("ovSintesisEdit"); sxRenderCtx("n2"); return; }
+  // ctx === "dt": persiste contra n8n (o solo en memoria en DEMO)
+  const p = detailProject, prev = p.sintesis;
+  btn.disabled = true; btn.textContent = "Guardando…";
+  p.sintesis = val;
+  if(DEMO){ btn.disabled=false; btn.textContent="Guardar síntesis"; closeModal("ovSintesisEdit"); renderDetail(); toast("✔ Síntesis actualizada (demo)"); return; }
+  try{
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, sintesis: val })});
+    closeModal("ovSintesisEdit"); renderDetail(); toast("✔ Síntesis actualizada");
+  }catch(e){
+    p.sintesis = prev; toast("No pude guardar la síntesis: "+e.message, true);
+  }finally{ btn.disabled = false; btn.textContent = "Guardar síntesis"; }
+}
+let sxEditCtx = null;
+/* bloque reusado: header colapsable + texto + botón que abre el popup de edición */
+function sintesisBlockHTML(ctx, text){
+  const open = sxOpen[ctx];
+  const body = text
+    ? `<p style="font-size:15px;white-space:pre-line;margin:0 0 10px">${esc(text)}</p><button class="addline" onclick="openSxEdit('${ctx}')">✎ editar síntesis</button>`
+    : `<button class="addline" onclick="openSxEdit('${ctx}')">+ agregar síntesis</button>`;
+  return `<div class="glabel" style="cursor:pointer" onclick="toggleSx('${ctx}')">
+      <span>Síntesis</span>
+      <button class="dd-toggle${open?"":" closed"}" tabindex="-1"><span>▾</span></button>
+    </div>
+    <div style="${open?"":"display:none"}">${body}</div>`;
+}
 let calView = null;   // Date del mes visible
 let weekView = null;  // Date dentro de la semana visible (vista semanal de cierre)
 let selDay = null;    // 'YYYY-MM-DD' del día seleccionado
@@ -1269,6 +1359,9 @@ function openDetail(id, readOnly=false){
   detailSnapshot = JSON.parse(JSON.stringify(detailProject));
   detailDirty = false; calDirty = false;
   detailReadOnly = readOnly;
+  tareasOpen = false;
+  calSectionOpen = false;
+  sxOpen.dt = false;
   detailProject.tareas = detailProject.tareas||[];
   detailProject.asignaciones = detailProject.asignaciones||{};
   detailProject.taskDates = detailProject.taskDates||{};
@@ -1430,12 +1523,12 @@ function renderDetail(){
     </tr>`;
   }).join("");
 
-  const sintesisContent = (p.sintesis || p.storyboard_url || p.tratamiento_url) ? `
+  const sintesisContent = `
     <div style="margin-top:var(--space-5)">
-      ${p.sintesis?`<p style="font-size:16.5px;white-space:pre-line;margin:0">${esc(p.sintesis)}</p>`:""}
-      ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Storyboard ↗</a></p>`:""}
+      ${sintesisBlockHTML("dt", p.sintesis)}
+      ${p.storyboard_url?`<p style="margin:10px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Storyboard ↗</a></p>`:""}
       ${p.tratamiento_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.tratamiento_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Tratamiento/Referencias ↗</a></p>`:""}
-    </div>` : "";
+    </div>`;
   const checklistBlock = checklistHTML(p, ro);
 
   $("#detailBody").innerHTML = `
@@ -1461,7 +1554,7 @@ function renderDetail(){
       ${sintesisContent}
     </div>` : `
     <div class="fgroup">
-      <div class="glabel">Datos del proyecto + Síntesis <small>editable</small></div>
+      <div class="glabel">Datos del proyecto + Síntesis</div>
       <div class="frow">
         <div><label class="f">Nombre de la campaña</label><input type="text" value="${esc(p.nombre||"")}" oninput="detailProject.nombre=this.value"></div>
         <div><label class="f">Productora</label><input type="text" value="${esc(p.productora||"")}" oninput="detailProject.productora=this.value"></div>
@@ -1503,7 +1596,7 @@ function renderDetail(){
       </div>
     </div>` : `
     <div class="fgroup">
-      <div class="glabel">Equipo interno <small>editable</small></div>
+      <div class="glabel">Equipo interno</div>
       <div class="frow">
         <div><label class="f">Productor Ejecutivo</label><input type="text" value="${esc(p.ep_nombre||"")}" oninput="detailProject.ep_nombre=this.value"></div>
         <div><label class="f">Mail EP</label><input type="email" value="${esc(p.ep_email||"")}" oninput="detailProject.ep_email=this.value"></div>
@@ -1516,17 +1609,26 @@ function renderDetail(){
 
     ${cierre||completado ? "" : `
     <div class="fgroup">
-      <div class="glabel">Tareas TEAM23 ${lockTareas?"<small>solo lectura</small>":"<small>editable</small>"}</div>
+      <div class="glabel" style="cursor:pointer" onclick="toggleTareasOpen()">
+        <span>Tareas TEAM23</span>
+        <button class="dd-toggle${tareasOpen?"":" closed"}" tabindex="-1"><span>▾</span></button>
+      </div>
+      <div style="${tareasOpen?"":"display:none"}">
       <div class="${lockTareas?"pills":"task-pills"}">${taskPills}</div>
       ${assigns}
       ${lockTareas?"":`<div class="actions" style="justify-content:flex-start;margin-top:14px">
         <button class="btn small" onclick="saveTeam(this)">Guardar cambios de equipo</button>
       </div>`}
+      </div>
     </div>`}
 
     ${completado ? "" : `
     <div class="fgroup">
-      <div class="glabel">Calendario ${cierre?"<small>vista semanal · solo lectura</small>":"<small>fases + hitos por día. Clickeá un día para detallar algo puntual</small>"}</div>
+      <div class="glabel" style="cursor:pointer" onclick="toggleCalSectionOpen()">
+        <span>Calendario</span>
+        <button class="dd-toggle${calSectionOpen?"":" closed"}" tabindex="-1"><span>▾</span></button>
+      </div>
+      <div style="${calSectionOpen?"":"display:none"}">
       ${cierre ? `
         ${weekCalendarHTML(p, lookMap)}
         ${dayPanelHTML(p, lookMap, true)}
@@ -1549,6 +1651,7 @@ function renderDetail(){
           <button class="btn small" onclick="printCalendar()">Descargar PDF</button>
         </div>
       `}
+      </div>
     </div>`}
 
     ${lockFields ? "" : `
@@ -1847,20 +1950,19 @@ function renderDashboard(){ $("#dashboardBody").innerHTML = dashboardHTML(); }
 let loadScope = "activo"; // 'activo' | 'pre' — qué proyectos mira "Carga de trabajo"
 function setLoadScope(s){ loadScope = s; renderDashboard(); }
 
-/* equipo interno primero (EP/Productor/Coordinador), después los asignados a tareas */
+/* una sola persona = una sola entrada, sume equipo interno (EP/Productor/Coordinador) y
+   asignaciones de tareas por igual — antes se separaban en dos listas y una misma persona
+   con ambos roles aparecía duplicada con conteos parciales */
 function computeLoad(list){
-  const teamLoad = {}, taskLoad = {};
-  const bump = (store,nombre,email) => { const key=(nombre||email||"").trim(); if(key) store[key]=(store[key]||0)+1; };
+  const load = {};
+  const bump = (nombre,email) => { const key=(nombre||email||"").trim(); if(key) load[key]=(load[key]||0)+1; };
   list.forEach(p=>{
-    Object.values(p.asignaciones||{}).forEach(rows=>(rows||[]).forEach(r=>bump(taskLoad,r.nombre,r.email)));
-    bump(teamLoad, p.ep_nombre, p.ep_email);
-    bump(teamLoad, p.prod_nombre, p.prod_email);
-    bump(teamLoad, p.coord_nombre, p.coord_email);
+    Object.values(p.asignaciones||{}).forEach(rows=>(rows||[]).forEach(r=>bump(r.nombre,r.email)));
+    bump(p.ep_nombre, p.ep_email);
+    bump(p.prod_nombre, p.prod_email);
+    bump(p.coord_nombre, p.coord_email);
   });
-  return [
-    ...Object.entries(teamLoad).sort((a,b)=>b[1]-a[1]),
-    ...Object.entries(taskLoad).sort((a,b)=>b[1]-a[1])
-  ];
+  return Object.entries(load).sort((a,b)=>b[1]-a[1]);
 }
 /* más de 1 proyecto en el scope = sobrecargado → se marca en rojo (mismo rojo de alerta del resto del hub) */
 function loadListHTML(rows, emptyMsg){
@@ -2534,9 +2636,11 @@ function kickOffComplete(){
   npSintesis = kickOffResumen;
   npStoryboardUrl = kickOffLinks.storyboard || "";
   npTratamientoUrl = kickOffLinks.tratamiento || "";
+  sxOpen.np = false;
   ["npNombre","npCliente","npAgencia","npProductora","npDirector","npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"]
     .forEach(id=>$("#"+id).value="");
   renderNPTasks();
+  sxRenderCtx("np");
   openModal("ovNew");
 }
 
@@ -2560,12 +2664,14 @@ let n2Selected = new Set(), n2AssignData = {}, n2TaskDates = {};
 
 function openDebrief(){
   n2Selected = new Set(); n2AssignData = {}; n2TaskDates = {};
-  ["n2Debrief","n2Nombre","n2Productora","n2Director","n2Cliente","n2Agencia","n2Sintesis","n2Storyboard",
+  n2SintesisVal = ""; sxOpen.n2 = false;
+  ["n2Debrief","n2Nombre","n2Productora","n2Director","n2Cliente","n2Agencia","n2Storyboard",
    "n2EpNombre","n2EpEmail","n2ProdNombre","n2ProdEmail","n2CoordNombre","n2CoordEmail"]
     .forEach(id=>{ const el=$("#"+id); if(el) el.value=""; });
   $("#n2Form").style.display="none";
   $("#n2DebriefStep").style.display="block";
   renderN2Tasks();
+  sxRenderCtx("n2");
   openModal("ovNew2");
 }
 
@@ -2587,7 +2693,8 @@ async function parseDebrief2(){
     $("#n2Nombre").value = r.nombre||"";       $("#n2Cliente").value = r.cliente||"";
     $("#n2Agencia").value = r.agencia||"";     $("#n2Productora").value = r.productora||"";
     $("#n2Director").value = r.director||"";
-    $("#n2Sintesis").value = r.sintesis||"";   $("#n2Storyboard").value = r.storyboard_url||"";
+    n2SintesisVal = r.sintesis||"";   $("#n2Storyboard").value = r.storyboard_url||"";
+    sxOpen.n2 = !!n2SintesisVal; sxRenderCtx("n2");
     n2Selected = new Set((r.tareas||[]).filter(t=>TAREAS.includes(t)));
     // el timeline que sugiere la IA solo se usa para precargar fecha de la tarea que coincide por nombre
     n2TaskDates = {};
@@ -2645,7 +2752,7 @@ async function createProject2(){
     prod_nombre: $("#n2ProdNombre").value.trim(), prod_email: $("#n2ProdEmail").value.trim(),
     coord_nombre: $("#n2CoordNombre").value.trim(), coord_email: $("#n2CoordEmail").value.trim(),
     tareas: [...n2Selected], asignaciones: asigs, taskDates: tDates,
-    sintesis: $("#n2Sintesis").value.trim(),
+    sintesis: n2SintesisVal.trim(),
     storyboard_url: $("#n2Storyboard").value.trim(),
     debrief_raw: $("#n2Debrief").value.trim()
   };
@@ -2750,7 +2857,14 @@ let sb = null, authUser = null;
 const AUTH_ON = !!CONFIG.SUPABASE_URL;
 function startApp(){ loadProjects(); }
 async function initAuth(){
-  if(!AUTH_ON){ startApp(); return; }
+  if(!AUTH_ON){
+    /* sin login (demo): mostramos igual lo que en producción solo aparece para internos,
+       ya que acá no hay sesión real contra la que gatear nada */
+    $("#btnUsers").style.display = "";
+    $("#btnDirectorio").style.display = "";
+    startApp();
+    return;
+  }
   const gate = $("#authGate"); gate.style.display = "flex";
   try{
     const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
