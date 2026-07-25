@@ -1261,19 +1261,26 @@ function cardHTML(p, readOnly=false){
   const nCand = p.status==="por_activarse"
     ? Object.values(p.asignaciones||{}).flat().filter(r=>r&&r.estado==="candidato").length : 0;
   const candWarn = nCand ? `<span class="pill warn">${nCand} candidato${nCand>1?"s":""} sin resolver</span>` : "";
+  /* si el status no es uno de los conocidos, que se vea cuál es en vez de desaparecer */
+  const rareWarn = statusRaro(p.status) ? `<span class="pill warn">estado desconocido: ${esc(p.status||"(vacío)")}</span>` : "";
   const dLink = p.links?.driveRoot && p.links.driveRoot!=="#" ? `<a href="${esc(p.links.driveRoot)}" target="_blank" onclick="event.stopPropagation()">DRIVE ↗</a>` : "";
   const fLink = p.links?.frameio && p.links.frameio!=="#" ? `<a href="${esc(p.links.frameio)}" target="_blank" onclick="event.stopPropagation()">FRAME.IO ↗</a>` : "";
   return `<div class="card" onclick="openDetail('${p.id}'${readOnly?",true":""})">
     <h3>${esc(p.nombre)}</h3>
     <div class="meta">${meta||"&nbsp;"}</div>
     ${inProgress(p.status)?`<div style="margin-bottom:var(--space-3)">${statusBadge(p.status)}</div>`:""}
-    <div class="pills">${pills}${candWarn}</div>
+    <div class="pills">${pills}${rareWarn}${candWarn}</div>
     ${(dLink||fLink)?`<div class="links">${dLink}${fLink}</div>`:""}
   </div>`;
 }
 
+/* la vista Proyectos tiene tres baldes; un status que no cae en ninguno dejaba al
+   proyecto invisible en el hub mientras el portal del proveedor sí lo mostraba.
+   Ahora esos aparecen en Pre-producción con el estado crudo a la vista. */
+function statusRaro(s){ return s!=="borrador" && !STATUS_META[s]; }
 function renderAll(){
-  const pend = projects.filter(p=>p.status==="por_activarse");
+  const raros = projects.filter(p=>statusRaro(p.status));
+  const pend = projects.filter(p=>p.status==="por_activarse").concat(raros);
   const act  = projects.filter(p=>inProgress(p.status));
   const done = projects.filter(p=>p.status==="completado");
 
@@ -1334,7 +1341,7 @@ window.addEventListener("hashchange", ()=>{
 
 /* ---------------- vista equipo (solo lectura) ---------------- */
 function renderEquipo(){
-  const pend = projects.filter(p=>p.status==="por_activarse");
+  const pend = projects.filter(p=>p.status==="por_activarse" || statusRaro(p.status));
   const act  = projects.filter(p=>inProgress(p.status));
   const done = projects.filter(p=>p.status==="completado");
   const group = (label, dotClass, list) => `
