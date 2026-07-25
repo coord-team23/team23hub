@@ -619,6 +619,23 @@
   .sx .sx-list{margin:0 0 var(--space-3);padding-left:0;list-style:none}
   .sx .sx-list li{position:relative;padding-left:18px;font-size:14px;line-height:1.55;margin-bottom:6px}
   .sx .sx-list li::before{content:"";position:absolute;left:2px;top:8px;width:7px;height:7px;background:var(--red);border:1.5px solid var(--ink)}
+
+  /* ---------- síntesis colapsable (ficha y armado; el portal tiene la suya) ---------- */
+  .sx-box{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);margin-top:var(--space-5);overflow:hidden}
+  .sx-head{width:100%;display:flex;align-items:center;gap:10px;background:var(--soft);border:none;border-bottom:var(--stroke-sm) solid var(--ink);padding:9px 12px;cursor:pointer;text-align:left;font-family:var(--font-primary);color:var(--ink)}
+  .sx-head:hover{background:#EDEDED}
+  .sx-head .cr{font-size:11px;flex:none;width:12px;transition:transform .15s}
+  .sx-head .ttl{font-size:11px;font-weight:var(--weight-bold);letter-spacing:.14em;text-transform:uppercase;flex:none}
+  .sx-head .prev{font-size:12.5px;color:var(--gray);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:var(--weight-regular)}
+  .sx-box.closed .sx-head{border-bottom:none}
+  .sx-box.closed .sx-head .cr{transform:rotate(-90deg)}
+  .sx-box.closed .sx-body{display:none}
+  .sx-body{padding:var(--space-4) var(--space-5)}
+  .sx-empty{font-size:13px;color:var(--gray)}
+  /* popup de edición: la caja grande que faltaba */
+  #ovSintesis .modal{width:min(820px,100%)}
+  #sxTa{min-height:300px;font-size:15px;line-height:1.6}
+  .sx-prevbox{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);background:#fff;max-height:240px;overflow:auto}
 </style>
 </head>
 <body>
@@ -728,6 +745,7 @@
         <div><label class="f">Cliente *</label><input type="text" id="npCliente" placeholder="Brahma"></div>
         <div><label class="f">Agencia</label><input type="text" id="npAgencia" placeholder=""></div>
       </div>
+      <div id="sx-np"></div>
     </div>
 
     <div class="fgroup">
@@ -899,8 +917,8 @@
           <div><label class="f">Cliente *</label><input type="text" id="n2Cliente"></div>
           <div><label class="f">Agencia</label><input type="text" id="n2Agencia"></div>
         </div>
-        <label class="f">Síntesis</label>
-        <textarea id="n2Sintesis" style="min-height:80px"></textarea>
+        <textarea id="n2Sintesis" style="display:none" aria-hidden="true"></textarea>
+        <div id="sx-n2"></div>
         <div style="margin-top:10px"><label class="f">Link a tratamiento - referencias (opcional)</label><input type="text" id="n2Storyboard" placeholder="https://…"></div>
       </div>
 
@@ -934,9 +952,33 @@
 
       <div class="actions">
         <button class="btn" onclick="closeNew2()">Cancelar</button>
-        <button class="btn" onclick="saveDraftBtn()">Guardar borrador</button>
+        <button class="btn" id="btnDraft" onclick="saveDraftBtn()">Guardar borrador</button>
         <button class="btn primary" id="btnCreate2" onclick="createProject2()">Crear proyecto</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: SÍNTESIS ============ -->
+<div class="overlay" id="ovSintesis" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sxTitle">
+    <button class="close" onclick="sxClose()" aria-label="Cerrar">✕</button>
+    <h2 id="sxTitle">Síntesis</h2>
+    <div class="kicker" id="sxWho"></div>
+
+    <div class="fgroup">
+      <div class="glabel">Texto <small>una línea que termina en “:” queda como subtítulo; las que arrancan con • o - quedan como viñetas</small></div>
+      <textarea id="sxTa" oninput="sxLive()" placeholder="De qué se trata el proyecto…&#10;&#10;Puntos clave:&#10;• …&#10;• …"></textarea>
+    </div>
+
+    <div class="fgroup">
+      <div class="glabel">Cómo se va a ver</div>
+      <div class="sx-prevbox" id="sxPrev"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="sxClose()">Cancelar</button>
+      <button class="btn primary" onclick="sxSave(this)">Guardar síntesis</button>
     </div>
   </div>
 </div>
@@ -1277,12 +1319,23 @@ function autoDemoLinks(st){
 ================================================================ */
 const mailFmtDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d||"") ? d.split("-").reverse().join("/") : (d||"a definir");
 function mailEsc(s){ return String(s??"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
-/* datos del proyecto tal como están cargados en el formulario, en vivo */
-function mailProjectData(){
+/* datos del proyecto para armar el mail. En el armado salen del formulario en
+   vivo; en la ficha, del proyecto ya creado (para sumar gente sobre la marcha). */
+function mailProjectData(ctx){
+  const orden = (a,b)=>String(a.inicio||"9999").localeCompare(String(b.inicio||"9999"));
+  if(ctx==="dt"){
+    const p = detailProject || {};
+    const timeline = (p.tareas||[])
+      .map(t=>{ const d = (p.taskDates||{})[t]||{}; return { fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||"" }; })
+      .filter(t=>t.inicio||t.fin||t.notas).sort(orden);
+    return {
+      proyecto: p.nombre||"", cliente: p.cliente||"", sintesis: p.sintesis||"",
+      storyboard: p.storyboard_url || p.tratamiento_url || "", timeline
+    };
+  }
   const timeline = [...n2Selected]
     .map(t=>{ const d = n2TaskDates[t]||{}; return { fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||"" }; })
-    .filter(t=>t.inicio||t.fin||t.notas)
-    .sort((a,b)=>String(a.inicio||"9999").localeCompare(String(b.inicio||"9999")));
+    .filter(t=>t.inicio||t.fin||t.notas).sort(orden);
   return {
     proyecto: ($("#n2Nombre")||{}).value?.trim() || "",
     cliente:  ($("#n2Cliente")||{}).value?.trim() || "",
@@ -1330,33 +1383,53 @@ function mailBuildHTML(d, rol, nombre, intro){
     '<p style="margin-top:22px;font-size:10px;color:#8A8A8A;letter-spacing:2px;">TEAM23 PRODUCTION HUB</p></div>';
 }
 /* lo que realmente se manda para una fila: HTML crudo si lo editaron, si no el armado */
-function mailFinalHTML(r, rol){
+function mailFinalHTML(r, rol, ctx){
   if((r.mailHtml||"").trim()) return r.mailHtml;
-  return mailBuildHTML(mailProjectData(), rol, r.nombre||"", r.mailIntro||"");
+  return mailBuildHTML(mailProjectData(ctx), rol, r.nombre||"", r.mailIntro||"");
 }
-function mailFinalSubject(r, rol){
-  return (r.mailSubject||"").trim() || mailSubjectDefault(mailProjectData().proyecto, rol);
+function mailFinalSubject(r, rol, ctx){
+  return (r.mailSubject||"").trim() || mailSubjectDefault(mailProjectData(ctx).proyecto, rol);
 }
 function mailIsEdited(r){ return !!((r.mailIntro||"").trim() || (r.mailSubject||"").trim() || (r.mailHtml||"").trim()); }
 
-/* ---------- controles por fila, dentro del bloque de candidatos ---------- */
+/* ---------- controles por fila ----------
+   En el armado (n2) el mail sale solo al crear el proyecto, así que el control
+   es un interruptor. En la ficha (dt) el proyecto ya existe y no hay nada
+   automático: el control es un botón que manda la propuesta en el momento, para
+   cuando se suma gente con el proyecto ya en marcha. */
 function mailSlotId(ctx, tarea, i){ return "mrow-"+ctx+"-"+String(tarea).replace(/[^a-zA-Z0-9]/g,"")+"-"+i; }
+function mailFechaCorta(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return "";
+  const dd = String(d.getDate()).padStart(2,"0"), mm = String(d.getMonth()+1).padStart(2,"0");
+  return dd+"/"+mm+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
 function mailRowInner(r, tarea, i, ctx){
-  if(ctx!=="n2" || !r || !(r.email||"").trim()) return "";
-  const on = r.mailOn !== false;
+  if(!r || !(r.email||"").trim()) return "";
+  if(ctx!=="n2" && ctx!=="dt") return "";
   const tq = String(tarea).replace(/'/g,"\\'");
+  const editado = mailIsEdited(r) ? '<span class="chipst conf">Editado</span>' : "";
+  const editar = `<button class="mini-btn" onclick="mailOpen('${tq}',${i},'${ctx}')">✎ Editar mail</button>`;
+  if(ctx==="dt"){
+    const enviado = !!r.mailSentAt;
+    return `<div class="mail-row">
+      <span class="who">✉ ${enviado?"Propuesta enviada · "+esc(mailFechaCorta(r.mailSentAt)):"Propuesta"}</span>
+      <button class="mini-btn ${enviado?"":"on"}" onclick="mailSend('${tq}',${i})">${enviado?"Reenviar propuesta":"Enviar propuesta"}</button>
+      ${editar}${editado}
+    </div>`;
+  }
+  const on = r.mailOn !== false;
   return `<div class="mail-row">
     <span class="who ${on?"":"off"}">✉ Propuesta a ${esc(r.email)}</span>
     <button class="mini-btn ${on?"on":"no"}" onclick="mailToggle('${tq}',${i})" aria-pressed="${on}">${on?"Envío activado":"Envío apagado"}</button>
-    <button class="mini-btn" onclick="mailOpen('${tq}',${i})">✎ Editar mail</button>
-    ${mailIsEdited(r)?'<span class="chipst conf">Editado</span>':""}
+    ${editar}${editado}
   </div>`;
 }
 /* el mail aparece cuando se carga la dirección: refresco solo esta fila para no perder el foco */
 function mailSlotSync(ctx, tarea, i){
-  if(ctx!=="n2") return;
+  if(ctx!=="n2" && ctx!=="dt") return;
   const el = $("#"+mailSlotId(ctx,tarea,i));
-  if(el) el.innerHTML = mailRowInner((n2AssignData[tarea]||[])[i], tarea, i, ctx);
+  if(el) el.innerHTML = mailRowInner((assignStore(ctx)[tarea]||[])[i], tarea, i, ctx);
 }
 function mailToggle(tarea, i){
   const r = (n2AssignData[tarea]||[])[i]; if(!r) return;
@@ -1365,33 +1438,67 @@ function mailToggle(tarea, i){
   toast(r.mailOn ? "Se le manda la propuesta a "+(r.nombre||r.email) : "No se le manda mail a "+(r.nombre||r.email));
 }
 
+/* ---------- enviar la propuesta desde la ficha (proyecto ya creado) ---------- */
+async function mailSend(tarea, i){
+  const p = detailProject; if(!p) return;
+  const r = (p.asignaciones[tarea]||[])[i];
+  if(!r || !(r.email||"").trim()){ toast("Cargá el mail de la persona primero", true); return; }
+  const quien = r.nombre || r.email;
+  const reenvio = !!r.mailSentAt;
+  const ok = await t23Confirm(
+    (reenvio ? "Se le vuelve a enviar la propuesta a " : "Se le va a enviar la propuesta a ")+quien+" ("+r.email+"), con el timeline del proyecto y su rol marcado. Podés revisarla antes con \u201cEditar mail\u201d.",
+    { titulo: reenvio?"REENVIAR PROPUESTA":"ENVIAR PROPUESTA", ok: reenvio?"Reenviar":"Enviar", cancelar:"Cancelar" });
+  if(ok !== true) return;
+  const prevEstado = r.estado, prevSent = r.mailSentAt;
+  /* mandarle una propuesta lo vuelve candidato: todavía no dijo que sí */
+  if(!r.estado) r.estado = "candidato";
+  r.mailSentAt = new Date().toISOString();
+  renderDetail();
+  if(DEMO){ toast("✔ Propuesta enviada a "+quien+" (demo)"); return; }
+  t23LoadShow();
+  try{
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({
+      id: p.id,
+      asignaciones_json: JSON.stringify(p.asignaciones),
+      mails: [{ rol:tarea, to:r.email.trim(), nombre:r.nombre||"", enviar:true,
+                subject: mailFinalSubject(r, tarea, "dt"), html: mailFinalHTML(r, tarea, "dt") }]
+    })});
+    toast("✔ Propuesta enviada a "+quien);
+    onProjectsLoaded();
+  }catch(e){
+    r.estado = prevEstado; r.mailSentAt = prevSent; renderDetail();
+    toast("No pude enviar la propuesta: "+e.message, true);
+  }finally{ t23LoadHide(); }
+}
+
 /* ---------- popup de edición ---------- */
-let mailEditing = null;   // { tarea, i, rol, nombre, email } — la fila en edición
-function mailOpen(tarea, i){
-  const r = (n2AssignData[tarea]||[])[i]; if(!r) return;
-  mailEditing = { tarea, i, rol:tarea, nombre:r.nombre||"", email:r.email||"" };
-  const d = mailProjectData();
+let mailEditing = null;   // { ctx, tarea, i, rol, nombre, email } — la fila en edición
+function mailOpen(tarea, i, ctx){
+  ctx = ctx || "n2";
+  const r = (assignStore(ctx)[tarea]||[])[i]; if(!r) return;
+  mailEditing = { ctx, tarea, i, rol:tarea, nombre:r.nombre||"", email:r.email||"" };
+  const d = mailProjectData(ctx);
   $("#mailWho").textContent = (r.nombre||r.email) + " · " + tarea + " · " + r.email;
   $("#mailSubject").value = (r.mailSubject||"").trim() || mailSubjectDefault(d.proyecto, tarea);
   $("#mailIntro").value = (r.mailIntro||"").trim() || mailIntroDefault(r.nombre||"", d.cliente, tarea);
   $("#mailHtml").value = (r.mailHtml||"");
   $("#mailAdvBox").open = !!(r.mailHtml||"").trim();
   mailLive();
-  $("#ovMail").classList.add("open");   // no toca el scroll del body: ovNew2 sigue abierto detrás
+  $("#ovMail").classList.add("open");   // no toca el scroll del body: queda uno abierto detrás
 }
 function mailClose(){ $("#ovMail").classList.remove("open"); mailEditing = null; }
 /* al desplegar el HTML lo precargo con el mail actual, para editar sobre algo real */
 function mailAdvToggle(){
   const box = $("#mailAdvBox"), ta = $("#mailHtml");
   if(box.open && !ta.value.trim() && mailEditing){
-    ta.value = mailBuildHTML(mailProjectData(), mailEditing.rol, mailEditing.nombre, $("#mailIntro").value);
+    ta.value = mailBuildHTML(mailProjectData(mailEditing.ctx), mailEditing.rol, mailEditing.nombre, $("#mailIntro").value);
   }
   mailLive();
 }
 function mailPreviewHTML(){
   if(!mailEditing) return "";
   const raw = $("#mailHtml").value.trim();
-  return raw || mailBuildHTML(mailProjectData(), mailEditing.rol, mailEditing.nombre, $("#mailIntro").value);
+  return raw || mailBuildHTML(mailProjectData(mailEditing.ctx), mailEditing.rol, mailEditing.nombre, $("#mailIntro").value);
 }
 function mailLive(){
   if(!mailEditing) return;
@@ -1407,7 +1514,7 @@ function mailLive(){
 }
 function mailReset(){
   if(!mailEditing) return;
-  const d = mailProjectData();
+  const d = mailProjectData(mailEditing.ctx);
   $("#mailSubject").value = mailSubjectDefault(d.proyecto, mailEditing.rol);
   $("#mailIntro").value = mailIntroDefault(mailEditing.nombre, d.cliente, mailEditing.rol);
   $("#mailHtml").value = "";
@@ -1417,20 +1524,22 @@ function mailReset(){
 }
 function mailSave(){
   if(!mailEditing) return;
-  const { tarea, i, rol, nombre } = mailEditing;
-  const r = (n2AssignData[tarea]||[])[i];
+  const { ctx, tarea, i, rol, nombre } = mailEditing;
+  const r = (assignStore(ctx)[tarea]||[])[i];
   if(!r){ mailClose(); return; }
-  const d = mailProjectData();
+  const d = mailProjectData(ctx);
   const subject = ($("#mailSubject").value||"").trim();
   const intro = ($("#mailIntro").value||"").trim();
   const raw = ($("#mailHtml").value||"").trim();
   /* guardo solo lo que difiere del automático, así el mail sigue tomando los
-     cambios del formulario (nombre, síntesis, fechas) mientras no lo pisen */
+     cambios del proyecto (nombre, síntesis, fechas) mientras no lo pisen */
   r.mailSubject = subject === mailSubjectDefault(d.proyecto, rol) ? "" : subject;
   r.mailIntro = intro === mailIntroDefault(nombre, d.cliente, rol) ? "" : intro;
   r.mailHtml = (raw && raw !== mailBuildHTML(d, rol, nombre, intro)) ? raw : "";
-  mailSlotSync("n2", tarea, i);
   mailClose();
+  /* en la ficha el override viaja al sheet con el próximo guardado del equipo */
+  if(ctx==="dt"){ detailDirty = true; renderDetail(); }
+  else mailSlotSync(ctx, tarea, i);
   toast(mailIsEdited(r) ? "✔ Mail guardado para "+(r.nombre||r.email) : "Mail sin cambios: queda el automático");
 }
 
@@ -1488,10 +1597,14 @@ function assignBlockHTML(tarea, rows, ctx){
         : `<button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
       return `<div class="cand-state">${c}${acts}</div>`;
     }
-    /* en curso: activo / inactivo. Sin estado (alta manual) cuenta como activo */
+    /* en curso: activo / inactivo. Sin estado (alta manual) cuenta como activo.
+       Excepción: un candidato sigue siendo candidato — es gente que se sumó con
+       el proyecto en marcha y todavía tiene que decir que sí. Si se rechaza,
+       sale del cuadro igual que los rechazados de pre-producción. */
+    if(r.estado==="candidato")
+      return `<div class="cand-state">${chip("cand","Candidato")}${b("confirmado","✓ Confirmar")}${b("rechazado","✕ Rechazar","no")}</div>`;
     if(r.estado==="inactivo") return `<div class="cand-state">${chip("inact","Inactivo")}${b("confirmado","↺ Reactivar")}</div>`;
-    const aviso = r.estado==="candidato" ? chip("cand","Sin confirmar") : "";
-    return `<div class="cand-state">${chip("conf","Activo")}${aviso}${b("inactivo","Desactivar","no")}</div>`;
+    return `<div class="cand-state">${chip("conf","Activo")}${b("inactivo","Desactivar","no")}</div>`;
   };
 
   const visibles = rows.map((r,i)=>({r,i})).filter(({r})=> !(enCurso && r.estado==="rechazado"));
@@ -1636,7 +1749,6 @@ let calAuto = true;   // saltar automáticamente al mes de la primera fecha en e
 
 function openDetail(id, readOnly=false){
   calCtx = "dt";
-  sxEditing = false;
   detailProject = projects.find(p=>p.id===id);
   if(!detailProject) return;
   detailSnapshot = JSON.parse(JSON.stringify(detailProject));
@@ -1824,17 +1936,9 @@ function renderDetail(){
     </tr>`;
   }).join("");
 
-  const sxEditor = sxEditing ? `
-      <textarea id="sxEditTa" style="min-height:150px;width:100%">${esc(p.sintesis||"")}</textarea>
-      <div class="actions" style="justify-content:flex-start;margin-top:10px">
-        <button class="btn primary small" onclick="sxSave(this)">Guardar síntesis</button>
-        <button class="btn small" onclick="sxCancel()">Cancelar</button>
-      </div>` : "";
   const sintesisContent = (p.sintesis || p.storyboard_url || p.tratamiento_url || !lockFields) ? `
-    <div style="margin-top:var(--space-5)">
-      ${sxEditing ? sxEditor
-        : p.sintesis ? sintesisHTML(p.sintesis) + (lockFields?"":`<button class="addline" onclick="sxEdit()">✎ editar síntesis</button>`)
-        : (lockFields?"":`<button class="addline" onclick="sxEdit()">+ agregar síntesis</button>`)}
+    <div>
+      ${(p.sintesis || !lockFields) ? sxBoxHTML("dt", lockFields) : ""}
       ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Storyboard ↗</a></p>`:""}
       ${p.tratamiento_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.tratamiento_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Tratamiento/Referencias ↗</a></p>`:""}
     </div>` : "";
@@ -2694,23 +2798,103 @@ function renderTracker(){
   $("#trkBody").innerHTML = trackerHTML(trkProject);
 }
 
-let sxEditing = false;
-function sxEdit(){ sxEditing = true; renderDetail(); }
-function sxCancel(){ sxEditing = false; renderDetail(); }
+/* ================================================================
+   SÍNTESIS: caja colapsable + popup de edición
+   Vive en tres lugares (ficha, alta manual, debrief) con el mismo
+   componente. El portal de proveedores tiene su propia copia y no se
+   toca. El texto no se edita nunca en línea: siempre en el popup, que
+   tiene lugar de sobra y muestra cómo va a quedar formateado.
+================================================================ */
+const sxAbierta = { dt:true, np:true, n2:true };   // preferencia de la sesión, por contexto
+function sxValue(ctx){
+  if(ctx==="dt") return (detailProject && detailProject.sintesis) || "";
+  if(ctx==="np") return npSintesis || "";
+  return (($("#n2Sintesis")||{}).value) || "";
+}
+function sxSetValue(ctx, v){
+  if(ctx==="dt"){ if(detailProject) detailProject.sintesis = v; return; }
+  if(ctx==="np"){ npSintesis = v; return; }
+  if($("#n2Sintesis")) $("#n2Sintesis").value = v;
+}
+/* lo que se muestra al lado del título cuando está colapsada */
+function sxPreviewLine(txt){
+  const l = String(txt||"").split(/\r?\n/).map(s=>s.trim()).find(Boolean) || "";
+  const limpia = l.replace(/^[•·\-\*]\s+/,"");
+  return limpia.length > 90 ? limpia.slice(0,90)+"…" : limpia;
+}
+function sxBoxHTML(ctx, readOnly){
+  const txt = sxValue(ctx);
+  const abierta = sxAbierta[ctx] !== false;
+  const editar = readOnly ? "" :
+    `<button class="addline" onclick="sxOpen('${ctx}')">${txt?"✎ editar síntesis":"+ agregar síntesis"}</button>`;
+  return `<div class="sx-box ${abierta?"":"closed"}" id="sxbox-${ctx}">
+    <button type="button" class="sx-head" onclick="sxToggle('${ctx}')" aria-expanded="${abierta}" aria-controls="sxbody-${ctx}">
+      <span class="cr">▾</span><span class="ttl">Síntesis</span>
+      <span class="prev">${abierta?"":esc(sxPreviewLine(txt))}</span>
+    </button>
+    <div class="sx-body" id="sxbody-${ctx}">
+      ${txt ? sintesisHTML(txt) : `<div class="sx-empty">Todavía no hay síntesis.</div>`}
+      ${editar}
+    </div>
+  </div>`;
+}
+/* np y n2 viven en contenedores fijos del formulario; dt se arma dentro de renderDetail */
+function sxRender(ctx){
+  const el = $("#sx-"+ctx);
+  if(el) el.innerHTML = sxBoxHTML(ctx, false);
+}
+function sxToggle(ctx){
+  const abierta = sxAbierta[ctx] !== false;
+  sxAbierta[ctx] = !abierta;
+  const box = $("#sxbox-"+ctx);
+  if(!box){ ctx==="dt" ? renderDetail() : sxRender(ctx); return; }
+  /* toco el DOM en vez de re-renderizar: no se pierde el scroll ni el foco */
+  box.classList.toggle("closed", abierta);
+  const head = box.querySelector(".sx-head");
+  if(head) head.setAttribute("aria-expanded", String(!abierta));
+  const prev = box.querySelector(".prev");
+  if(prev) prev.textContent = abierta ? sxPreviewLine(sxValue(ctx)) : "";
+}
+let sxCtx = null;   // contexto que está editando el popup
+function sxOpen(ctx){
+  sxCtx = ctx;
+  $("#sxWho").textContent = ctx==="dt"
+    ? ((detailProject&&detailProject.nombre)||"Proyecto")
+    : (ctx==="np" ? "Nuevo proyecto · alta manual" : "Nuevo proyecto · desde debrief");
+  $("#sxTa").value = sxValue(ctx);
+  sxLive();
+  $("#ovSintesis").classList.add("open");   // sin tocar el scroll: queda un modal abierto detrás
+  setTimeout(()=>{ const ta=$("#sxTa"); if(ta) ta.focus(); }, 30);
+}
+function sxClose(){ $("#ovSintesis").classList.remove("open"); sxCtx = null; }
+function sxLive(){
+  const v = ($("#sxTa").value||"").trim();
+  $("#sxPrev").innerHTML = v ? sintesisHTML(v) : `<div class="sx-empty">Vacía por ahora.</div>`;
+}
 async function sxSave(btn){
-  const p = detailProject;
-  const val = $("#sxEditTa").value.trim();
-  const prev = p.sintesis;
-  btn.disabled = true; btn.textContent = "Guardando…";
-  p.sintesis = val;
-  if(DEMO){ sxEditing = false; renderDetail(); toast("✔ Síntesis actualizada (demo)"); return; }
-  try{
-    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, sintesis: val })});
-    sxEditing = false; renderDetail(); toast("✔ Síntesis actualizada");
-  }catch(e){
-    p.sintesis = prev; btn.disabled = false; btn.textContent = "Guardar síntesis";
-    toast("No pude guardar la síntesis: "+e.message, true);
+  if(!sxCtx) return;
+  const ctx = sxCtx;
+  const val = ($("#sxTa").value||"").trim();
+  /* en el armado alcanza con dejarlo en el formulario: viaja al crear el proyecto */
+  if(ctx!=="dt"){
+    sxSetValue(ctx, val);
+    sxClose(); sxRender(ctx);
+    toast(val ? "✔ Síntesis actualizada" : "Síntesis vacía");
+    return;
   }
+  const p = detailProject; if(!p){ sxClose(); return; }
+  const prev = p.sintesis;
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  p.sintesis = val;
+  try{
+    if(!DEMO) await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, sintesis: val })});
+    sxClose(); renderDetail();
+    toast("✔ Síntesis actualizada"+(DEMO?" (demo)":""));
+  }catch(e){
+    p.sintesis = prev;
+    toast("No pude guardar la síntesis: "+e.message, true);
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 async function saveProjectInfo(btn){
   const _lbl = btn ? btn.textContent : "";
@@ -3027,6 +3211,7 @@ function kickOffComplete(){
   npSelected = new Set(); npAssignData = {}; npTaskDates = {};
   npAuto = autoDefaults(); renderAuto("np");
   npSintesis = kickOffResumen;
+  sxRender("np");
   npStoryboardUrl = kickOffLinks.storyboard || "";
   npTratamientoUrl = kickOffLinks.tratamiento || "";
   ["npNombre","npCliente","npAgencia","npProductora","npDirector","npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"]
@@ -3056,6 +3241,7 @@ let n2Selected = new Set(), n2AssignData = {}, n2TaskDates = {};
 
 /* ---------------- borradores compartidos (viven en el sheet, los ve todo el equipo) ---------------- */
 let currentDraftId = null;
+let n2DraftBase = null;   // snapshot del borrador tal como se abrió, para saber si cambió algo
 function draftsAll(){ return (projects||[]).filter(p=>p.status==="borrador"); }
 function n2Snapshot(){
   const ids = ["n2Nombre","n2Cliente","n2Agencia","n2Productora","n2Director","n2Sintesis","n2Storyboard",
@@ -3070,6 +3256,7 @@ function n2Snapshot(){
 }
 async function saveDraft(){
   const s = n2Snapshot();
+  const actualizando = !!currentDraftId;   /* borrador que ya existe: se guardan cambios, no se crea */
   if(!s.campos.n2Nombre.trim() && !s.debrief.trim() && !s.tareas.length){
     toast("No hay nada para guardar como borrador", true); return false;
   }
@@ -3079,8 +3266,8 @@ async function saveDraft(){
     const p = { id:"draft_demo_"+Date.now(), nombre, cliente, status:"borrador", year:String(new Date().getFullYear()),
       draft_json: JSON.stringify(s), tareas:[], asignaciones:{}, links:{}, calendario:[], taskDates:{} };
     if(currentDraftId) projects = projects.filter(x=>x.id!==currentDraftId);
-    projects.push(p); currentDraftId = p.id; renderAll();
-    toast("✔ Borrador guardado (demo)"); return true;
+    projects.push(p); currentDraftId = p.id; n2DraftBase = JSON.stringify(s); renderAll();
+    toast((actualizando?"✔ Cambios guardados":"✔ Borrador guardado")+" (demo)"); return true;
   }
   t23LoadShow();
   try{
@@ -3089,12 +3276,13 @@ async function saveDraft(){
     if(!p || !p.id) throw new Error("respuesta vacía");
     const viejo = currentDraftId;
     projects.push(p); currentDraftId = p.id;
+    n2DraftBase = JSON.stringify(s);   /* guardado = punto de partida nuevo: cerrar ya no pregunta */
     if(viejo){
       projects = projects.filter(x=>x.id!==viejo);
       api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id:viejo})}).catch(()=>{});
     }
     renderAll();
-    toast("✔ Borrador guardado, lo ve todo el equipo");
+    toast(actualizando ? "✔ Cambios guardados en el borrador" : "✔ Borrador guardado, lo ve todo el equipo");
     return true;
   }catch(e){ toast("No pude guardar el borrador: "+e.message, true); return false; }
   finally{ t23LoadHide(); }
@@ -3112,8 +3300,12 @@ function openDraft(id){
   n2TaskDates = d.fechas||{};
   n2Auto = Object.assign(autoDefaults(), d.auto||{});
   renderAuto("n2");
+  sxRender("n2");
   renderN2Tasks();
   if(d.formVisible || (d.campos||{}).n2Nombre) $("#n2Form").style.display="block";
+  if($("#btnDraft")) $("#btnDraft").textContent = "Guardar cambios";
+  /* recién acá, con todo cargado, queda la foto contra la que se compara al cerrar */
+  n2DraftBase = JSON.stringify(n2Snapshot());
 }
 async function deleteDraftUI(id){
   if(await t23Confirm("Se elimina el borrador para todo el equipo. No tiene automatizaciones asociadas.", {titulo:"ELIMINAR BORRADOR", ok:"Eliminar", peligro:true}) !== true) return;
@@ -3137,11 +3329,14 @@ function draftCardHTML(p){
 
 function openDebrief(){
   currentDraftId = null;
+  n2DraftBase = null;
+  if($("#btnDraft")) $("#btnDraft").textContent = "Guardar borrador";
   n2Selected = new Set(); n2AssignData = {}; n2TaskDates = {};
   n2Auto = autoDefaults(); renderAuto("n2");
   ["n2Debrief","n2Nombre","n2Productora","n2Director","n2Cliente","n2Agencia","n2Sintesis","n2Storyboard",
    "n2EpNombre","n2EpEmail","n2ProdNombre","n2ProdEmail","n2CoordNombre","n2CoordEmail"]
     .forEach(id=>{ const el=$("#"+id); if(el) el.value=""; });
+  sxRender("n2");
   $("#n2Form").style.display="none";
   $("#n2DebriefStep").style.display="block";
   calCtx = "n2"; calAuto = true;
@@ -3173,6 +3368,7 @@ async function parseDebrief2(){
     $("#n2Agencia").value = r.agencia||"";     $("#n2Productora").value = r.productora||"";
     $("#n2Director").value = r.director||"";
     $("#n2Sintesis").value = r.sintesis||"";   $("#n2Storyboard").value = r.storyboard_url||"";
+    sxRender("n2");
     n2Selected = new Set((r.tareas||[]).filter(t=>TAREAS.includes(t)));
     // el timeline que sugiere la IA solo se usa para precargar fecha de la tarea que coincide por nombre
     n2TaskDates = {};
@@ -3183,11 +3379,27 @@ async function parseDebrief2(){
   }catch(e){ toast("No pude analizar el debrief: "+e.message, true); }
   finally{ t23LoadHide(); btn.disabled=false; btn.textContent="Analizar debrief"; }
 }
+/* Un armado nuevo está "sucio" si hay algo cargado. Un borrador que ya existe
+   está sucio solo si cambió respecto de cómo se abrió: si no, cerrar no pregunta
+   nada. */
 function n2Dirty(){
+  if(currentDraftId && n2DraftBase !== null){
+    try{ return JSON.stringify(n2Snapshot()) !== n2DraftBase; }catch(e){ return true; }
+  }
   return !!(($("#n2Debrief")&&$("#n2Debrief").value.trim()) || ($("#n2Nombre")&&$("#n2Nombre").value.trim()) || n2Selected.size);
 }
 async function closeNew2(){
   if(!n2Dirty()){ closeModal("ovNew2"); return; }
+  /* borrador existente: la pregunta es si se guardan los cambios. Cerrar sin
+     guardar deja el borrador como estaba, nunca lo elimina. */
+  if(currentDraftId){
+    const r = await t23Confirm("Tenés cambios sin guardar en este borrador. Si no los guardás, queda como estaba: el borrador no se elimina.",
+      {titulo:"CAMBIOS SIN GUARDAR", cancelar:"Seguir editando", extra:"No guardar", ok:"Guardar cambios"});
+    if(r === true){ if(await saveDraft()) closeModal("ovNew2"); return; }
+    if(r === "extra") closeModal("ovNew2");
+    return;
+  }
+  /* armado nuevo: todavía no existe nada, así que se ofrece dejarlo como borrador */
   const r = await t23Confirm("Vas a cerrar el armado sin crear el proyecto.", {titulo:"CERRAR SIN CREAR", ok:"Cerrar igual", peligro:true, extra:"Guardar borrador"});
   if(r === "extra"){ if(await saveDraft()) closeModal("ovNew2"); return; }
   if(r === true) closeModal("ovNew2");
@@ -3219,10 +3431,15 @@ async function createProject2(){
   if(!nombre || !cliente){ toast("Falta el nombre o el cliente", true); return; }
   if(!epN || !epE){ toast("Cargá el Productor Ejecutivo y su mail", true); return; }
 
+  const ahora = new Date().toISOString();
   const asigs = {};
   Object.entries(n2AssignData).forEach(([t,rows])=>{
     const clean = rows.filter(r=>r.nombre||r.email);
-    if(clean.length) asigs[t]=clean.map(r=>({ nombre:r.nombre, email:r.email, discord:r.discord||"", telefono:r.telefono||"", estado:"candidato" }));
+    /* a quien le sale la propuesta al crear le queda la fecha, así después la
+       ficha no dice "sin propuesta enviada" de alguien que sí la recibió */
+    if(clean.length) asigs[t]=clean.map(r=>Object.assign(
+      { nombre:r.nombre, email:r.email, discord:r.discord||"", telefono:r.telefono||"", estado:"candidato" },
+      (r.email && r.mailOn!==false) ? { mailSentAt: ahora } : {}));
   });
   // misma lógica que el alta manual: fecha por tarea, sin timeline aparte
   const tDates = {};
@@ -3240,8 +3457,8 @@ async function createProject2(){
       mails.push({
         rol: t, to: r.email.trim(), nombre: r.nombre||"",
         enviar: r.mailOn !== false,
-        subject: mailFinalSubject(r, t),
-        html: mailFinalHTML(r, t)
+        subject: mailFinalSubject(r, t, "n2"),
+        html: mailFinalHTML(r, t, "n2")
       });
     });
   });
@@ -3292,7 +3509,7 @@ async function createProject2(){
         : nOn2.length ? "✔ Proyecto creado, "+nOn2.join(" + ")+" listo"
         : "✔ Proyecto creado, sin automatizaciones");
     if(currentDraftId){
-      const viejoDraft = currentDraftId; currentDraftId = null;
+      const viejoDraft = currentDraftId; currentDraftId = null; n2DraftBase = null;
       projects = projects.filter(x=>x.id!==viejoDraft);
       api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id:viejoDraft})}).catch(()=>{});
     }
@@ -3342,6 +3559,7 @@ function closeOverlayById(id){
   if(id==="ovDetail"){ requestCloseDetail(); return; }
   if(id==="ovNew2"){ closeNew2(); return; }
   if(id==="ovMail"){ mailClose(); return; }
+  if(id==="ovSintesis"){ sxClose(); return; }
   closeModal(id);
 }
 document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{

@@ -364,7 +364,7 @@ function demoData(){
   projects=[{
     id:"demo1", nombre:"SPOTIFY - CDMX", cliente:"Spotify", productora:"LANDIA/TMMT", status:"entregando",
     sintesis:"Hero film + social. Post completa.",
-    links:{driveRoot:"#",frameio:"#",feedback:"#"},
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",brief:"#",feedback:"#",notas:"#",frameio:"#"},
     misRoles:["Online"],
     calendario:[
       {tipo:"fase",fase:"Online",inicio:d(6),fin:d(14),notas:""},
@@ -507,8 +507,15 @@ function renderDetail(){
   const stepper=`<div class="stepper">${ETAPAS.map((e,i)=>
     `<span class="step ${i<idx?"done":""}" style="${i===idx?statusPillStyle(e):""}">${ETIQ[e]}</span>`
   ).join("")}</div>`;
-  const linkDefs=[["driveRoot","Drive del proyecto"],["frameio","Frame.io"],["feedback","Feedback"]];
-  const links=linkDefs.filter(([k])=>p.links&&p.links[k]).map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
+  /* Carpetas y documentos del proyecto. El backend (wf8) manda el set completo;
+     acá solo se dibuja lo que llegó, así un proyecto sin Frame.io o sin brief no
+     muestra huecos. El acceso real lo gobierna Drive, no esta lista. */
+  const CARPETAS=[["driveRoot","Unidad del proyecto"],["coord","0. COORD"],["supervision","1. SUPERVISION"],
+                  ["footage","2. FOOTAGE"],["recursos","3. RECURSOS"],["editables","4. EDITABLES"],["finales","5. FINALES"]];
+  const DOCS=[["brief","Brief"],["feedback","Feedback"],["notas","Notas"],["frameio","Frame.io"]];
+  const linkList=defs=>defs.filter(([k])=>p.links&&p.links[k])
+    .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
+  const carpetas=linkList(CARPETAS), docs=linkList(DOCS);
   const lookMap={}; let n=0;
   (p.calendario||[]).forEach((r,i)=>{ if(r.tipo!=="hito"){ lookMap[i]=n%PHASE_LOOKS.length; n++; } });
   $("#detailBody").innerHTML=`
@@ -516,7 +523,8 @@ function renderDetail(){
     <div class="kicker">${esc(p.cliente)}${p.productora?" · "+esc(p.productora):""}${(p.misRoles||[]).length?" · Tu rol: "+p.misRoles.map(esc).join(", "):""}</div>
     ${stepper}
     ${p.sintesis?`<div class="fgroup"><div class="glabel">Síntesis</div>${sintesisHTML(p.sintesis,true)}</div>`:""}
-    ${links?`<div class="fgroup"><div class="glabel">Links</div><div class="linkgrid">${links}</div></div>`:""}
+    ${carpetas?`<div class="fgroup"><div class="glabel">Carpetas de Drive</div><div class="linkgrid">${carpetas}</div></div>`:""}
+    ${docs?`<div class="fgroup"><div class="glabel">Documentos</div><div class="linkgrid">${docs}</div></div>`:""}
     ${(p.calendario||[]).some(r=>r.inicio)?`<div class="fgroup"><div class="glabel">Calendario</div>${monthHTML(p,lookMap)}</div>`:""}`;
 }
 function monthHTML(p, lookMap){
