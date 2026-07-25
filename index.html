@@ -279,6 +279,12 @@
   .chipst.cand{border-color:var(--gray);color:var(--gray)}
   .chipst.conf{background:var(--ink);color:#fff}
   .chipst.rech{border-color:var(--red);color:var(--red);text-decoration:line-through}
+  .chipst.inact{border-color:var(--gray);color:var(--gray);background:#F2F2F2}
+  /* fila de rechazado en pre-producción: se minimiza pero se ve que quedó afuera */
+  .assign-min{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 2px;margin-bottom:4px;border-bottom:1px dashed var(--hair)}
+  .assign-min .nm{font-size:12.5px;color:var(--gray);text-decoration:line-through;flex:1;min-width:120px}
+  /* hueco de la cruz de borrar: en la ficha no se borra a nadie, se cambia de estado */
+  .icon-slot{display:block;width:34px;height:38px}
   .mini-btn{font-family:var(--font-primary);font-size:11px;font-weight:var(--weight-bold);border:2px solid var(--ink);border-radius:var(--radius-full);padding:4px 10px;background:#fff;cursor:pointer}
   .mini-btn:hover{background:var(--ink);color:#fff}
   .mini-btn.no{border-color:var(--red);color:var(--red)}
@@ -1125,7 +1131,10 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function cardHTML(p, readOnly=false){
   const meta = [p.cliente,p.agencia,p.productora].filter(Boolean).map(esc).join(" · ");
   const pills = (p.tareas||[]).map(t=>`<span class="pill">${esc(t)}</span>`).join("");
-  const nCand = Object.values(p.asignaciones||{}).flat().filter(r=>r&&r.estado==="candidato").length;
+  /* el aviso de candidatos sin resolver solo tiene sentido en pre-producción:
+     de Ejecutando en adelante ya no se confirma ni se rechaza a nadie */
+  const nCand = p.status==="por_activarse"
+    ? Object.values(p.asignaciones||{}).flat().filter(r=>r&&r.estado==="candidato").length : 0;
   const candWarn = nCand ? `<span class="pill warn">${nCand} candidato${nCand>1?"s":""} sin resolver</span>` : "";
   const dLink = p.links?.driveRoot && p.links.driveRoot!=="#" ? `<a href="${esc(p.links.driveRoot)}" target="_blank" onclick="event.stopPropagation()">DRIVE ↗</a>` : "";
   const fLink = p.links?.frameio && p.links.frameio!=="#" ? `<a href="${esc(p.links.frameio)}" target="_blank" onclick="event.stopPropagation()">FRAME.IO ↗</a>` : "";
@@ -1454,27 +1463,62 @@ function renderNPAssigns(){
 function assignBlockHTML(tarea, rows, ctx){
   const td = taskDatesStore(ctx)[tarea] || {};
   const tq = String(tarea).replace(/'/g,"\\'");
+  /* En la ficha la gente no se borra, se gobierna por estado:
+       Pre-producción  → confirmado / rechazado (el rechazado se minimiza)
+       Ejecutando y más → los rechazados salen del cuadro y los que quedan
+                          se prenden y apagan (activo / inactivo)
+     La cruz de borrar solo sobrevive en los formularios de creación y, en la
+     ficha, en una fila recién agregada que todavía está vacía. */
+  const dt = ctx==="dt";
+  const enCurso = dt && detailProject && detailProject.status !== "por_activarse";
+  const vacia = r => !((r.nombre||"").trim() || (r.email||"").trim());
+
+  const chip = (clase, txt) => `<span class="chipst ${clase}">${txt}</span>`;
+
   const stateRow = (r,i)=>{
-    if(ctx!=="dt" || !r.estado) return "";
-    const chip = r.estado==="confirmado" ? '<span class="chipst conf">Confirmado</span>'
-               : r.estado==="rechazado"  ? '<span class="chipst rech">Rechazado</span>'
-               : '<span class="chipst cand">Candidato</span>';
-    const acts = r.estado==="candidato"
-      ? `<button class="mini-btn" onclick="candSet('${tq}',${i},'confirmado')">✓ Confirmar</button><button class="mini-btn no" onclick="candSet('${tq}',${i},'rechazado')">✕ Rechazar</button>`
-      : `<button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
-    return `<div class="cand-state">${chip}${acts}</div>`;
+    if(!dt || vacia(r)) return "";
+    const b = (estado, txt, clase="") => `<button class="mini-btn ${clase}" onclick="candSet('${tq}',${i},'${estado}')">${txt}</button>`;
+    if(!enCurso){
+      /* pre-producción: se resuelve el candidato */
+      if(!r.estado) return "";
+      if(r.estado==="inactivo") return `<div class="cand-state">${chip("inact","Inactivo")}${b("confirmado","↺ Reactivar")}</div>`;
+      const c = r.estado==="confirmado" ? chip("conf","Confirmado") : chip("cand","Candidato");
+      const acts = r.estado==="candidato"
+        ? b("confirmado","✓ Confirmar") + b("rechazado","✕ Rechazar","no")
+        : `<button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
+      return `<div class="cand-state">${c}${acts}</div>`;
+    }
+    /* en curso: activo / inactivo. Sin estado (alta manual) cuenta como activo */
+    if(r.estado==="inactivo") return `<div class="cand-state">${chip("inact","Inactivo")}${b("confirmado","↺ Reactivar")}</div>`;
+    const aviso = r.estado==="candidato" ? chip("cand","Sin confirmar") : "";
+    return `<div class="cand-state">${chip("conf","Activo")}${aviso}${b("inactivo","Desactivar","no")}</div>`;
   };
-  return `<div class="assign-block">
-    <div class="ttl">${esc(tarea)} — ${ctx==="n2"?"candidatos":"equipo"} + fechas</div>
-    ${rows.map((r,i)=>`
+
+  const visibles = rows.map((r,i)=>({r,i})).filter(({r})=> !(enCurso && r.estado==="rechazado"));
+  const filaHTML = ({r,i})=>{
+    /* rechazado en pre-producción: una línea y listo, para no comerse la pantalla */
+    if(dt && !enCurso && r.estado==="rechazado" && !vacia(r)) return `
+      <div class="assign-min">
+        <span class="nm">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}</span>
+        ${chip("rech","Rechazado")}
+        <button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>
+      </div>`;
+    const quitar = (!dt || vacia(r))
+      ? `<button class="icon-btn" onclick="delAssign('${ctx}','${tq}',${i})" title="Quitar">✕</button>`
+      : `<span class="icon-slot" title="Acá nadie se borra: en pre-producción se rechaza, en ejecución se desactiva"></span>`;
+    return `
       <div class="assign-row">
         <input type="text" placeholder="Nombre" autocomplete="off" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tq}',${i},'nombre',this.value);acOpen(this,'${ctx}','${tq}',${i})" onkeydown="acKey(event)" onblur="acBlur(this,'${ctx}','${tq}',${i})">
         <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tq}',${i},'email',this.value)" onblur="mailSlotSync('${ctx}','${tq}',${i})">
-        <button class="icon-btn" onclick="delAssign('${ctx}','${tq}',${i})" title="Quitar">✕</button>
+        ${quitar}
         <input type="text" placeholder="Discord" value="${esc(r.discord||'')}" oninput="setAssign('${ctx}','${tq}',${i},'discord',this.value)">
         <input type="tel" placeholder="Teléfono" value="${esc(r.telefono||'')}" oninput="setAssign('${ctx}','${tq}',${i},'telefono',this.value)">
       </div>
-      <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>${stateRow(r,i)}`).join("")}
+      <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>${stateRow(r,i)}`;
+  };
+  return `<div class="assign-block">
+    <div class="ttl">${esc(tarea)} — ${ctx==="n2"?"candidatos":"equipo"} + fechas</div>
+    ${visibles.map(filaHTML).join("")}
     <button class="addline" onclick="addAssign('${ctx}','${tarea}')">+ agregar persona</button>
     <div class="frow" style="margin-top:var(--space-4)">
       <div><label class="f">Inicio</label><input type="date" value="${esc(td.inicio||"")}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value)"></div>
@@ -1483,18 +1527,29 @@ function assignBlockHTML(tarea, rows, ctx){
     </div>
   </div>`;
 }
-/* confirmar / rechazar candidatos desde la ficha; persiste al toque */
+/* confirmar / rechazar en pre-producción, activar / desactivar en curso; persiste al toque */
+const ESTADO_TOAST = {
+  confirmado: n => "✔ "+n+" confirmado",
+  rechazado:  () => "Candidato rechazado",
+  candidato:  () => "Vuelve a candidato",
+  inactivo:   n => n+" desactivado en el proyecto"
+};
 async function candSet(tarea, i, estado){
   const p = detailProject;
   const row = (p.asignaciones[tarea]||[])[i];
   if(!row) return;
   const prev = row.estado;
+  const quien = row.nombre || row.email;
+  /* reactivar es volver a confirmado, pero el aviso tiene que decir otra cosa */
+  const msg = (estado==="confirmado" && prev==="inactivo")
+    ? quien+" vuelve a estar activo"
+    : (ESTADO_TOAST[estado] || (()=>"Estado actualizado"))(quien);
   row.estado = estado;
   renderDetail();
-  if(DEMO){ toast(estado==="confirmado"?"✔ "+(row.nombre||row.email)+" confirmado (demo)":estado==="rechazado"?"Candidato rechazado (demo)":"Vuelve a candidato (demo)"); return; }
+  if(DEMO){ toast(msg+" (demo)"); return; }
   try{
     await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, asignaciones_json: JSON.stringify(p.asignaciones) })});
-    toast(estado==="confirmado"?"✔ "+(row.nombre||row.email)+" confirmado":estado==="rechazado"?"Candidato rechazado":"Vuelve a candidato");
+    toast(msg);
   }catch(e){ row.estado = prev; renderDetail(); toast("No pude guardar el cambio: "+e.message, true); }
 }
 function taskDatesStore(ctx){ return ctx==="np" ? npTaskDates : ctx==="n2" ? n2TaskDates : (detailProject.taskDates = detailProject.taskDates||{}); }
@@ -1728,12 +1783,14 @@ function renderDetail(){
 
   const assigns = lockTareas
     ? p.tareas.map(t=>{
-        const rows = (p.asignaciones[t]||[]).filter(r=>r.nombre||r.email);
+        /* de Entregando en adelante el cuadro ya no muestra a los rechazados
+           (salieron al activar); los inactivos quedan visibles pero marcados */
+        const rows = (p.asignaciones[t]||[]).filter(r=>(r.nombre||r.email) && r.estado!=="rechazado");
         const d = (p.taskDates&&p.taskDates[t])||{};
         const range = d.inicio ? ` <small style="color:var(--gray);font-weight:var(--weight-regular)">(${fmtShort(d.inicio)} – ${fmtShort(d.fin||d.inicio)})</small>` : "";
         if(!rows.length && !range) return "";
         return `<div class="assign-block"><div class="ttl">${esc(t)} — asignados${range}</div>${rows.map(r=>
-          `<div style="font-size:${"var(--fs-caption)"};margin-bottom:4px">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}</div>`).join("")}</div>`;
+          `<div style="font-size:${"var(--fs-caption)"};margin-bottom:4px${r.estado==="inactivo"?";color:var(--gray);text-decoration:line-through":""}">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}${r.estado==="inactivo"?' <span class="chipst inact" style="text-decoration:none">Inactivo</span>':""}</div>`).join("")}</div>`;
       }).join("")
     : p.tareas.map(t=>assignBlockHTML(t, p.asignaciones[t]||[{nombre:"",email:"",discord:"",telefono:""}], "dt")).join("");
 
