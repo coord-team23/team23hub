@@ -443,9 +443,16 @@
   table.trk td.trk-cell.on{background:var(--brand-green);font-weight:var(--weight-bold)}
   table.trk td.trk-cell.trk-inact{background:var(--soft);color:var(--gray)}
   table.trk td.trk-cell.trk-inact.on{background:#D9D9D4;color:var(--gray)}
+  /* conteo cerrado por finalización: rayado, no se puede marcar hasta reactivar */
+  table.trk td.trk-cell.trk-cerrado{cursor:not-allowed;background:repeating-linear-gradient(45deg,#fff,#fff 3px,var(--soft) 3px,var(--soft) 6px)}
+  table.trk td.trk-cell.trk-cerrado:hover{background:repeating-linear-gradient(45deg,#fff,#fff 3px,#E4E4E0 3px,#E4E4E0 6px)}
+  table.trk td.trk-cell.trk-cerrado.on{background:repeating-linear-gradient(45deg,var(--brand-green),var(--brand-green) 3px,#CDE3C2 3px,#CDE3C2 6px);color:var(--ink)}
   table.trk td.trk-removido{color:var(--gray)}
   .trk-toggle{display:block;margin-top:4px;font-size:9px;font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--hair);border-radius:var(--radius-full);background:#fff;color:var(--gray);cursor:pointer;padding:1px 6px}
   .trk-toggle:hover{border-color:var(--ink);color:var(--ink)}
+  .trk-toggle.react{border-color:var(--red);color:var(--red)}
+  .trk-toggle.react:hover{background:var(--red);border-color:var(--red);color:#fff}
+  #ovFin .modal,#ovReact .modal{width:min(560px,100%)}
   table.trk input.trk-nota{width:100%;border:none;font-size:12px;padding:2px 4px;background:transparent}
   table.trk input.trk-nota:focus{outline:1.5px solid var(--red);background:#fff}
   .trk-resumen{margin-top:var(--space-7)}
@@ -955,6 +962,49 @@
         <button class="btn" id="btnDraft" onclick="saveDraftBtn()">Guardar borrador</button>
         <button class="btn primary" id="btnCreate2" onclick="createProject2()">Crear proyecto</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: FINALIZÓ (tracker) ============ -->
+<div class="overlay" id="ovFin" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="finTitle">
+    <button class="close" onclick="finClose()" aria-label="Cerrar">✕</button>
+    <h2 id="finTitle">Finalizó el trabajo</h2>
+    <div class="kicker" id="finWho"></div>
+
+    <p style="font-size:15px;line-height:1.5;margin:0 0 16px">
+      Se registra el día en que terminó su trabajo en el proyecto. Viene cargado con hoy:
+      si terminó otro día, cambialo antes de confirmar.
+    </p>
+
+    <div class="frow">
+      <div><label class="f">Día de finalización</label><input type="date" id="finFecha"></div>
+    </div>
+    <div class="trk-range" id="finHint" style="margin-top:10px"></div>
+
+    <div class="actions">
+      <button class="btn" onclick="finClose()">Cancelar</button>
+      <button class="btn primary" onclick="finSave(this)">Confirmar finalización</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: REACTIVAR CONTEO (tracker) ============ -->
+<div class="overlay" id="ovReact" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="reactTitle">
+    <button class="close" onclick="reactClose()" aria-label="Cerrar">✕</button>
+    <h2 id="reactTitle">Reactivar el conteo</h2>
+    <div class="kicker" id="reactWho"></div>
+
+    <p style="font-size:15px;line-height:1.5;margin:0 0 14px">
+      Se vuelve a habilitar la carga de jornadas de esta persona y se borra la finalización.
+    </p>
+    <div class="trk-range" id="reactHint"></div>
+
+    <div class="actions">
+      <button class="btn" onclick="reactClose()">Cancelar</button>
+      <button class="btn primary" onclick="reactSave(this)">Reactivar conteo</button>
     </div>
   </div>
 </div>
@@ -2642,6 +2692,7 @@ function ensureTracker(p){
   p.tracker.notas = p.tracker.notas || {};
   p.tracker.nombres = p.tracker.nombres || {};
   p.tracker.inactivos = p.tracker.inactivos || {};
+  p.tracker.finalizados = p.tracker.finalizados || {};   // { key: {fecha, marcadoEl} }
   return p.tracker;
 }
 
@@ -2668,21 +2719,29 @@ function ultimaJornada(t, key){
 function trackerParticipants(p){
   const t = ensureTracker(p);
   const list = [], seen = new Set();
-  const add = (key, nombre, rol, removido)=>{
+  /* ref = {tarea, i} apunta a la fila de asignaciones. Cuando existe, el estado
+     activo/inactivo se lee y se escribe ahí: es la misma fuente que la ficha, no
+     una copia. El equipo interno (EP/Prod/Coord) y la gente que ya no está
+     asignada no tienen fila, así que para esos manda t.inactivos. */
+  const add = (key, nombre, rol, removido, ref)=>{
     if(!key || seen.has(key)) return;
     seen.add(key);
-    list.push({key, nombre, rol, removido:!!removido, inactivo:!!t.inactivos[key]});
+    const fila = ref ? ((p.asignaciones[ref.tarea]||[])[ref.i]||{}) : null;
+    const inactivo = fila ? fila.estado==="inactivo" : !!t.inactivos[key];
+    list.push({key, nombre, rol, removido:!!removido, inactivo, ref:ref||null, fin:t.finalizados[key]||null});
     t.nombres[key] = nombre;
   };
   if(p.ep_nombre) add("ep", p.ep_nombre, "EP");
   if(p.prod_nombre) add("prod", p.prod_nombre, "Prod");
   if(p.coord_nombre) add("coord", p.coord_nombre, "Coord");
   Object.entries(p.asignaciones||{}).forEach(([tarea, rows])=>{
-    (rows||[]).forEach(r=>{
+    (rows||[]).forEach((r,i)=>{
       if(!r || !r.nombre) return;
-      if(r.estado && r.estado!=="confirmado") return;
+      /* los inactivos SÍ van (grisados): antes se caían del cuadro y se perdían
+         de vista las jornadas que ya tenían cargadas */
+      if(r.estado && r.estado!=="confirmado" && r.estado!=="inactivo") return;
       const key = r.email && r.email.trim() ? "e:"+r.email.trim().toLowerCase() : "n:"+tarea+"|"+r.nombre;
-      add(key, r.nombre, tarea);
+      add(key, r.nombre, tarea, false, {tarea, i});
     });
   });
   // participantes que ya no están asignados pero tienen jornadas cargadas: se conservan, grisados
@@ -2715,6 +2774,12 @@ function openTracker(id){
 
 function toggleJornada(key, dateKey){
   const t = ensureTracker(trkProject);
+  /* con el trabajo finalizado el conteo queda cerrado: hay que reactivarlo antes
+     de volver a tocar jornadas, así nadie suma días sobre algo ya cerrado */
+  if(t.finalizados[key]){
+    toast("El conteo de "+(t.nombres[key]||"esta persona")+" está cerrado. Reactivalo para volver a cargar jornadas.", true);
+    return;
+  }
   t.jornadas[key] = t.jornadas[key] || {};
   if(t.jornadas[key][dateKey]) delete t.jornadas[key][dateKey];
   else t.jornadas[key][dateKey] = true;
@@ -2729,18 +2794,121 @@ function setTrackerNota(dateKey, val){
 }
 
 function toggleInactivo(key){
-  const t = ensureTracker(trkProject);
+  const p = trkProject, t = ensureTracker(p);
+  const pp = trackerParticipants(p).find(x=>x.key===key);
+  const fila = pp && pp.ref ? (p.asignaciones[pp.ref.tarea]||[])[pp.ref.i] : null;
+  if(fila){
+    /* misma fuente que la ficha: acá se cambia el estado de la persona, no una copia */
+    fila.estado = fila.estado==="inactivo" ? "confirmado" : "inactivo";
+    renderTracker();
+    refrescarFicha();
+    toast(fila.estado==="inactivo" ? pp.nombre+" desactivado en el proyecto" : pp.nombre+" vuelve a estar activo");
+    saveTracker(true);
+    return;
+  }
   if(t.inactivos[key]) delete t.inactivos[key];
   else t.inactivos[key] = true;
   renderTracker();
   saveTracker();
 }
+/* si la ficha del mismo proyecto está abierta detrás, que se vea el cambio */
+function refrescarFicha(){
+  if(detailProject && trkProject && detailProject.id === trkProject.id) renderDetail();
+  onProjectsLoaded();
+}
 
-async function saveTracker(){
+async function saveTracker(conEquipo, extra){
   if(DEMO) return;
+  const body = { id:trkProject.id, tracker_json: JSON.stringify(trkProject.tracker) };
+  /* el estado activo/inactivo vive en asignaciones_json, así que cuando cambia
+     hay que mandar las dos cosas en la misma llamada */
+  if(conEquipo) body.asignaciones_json = JSON.stringify(trkProject.asignaciones||{});
+  /* seam para el aviso a administración: wf4 ignora las claves que no conoce, así
+     que esto viaja inerte hasta que exista la rama que lo lea */
+  if(extra) Object.assign(body, extra);
   try{
-    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({id:trkProject.id,tracker_json:JSON.stringify(trkProject.tracker)})});
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify(body)});
   }catch(e){ toast("No pude guardar el tracker: "+e.message, true); }
+}
+
+/* ---------- \"Finalizó\": deja registrado el último día de trabajo ---------- */
+let finKey = null;
+function finOpen(key){
+  const p = trkProject, t = ensureTracker(p);
+  const pp = trackerParticipants(p).find(x=>x.key===key); if(!pp) return;
+  finKey = key;
+  const ult = ultimaJornada(t, key);
+  const jor = Object.values(t.jornadas[key]||{}).filter(Boolean).length;
+  const hoy = ymd(new Date());
+  $("#finWho").textContent = pp.nombre + " · " + pp.rol;
+  $("#finFecha").value = (pp.fin && pp.fin.fecha) || hoy;
+  $("#finHint").innerHTML = `Jornadas cargadas: <b>${jor}</b>` +
+    (ult ? ` · Última jornada marcada: <b>${fmtShort(ult)}</b> <button class="mini-btn" onclick="finUsarUltima('${ult}')">usar esa fecha</button>` : "") +
+    (pp.fin ? `<div style="margin-top:6px">Ya estaba marcado como finalizado el <b>${fmtShort(pp.fin.fecha)}</b>: al confirmar se sobreescribe.</div>` : "");
+  $("#ovFin").classList.add("open");
+}
+function finClose(){ $("#ovFin").classList.remove("open"); finKey = null; }
+function finUsarUltima(f){ $("#finFecha").value = f; }
+async function finSave(btn){
+  if(!finKey) return;
+  const p = trkProject, t = ensureTracker(p);
+  const fecha = ($("#finFecha").value||"").trim();
+  if(!fecha){ toast("Elegí el día en que finalizó", true); return; }
+  const pp = trackerParticipants(p).find(x=>x.key===finKey);
+  const key = finKey;
+  const prev = t.finalizados[key] || null;
+  t.finalizados[key] = { fecha, marcadoEl: new Date().toISOString() };
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
+    await saveTracker(false, { finalizacion: {
+      key, nombre: pp?pp.nombre:"", rol: pp?pp.rol:"", fecha,
+      jornadas: Object.values(t.jornadas[key]||{}).filter(Boolean).length,
+      proyecto: p.nombre||"", proyecto_id: p.id
+    }});
+    finClose(); renderTracker();
+    toast("✔ "+(pp?pp.nombre:"La persona")+" finalizó el "+fmtShort(fecha));
+  }catch(e){
+    if(prev) t.finalizados[key] = prev; else delete t.finalizados[key];
+    toast("No pude registrar la finalización: "+e.message, true);
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
+}
+/* ---------- "Reactivar": vuelve a abrir el conteo de jornadas ---------- */
+let reactKey = null;
+function reactOpen(key){
+  const p = trkProject, t = ensureTracker(p);
+  const pp = trackerParticipants(p).find(x=>x.key===key); if(!pp || !pp.fin) return;
+  reactKey = key;
+  const jor = Object.values(t.jornadas[key]||{}).filter(Boolean).length;
+  $("#reactWho").textContent = pp.nombre + " · " + pp.rol;
+  $("#reactHint").innerHTML =
+    `Hoy figura como finalizada el <b>${fmtShort(pp.fin.fecha)}</b>, con <b>${jor}</b> jornada${jor===1?"":"s"} cargada${jor===1?"":"s"}.` +
+    `<div style="margin-top:6px">Las jornadas ya cargadas no se tocan: solo se vuelve a habilitar la carga.</div>`;
+  $("#ovReact").classList.add("open");
+}
+function reactClose(){ $("#ovReact").classList.remove("open"); reactKey = null; }
+async function reactSave(btn){
+  if(!reactKey) return;
+  const p = trkProject, t = ensureTracker(p);
+  const key = reactKey;
+  const pp = trackerParticipants(p).find(x=>x.key===key);
+  const prev = t.finalizados[key];
+  delete t.finalizados[key];
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
+    await saveTracker(false, { reactivacion: {
+      key, nombre: pp?pp.nombre:"", rol: pp?pp.rol:"",
+      fechaPrevia: prev?prev.fecha:"", jornadas: Object.values(t.jornadas[key]||{}).filter(Boolean).length,
+      proyecto: p.nombre||"", proyecto_id: p.id
+    }});
+    reactClose(); renderTracker();
+    toast("✔ Conteo reactivado para "+(pp?pp.nombre:"la persona"));
+  }catch(e){
+    if(prev) t.finalizados[key] = prev;
+    renderTracker();
+    toast("No pude reactivar el conteo: "+e.message, true);
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
 function trackerHTML(p){
@@ -2760,7 +2928,15 @@ function trackerHTML(p){
 
   const head = `<tr>
     <th class="trk-day">Día</th><th class="trk-date">Fecha</th>
-    ${parts.map(pp=>`<th class="${(pp.removido||pp.inactivo)?"trk-removido":""}">${esc(pp.nombre)}<div class="trk-rol">${esc(pp.rol)}${pp.inactivo?" · inactivo":""}</div><button class="trk-toggle" title="${pp.inactivo?"Reactivar":"Marcar inactivo"}" onclick="toggleInactivo('${pp.key}')">${pp.inactivo?"↺ activar":"○ inactivar"}</button></th>`).join("")}
+    ${parts.map(pp=>{
+      const marca = pp.fin ? " · finalizó "+fmtShort(pp.fin.fecha) : pp.inactivo ? " · inactivo" : "";
+      const btnEstado = pp.removido ? "" :
+        `<button class="trk-toggle" title="${pp.inactivo?"Reactivar en el proyecto":"Marcar inactivo en el proyecto"}" onclick="toggleInactivo('${pp.key}')">${pp.inactivo?"↺ activar":"○ inactivar"}</button>`;
+      const btnFin = pp.fin
+        ? `<button class="trk-toggle react" title="Volver a abrir el conteo de jornadas" onclick="reactOpen('${pp.key}')">↺ Reactivar</button>`
+        : `<button class="trk-toggle" title="Registrar el último día de trabajo y cerrar el conteo" onclick="finOpen('${pp.key}')">Finalizó</button>`;
+      return `<th class="${(pp.removido||pp.inactivo||pp.fin)?"trk-removido":""}">${esc(pp.nombre)}<div class="trk-rol">${esc(pp.rol)}${marca}</div>${btnEstado}${btnFin}</th>`;
+    }).join("")}
     <th>Notas / hitos</th>
   </tr>`;
 
@@ -2769,7 +2945,9 @@ function trackerHTML(p){
     const isWeekend = [0,6].includes(d.getDay());
     const cells = parts.map(pp=>{
       const on = !!(t.jornadas[pp.key] && t.jornadas[pp.key][key]);
-      return `<td class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""}" onclick="toggleJornada('${pp.key}','${key}')">${on?"✕":""}</td>`;
+      const cerrado = !!pp.fin;   // conteo cerrado por finalización
+      const tip = cerrado ? ' title="Conteo cerrado: reactivalo para cargar jornadas"' : "";
+      return `<td class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""} ${cerrado?"trk-cerrado":""}"${tip} onclick="toggleJornada('${pp.key}','${key}')">${on?"✕":""}</td>`;
     }).join("");
     return `<tr class="${isWeekend?"trk-weekend":""}">
       <td class="trk-day">${d.toLocaleDateString("es-AR",{weekday:"short"}).toUpperCase()}</td>
@@ -2781,13 +2959,20 @@ function trackerHTML(p){
 
   const totalJor = parts.reduce((s,pp)=>s+Object.values(t.jornadas[pp.key]||{}).filter(Boolean).length,0);
   const resumen = `<div class="trk-resumen">
-    <table><thead><tr><th>Nombre</th><th>Rol</th><th>Jornadas</th><th>Última jornada</th></tr></thead><tbody>
+    <table><thead><tr><th>Nombre</th><th>Rol</th><th>Jornadas</th><th>Última jornada</th><th>Finalizó</th></tr></thead><tbody>
       ${parts.map(pp=>{
         const jor = Object.values(t.jornadas[pp.key]||{}).filter(Boolean).length;
         const ult = ultimaJornada(t, pp.key);
-        return `<tr${(pp.removido||pp.inactivo)?' style="color:var(--gray)"':""}><td>${esc(pp.nombre)}${pp.removido?' <small style="color:var(--gray)">(ya no asignado)</small>':pp.inactivo?' <small style="color:var(--gray)">(inactivo)</small>':""}</td><td>${esc(pp.rol)}</td><td>${jor}</td><td>${ult?fmtShort(ult):"—"}</td></tr>`;
+        const nota = pp.removido ? ' <small style="color:var(--gray)">(ya no asignado)</small>'
+                   : pp.inactivo ? ' <small style="color:var(--gray)">(inactivo)</small>' : "";
+        /* la fecha de finalización es el dato que va a administración */
+        const fin = pp.fin ? `<b>${fmtShort(pp.fin.fecha)}</b>` : "—";
+        const desfasada = pp.fin && ult && pp.fin.fecha !== ult
+          ? ` <small style="color:var(--red)">≠ última jornada</small>` : "";
+        const conteo = pp.fin ? `${jor} <small style="color:var(--gray)">cerrado</small>` : String(jor);
+        return `<tr${(pp.removido||pp.inactivo)?' style="color:var(--gray)"':""}><td>${esc(pp.nombre)}${nota}</td><td>${esc(pp.rol)}</td><td>${conteo}</td><td>${ult?fmtShort(ult):"—"}</td><td>${fin}${desfasada}</td></tr>`;
       }).join("")}
-      <tr style="font-weight:var(--weight-bold);border-top:2px solid var(--ink)"><td>TOTAL</td><td></td><td>${totalJor}</td><td></td></tr>
+      <tr style="font-weight:var(--weight-bold);border-top:2px solid var(--ink)"><td>TOTAL</td><td></td><td>${totalJor}</td><td></td><td></td></tr>
     </tbody></table>
   </div>`;
 
@@ -3560,6 +3745,8 @@ function closeOverlayById(id){
   if(id==="ovNew2"){ closeNew2(); return; }
   if(id==="ovMail"){ mailClose(); return; }
   if(id==="ovSintesis"){ sxClose(); return; }
+  if(id==="ovFin"){ finClose(); return; }
+  if(id==="ovReact"){ reactClose(); return; }
   closeModal(id);
 }
 document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{
