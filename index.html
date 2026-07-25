@@ -244,6 +244,13 @@
   .addline:hover{text-decoration:underline}
 
   .modal .actions{display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5);flex-wrap:wrap}
+  /* tres opciones no entran en una fila y wrapean torcidas: apiladas quedan
+     alineadas y se pueden ordenar por riesgo */
+  .actions.stack{flex-direction:column;align-items:stretch;flex-wrap:nowrap}
+  .actions.stack .btn{width:100%;padding-left:var(--space-5);padding-right:var(--space-5)}
+  .actions.stack .sep{border-top:1px solid var(--hair);margin-top:var(--space-2)}
+  .btn.danger-out{border-color:var(--red);color:var(--red)}
+  .btn.danger-out:hover{background:var(--red);border-color:var(--red);color:#fff}
 
   /* ---------- detalle: links Drive / Frame ---------- */
   .link-split{display:grid;grid-template-columns:1fr;gap:var(--space-5)}
@@ -883,11 +890,14 @@
 <div class="overlay" id="ovConfirm" style="z-index:1200">
   <div class="modal" role="dialog" aria-modal="true" style="width:min(480px,100%)">
     <h2 style="font-size:22px">Cambios sin guardar</h2>
-    <div class="kicker">Hiciste cambios en este proyecto que todavía no se guardaron</div>
-    <div class="actions" style="flex-wrap:wrap;gap:10px">
+    <p style="font-size:15px;line-height:1.5;margin:0 0 var(--space-7);color:var(--gray)">
+      Hiciste cambios en este proyecto que todavía no se guardaron.
+    </p>
+    <div class="actions stack">
       <button class="btn primary" onclick="confirmSaveExit(this)">Guardar y salir</button>
-      <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="confirmDiscard()">Descartar cambios</button>
       <button class="btn" onclick="closeModal('ovConfirm')">Seguir editando</button>
+      <div class="sep"></div>
+      <button class="btn danger-out" onclick="confirmDiscard()">Descartar cambios</button>
     </div>
   </div>
 </div>
@@ -3769,7 +3779,7 @@ async function closeNew2(){
     return;
   }
   /* armado nuevo: todavía no existe nada, así que se ofrece dejarlo como borrador */
-  const r = await t23Confirm("Vas a cerrar el armado sin crear el proyecto.", {titulo:"CERRAR SIN CREAR", ok:"Cerrar igual", peligro:true, extra:"Guardar borrador"});
+  const r = await t23Confirm("Vas a cerrar el armado sin crear el proyecto.", {titulo:"CERRAR SIN CREAR", ok:"Cerrar sin guardar", peligro:true, extra:"Guardar borrador"});
   if(r === "extra"){ if(await saveDraft()) closeModal("ovNew2"); return; }
   if(r === true) closeModal("ovNew2");
 }

@@ -33,7 +33,7 @@
             {
               "id": "c1",
               "name": "dbSheetId",
-              "value": "PEGAR_DB_SHEET_ID",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
               "type": "string"
             }
           ]
@@ -113,7 +113,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function safe(v, fb){ try { return v ? JSON.parse(v) : fb; } catch(e){ return fb; } }\nconst projRows = $('Leer Projects').all().map(i => i.json).filter(r => r && r.id);\nconst calRows = $('Leer Calendar').all().map(i => i.json).filter(r => r && r.project_id);\nconst projects = projRows.map(p => ({\n  id: String(p.id),\n  nombre: p.nombre || '',\n  cliente: p.cliente || '',\n  agencia: p.agencia || '',\n  productora: p.productora || '',\n  director: p.director || '',\n  ep_nombre: p.ep_nombre || '', ep_email: p.ep_email || '',\n  prod_nombre: p.prod_nombre || '', prod_email: p.prod_email || '',\n  coord_nombre: p.coord_nombre || '', coord_email: p.coord_email || '',\n  tareas: safe(p.tareas_json, []),\n  asignaciones: safe(p.asignaciones_json, {}),\n  taskDates: safe(p.taskDates_json, {}),\n  sintesis: p.sintesis || '',\n  checklist: safe(p.checklist_json, {}),\n  tracker: safe(p.tracker_json, {}),\n  storyboard_url: p.storyboard_url || '',\n  tratamiento_url: p.tratamiento_url || '',\n  status: p.status || 'por_activarse',\n  year: String(p.year || ''),\n  links: safe(p.links_json, {}),\n  calendario: calRows.filter(c => String(c.project_id) === String(p.id)).map(c => ({ fase: c.fase, inicio: c.inicio, fin: c.fin, notas: c.notas || '', tipo: c.tipo === 'hito' ? 'hito' : 'fase' }))\n}));\nreturn [{ json: { projects } }];"
+        "jsCode": "function safe(v, fb){ try { return v ? JSON.parse(v) : fb; } catch(e){ return fb; } }\nconst projRows = $('Leer Projects').all().map(i => i.json).filter(r => r && r.id);\nconst calRows = $('Leer Calendar').all().map(i => i.json).filter(r => r && r.project_id);\nconst projects = projRows.map(p => ({\n  id: String(p.id),\n  draft_json: p.draft_json || '',\n  nombre: p.nombre || '',\n  cliente: p.cliente || '',\n  agencia: p.agencia || '',\n  productora: p.productora || '',\n  director: p.director || '',\n  ep_nombre: p.ep_nombre || '', ep_email: p.ep_email || '',\n  prod_nombre: p.prod_nombre || '', prod_email: p.prod_email || '',\n  coord_nombre: p.coord_nombre || '', coord_email: p.coord_email || '',\n  tareas: safe(p.tareas_json, []),\n  asignaciones: safe(p.asignaciones_json, {}),\n  taskDates: safe(p.taskDates_json, {}),\n  sintesis: p.sintesis || '',\n  checklist: safe(p.checklist_json, {}),\n  tracker: safe(p.tracker_json, {}),\n  storyboard_url: p.storyboard_url || '',\n  tratamiento_url: p.tratamiento_url || '',\n  status: p.status || 'por_activarse',\n  year: String(p.year || ''),\n  links: safe(p.links_json, {}),\n  calendario: calRows.filter(c => String(c.project_id) === String(p.id)).map(c => ({ fase: c.fase, inicio: c.inicio, fin: c.fin, notas: c.notas || '', tipo: c.tipo === 'hito' ? 'hito' : 'fase' }))\n}));\nreturn [{ json: { projects } }];"
       },
       "id": "b2000002-0000-0000-0000-000000000005",
       "name": "Armar respuesta",
