@@ -3246,7 +3246,7 @@ const FRASES_CARGA = [
   "No apagues el equipo, actualización 3 de 47",
   "Tiempo estimado: 4 minutos… 2 horas… 30 segundos"
 ];
-const FRASES_ACCION = { crear: "Convenciendo a Drive y a Frame de trabajar juntos" };
+const FRASES_ACCION = { crear: "Convenciendo a Drive y a Frame de trabajar juntos", borrar: "Haciendo desaparecer el borrador sin dejar rastro" };
 let t23LoadEl = null, t23LoadTimer = null;
 function t23LoadShow(accion){
   t23LoadHide();
@@ -3606,16 +3606,27 @@ function openDraft(id){
   /* recién acá, con todo cargado, queda la foto contra la que se compara al cerrar */
   n2DraftBase = JSON.stringify(n2Snapshot());
 }
+/* borrados en curso: la ✕ de la tarjeta es chica y se clickea dos veces fácil */
+const borrandoDraft = new Set();
 async function deleteDraftUI(id){
+  if(borrandoDraft.has(id)) return;
   if(await t23Confirm("Se elimina el borrador para todo el equipo. No tiene automatizaciones asociadas.", {titulo:"ELIMINAR BORRADOR", ok:"Eliminar", peligro:true}) !== true) return;
-  if(!DEMO){
-    try{ await api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id})}); }
-    catch(e){ toast("No pude eliminar el borrador: "+e.message, true); return; }
+  if(borrandoDraft.has(id)) return;   // por si entró otro click mientras estaba el confirm
+  borrandoDraft.add(id);
+  /* el borrado tarda: sin el loader la interfaz queda viva y parece que no pasó nada */
+  t23LoadShow("borrar");
+  try{
+    if(!DEMO) await api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id})});
+    projects = projects.filter(x=>x.id!==id);
+    if(currentDraftId===id){ currentDraftId = null; n2DraftBase = null; }
+    renderAll();
+    toast("✔ Borrador eliminado");
+  }catch(e){
+    toast("No pude eliminar el borrador: "+e.message, true);
+  }finally{
+    borrandoDraft.delete(id);
+    t23LoadHide();
   }
-  projects = projects.filter(x=>x.id!==id);
-  if(currentDraftId===id) currentDraftId = null;
-  renderAll();
-  toast("✔ Borrador eliminado");
 }
 function draftCardHTML(p){
   return `<div class="card draft-card" onclick="openDraft('${p.id}')">
