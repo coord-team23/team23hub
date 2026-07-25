@@ -639,6 +639,20 @@
   .sx-box.closed .sx-body{display:none}
   .sx-body{padding:var(--space-4) var(--space-5)}
   .sx-empty{font-size:13px;color:var(--gray)}
+
+  /* ---------- notas de tarea / fase: se leen enteras, se editan en popup ---------- */
+  .nota-box{border:1.5px solid var(--hair);border-radius:var(--radius-sm);padding:8px 10px;margin-top:var(--space-3)}
+  .nota-box.tiene{border-color:var(--ink)}
+  .nota-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .nota-head .lbl{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--gray);flex:1}
+  .nota-txt{font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .nota-txt.vacia{color:var(--gray);font-style:italic}
+  .cal-nota{cursor:pointer;text-align:left}
+  .cal-nota .txt{font-size:12.5px;line-height:1.4;max-height:2.8em;overflow:hidden;display:block}
+  .cal-nota .txt.vacia{color:var(--gray)}
+  .cal-nota:hover{background:var(--soft)}
+  #ovNota .modal{width:min(680px,100%)}
+  #notaTa{min-height:220px;font-size:15px;line-height:1.6}
   /* popup de edición: la caja grande que faltaba */
   #ovSintesis .modal{width:min(820px,100%)}
   #sxTa{min-height:300px;font-size:15px;line-height:1.6}
@@ -986,6 +1000,25 @@
     <div class="actions">
       <button class="btn" onclick="finClose()">Cancelar</button>
       <button class="btn primary" onclick="finSave(this)">Confirmar finalización</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: NOTAS DE TAREA / FASE ============ -->
+<div class="overlay" id="ovNota" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="notaTitle">
+    <button class="close" onclick="notaClose()" aria-label="Cerrar">✕</button>
+    <h2 id="notaTitle">Notas</h2>
+    <div class="kicker" id="notaWho"></div>
+
+    <div class="fgroup">
+      <div class="glabel">A tener en cuenta <small>lo ve el equipo en la ficha, y viaja a la columna NOTAS del calendario</small></div>
+      <textarea id="notaTa" placeholder="Todo lo que haya que saber de esta etapa…"></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="notaClose()">Cancelar</button>
+      <button class="btn primary" onclick="notaSave()">Guardar notas</button>
     </div>
   </div>
 </div>
@@ -1686,8 +1719,8 @@ function assignBlockHTML(tarea, rows, ctx){
     <div class="frow" style="margin-top:var(--space-4)">
       <div><label class="f">Inicio</label><input type="date" value="${esc(td.inicio||"")}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value)"></div>
       <div><label class="f">Fin</label><input type="date" value="${esc(td.fin||"")}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value)"></div>
-      <div style="flex:2;min-width:200px"><label class="f">Notas</label><input type="text" placeholder="A tener en cuenta para esta tarea" value="${esc(td.notas||"")}" onchange="setTaskDate('${ctx}','${tarea}','notas',this.value)"></div>
     </div>
+    <div id="${notaSlotId(ctx,tarea)}">${notaBoxHTML(ctx, tarea, false)}</div>
   </div>`;
 }
 /* confirmar / rechazar en pre-producción, activar / desactivar en curso; persiste al toque */
@@ -1972,7 +2005,7 @@ function renderDetail(){
         <td><span style="display:flex;align-items:center;gap:6px;font-weight:var(--weight-bold)">${esc(e.fase)}<small style="color:var(--gray);font-weight:var(--weight-regular)">tarea</small></span></td>
         <td><input type="date" value="${esc(e.inicio)}" oninput="taskDateSet('${t}','inicio',this.value)" onchange="renderDetail()"></td>
         <td><input type="date" value="${esc(e.fin)}" oninput="taskDateSet('${t}','fin',this.value)" onchange="renderDetail()"></td>
-        <td><input type="text" value="${esc(e.notas||"")}" oninput="taskDateSet('${t}','notas',this.value)" placeholder=""></td>
+        ${notaCeldaHTML({kind:"caltask", tarea:e.key})}
         <td></td>
       </tr>`;
     }
@@ -1981,7 +2014,7 @@ function renderDetail(){
       <td><input type="text" value="${esc(e.fase)}" oninput="calSet(${e.idx},'fase',this.value)" onchange="renderDetail()" placeholder="Fase"></td>
       <td><input type="date" value="${esc(e.inicio)}" oninput="calSet(${e.idx},'inicio',this.value)" onchange="renderDetail()"></td>
       <td><input type="date" value="${esc(e.fin)}" oninput="calSet(${e.idx},'fin',this.value)" onchange="renderDetail()"></td>
-      <td><input type="text" value="${esc(e.notas||"")}" oninput="calSet(${e.idx},'notas',this.value)" placeholder=""></td>
+      ${notaCeldaHTML({kind:"cal", idx:e.idx})}
       <td><button class="icon-btn" onclick="calDel(${e.idx})">✕</button></td>
     </tr>`;
   }).join("");
@@ -2984,6 +3017,87 @@ function renderTracker(){
 }
 
 /* ================================================================
+   NOTAS DE TAREA / FASE
+   Eran un input de una línea: con una nota larga no se leía nada. Ahora
+   se muestran enteras (con wrap) y se editan en el popup ovNota. Hay tres
+   puntos de entrada al mismo dato:
+     task    → bloque de la tarea en el armado y en la ficha (setTaskDate)
+     caltask → fila de tarea en la tabla del calendario (taskDateSet)
+     cal     → fase independiente de la tabla del calendario (calSet)
+   Ojo: la ficha marca detailDirty con los eventos input/change de sus
+   campos. Al editar desde un popup esos eventos no ocurren, así que las
+   banderas se prenden a mano o los cambios se pierden sin avisar.
+================================================================ */
+let notaTarget = null;
+function notaValue(tg){
+  if(!tg) return "";
+  if(tg.kind==="cal") return (((detailProject||{}).calendario||[])[tg.idx]||{}).notas || "";
+  if(tg.kind==="caltask") return (((detailProject||{}).taskDates||{})[tg.tarea]||{}).notas || "";
+  return ((taskDatesStore(tg.ctx)||{})[tg.tarea]||{}).notas || "";
+}
+function notaEtiqueta(tg){
+  if(!tg) return "";
+  if(tg.kind==="cal"){
+    const f = (((detailProject||{}).calendario||[])[tg.idx]||{}).fase;
+    return (f||"Fase sin nombre")+" · fase del calendario";
+  }
+  const dónde = tg.kind==="caltask" || tg.ctx==="dt" ? "tarea del proyecto" : "tarea · armado";
+  return tg.tarea+" · "+dónde;
+}
+/* caja legible dentro del bloque de la tarea */
+function notaSlotId(ctx, tarea){ return "notabox-"+ctx+"-"+String(tarea).replace(/[^a-zA-Z0-9]/g,""); }
+function notaBoxHTML(ctx, tarea, readOnly){
+  const txt = ((taskDatesStore(ctx)||{})[tarea]||{}).notas || "";
+  const tq = String(tarea).replace(/'/g,"\\'");
+  const editar = readOnly ? "" :
+    `<button class="mini-btn" onclick="notaOpen('task','${ctx}','${tq}')">${txt?"✎ editar":"+ agregar"}</button>`;
+  return `<div class="nota-box ${txt?"tiene":""}">
+    <div class="nota-head"><span class="lbl">Notas</span>${editar}</div>
+    <div class="nota-txt ${txt?"":"vacia"}">${txt?esc(txt):"Sin notas para esta tarea."}</div>
+  </div>`;
+}
+function notaSlotSync(ctx, tarea){
+  const el = $("#"+notaSlotId(ctx,tarea));
+  if(el) el.innerHTML = notaBoxHTML(ctx, tarea, false);
+}
+/* celda de la tabla del calendario: preview recortado, click para abrir */
+function notaCeldaHTML(tg){
+  const txt = notaValue(tg);
+  const args = tg.kind==="cal" ? `'cal',${tg.idx}` : `'caltask','${String(tg.tarea).replace(/'/g,"\\'")}'`;
+  return `<td class="cal-nota" onclick="notaOpen(${args})" title="${txt?esc(txt):"Sin notas"}">
+    <span class="txt ${txt?"":"vacia"}">${txt?esc(txt):"+ agregar"}</span></td>`;
+}
+function notaOpen(kind, a, b){
+  notaTarget = kind==="cal" ? {kind:"cal", idx:Number(a)}
+             : kind==="caltask" ? {kind:"caltask", tarea:a}
+             : {kind:"task", ctx:a, tarea:b};
+  $("#notaWho").textContent = notaEtiqueta(notaTarget);
+  $("#notaTa").value = notaValue(notaTarget);
+  $("#ovNota").classList.add("open");
+  setTimeout(()=>{ const ta=$("#notaTa"); if(ta) ta.focus(); }, 30);
+}
+function notaClose(){ $("#ovNota").classList.remove("open"); notaTarget = null; }
+function notaSave(){
+  if(!notaTarget) return;
+  const tg = notaTarget;
+  const val = ($("#notaTa").value||"").trim();
+  if(tg.kind==="cal"){
+    calSet(tg.idx, "notas", val);          // ya prende calDirty
+    notaClose(); renderDetail();
+  }else if(tg.kind==="caltask"){
+    taskDateSet(tg.tarea, "notas", val);
+    detailDirty = true;                    // el input/change de la ficha no corrió
+    notaClose(); renderDetail();
+  }else{
+    setTaskDate(tg.ctx, tg.tarea, "notas", val);   // refresca el calendario del armado
+    if(tg.ctx==="dt") detailDirty = true;
+    notaClose();
+    if(tg.ctx!=="dt") notaSlotSync(tg.ctx, tg.tarea);
+  }
+  toast(val ? "✔ Notas guardadas" : "Notas vacías");
+}
+
+/* ================================================================
    SÍNTESIS: caja colapsable + popup de edición
    Vive en tres lugares (ficha, alta manual, debrief) con el mismo
    componente. El portal de proveedores tiene su propia copia y no se
@@ -3747,6 +3861,7 @@ function closeOverlayById(id){
   if(id==="ovSintesis"){ sxClose(); return; }
   if(id==="ovFin"){ finClose(); return; }
   if(id==="ovReact"){ reactClose(); return; }
+  if(id==="ovNota"){ notaClose(); return; }
   closeModal(id);
 }
 document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{
