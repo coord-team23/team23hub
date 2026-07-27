@@ -230,7 +230,8 @@
     font-size:12px;font-weight:var(--weight-bold);letter-spacing:.04em;text-transform:uppercase;
     border:2px solid var(--ink);border-radius:var(--radius-full);padding:var(--space-3) var(--space-5);cursor:pointer;
     background:#fff;transition:all .12s;user-select:none;
-  ;color:var(--ink)}
+    color:var(--ink);
+  }
   .task-pill.on{background:var(--red);border-color:var(--red);color:#fff}
 
   .assign-block{border:2px solid var(--ink);border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);margin-top:var(--space-4)}
@@ -239,7 +240,8 @@
   .icon-btn{
     width:34px;height:38px;border:2px solid var(--ink);border-radius:var(--radius-sm);background:#fff;
     cursor:pointer;font-weight:var(--weight-bold);font-size:15px;flex:none;
-  ;color:var(--ink)}
+    color:var(--ink);
+  }
   .icon-btn:hover{background:var(--ink);color:#fff}
   .addline{font-family:var(--font-secondary);font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--ink);background:none;border:none;cursor:pointer;padding:2px 0}
   .addline:hover{text-decoration:underline}
@@ -385,7 +387,8 @@
   .cal-nav button{
     width:34px;height:34px;border:2px solid var(--ink);border-radius:50%;background:#fff;
     font-size:15px;font-weight:var(--weight-bold);cursor:pointer;line-height:1;
-  ;color:var(--ink)}
+    color:var(--ink);
+  }
   .cal-nav button:hover{background:var(--ink);color:#fff}
   .cal-scroll{overflow-x:auto;min-width:0}
   .cal-min{min-width:660px}
@@ -631,8 +634,16 @@
 
     /* inputs: 16px evita el auto-zoom de iOS al enfocar */
     input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{font-size:16px}
+    /* La grilla de 2 columnas dejaba que la autoubicación mandara el campo Discord
+       (4º hijo) a la columna de 44px: quedaba una cajita ilegible al costado. Con
+       las áreas explícitas cada campo va donde tiene que ir.
+       Orden de los hijos: 1 nombre · 2 mail · 3 ✕/hueco · 4 discord · 5 teléfono */
     .assign-row{grid-template-columns:1fr 44px}
-    .assign-row input[type=email]{grid-column:1 / -1}
+    .assign-row > *:nth-child(1){grid-area:1 / 1 / 2 / 2}
+    .assign-row > *:nth-child(3){grid-area:1 / 2 / 2 / 3}
+    .assign-row > *:nth-child(2){grid-area:2 / 1 / 3 / 3}
+    .assign-row > *:nth-child(4){grid-area:3 / 1 / 4 / 3}
+    .assign-row > *:nth-child(5){grid-area:4 / 1 / 5 / 3}
     .icon-btn{width:44px;height:42px}
 
     /* tabla de fases con scroll lateral propio */
