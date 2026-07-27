@@ -49,7 +49,7 @@
   .header-top{display:flex;align-items:center;justify-content:space-between}
   .tabrow{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap}
   .tabbar{display:flex;gap:var(--space-2);flex-wrap:wrap}
-  .tabbar .status-opt{padding:var(--space-2) var(--space-4);font-size:12px}
+  .tabbar .status-opt{padding:var(--space-2) var(--space-4);font-size:12px;color:var(--ink)}
   .tabacts{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
   .wordmark{display:flex;align-items:center;gap:var(--space-3);text-decoration:none;color:var(--ink)}
   .wordmark .t{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:22px;letter-spacing:var(--tracking-tight)}
@@ -171,7 +171,7 @@
   #detailBody{zoom:0.9}
   .modal .close{
     position:absolute;top:var(--space-4);right:var(--space-4);width:38px;height:38px;border-radius:50%;
-    border:var(--stroke-sm) solid var(--ink);background:#fff;font-size:17px;cursor:pointer;font-weight:var(--weight-bold);z-index:2;
+    border:var(--stroke-sm) solid var(--ink);background:#fff;color:var(--ink);font-size:17px;cursor:pointer;font-weight:var(--weight-bold);z-index:2;
   }
   .modal .close:hover{background:var(--red);border-color:var(--red);color:#fff}
   .modal h2{
@@ -230,7 +230,7 @@
     font-size:12px;font-weight:var(--weight-bold);letter-spacing:.04em;text-transform:uppercase;
     border:2px solid var(--ink);border-radius:var(--radius-full);padding:var(--space-3) var(--space-5);cursor:pointer;
     background:#fff;transition:all .12s;user-select:none;
-  }
+  ;color:var(--ink)}
   .task-pill.on{background:var(--red);border-color:var(--red);color:#fff}
 
   .assign-block{border:2px solid var(--ink);border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);margin-top:var(--space-4)}
@@ -239,7 +239,7 @@
   .icon-btn{
     width:34px;height:38px;border:2px solid var(--ink);border-radius:var(--radius-sm);background:#fff;
     cursor:pointer;font-weight:var(--weight-bold);font-size:15px;flex:none;
-  }
+  ;color:var(--ink)}
   .icon-btn:hover{background:var(--ink);color:#fff}
   .addline{font-family:var(--font-secondary);font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--ink);background:none;border:none;cursor:pointer;padding:2px 0}
   .addline:hover{text-decoration:underline}
@@ -293,7 +293,7 @@
   .assign-min .nm{font-size:12.5px;color:var(--gray);text-decoration:line-through;flex:1;min-width:120px}
   /* hueco de la cruz de borrar: en la ficha no se borra a nadie, se cambia de estado */
   .icon-slot{display:block;width:34px;height:38px}
-  .mini-btn{font-family:var(--font-primary);font-size:11px;font-weight:var(--weight-bold);border:2px solid var(--ink);border-radius:var(--radius-full);padding:4px 10px;background:#fff;cursor:pointer}
+  .mini-btn{font-family:var(--font-primary);font-size:11px;font-weight:var(--weight-bold);border:2px solid var(--ink);border-radius:var(--radius-full);padding:4px 10px;background:#fff;cursor:pointer;color:var(--ink)}
   .mini-btn:hover{background:var(--ink);color:#fff}
   .mini-btn.no{border-color:var(--red);color:var(--red)}
   .mini-btn.no:hover{background:var(--red);color:#fff}
@@ -359,7 +359,7 @@
   .status-select{display:flex;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-3) 0 var(--space-7)}
   .status-opt{
     font-size:12px;font-weight:var(--weight-bold);letter-spacing:.08em;text-transform:uppercase;
-    border:2px solid var(--ink);border-radius:var(--radius-full);padding:var(--space-3) var(--space-5);cursor:pointer;background:#fff;
+    border:2px solid var(--ink);border-radius:var(--radius-full);padding:var(--space-3) var(--space-5);cursor:pointer;background:#fff;color:var(--ink);
   }
   .status-opt.on{background:var(--ink);color:#fff}
   .status-opt.on.act{background:var(--brand-green);border-color:var(--brand-green);color:var(--ink)}
@@ -385,7 +385,7 @@
   .cal-nav button{
     width:34px;height:34px;border:2px solid var(--ink);border-radius:50%;background:#fff;
     font-size:15px;font-weight:var(--weight-bold);cursor:pointer;line-height:1;
-  }
+  ;color:var(--ink)}
   .cal-nav button:hover{background:var(--ink);color:#fff}
   .cal-scroll{overflow-x:auto;min-width:0}
   .cal-min{min-width:660px}
@@ -472,7 +472,7 @@
   .daypanel{border:2px solid var(--ink);border-radius:var(--radius-md);padding:var(--space-5) var(--space-5);margin-top:var(--space-5);background:#fff}
   .dp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3)}
   .dp-head .dp-title{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-caption);text-transform:uppercase;letter-spacing:var(--tracking-tight)}
-  .dp-close{border:none;background:none;font-size:15px;font-weight:var(--weight-bold);cursor:pointer}
+  .dp-close{border:none;background:none;font-size:15px;font-weight:var(--weight-bold);cursor:pointer;color:var(--ink)}
   .dp-close:hover{color:var(--red)}
   .dp-fases{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-3)}
   .dp-fase{
@@ -600,6 +600,29 @@
     /* el panel del directorio no puede ser más ancho que la pantalla */
     #dirChipPanel{width:min(340px,calc(100vw - 24px))}
     .dir-tools input{min-width:0}
+
+    /* La etiqueta de sección es flex con space-between: con un texto de ayuda largo
+       el <small> se iba a la derecha y wrapeaba con sangría, quedando ilegible
+       ("CALENDARIO fases + hitos por día... / puntual"). En vertical se lee. */
+    .fgroup>.glabel{flex-direction:column;align-items:flex-start;gap:3px}
+    .fgroup>.glabel small{text-align:left;line-height:1.4}
+
+    /* Tabla de fases: a 540px las columnas quedaban tan angostas que los inputs de
+       fecha (16px, para que iOS no haga zoom) se desbordaban y se pisaban entre sí
+       y con el "+ agregar" de Notas. Con más ancho y columnas fijas, cada cosa entra. */
+    .tbl-scroll{min-width:0}
+    .tbl-scroll table.cal{min-width:700px}
+    table.cal th,table.cal td{padding:var(--space-2) 6px}
+    table.cal td input{width:100%}
+    table.cal th:nth-child(1),table.cal td:nth-child(1){width:24px;padding-right:0}
+    table.cal th:nth-child(2),table.cal td:nth-child(2){width:150px}
+    table.cal th:nth-child(3),table.cal td:nth-child(3),
+    table.cal th:nth-child(4),table.cal td:nth-child(4){width:132px}
+    table.cal th:nth-child(5),table.cal td:nth-child(5){min-width:130px}
+    table.cal th:nth-child(6),table.cal td:nth-child(6){width:52px}
+
+    /* la ✕ flotante pesaba mucho encima del contenido */
+    .modal .close{box-shadow:2px 2px 0 var(--ink)}
 
     /* checks de automatizaciones: 30px es chico para el dedo, y el texto
        de ayuda se lee mejor con la caja un poco más aireada */
