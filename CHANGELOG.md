@@ -1,6 +1,37 @@
 # Changelog
 
-Resumen de los cambios mergeados hasta ahora en TEAM23 Production Hub (panel + portal de proveedores).
+Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
+
+## 2026-07-25 — Reconciliación con la versión de Eyal + rebrand TEAM 23
+
+Este merge trajo tu último estado de `coord-team23/team23hub` (67 commits desde la vez pasada) hacia `t34M23/team23hub`, resolviendo los lugares donde ambos tocamos lo mismo. Punto de rollback si algo se rompe: tag `pre-eyal-merge-2026-07-25`.
+
+### Lo tuyo que se adoptó tal cual
+
+- **Borrador + automatizaciones**: al crear un proyecto, ahora se puede dejar "en borrador" y elegir qué se dispara de una (Drive / Frame.io / Discord), en vez de todo junto.
+- **Mails de propuesta por candidato** (`mailOpen`/`mailBuildHTML`), con preview en vivo antes de mandar.
+- **Notas por tarea** (`notaOpen`/`notaSave`), separadas de las fechas.
+- **Banner de "proyectos nuevos"** con cache en localStorage.
+- **Tu síntesis colapsable + popup** (con la vista previa "Cómo se va a ver") — la adoptamos en vez de la que habíamos armado nosotros en paralelo, porque la tuya quedó más completa. Si ves referencias a `sxBoxHTML`/`sxOpen`/`sxToggle` en el código, es la tuya.
+- `n8n/0-setup-portada.json` (portada del Brief en Slides).
+- **Se descartó** `n8n/index.html` — parecía una copia vieja del hub subida por error a esa carpeta; avisame si en realidad tenía algo que necesitás.
+
+### Lo que reaplicamos encima de tu versión (no estaba ahí)
+
+- Pills de tareas alineadas a la derecha del título + mismo tamaño que el badge de estado, en las cards de "Proyectos".
+- Bloques "equipo + fechas" sin borde (antes tenían un recuadro).
+- "Tareas TEAM 23" y "Calendario" en la ficha ahora son colapsables: arrancan cerradas, se abren clickeando en cualquier parte del título (no solo un ícono), con un toggle circular de borde negro.
+- Fix de un bug real: el nodo de debrief IA tenía `model: 'claude-sonnet-4-6'` (no existe) — corregido a `claude-sonnet-5`. Si en tu copia lo volviste a tocar, chequealo.
+
+### Nuevo en esta tanda (no existía en ningún lado antes)
+
+- **Rebrand de marca**: `TEAM23` → `TEAM 23` (con espacio) en todo el hub — wordmark, título de la pestaña del navegador, footers, asunto/cuerpo de los mails de propuesta, PDF del calendario. **Ojo si tenés textos propios con "TEAM23" pegado** (código, docs, mails) — para consistencia visual conviene que uses la misma separación de acá en más. No se tocó nada técnico: el dominio `team23.online`, las rutas de webhook (`team23/create`, `team23/update`, etc.) y el nombre de la credencial de n8n `Team23 Key` quedan exactamente igual.
+- Los botones del header (Directorio / Usuarios / + Nuevo Proyecto / Salir) ahora comparten look exacto con las tabs de navegación: mismo stroke (2px), misma altura, mayúsculas. "Salir" pasa a ser solo un ícono de flecha (antes decía "Salir" y ocupaba mucho ancho).
+- En modo demo (sin `CONFIG.SUPABASE_URL`) los botones de Directorio/Usuarios/Salir ahora se muestran solos, para poder recorrer el hub completo localmente sin necesitar login real.
+
+### Nota sobre `CONFIG`
+
+Mientras probábamos local, vaciamos temporalmente `CONFIG` (N8N_BASE/API_KEY/SUPABASE_*) en `index.html` y `proveedores.html` para no pegarle a producción por accidente. **Ya está restaurado** con los valores reales antes de este commit — si en algún momento ves el hub pidiéndote solo "MODO DEMO" en el live, es que quedó vacío por error, avisame.
 
 ## Merge con la versión de Eyal
 
