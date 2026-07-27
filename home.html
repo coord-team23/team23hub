@@ -35,7 +35,7 @@ try{
     --fs-body:var(--text-b1-size);   /* Body B1 · buttons, inputs, running text */
     --fs-caption:var(--text-c2-size); /* Caption C2 · labels, meta, kickers */
   }
-  .kicker{font-size:var(--fs-caption);letter-spacing:.16em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin-bottom:var(--space-5)}
+  .kicker{font-size:var(--fs-caption);letter-spacing:-0.04em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin-bottom:var(--space-5)}
   .btn{
     font-family:var(--font-secondary);font-weight:var(--weight-bold);font-size:var(--fs-caption);
     border:var(--stroke-sm) solid var(--ink);background:var(--paper);color:var(--ink);
@@ -45,63 +45,44 @@ try{
   }
   .btn:hover{transform:translateY(-2px)}
   .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
-  body{font-family:var(--font-primary);color:var(--ink);background:#fff;margin:0;line-height:1.35;-webkit-font-smoothing:antialiased}
+  body{font-family:var(--font-primary);color:var(--ink);letter-spacing:var(--tracking-tight);background:#fff;margin:0;line-height:1.35;-webkit-font-smoothing:antialiased}
   .hm-wrap{max-width:860px;margin:0 auto;padding:34px 22px 60px}
-  .hm-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:52px}
-  .hm-mark{display:flex;align-items:center;gap:10px}
-  .hm-mark b{font-weight:900;font-size:22px;letter-spacing:-0.5px}
-  h1{font-weight:900;font-size:clamp(38px,7vw,62px);line-height:1.02;letter-spacing:-1px;margin:0 0 14px;text-transform:uppercase}
+  h1{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:clamp(38px,7vw,62px);
+    line-height:1.02;letter-spacing:var(--tracking-tight);margin:0 0 14px;text-transform:uppercase;
+    -webkit-text-stroke:.6px currentColor;
+  }
   h1 .rojo{color:var(--red)}
-  .hm-sub{font-size:17.5px;line-height:1.55;max-width:640px;margin:0 0 26px;color:var(--ink)}
+  h2.hm-sub{font-size:17.5px;font-weight:var(--weight-bold);line-height:1.25;max-width:640px;margin:0 0 26px;color:var(--ink);text-transform:none;letter-spacing:var(--tracking-tight)}
   .hm-cta{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:56px}
-  .hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:56px}
-  .hm-card{border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:18px}
-  .hm-card h3{margin:0 0 8px;font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.3px}
-  .hm-card p{margin:0;font-size:13.5px;line-height:1.55;color:var(--gray)}
-  .hm-quien{border:2px solid var(--ink);background:var(--ink);color:#fff;padding:22px 20px;margin-bottom:56px}
-  .hm-quien h2{margin:0 0 8px;font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:.4px}
-  .hm-quien p{margin:0;font-size:14px;line-height:1.6;color:#ddd}
-  .hm-quien a{color:#fff}
-  .hm-foot{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:12.5px;color:var(--gray);border-top:1px solid var(--hair,#ddd);padding-top:18px}
-  .hm-foot a{color:var(--gray)}
+  .hm-quien{border:2px solid var(--ink);border-radius:var(--radius-lg);background:var(--paper);color:var(--ink);padding:22px 20px;margin-bottom:56px}
+  .hm-quien h2{margin:0 0 8px;font-size:16px;font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.4px}
+  .hm-quien p{margin:0;font-size:14px;line-height:1.6;color:var(--gray)}
+  .hm-quien a{color:var(--ink)}
+  footer{
+    border-top:var(--stroke-sm) solid var(--ink);padding:var(--space-7) 0 0;margin-top:12px;
+    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:var(--space-7);
+  }
+  .foot-mark-img{display:block;width:clamp(280px,42vw,620px);height:auto;max-width:100%}
+  .foot-right{
+    text-align:right;font-size:var(--fs-caption);letter-spacing:.1em;color:var(--gray);
+    font-family:var(--font-secondary);font-weight:var(--weight-bold);
+  }
+  .foot-scope{margin-bottom:var(--space-2)}
+  @media(max-width:640px){
+    footer{flex-direction:column;align-items:flex-start;gap:20px}
+    .foot-right{text-align:left}
+  }
 </style>
 </head>
 <body>
 <div class="hm-wrap">
-  <div class="hm-top">
-    <div class="hm-mark">
-      <b>TEAM 23</b>
-      <svg width="34" height="22" viewBox="0 0 64 40" aria-hidden="true"><circle cx="18" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="46" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="21" cy="24" r="7.5" fill="#0A0A0A"/><circle cx="49" cy="24" r="7.5" fill="#0A0A0A"/></svg>
-    </div>
-    <a class="btn" href="/login">Ingresar</a>
-  </div>
-
-  <div class="kicker" style="margin-bottom:10px">Estudio de post-producción</div>
+  <div class="kicker" style="margin-bottom:10px">Dirección Creativa, Post Producción &amp; New Media Lab</div>
   <h1>TEAM 23 Hub<span class="rojo">.</span></h1>
-  <p class="hm-sub"><b>TEAM 23 Hub</b> es la plataforma de gestión de post-producción del estudio <b>TEAM 23</b>. Sirve para organizar cada proyecto de principio a fin: calendarios y fechas de entrega, revisión de materiales, asignación del equipo y coordinación con los colaboradores, todo en un solo lugar.</p>
+  <h2 class="hm-sub">Plataforma de gestión del estudio TEAM 23 para organizar cada proyecto de principio a fin: calendarios y fechas de entrega, revisión de materiales, asignación del equipo y coordinación con los colaboradores, todo en un solo lugar.</h2>
   <div class="hm-cta">
     <a class="btn primary" href="/login">Ingresar al hub</a>
     <span style="font-size:12.5px;color:var(--gray)">Acceso con cuenta · el estudio da de alta a sus colaboradores</span>
-  </div>
-
-  <div class="hm-grid">
-    <div class="hm-card">
-      <h3>Proyectos y calendarios</h3>
-      <p>Cada proyecto con sus fases, hitos y fechas de entrega, visibles para todos los que participan.</p>
-    </div>
-    <div class="hm-card">
-      <h3>Entregas y material</h3>
-      <p>Carpetas de trabajo, revisión de cortes y masters organizados con la misma estructura en todos los proyectos.</p>
-    </div>
-    <div class="hm-card">
-      <h3>Equipo y colaboradores</h3>
-      <p>Asignaciones claras: quién hace qué, en qué fechas, y avisos automáticos cuando algo importante cambia.</p>
-    </div>
-  </div>
-
-  <div class="hm-card" style="margin-bottom:56px">
-    <h3>Qué datos usa TEAM 23 Hub y para qué</h3>
-    <p>Para autenticarte, la plataforma usa tu nombre, tu dirección de correo y tu foto de perfil (los datos básicos de tu cuenta, también si entrás con Google). No accede a nada más de tu cuenta de Google: ni Drive, ni mails, ni calendario. Además guarda los datos de coordinación de los proyectos en los que participás (asignaciones, fechas y contacto profesional). Nada se vende ni se usa para publicidad. El detalle completo está en la <a href="/privacidad">Política de privacidad</a>.</p>
   </div>
 
   <div class="hm-quien">
@@ -109,10 +90,16 @@ try{
     <p>TEAM 23 Hub es una herramienta de trabajo del estudio: la usan el equipo interno de TEAM 23 y los proveedores que colaboran en sus proyectos. Si trabajás con nosotros y necesitás acceso, escribinos a <a href="mailto:coord@team23.online">coord@team23.online</a>.</p>
   </div>
 
-  <div class="hm-foot">
-    <span>© TEAM 23 · Post Production</span>
-    <span><a href="/privacidad">Política de privacidad</a> · <a href="mailto:coord@team23.online">Contacto</a></span>
-  </div>
+  <footer>
+    <div>
+      <img class="foot-mark-img" src="assets/footer-mark.png" alt="biz@team23.online — Creative direction, (Post) producción, New media lab">
+    </div>
+    <div class="foot-right">
+      <div class="foot-scope">MX — ARG — WORLDWIDE</div>
+      <div>TEAM 23 © <span id="yr"></span></div>
+    </div>
+  </footer>
 </div>
+<script>document.getElementById("yr").textContent = new Date().getFullYear();</script>
 </body>
 </html>
