@@ -545,6 +545,42 @@
     .modal .close{position:fixed;top:10px;right:10px;box-shadow:3px 3px 0 var(--ink)}
     .modal h2{padding-right:50px}
     .modal .actions .btn{flex:1}
+    /* los apilados no llevan flex:1: en columna les rompe el alto */
+    .modal .actions.stack .btn{flex:none}
+
+    /* tabs en una sola línea con scroll: el header es sticky y dos filas se comen la pantalla */
+    .tabbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .tabbar::-webkit-scrollbar{display:none}
+    .tabbar .status-opt{flex:none}
+
+    /* tracker: con table-layout fijo las columnas se aplastan hasta que no se lee
+       ningún nombre. En pantalla chica conviene que scrolee de costado. */
+    table.trk{table-layout:auto;width:auto;min-width:100%}
+    table.trk input.trk-nota{min-width:120px}
+    .trk-resumen{overflow-x:auto}
+    .trk-resumen table{min-width:440px}
+
+    /* el hueco de la cruz tiene que igualar la columna de 44px de la grilla */
+    .icon-slot{width:44px;height:42px}
+
+    /* objetivos táctiles: 4px de alto no se acierta con el dedo */
+    .mini-btn{min-height:34px;padding:6px 12px;font-size:12px}
+    .trk-toggle{min-height:26px;padding:4px 8px;font-size:10px}
+
+    /* popups: bajar los altos fijos para no obligar a scrollear tanto */
+    #sxTa{min-height:190px}
+    #notaTa{min-height:150px}
+    .mail-prev{height:250px}
+    .sx-prevbox{max-height:170px}
+    .mail-adv textarea{min-height:120px}
+
+    /* controles de fila: que no queden apretados contra el borde */
+    .mail-row,.cand-state,.assign-min{gap:8px}
+
+    /* checks de automatizaciones: 30px es chico para el dedo, y el texto
+       de ayuda se lee mejor con la caja un poco más aireada */
+    .auto-item{padding:11px 4px;gap:12px}
+    .auto-item .chk-box{width:36px;height:36px;line-height:32px;font-size:22px}
 
     /* inputs: 16px evita el auto-zoom de iOS al enfocar */
     input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{font-size:16px}
