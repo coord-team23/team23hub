@@ -1362,12 +1362,24 @@ function renderAll(){
   $("#listActive").innerHTML  = act.length ? act.map(p=>cardHTML(p)).join("")  : `<div class="empty">Sin proyectos activos ahora mismo.</div>`;
 
   if(!done.length){ $("#listDone").innerHTML = `<div class="empty">Todavía no hay completados.</div>`; return; }
+  /* agrupado por mes+año (no solo año) — "s/año" para completados viejos sin ninguno de los dos */
   const byYear = {};
-  done.forEach(p=>{ const y=p.year||"s/año"; (byYear[y]=byYear[y]||[]).push(p); });
+  done.forEach(p=>{
+    const key = p.year ? (p.year+"-"+String(p.month||0).padStart(2,"0")) : "s/año";
+    (byYear[key]=byYear[key]||[]).push(p);
+  });
   const years = Object.keys(byYear).sort((a,b)=>b.localeCompare(a));
+  const groupLabel = key=>{
+    if(key==="s/año") return "Sin fecha";
+    const [y,m] = key.split("-");
+    if(!Number(m)) return y;
+    const d = new Date(Number(y), Number(m)-1, 1);
+    const txt = d.toLocaleDateString("es-AR",{month:"long",year:"numeric"});
+    return txt.charAt(0).toUpperCase()+txt.slice(1);
+  };
   $("#listDone").innerHTML = years.map((y,i)=>`
     <details class="year" ${i===0?"open":""}>
-      <summary>${esc(y)} <span class="count">(${byYear[y].length})</span></summary>
+      <summary>${esc(groupLabel(y))} <span class="count">(${byYear[y].length})</span></summary>
       <div class="grid">${byYear[y].map(p=>cardHTML(p)).join("")}</div>
     </details>`).join("");
 }
@@ -2687,13 +2699,13 @@ async function setStatus(s, skipGate=false){
   }
   const prev = p.status;
   p.status = s;
-  if(s==="completado"){ p.year = String(new Date().getFullYear()); }
+  if(s==="completado"){ const now=new Date(); p.year = String(now.getFullYear()); p.month = String(now.getMonth()+1); }
   const et = etapaDe(s);
   if(et) seedChecklist(p, et);   /* Entregando → checklist Delivery, Listo p/cierre → checklist Cierre */
   renderDetail();
   if(!DEMO){
     try{
-      await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({id:p.id,status:s,year:p.year,checklist_json:JSON.stringify(p.checklist||{})})});
+      await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({id:p.id,status:s,year:p.year,month:p.month,checklist_json:JSON.stringify(p.checklist||{})})});
     }catch(e){ p.status=prev; renderDetail(); toast("No pude actualizar el estado: "+e.message,true); return; }
   }
   onProjectsLoaded();
