@@ -39,7 +39,7 @@
             {
               "id": "c2",
               "name": "discordGuildId",
-              "value": "PEGAR_ID_DEL_SERVIDOR_DE_DISCORD",
+              "value": "1137462471767097534",
               "type": "string"
             }
           ]
@@ -211,7 +211,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const p = $('Buscar proyecto').first().json;\nif (!p.discord_category_id) return [];\nreturn [{ json: { categoryId: p.discord_category_id } }];"
+        "jsCode": "const p = $('Buscar proyecto').first().json;\nconst catId = String(p.discord_category_id || '').replace(/^'+/, '').trim();\nif (!catId) return [];\nreturn [{ json: { categoryId: catId } }];"
       },
       "id": "e9000009-0000-0000-0000-00000000000a",
       "name": "¿Tiene Discord?",

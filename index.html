@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="18" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="46" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="21" cy="36" r="7.5" fill="%230A0A0A"/><circle cx="49" cy="36" r="7.5" fill="%230A0A0A"/></svg>'>
-<title>TEAM23 — Production Hub</title>
+<title>TEAM 23 — Production Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="design-system/styles.css">
 <style>
   :root{
-    /* app-level aliases onto the TEAM23 design-system tokens (design-system/tokens/) */
+    /* app-level aliases onto the TEAM 23 design-system tokens (design-system/tokens/) */
     --ink:var(--n-600);
     --paper:var(--n-000);
     --red:var(--brand-red);
@@ -71,7 +71,7 @@
 
   .btn{
     font-family:var(--font-secondary);font-weight:var(--weight-bold);font-size:var(--fs-caption);
-    border:var(--stroke-sm) solid var(--ink);background:var(--paper);color:var(--ink);
+    border:2px solid var(--ink);background:var(--paper);color:var(--ink);
     border-radius:var(--radius-full);padding:var(--space-4) var(--space-9);cursor:pointer;
     transition:transform .15s ease, background .15s ease, color .15s ease;
     white-space:nowrap;
@@ -88,6 +88,16 @@
   #btnNew:hover{background:var(--red);border-color:var(--red);color:#fff}
   .btn.small{padding:var(--space-3) var(--space-5);font-size:12px}
   .btn[disabled]{opacity:.5;cursor:wait;transform:none}
+  /* los botones del header son la misma pieza que las tabs: misma tipografía, tamaño y alto.
+     (.btn.small ya trae padding propio con más especificidad que "header .btn", por eso acá
+     hace falta repetir la clase para ganarle) */
+  header .btn.small{
+    font-family:var(--font-primary);text-transform:uppercase;letter-spacing:.08em;
+    font-size:12px;padding:var(--space-2) var(--space-4);
+  }
+  /* salir: solo el ícono; mismo padding vertical que el resto para que el alto coincida */
+  header #btnLogout{padding:var(--space-2) var(--space-3);letter-spacing:0;display:inline-flex;align-items:center;justify-content:center}
+  #btnLogout svg{display:block}
 
   /* ---------- demo banner ---------- */
   .demo-banner{
@@ -170,6 +180,8 @@
   /* ficha de proyecto: modal más ancho + contenido escalado al 90% */
   #ovDetail .modal{width:min(1080px,100%)}
   #detailBody{zoom:0.9}
+  /* directorio: vista propia (no modal) — la tabla usa todo el alto disponible */
+  #view-directorio .dir-wrap{max-height:calc(100vh - 300px)}
   .modal .close{
     position:absolute;top:var(--space-4);right:var(--space-4);width:38px;height:38px;border-radius:50%;
     border:var(--stroke-sm) solid var(--ink);background:#fff;font-size:17px;cursor:pointer;font-weight:var(--weight-bold);z-index:2;
@@ -254,6 +266,13 @@
   .addline:hover{text-decoration:underline}
 
   .modal .actions{display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5);flex-wrap:wrap}
+  /* tres opciones no entran en una fila y wrapean torcidas: apiladas quedan
+     alineadas y se pueden ordenar por riesgo */
+  .actions.stack{flex-direction:column;align-items:stretch;flex-wrap:nowrap}
+  .actions.stack .btn{width:100%;padding-left:var(--space-5);padding-right:var(--space-5)}
+  .actions.stack .sep{border-top:1px solid var(--hair);margin-top:var(--space-2)}
+  .btn.danger-out{border-color:var(--red);color:var(--red)}
+  .btn.danger-out:hover{background:var(--red);border-color:var(--red);color:#fff}
 
   /* ---------- detalle: links Drive / Frame ---------- */
   .link-split{display:grid;grid-template-columns:1fr;gap:var(--space-5)}
@@ -289,6 +308,12 @@
   .chipst.cand{border-color:var(--gray);color:var(--gray)}
   .chipst.conf{background:var(--ink);color:#fff}
   .chipst.rech{border-color:var(--red);color:var(--red);text-decoration:line-through}
+  .chipst.inact{border-color:var(--gray);color:var(--gray);background:#F2F2F2}
+  /* fila de rechazado en pre-producción: se minimiza pero se ve que quedó afuera */
+  .assign-min{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 2px;margin-bottom:4px;border-bottom:1px dashed var(--hair)}
+  .assign-min .nm{font-size:12.5px;color:var(--gray);text-decoration:line-through;flex:1;min-width:120px}
+  /* hueco de la cruz de borrar: en la ficha no se borra a nadie, se cambia de estado */
+  .icon-slot{display:block;width:34px;height:38px}
   .mini-btn{font-family:var(--font-primary);font-size:11px;font-weight:var(--weight-bold);border:2px solid var(--ink);border-radius:var(--radius-full);padding:4px 10px;background:#fff;cursor:pointer}
   .mini-btn:hover{background:var(--ink);color:#fff}
   .mini-btn.no{border-color:var(--red);color:var(--red)}
@@ -315,6 +340,26 @@
   .chk-item.done .txt{color:var(--gray);text-decoration:line-through}
   .chk-item .resp{font-size:14.8px;font-weight:800;letter-spacing:.1em;border:1.5px solid var(--ink);border-radius:var(--radius-full);padding:2px 8px;flex:none;margin-top:1px}
   .chk-item .by{font-size:16px;color:var(--gray);flex-basis:100%;padding-left:32px}
+
+  /* ---------- automatizaciones activables al crear un proyecto ---------- */
+  .auto-item{display:flex;gap:10px;align-items:flex-start;padding:9px 4px;border-bottom:1px solid var(--hair)}
+  .auto-item:last-child{border-bottom:none}
+  .auto-item .txt{font-size:15px;font-weight:var(--weight-bold);letter-spacing:.01em;flex:1}
+  .auto-item .txt small{display:block;font-size:12.5px;font-weight:var(--weight-regular);color:var(--gray);letter-spacing:0;margin-top:2px}
+  .auto-item.off .txt{color:var(--gray)}
+  .auto-note{font-size:12.5px;font-weight:var(--weight-bold);color:var(--red);margin-top:10px;line-height:1.45}
+
+  /* ---------- mails de propuesta a candidatos ---------- */
+  .mail-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-2px 0 10px 2px}
+  .mail-row .who{font-size:11px;font-weight:var(--weight-bold);letter-spacing:.04em;color:var(--gray)}
+  .mail-row .who.off{text-decoration:line-through}
+  #ovMail .modal{width:min(860px,100%)}
+  .mail-prev{width:100%;height:340px;border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);background:#fff;display:block}
+  .mail-adv{margin-bottom:var(--space-7)}
+  .mail-adv summary{font-size:11px;font-weight:var(--weight-bold);letter-spacing:.12em;text-transform:uppercase;color:var(--gray);cursor:pointer}
+  .mail-adv summary:hover{color:var(--ink)}
+  .mail-adv textarea{min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.5}
+  .mail-warn{font-size:12.5px;color:var(--red);font-weight:var(--weight-bold);margin:8px 0 6px;line-height:1.45}
 
   /* ---------- selector de flujo de creación (kick off vs. debrief IA) ---------- */
   .opt-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
@@ -427,9 +472,16 @@
   table.trk td.trk-cell.on{background:var(--brand-green);font-weight:var(--weight-bold)}
   table.trk td.trk-cell.trk-inact{background:var(--soft);color:var(--gray)}
   table.trk td.trk-cell.trk-inact.on{background:#D9D9D4;color:var(--gray)}
+  /* conteo cerrado por finalización: rayado, no se puede marcar hasta reactivar */
+  table.trk td.trk-cell.trk-cerrado{cursor:not-allowed;background:repeating-linear-gradient(45deg,#fff,#fff 3px,var(--soft) 3px,var(--soft) 6px)}
+  table.trk td.trk-cell.trk-cerrado:hover{background:repeating-linear-gradient(45deg,#fff,#fff 3px,#E4E4E0 3px,#E4E4E0 6px)}
+  table.trk td.trk-cell.trk-cerrado.on{background:repeating-linear-gradient(45deg,var(--brand-green),var(--brand-green) 3px,#CDE3C2 3px,#CDE3C2 6px);color:var(--ink)}
   table.trk td.trk-removido{color:var(--gray)}
   .trk-toggle{display:block;margin-top:4px;font-size:9px;font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--hair);border-radius:var(--radius-full);background:#fff;color:var(--gray);cursor:pointer;padding:1px 6px}
   .trk-toggle:hover{border-color:var(--ink);color:var(--ink)}
+  .trk-toggle.react{border-color:var(--red);color:var(--red)}
+  .trk-toggle.react:hover{background:var(--red);border-color:var(--red);color:#fff}
+  #ovFin .modal,#ovReact .modal{width:min(560px,100%)}
   table.trk input.trk-nota{width:100%;border:none;font-size:12px;padding:2px 4px;background:transparent}
   table.trk input.trk-nota:focus{outline:1.5px solid var(--red);background:#fff}
   .trk-resumen{margin-top:var(--space-7)}
@@ -577,13 +629,70 @@
 #acPanel .ac-item{padding:8px 10px;font-size:13px;cursor:pointer;border-bottom:1px solid #eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #acPanel .ac-item:last-child{border-bottom:none}
 #acPanel .ac-item:hover,#acPanel .ac-item.on{background:var(--ink);color:#fff}
+
+  /* ---- borradores ---- */
+  .draft-card{position:relative;border:2px dashed var(--red) !important;box-shadow:none !important}
+  .draft-card:hover{box-shadow:4px 4px 0 rgba(255,43,30,.25) !important}
+  .draft-card .draft-x{position:absolute;top:8px;right:10px;background:none;border:none;font-size:14px;cursor:pointer;color:var(--gray)}
+  .draft-card .draft-x:hover{color:var(--red)}
+
+  /* ---- confirm + loader del hub ---- */
+  .t23-ov{position:fixed;inset:0;background:rgba(10,10,10,.45);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px}
+  .t23-card{background:#fff;border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:22px 24px;max-width:440px;width:100%}
+  .t23-load{text-align:center;max-width:380px}
+  .t23-eyes{display:flex;gap:10px;justify-content:center;margin-bottom:18px}
+  .t23-eye{width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid var(--ink);position:relative;overflow:hidden}
+  .t23-eye::after{content:"";position:absolute;top:12px;left:5px;width:13px;height:13px;border-radius:50%;background:var(--ink);animation:t23look 2.6s ease-in-out infinite}
+  @keyframes t23look{0%,20%{transform:translateX(0)}40%,60%{transform:translateX(11px)}80%,100%{transform:translateX(0)}}
+  .t23-bar{height:14px;border:2px solid var(--ink);position:relative;overflow:hidden;background:#fff;margin-bottom:14px}
+  .t23-bar::after{content:"";position:absolute;top:0;bottom:0;width:34%;background:var(--red);animation:t23sweep 1.15s cubic-bezier(.45,0,.55,1) infinite alternate}
+  @keyframes t23sweep{0%{left:-4%}100%{left:70%}}
+  .t23-frase{font-size:13px;color:var(--gray);min-height:18px;transition:opacity .25s}
+
+  /* ---- síntesis formateada ---- */
+  .sx .sx-p{margin:0 0 var(--space-3);line-height:1.55}
+  .sx .sx-label{font-size:var(--fs-caption);letter-spacing:.14em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--gray);margin:var(--space-4) 0 var(--space-2)}
+  .sx .sx-list{margin:0 0 var(--space-3);padding-left:0;list-style:none}
+  .sx .sx-list li{position:relative;padding-left:18px;font-size:14px;line-height:1.55;margin-bottom:6px}
+  .sx .sx-list li::before{content:"";position:absolute;left:2px;top:8px;width:7px;height:7px;background:var(--red);border:1.5px solid var(--ink)}
+
+  /* ---------- síntesis colapsable (ficha y armado; el portal tiene la suya) ---------- */
+  .sx-box{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);margin-top:var(--space-5);overflow:hidden}
+  .sx-head{width:100%;display:flex;align-items:center;gap:10px;background:var(--soft);border:none;border-bottom:var(--stroke-sm) solid var(--ink);padding:9px 12px;cursor:pointer;text-align:left;font-family:var(--font-primary);color:var(--ink)}
+  .sx-head:hover{background:#EDEDED}
+  .sx-head .cr{font-size:11px;flex:none;width:12px;transition:transform .15s}
+  .sx-head .ttl{font-size:11px;font-weight:var(--weight-bold);letter-spacing:.14em;text-transform:uppercase;flex:none}
+  .sx-head .prev{font-size:12.5px;color:var(--gray);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:var(--weight-regular)}
+  .sx-box.closed .sx-head{border-bottom:none}
+  .sx-box.closed .sx-head .cr{transform:rotate(-90deg)}
+  .sx-box.closed .sx-body{display:none}
+  .sx-body{padding:var(--space-4) var(--space-5)}
+  .sx-empty{font-size:13px;color:var(--gray)}
+
+  /* ---------- notas de tarea / fase: se leen enteras, se editan en popup ---------- */
+  .nota-box{border:1.5px solid var(--hair);border-radius:var(--radius-sm);padding:8px 10px;margin-top:var(--space-3)}
+  .nota-box.tiene{border-color:var(--ink)}
+  .nota-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .nota-head .lbl{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--gray);flex:1}
+  .nota-txt{font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .nota-txt.vacia{color:var(--gray);font-style:italic}
+  .cal-nota{cursor:pointer;text-align:left}
+  .cal-nota .txt{font-size:12.5px;line-height:1.4;max-height:2.8em;overflow:hidden;display:block}
+  .cal-nota .txt.vacia{color:var(--gray)}
+  .cal-nota:hover{background:var(--soft)}
+  #ovNota .modal{width:min(680px,100%)}
+  #notaTa{min-height:220px;font-size:15px;line-height:1.6}
+  /* popup de edición: la caja grande que faltaba */
+  #ovSintesis .modal{width:min(820px,100%)}
+  #sxTa{min-height:300px;font-size:15px;line-height:1.6}
+  .sx-prevbox{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);background:#fff;max-height:240px;overflow:auto}
 </style>
 </head>
 <body>
 <div id="authGate" style="display:none;position:fixed;inset:0;z-index:2000;background:#fff;align-items:center;justify-content:center">
   <div style="width:min(430px,92%);border:2px solid var(--ink);border-radius:var(--radius-lg,16px);padding:30px;box-shadow:8px 8px 0 var(--ink);background:#fff">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-      <span style="font-family:var(--font-primary);font-weight:900;font-size:24px;letter-spacing:-0.5px">TEAM23</span>
+      <span style="font-family:var(--font-primary);font-weight:900;font-size:24px;letter-spacing:-0.5px">TEAM 23</span>
       <svg width="34" height="22" viewBox="0 0 64 40" aria-hidden="true"><circle cx="18" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="46" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="21" cy="24" r="7.5" fill="#0A0A0A"/><circle cx="49" cy="24" r="7.5" fill="#0A0A0A"/></svg>
     </div>
     <div class="kicker" style="margin-bottom:14px">Production Hub · acceso del equipo</div>
@@ -595,7 +704,7 @@
 <header>
   <div class="header-top">
     <a class="wordmark" href="#" onclick="return false">
-      <span class="t">TEAM23</span>
+      <span class="t">TEAM 23</span>
       <span class="eyes" id="eyes">
         <span class="eye"><span class="pupil"></span></span>
         <span class="eye"><span class="pupil"></span></span>
@@ -610,10 +719,10 @@
       <button class="status-opt" data-view="calendario" onclick="switchView('calendario')">Calendario</button>
     </nav>
     <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
-      <button class="btn small" id="btnDirectorio" style="display:none" onclick="openDirectorio()">Directorio</button>
+      <button class="btn small" id="btnDirectorio" data-view="directorio" style="display:none" onclick="openDirectorio()">Directorio</button>
       <button class="btn small" id="btnUsers" style="display:none" onclick="openUsers()">Usuarios</button>
       <button class="btn small" id="btnNew">+ NUEVO PROYECTO</button>
-      <button class="btn small" id="btnLogout" style="display:none" onclick="authLogout()">Salir</button>
+      <button class="btn small" id="btnLogout" style="display:none" onclick="authLogout()" title="Salir" aria-label="Salir"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/></svg></button>
     </div>
   </div>
 </header>
@@ -624,6 +733,8 @@
     <span class="sync-pill" id="syncPill" style="display:none"><span class="sync-spin"></span>Buscando proyectos nuevos…</span>
   </div>
 </div>
+
+<div class="demo-banner" id="staleBanner" style="display:none"></div>
 
 <div class="demo-banner" id="demoBanner" style="display:none">
   <b>MODO DEMO</b> — Estás viendo datos de ejemplo. Para conectarlo en serio: configurá <code>CONFIG.N8N_BASE</code> y <code>CONFIG.API_KEY</code> al inicio del archivo, con tus workflows de n8n importados (ver README).
@@ -658,6 +769,17 @@
   <section id="view-dashboard" class="view" hidden>
     <div id="dashboardBody"></div>
   </section>
+
+  <section id="view-directorio" class="view" hidden>
+    <div class="kicker">Sincronizado con el spreadsheet de proveedores · editá una celda y se guarda al salir de ella · solo productores</div>
+    <div class="dir-tools">
+      <input id="dirSearch" type="text" placeholder="Buscar por nombre, especialidad, mail…" oninput="dirRender()">
+      <span class="dir-count" id="dirCount"></span>
+      <button class="btn small" onclick="dirLoad(true)">Refrescar</button>
+      <a class="btn small" href="https://docs.google.com/spreadsheets/d/1jMs5xUhFKrp5z_LHMOdkJia7vKJsrtKdSB20g9KHsp0/edit" target="_blank" rel="noopener">Abrir sheet ↗</a>
+    </div>
+    <div class="dir-wrap" id="dirBody"><p style="font-size:13px;color:var(--gray);padding:12px">Cargando…</p></div>
+  </section>
 </main>
 
 <footer>
@@ -666,7 +788,7 @@
   </div>
   <div class="foot-right">
     <div class="foot-scope">MX — ARG — WORLDWIDE</div>
-    <div>TEAM23 © <span id="yr"></span></div>
+    <div>TEAM 23 © <span id="yr"></span></div>
   </div>
 </footer>
 
@@ -686,6 +808,7 @@
         <div><label class="f">Cliente *</label><input type="text" id="npCliente" placeholder="Brahma"></div>
         <div><label class="f">Agencia</label><input type="text" id="npAgencia" placeholder=""></div>
       </div>
+      <div id="sx-np"></div>
     </div>
 
     <div class="fgroup">
@@ -704,12 +827,16 @@
       </div>
     </div>
 
-    <div class="fgroup" id="npSintesisBlock"></div>
-
     <div class="fgroup">
-      <div class="glabel">Tareas TEAM23 <small>elegí las que aplican</small></div>
+      <div class="glabel">Tareas TEAM 23 <small>elegí las que aplican</small></div>
       <div class="task-pills" id="npTasks"></div>
       <div id="npAssigns"></div>
+      <div id="npCalPrev"></div>
+    </div>
+
+    <div class="fgroup">
+      <div class="glabel">Automatizaciones <small>vienen todas activadas; desactivá solo si hace falta</small></div>
+      <div id="npAuto"></div>
     </div>
 
     <div class="actions">
@@ -768,21 +895,6 @@
   </div>
 </div>
 
-<!-- ============ MODAL: ELEGIR FLUJO DE CREACIÓN ============ -->
-<div class="overlay" id="ovDirectorio">
-  <div class="modal" role="dialog" aria-modal="true" style="width:min(1240px,96vw)">
-    <button class="close" onclick="closeModal('ovDirectorio')" aria-label="Cerrar">✕</button>
-    <h2>Directorio Team23</h2>
-    <div class="kicker">Sincronizado con el spreadsheet de proveedores · editá una celda y se guarda al salir de ella · solo productores</div>
-    <div class="dir-tools">
-      <input id="dirSearch" type="text" placeholder="Buscar por nombre, especialidad, mail…" oninput="dirRender()">
-      <span class="dir-count" id="dirCount"></span>
-      <button class="btn small" onclick="dirLoad(true)">Refrescar</button>
-      <a class="btn small" href="https://docs.google.com/spreadsheets/d/1jMs5xUhFKrp5z_LHMOdkJia7vKJsrtKdSB20g9KHsp0/edit" target="_blank" rel="noopener">Abrir sheet ↗</a>
-    </div>
-    <div class="dir-wrap" id="dirBody"><p style="font-size:13px;color:var(--gray);padding:12px">Cargando…</p></div>
-  </div>
-</div>
 
 <div class="overlay" id="ovUsers">
   <div class="modal" role="dialog" aria-modal="true" style="width:min(640px,100%)">
@@ -796,11 +908,14 @@
 <div class="overlay" id="ovConfirm" style="z-index:1200">
   <div class="modal" role="dialog" aria-modal="true" style="width:min(480px,100%)">
     <h2 style="font-size:22px">Cambios sin guardar</h2>
-    <div class="kicker">Hiciste cambios en este proyecto que todavía no se guardaron</div>
-    <div class="actions" style="flex-wrap:wrap;gap:10px">
+    <p style="font-size:15px;line-height:1.5;margin:0 0 var(--space-7);color:var(--gray)">
+      Hiciste cambios en este proyecto que todavía no se guardaron.
+    </p>
+    <div class="actions stack">
       <button class="btn primary" onclick="confirmSaveExit(this)">Guardar y salir</button>
-      <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="confirmDiscard()">Descartar cambios</button>
       <button class="btn" onclick="closeModal('ovConfirm')">Seguir editando</button>
+      <div class="sep"></div>
+      <button class="btn danger-out" onclick="confirmDiscard()">Descartar cambios</button>
     </div>
   </div>
 </div>
@@ -830,7 +945,7 @@
 <!-- ============ MODAL: NUEVO PROYECTO (OPCIÓN 2 · DEBRIEF IA) ============ -->
 <div class="overlay" id="ovNew2">
   <div class="modal" role="dialog" aria-modal="true">
-    <button class="close" onclick="closeModal('ovNew2')" aria-label="Cerrar">✕</button>
+    <button class="close" onclick="closeNew2()" aria-label="Cerrar">✕</button>
     <h2>Nuevo proyecto</h2>
     <div class="kicker">Opción 2 · Desde debrief — la IA arma el borrador, vos lo revisás</div>
 
@@ -853,10 +968,10 @@
           <div><label class="f">Cliente *</label><input type="text" id="n2Cliente"></div>
           <div><label class="f">Agencia</label><input type="text" id="n2Agencia"></div>
         </div>
+        <textarea id="n2Sintesis" style="display:none" aria-hidden="true"></textarea>
+        <div id="sx-n2"></div>
         <div style="margin-top:10px"><label class="f">Link a tratamiento - referencias (opcional)</label><input type="text" id="n2Storyboard" placeholder="https://…"></div>
       </div>
-
-      <div class="fgroup" id="n2SintesisBlock"></div>
 
       <div class="fgroup">
         <div class="glabel">3 · Equipo interno <small>nombre + mail (para los avisos de calendario)</small></div>
@@ -875,29 +990,144 @@
       </div>
 
       <div class="fgroup">
-        <div class="glabel">4 · Tareas TEAM23, candidatos y fechas <small>varios por tarea para comparar presupuestos; les sale la propuesta por mail al crear</small></div>
+        <div class="glabel">4 · Tareas TEAM 23, candidatos y fechas <small>varios por tarea para comparar presupuestos; a cada uno le sale la propuesta por mail al crear, y se puede apagar o editar por candidato</small></div>
         <div class="task-pills" id="n2Tasks"></div>
         <div id="n2Assigns"></div>
+        <div id="n2CalPrev"></div>
+      </div>
+
+      <div class="fgroup">
+        <div class="glabel">5 · Automatizaciones <small>vienen todas activadas; desactivá solo si hace falta</small></div>
+        <div id="n2Auto"></div>
       </div>
 
       <div class="actions">
-        <button class="btn" onclick="closeModal('ovNew2')">Cancelar</button>
+        <button class="btn" onclick="closeNew2()">Cancelar</button>
+        <button class="btn" id="btnDraft" onclick="saveDraftBtn()">Guardar borrador</button>
         <button class="btn primary" id="btnCreate2" onclick="createProject2()">Crear proyecto</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ============ MODAL: EDITAR SÍNTESIS (popup grande, reusado por ficha/np/n2) ============ -->
-<div class="overlay" id="ovSintesisEdit">
-  <div class="modal" role="dialog" aria-modal="true" style="width:min(760px,100%)">
-    <button class="close" onclick="closeModal('ovSintesisEdit')" aria-label="Cerrar">✕</button>
-    <h2>Síntesis</h2>
-    <div class="kicker">Resumen del proyecto: de qué se trata y qué hay que hacer</div>
-    <textarea id="sxEditTa" style="min-height:320px;font-size:15px;line-height:1.5"></textarea>
+<!-- ============ MODAL: FINALIZÓ (tracker) ============ -->
+<div class="overlay" id="ovFin" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="finTitle">
+    <button class="close" onclick="finClose()" aria-label="Cerrar">✕</button>
+    <h2 id="finTitle">Finalizó el trabajo</h2>
+    <div class="kicker" id="finWho"></div>
+
+    <p style="font-size:15px;line-height:1.5;margin:0 0 16px">
+      Se registra el día en que terminó su trabajo en el proyecto. Viene cargado con hoy:
+      si terminó otro día, cambialo antes de confirmar.
+    </p>
+
+    <div class="frow">
+      <div><label class="f">Día de finalización</label><input type="date" id="finFecha"></div>
+    </div>
+    <div class="trk-range" id="finHint" style="margin-top:10px"></div>
+
     <div class="actions">
-      <button class="btn" onclick="closeModal('ovSintesisEdit')">Cancelar</button>
-      <button class="btn primary" id="btnSxSave" onclick="saveSxEdit()">Guardar síntesis</button>
+      <button class="btn" onclick="finClose()">Cancelar</button>
+      <button class="btn primary" onclick="finSave(this)">Confirmar finalización</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: NOTAS DE TAREA / FASE ============ -->
+<div class="overlay" id="ovNota" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="notaTitle">
+    <button class="close" onclick="notaClose()" aria-label="Cerrar">✕</button>
+    <h2 id="notaTitle">Notas</h2>
+    <div class="kicker" id="notaWho"></div>
+
+    <div class="fgroup">
+      <div class="glabel">A tener en cuenta <small>lo ve el equipo en la ficha, y viaja a la columna NOTAS del calendario</small></div>
+      <textarea id="notaTa" placeholder="Todo lo que haya que saber de esta etapa…"></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="notaClose()">Cancelar</button>
+      <button class="btn primary" onclick="notaSave()">Guardar notas</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: REACTIVAR CONTEO (tracker) ============ -->
+<div class="overlay" id="ovReact" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="reactTitle">
+    <button class="close" onclick="reactClose()" aria-label="Cerrar">✕</button>
+    <h2 id="reactTitle">Reactivar el conteo</h2>
+    <div class="kicker" id="reactWho"></div>
+
+    <p style="font-size:15px;line-height:1.5;margin:0 0 14px">
+      Se vuelve a habilitar la carga de jornadas de esta persona y se borra la finalización.
+    </p>
+    <div class="trk-range" id="reactHint"></div>
+
+    <div class="actions">
+      <button class="btn" onclick="reactClose()">Cancelar</button>
+      <button class="btn primary" onclick="reactSave(this)">Reactivar conteo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: SÍNTESIS ============ -->
+<div class="overlay" id="ovSintesis" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sxTitle">
+    <button class="close" onclick="sxClose()" aria-label="Cerrar">✕</button>
+    <h2 id="sxTitle">Síntesis</h2>
+    <div class="kicker" id="sxWho"></div>
+
+    <div class="fgroup">
+      <div class="glabel">Texto <small>una línea que termina en “:” queda como subtítulo; las que arrancan con • o - quedan como viñetas</small></div>
+      <textarea id="sxTa" oninput="sxLive()" placeholder="De qué se trata el proyecto…&#10;&#10;Puntos clave:&#10;• …&#10;• …"></textarea>
+    </div>
+
+    <div class="fgroup">
+      <div class="glabel">Cómo se va a ver</div>
+      <div class="sx-prevbox" id="sxPrev"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="sxClose()">Cancelar</button>
+      <button class="btn primary" onclick="sxSave(this)">Guardar síntesis</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: MAIL AL CANDIDATO ============ -->
+<div class="overlay" id="ovMail" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mailTitle">
+    <button class="close" onclick="mailClose()" aria-label="Cerrar">✕</button>
+    <h2 id="mailTitle">Mail al candidato</h2>
+    <div class="kicker" id="mailWho"></div>
+
+    <div class="fgroup">
+      <div class="glabel">Asunto</div>
+      <input type="text" id="mailSubject" oninput="mailLive()">
+    </div>
+
+    <div class="fgroup">
+      <div class="glabel">Apertura <small>reemplaza el saludo automático; el resto del mail se arma solo</small></div>
+      <textarea id="mailIntro" style="min-height:90px" oninput="mailLive()"></textarea>
+    </div>
+
+    <details class="mail-adv" id="mailAdvBox" ontoggle="mailAdvToggle()">
+      <summary>Editar el HTML completo</summary>
+      <div class="mail-warn" id="mailRawWarn" style="display:none">Mientras esta caja tenga contenido, el mail se manda tal cual: el asunto sigue valiendo, pero la apertura de arriba deja de aplicarse.</div>
+      <textarea id="mailHtml" oninput="mailLive()" placeholder="Se carga con el mail actual al abrir esta sección…"></textarea>
+    </details>
+
+    <div class="fgroup">
+      <div class="glabel">Vista previa <small>así sale el mail</small></div>
+      <iframe class="mail-prev" id="mailPrev" sandbox="" title="Vista previa del mail"></iframe>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="mailReset()">Restablecer</button>
+      <button class="btn" onclick="mailClose()">Cancelar</button>
+      <button class="btn primary" onclick="mailSave()">Guardar mail</button>
     </div>
   </div>
 </div>
@@ -911,14 +1141,11 @@
    N8N_BASE: la URL de tu instancia, p.ej. "https://n8n.rawmarketing.co"
    API_KEY : el valor que definiste en la credencial "Team23 Key" (header x-team23-key)
 ================================================================ */
-/* TEMP-DEMO: CONFIG vaciado a propósito para probar local en modo 100% demo, sin login real
-   ni pegarle a producción (n8n/Supabase). NO COMMITEAR así — antes de subir, restaurar los
-   valores reales de coordteam23.app.n8n.cloud + Supabase. */
 const CONFIG = {
-  N8N_BASE: "",
-  API_KEY: "",
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: ""
+  N8N_BASE: "https://coordteam23.app.n8n.cloud",
+  API_KEY: "coordHUBt23",
+  SUPABASE_URL: "https://muvmrkacjhygfuialpyn.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI"
 };
 
 /* id estable por entrada de calendario — necesario para poder sincronizar cada
@@ -948,19 +1175,12 @@ let projects = [];
 const demoProjects = [
   {
     id:"p_demo1", nombre:"SPOTIFY - CDMX", cliente:"Spotify", agencia:"", productora:"LANDIA/TMMT", director:"Sofía Vargas",
-    ep_nombre:"N4rf", ep_email:"ep@team23.online", prod_nombre:"Comp Dos", prod_email:"vfx@team23.online", coord_nombre:"Coord Uno", coord_email:"coord@team23.online",
+    ep_nombre:"N4rf", ep_email:"ep@team23.online", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
     tareas:["Online","VFX","Color"],
-    asignaciones:{
-      "Online":[{nombre:"Edi Uno",email:"edi@team23.online",discord:"edi#0451",telefono:"+52 55 1234 5678",estado:"confirmado"}],
-      "VFX":[{nombre:"Comp Dos",email:"vfx@team23.online",discord:"compdos#8821",telefono:"+52 55 8765 4321",estado:"confirmado"},{nombre:"Comp Tres (freelance)",email:"comptres@gmail.com",discord:"",telefono:"",estado:"candidato"}],
-      "Color":[{nombre:"Cole Cuatro",email:"color@team23.online",discord:"colecuatro#3310",telefono:"",estado:"confirmado"}]
-    },
+    asignaciones:{"Online":[{nombre:"Edi Uno",email:"edi@team23.online"}],"VFX":[{nombre:"Comp Dos",email:"vfx@team23.online"}]},
     taskDates:{"Online":{inicio:"2026-07-06",fin:"2026-07-14",notas:""},"VFX":{inicio:"2026-07-13",fin:"2026-07-24",notas:""},"Color":{inicio:"2026-07-16",fin:"2026-07-22",notas:""}},
     status:"activo", year:"2026",
-    sintesis:"Hero film + 3 cutdowns para redes. Post completa: online, VFX de producto y color.\nPuntos clave:\n- Entrega en 2 tandas (corte de aprobación + masters)\n- Aprobación de cliente vía Frame.io",
-    storyboard_url:"https://drive.google.com/drive/folders/demo-storyboard",
-    tratamiento_url:"https://drive.google.com/drive/folders/demo-tratamiento",
-    links:{driveRoot:"https://drive.google.com/drive/folders/demo-spotify-root",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",feedback:"https://docs.google.com/document/d/demo-feedback",desglose:"https://docs.google.com/spreadsheets/d/demo-desglose",frameio:"https://next.frame.io/project/demo-spotify"},
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
     calendario:[
       {tipo:"fase",fase:"Entrega Masters",inicio:"2026-07-27",fin:"2026-07-28",notas:""},
       {tipo:"hito",fase:"Corte 1 al cliente",inicio:"2026-07-10",fin:"2026-07-10",notas:""},
@@ -971,14 +1191,14 @@ const demoProjects = [
     id:"p_demo2", nombre:"BRAHMA - Te la mereSED", cliente:"Brahma", agencia:"", productora:"",
     ep_nombre:"N4rf", ep_email:"ep@team23.online", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
     tareas:["VFX","Online"], asignaciones:{}, taskDates:{}, status:"completado", year:"2026",
-    links:{driveRoot:"https://drive.google.com/drive/folders/demo-brahma-root",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"https://drive.google.com/drive/folders/demo-brahma-finales",feedback:"#",desglose:"#",frameio:"https://next.frame.io/project/demo-brahma"},
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
     calendario:[]
   },
   {
     id:"p_demo3", nombre:"PROYECTO X - TVC", cliente:"Cliente X", agencia:"Agencia Y", productora:"Prod Z",
     ep_nombre:"", ep_email:"", prod_nombre:"", prod_email:"", coord_nombre:"", coord_email:"",
     tareas:["Retoque","SFX/Mezcla"], asignaciones:{}, taskDates:{}, status:"por_activarse", year:"2026",
-    links:{driveRoot:"https://drive.google.com/drive/folders/demo-x-root",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",feedback:"#",desglose:"https://docs.google.com/spreadsheets/d/demo-x-desglose",frameio:"https://next.frame.io/project/demo-x"},
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
     calendario:[]
   }
 ];
@@ -1012,6 +1232,37 @@ function autoAdvanceOverdue(){
   });
 }
 
+/* ---------- caché de proyectos + aviso de datos viejos ---------- */
+function cacheLeer(){
+  try{
+    const c = JSON.parse(localStorage.getItem("t23_projects")||"null");
+    if(Array.isArray(c)) return { ts:0, projects:c };                 // formato viejo, sin fecha
+    if(c && Array.isArray(c.projects)) return { ts:c.ts||0, projects:c.projects };
+  }catch(e){}
+  return null;
+}
+function cacheGuardar(list){
+  try{ localStorage.setItem("t23_projects", JSON.stringify({ ts:Date.now(), projects:list })); }catch(e){}
+}
+function haceCuanto(ts){
+  if(!ts) return "de una sesión anterior";
+  const min = Math.round((Date.now()-ts)/60000);
+  if(min < 2) return "de hace un momento";
+  if(min < 60) return "de hace "+min+" minutos";
+  const h = Math.round(min/60);
+  if(h < 24) return "de hace "+h+(h===1?" hora":" horas");
+  const d = Math.round(h/24);
+  return "de hace "+d+(d===1?" día":" días");
+}
+function staleBannerShow(motivo, ts){
+  const el = $("#staleBanner"); if(!el) return;
+  el.innerHTML = ts !== null
+    ? `<b>DATOS VIEJOS</b> — No pude conectar con n8n (${esc(motivo)}), así que esto es lo último guardado, ${esc(haceCuanto(ts))}. Puede faltar o sobrar algo. <button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar</button>`
+    : `<b>SIN DATOS</b> — No pude conectar con n8n (${esc(motivo)}) y no hay nada guardado. Revisá CONFIG y las credenciales del workflow 2, y que esté publicado. <button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar</button>`;
+  el.style.display = "block";
+}
+function staleBannerHide(){ const el = $("#staleBanner"); if(el) el.style.display = "none"; }
+
 async function loadProjects(){
   if(DEMO){
     projects = JSON.parse(JSON.stringify(demoProjects));
@@ -1019,15 +1270,18 @@ async function loadProjects(){
     autoAdvanceOverdue();
     onProjectsLoaded(); return;
   }
-  /* cache local: pinta al instante lo último conocido mientras llega lo fresco */
-  if(!projects.length){
-    try{
-      const c = JSON.parse(localStorage.getItem("t23_projects")||"null");
-      if(Array.isArray(c) && c.length){ projects = c; onProjectsLoaded(); }
-    }catch(e){}
+  /* Caché local: pinta al instante lo último conocido mientras llega lo fresco.
+     Ojo con esto: si el fetch falla, lo que queda en pantalla ES el caché. Sin un
+     aviso persistente el hub miente y parece que un proyecto no existe — pasó, con
+     el dbSheetId de wf2 en placeholder: el portal leía bien y el hub mostraba una
+     foto vieja sin decirlo. El toast de error duraba 4 segundos y se perdía. */
+  const cache = cacheLeer();
+  if(!projects.length && cache && cache.projects.length){
+    projects = cache.projects; onProjectsLoaded();
   }
   const prevIds = new Set(projects.map(p=>p.id));
   const hadCache = projects.length > 0;
+  const cacheTs = cache ? cache.ts : 0;
   syncPillShow(true);
   try{
     const data = await api("/webhook/team23/projects");
@@ -1041,13 +1295,15 @@ async function loadProjects(){
     }));
     autoAdvanceOverdue();
     onProjectsLoaded();
-    try{ localStorage.setItem("t23_projects", JSON.stringify(projects)); }catch(e){}
+    cacheGuardar(projects);
+    staleBannerHide();
     if(hadCache){
       const nuevos = projects.filter(p=>!prevIds.has(p.id)).length;
       if(nuevos) toast("✔ "+nuevos+(nuevos>1?" proyectos nuevos":" proyecto nuevo"));
     }
   }catch(e){
     toast("No pude cargar los proyectos, revisá n8n ("+e.message+")", true);
+    staleBannerShow(e.message, hadCache ? cacheTs : null);
   }finally{
     syncPillShow(false);
   }
@@ -1066,8 +1322,13 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function cardHTML(p, readOnly=false){
   const meta = [p.cliente,p.agencia,p.productora].filter(Boolean).map(esc).join(" · ");
   const pills = (p.tareas||[]).map(t=>`<span class="pill">${esc(t)}</span>`).join("");
-  const nCand = Object.values(p.asignaciones||{}).flat().filter(r=>r&&r.estado==="candidato").length;
+  /* el aviso de candidatos sin resolver solo tiene sentido en pre-producción:
+     de Ejecutando en adelante ya no se confirma ni se rechaza a nadie */
+  const nCand = p.status==="por_activarse"
+    ? Object.values(p.asignaciones||{}).flat().filter(r=>r&&r.estado==="candidato").length : 0;
   const candWarn = nCand ? `<span class="pill warn">${nCand} candidato${nCand>1?"s":""} sin resolver</span>` : "";
+  /* si el status no es uno de los conocidos, que se vea cuál es en vez de desaparecer */
+  const rareWarn = statusRaro(p.status) ? `<span class="pill warn">estado desconocido: ${esc(p.status||"(vacío)")}</span>` : "";
   const dLink = p.links?.driveRoot && p.links.driveRoot!=="#" ? `<a href="${esc(p.links.driveRoot)}" target="_blank" onclick="event.stopPropagation()">DRIVE ↗</a>` : "";
   const fLink = p.links?.frameio && p.links.frameio!=="#" ? `<a href="${esc(p.links.frameio)}" target="_blank" onclick="event.stopPropagation()">FRAME.IO ↗</a>` : "";
   return `<div class="card" onclick="openDetail('${p.id}'${readOnly?",true":""})">
@@ -1077,21 +1338,27 @@ function cardHTML(p, readOnly=false){
     </div>
     <div class="meta">${meta||"&nbsp;"}</div>
     ${inProgress(p.status)?`<div style="margin-bottom:var(--space-3)">${statusBadge(p.status)}</div>`:""}
-    ${candWarn?`<div class="pills">${candWarn}</div>`:""}
+    ${(rareWarn||candWarn)?`<div class="pills">${rareWarn}${candWarn}</div>`:""}
     ${(dLink||fLink)?`<div class="links">${dLink}${fLink}</div>`:""}
   </div>`;
 }
 
+/* la vista Proyectos tiene tres baldes; un status que no cae en ninguno dejaba al
+   proyecto invisible en el hub mientras el portal del proveedor sí lo mostraba.
+   Ahora esos aparecen en Pre-producción con el estado crudo a la vista. */
+function statusRaro(s){ return s!=="borrador" && !STATUS_META[s]; }
 function renderAll(){
-  const pend = projects.filter(p=>p.status==="por_activarse");
+  const raros = projects.filter(p=>statusRaro(p.status));
+  const pend = projects.filter(p=>p.status==="por_activarse").concat(raros);
   const act  = projects.filter(p=>inProgress(p.status));
   const done = projects.filter(p=>p.status==="completado");
 
-  $("#cPending").textContent = "("+pend.length+")";
+  const drafts = draftsAll();
+  $("#cPending").textContent = "("+(pend.length+drafts.length)+")";
   $("#cActive").textContent  = "("+act.length+")";
   $("#cDone").textContent    = "("+done.length+")";
 
-  $("#listPending").innerHTML = pend.length? pend.map(p=>cardHTML(p)).join("") : `<div class="empty">Nada en pre-producción. Los proyectos nuevos aparecen acá.</div>`;
+  $("#listPending").innerHTML = drafts.map(draftCardHTML).join("") + (pend.length? pend.map(p=>cardHTML(p)).join("") : (drafts.length? "" : `<div class="empty">Nada en pre-producción. Los proyectos nuevos aparecen acá.</div>`));
   $("#listActive").innerHTML  = act.length ? act.map(p=>cardHTML(p)).join("")  : `<div class="empty">Sin proyectos activos ahora mismo.</div>`;
 
   if(!done.length){ $("#listDone").innerHTML = `<div class="empty">Todavía no hay completados.</div>`; return; }
@@ -1106,7 +1373,7 @@ function renderAll(){
 }
 
 /* ---------------- vistas (tabs) ---------------- */
-const VIEW_TITLES = {proyectos:"Proyectos", calendario:"Calendario", equipo:"Equipo", dashboard:"Status"};
+const VIEW_TITLES = {proyectos:"Proyectos", calendario:"Calendario", equipo:"Equipo", dashboard:"Status", directorio:"Directorio TEAM 23"};
 let currentView = "dashboard";
 
 /* ---------------- kick off wizard ---------------- */
@@ -1121,6 +1388,7 @@ function renderCurrentView(){
   if(currentView==="calendario") renderGlobalCalendar();
   else if(currentView==="equipo") renderEquipo();
   else if(currentView==="dashboard") renderDashboard();
+  else if(currentView==="directorio"){ if(!dirData) dirLoad(); else dirRender(); }
 }
 
 function applyViewUI(name){
@@ -1143,7 +1411,7 @@ window.addEventListener("hashchange", ()=>{
 
 /* ---------------- vista equipo (solo lectura) ---------------- */
 function renderEquipo(){
-  const pend = projects.filter(p=>p.status==="por_activarse");
+  const pend = projects.filter(p=>p.status==="por_activarse" || statusRaro(p.status));
   const act  = projects.filter(p=>inProgress(p.status));
   const done = projects.filter(p=>p.status==="completado");
   const group = (label, dotClass, list) => `
@@ -1155,6 +1423,288 @@ function renderEquipo(){
     group("Pre-producción","",pend) +
     group("Activos","act",act) +
     group("Completados","done",done);
+}
+
+/* ================================================================
+   AUTOMATIZACIONES POR PROYECTO
+   Los tres bloques que dispara el workflow 3 al crear se pueden apagar
+   de a uno desde el armado. Por default vienen los tres encendidos; el
+   backend lee cada flag como "encendido salvo que llegue false", así que
+   un cliente viejo (o el guardado de borrador) sigue creando todo.
+   La portada viaja pegada a Drive: se copia dentro de la unidad nueva,
+   sin unidad no hay dónde ponerla.
+================================================================ */
+const AUTO_DEFS = [
+  ["drive",   "Crear unidad de Drive",     "Carpetas del proyecto, plantillas (desglose, brief, feedback, notas) y portada automática"],
+  ["frame",   "Crear proyecto de Frame.io","Proyecto + carpetas 1. Footage · 2. Offline · 3. Online · 4. Masters"],
+  ["discord", "Crear canales de Discord",  "Categoría privada, canales del proyecto y aviso inicial al equipo"]
+];
+const autoDefaults = () => ({ drive:true, frame:true, discord:true });
+let npAuto = autoDefaults();
+let n2Auto = autoDefaults();
+function autoStore(ctx){ return ctx==="n2" ? n2Auto : npAuto; }
+function renderAuto(ctx){
+  const box = $("#"+ctx+"Auto"); if(!box) return;
+  const st = autoStore(ctx);
+  const off = AUTO_DEFS.filter(([k])=>!st[k]).map(([,label])=>label.replace("Crear ",""));
+  box.innerHTML = AUTO_DEFS.map(([k,label,hint])=>`
+    <div class="auto-item ${st[k]?"":"off"}">
+      <button class="chk-box ${st[k]?"done":""}" onclick="toggleAuto('${ctx}','${k}')"
+              aria-pressed="${st[k]}" aria-label="${esc(label)}">${st[k]?"✓":""}</button>
+      <span class="txt">${esc(label)}<small>${esc(hint)}</small></span>
+    </div>`).join("") +
+    (off.length ? `<div class="auto-note">No se va a crear: ${esc(off.join(" · "))}. El proyecto se crea igual, pero desde el hub no hay forma de generarlo después: queda a mano.</div>` : "");
+}
+function toggleAuto(ctx,k){ const st = autoStore(ctx); st[k] = !st[k]; renderAuto(ctx); }
+/* etiqueta del botón mientras corre + texto del toast, según lo que quedó encendido */
+function autoNames(st){ return [st.drive&&"Drive", st.frame&&"Frame.io", st.discord&&"Discord"].filter(Boolean); }
+function autoBusyLabel(st){ const n = autoNames(st); return n.length ? "Creando "+n.join(" + ")+"…" : "Creando proyecto…"; }
+function autoDemoLinks(st){
+  const L = {};
+  if(st.drive) Object.assign(L,{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#"});
+  if(st.frame) L.frameio = "#";
+  return L;
+}
+
+/* ================================================================
+   MAILS DE PROPUESTA A CANDIDATOS
+   El armado (opción 2) es el único flujo que manda propuestas: cada
+   candidato con mail recibe una, con el timeline del proyecto y su rol
+   resaltado. Acá se puede apagar el envío uno por uno y editar el mail
+   antes de crear el proyecto.
+   El template es el mismo que tiene el workflow 3; el hub manda el HTML
+   ya armado en `body.mails`, así que lo que se ve en la vista previa es
+   literalmente lo que sale. El template de n8n queda como fallback para
+   clientes viejos: si tocás uno, tocá el otro.
+================================================================ */
+const mailFmtDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d||"") ? d.split("-").reverse().join("/") : (d||"a definir");
+function mailEsc(s){ return String(s??"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+/* datos del proyecto para armar el mail. En el armado salen del formulario en
+   vivo; en la ficha, del proyecto ya creado (para sumar gente sobre la marcha). */
+function mailProjectData(ctx){
+  const orden = (a,b)=>String(a.inicio||"9999").localeCompare(String(b.inicio||"9999"));
+  if(ctx==="dt"){
+    const p = detailProject || {};
+    const timeline = (p.tareas||[])
+      .map(t=>{ const d = (p.taskDates||{})[t]||{}; return { fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||"" }; })
+      .filter(t=>t.inicio||t.fin||t.notas).sort(orden);
+    return {
+      proyecto: p.nombre||"", cliente: p.cliente||"", sintesis: p.sintesis||"",
+      storyboard: p.storyboard_url || p.tratamiento_url || "", timeline
+    };
+  }
+  const timeline = [...n2Selected]
+    .map(t=>{ const d = n2TaskDates[t]||{}; return { fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||"" }; })
+    .filter(t=>t.inicio||t.fin||t.notas).sort(orden);
+  return {
+    proyecto: ($("#n2Nombre")||{}).value?.trim() || "",
+    cliente:  ($("#n2Cliente")||{}).value?.trim() || "",
+    sintesis: ($("#n2Sintesis")||{}).value?.trim() || "",
+    storyboard: ($("#n2Storyboard")||{}).value?.trim() || "",
+    timeline
+  };
+}
+function mailSubjectDefault(proyecto, rol){ return "🎬 Propuesta TEAM 23 — " + (proyecto||"Proyecto nuevo") + " (" + rol + ")"; }
+function mailIntroDefault(nombre, cliente, rol){
+  return "Hola " + (nombre||"") + ", te contactamos por un proyecto nuevo" +
+         (cliente ? " para " + cliente : "") + ". Tu rol propuesto: " + rol + ".";
+}
+/* mismo HTML que arma el nodo "Armar propuestas" del wf3 */
+function mailBuildHTML(d, rol, nombre, intro){
+  const th = t => '<th style="text-align:left;padding:6px 10px;border-bottom:2px solid #0A0A0A;font-size:11px;letter-spacing:1px;">'+t+'</th>';
+  const conNotas = d.timeline.some(t=>t.notas);
+  const tl = d.timeline.length
+    ? '<table style="border-collapse:collapse;width:100%;font-size:14px;"><thead><tr>'+th("FASE")+th("INICIO")+th("FIN")+(conNotas?th("NOTAS"):"")+'</tr></thead><tbody>'+
+      d.timeline.map(t=>{
+        const mio = t.fase===rol;
+        const td = 'padding:6px 10px;border-bottom:1px solid #ddd;'+(mio?'background:#FFF3F2;':'');
+        return '<tr>'+
+          '<td style="'+td+(mio?'border-left:3px solid #FF2B1E;':'')+'"><b>'+mailEsc(t.fase)+'</b>'+(mio?' <span style="color:#FF2B1E;font-size:11px;font-weight:bold;">&larr; tu rol</span>':'')+'</td>'+
+          '<td style="'+td+'">'+mailFmtDate(t.inicio)+'</td>'+
+          '<td style="'+td+'">'+mailFmtDate(t.fin)+'</td>'+
+          (conNotas?'<td style="'+td+'font-size:12.5px;color:#555;">'+mailEsc(t.notas||"")+'</td>':'')+
+        '</tr>';
+      }).join("")+'</tbody></table>'
+    : '<p style="color:#8A8A8A;">Timeline a definir.</p>';
+  const sb = d.storyboard ? '<p><b>Storyboard / referencias:</b> <a href="'+mailEsc(d.storyboard)+'">'+mailEsc(d.storyboard)+'</a></p>' : "";
+  /* sin apertura propia va el saludo armado, igual que siempre (con cliente y rol
+     en negrita); con apertura propia va el texto tal cual lo escribieron */
+  const custom = (intro||"").trim();
+  const apertura = custom
+    ? '<p style="white-space:pre-line;">'+mailEsc(custom)+'</p>'
+    : '<p>Hola '+mailEsc(nombre||"")+', te contactamos por un proyecto nuevo'+(d.cliente?' para <b>'+mailEsc(d.cliente)+'</b>':"")+'. Tu rol propuesto: <b>'+mailEsc(rol)+'</b>.</p>';
+  return '<div style="font-family:Helvetica,Arial,sans-serif;color:#0A0A0A;max-width:640px;">'+
+    '<h2 style="margin:0 0 4px;font-size:22px;">'+mailEsc(d.proyecto)+'</h2>'+
+    '<p style="margin:0 0 16px;color:#FF2B1E;font-weight:bold;letter-spacing:2px;font-size:11px;">PROPUESTA DE PROYECTO · TEAM 23</p>'+
+    apertura+
+    (d.sintesis?'<p style="margin:14px 0 6px;font-weight:bold;font-size:12px;letter-spacing:1px;">DE QUÉ SE TRATA</p><p style="white-space:pre-line;">'+mailEsc(d.sintesis)+'</p>':"")+sb+
+    '<p style="margin:14px 0 6px;font-weight:bold;font-size:12px;letter-spacing:1px;">TIMELINE TENTATIVO</p>'+tl+
+    '<p style="margin-top:18px;">Si te interesa, respondé este mail con tu disponibilidad y presupuesto para el rol.</p>'+
+    '<p style="margin-top:22px;font-size:10px;color:#8A8A8A;letter-spacing:2px;">TEAM 23 PRODUCTION HUB</p></div>';
+}
+/* lo que realmente se manda para una fila: HTML crudo si lo editaron, si no el armado */
+function mailFinalHTML(r, rol, ctx){
+  if((r.mailHtml||"").trim()) return r.mailHtml;
+  return mailBuildHTML(mailProjectData(ctx), rol, r.nombre||"", r.mailIntro||"");
+}
+function mailFinalSubject(r, rol, ctx){
+  return (r.mailSubject||"").trim() || mailSubjectDefault(mailProjectData(ctx).proyecto, rol);
+}
+function mailIsEdited(r){ return !!((r.mailIntro||"").trim() || (r.mailSubject||"").trim() || (r.mailHtml||"").trim()); }
+
+/* ---------- controles por fila ----------
+   En el armado (n2) el mail sale solo al crear el proyecto, así que el control
+   es un interruptor. En la ficha (dt) el proyecto ya existe y no hay nada
+   automático: el control es un botón que manda la propuesta en el momento, para
+   cuando se suma gente con el proyecto ya en marcha. */
+function mailSlotId(ctx, tarea, i){ return "mrow-"+ctx+"-"+String(tarea).replace(/[^a-zA-Z0-9]/g,"")+"-"+i; }
+function mailFechaCorta(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return "";
+  const dd = String(d.getDate()).padStart(2,"0"), mm = String(d.getMonth()+1).padStart(2,"0");
+  return dd+"/"+mm+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+function mailRowInner(r, tarea, i, ctx){
+  if(!r || !(r.email||"").trim()) return "";
+  if(ctx!=="n2" && ctx!=="dt") return "";
+  const tq = String(tarea).replace(/'/g,"\\'");
+  const editado = mailIsEdited(r) ? '<span class="chipst conf">Editado</span>' : "";
+  const editar = `<button class="mini-btn" onclick="mailOpen('${tq}',${i},'${ctx}')">✎ Editar mail</button>`;
+  if(ctx==="dt"){
+    /* La propuesta es para invitar a alguien que todavía no dijo que sí. Si ya se
+       la mandaste, o si la persona ya está confirmada / activa / inactiva en el
+       proyecto, el bloque no tiene nada que hacer ahí. La fecha del envío no se
+       pierde: pasa al chip de estado. */
+    if(r.mailSentAt || r.estado !== "candidato") return "";
+    return `<div class="mail-row">
+      <span class="who">✉ Propuesta</span>
+      <button class="mini-btn on" onclick="mailSend('${tq}',${i})">Enviar propuesta</button>
+      ${editar}${editado}
+    </div>`;
+  }
+  const on = r.mailOn !== false;
+  return `<div class="mail-row">
+    <span class="who ${on?"":"off"}">✉ Propuesta a ${esc(r.email)}</span>
+    <button class="mini-btn ${on?"on":"no"}" onclick="mailToggle('${tq}',${i})" aria-pressed="${on}">${on?"Envío activado":"Envío apagado"}</button>
+    ${editar}${editado}
+  </div>`;
+}
+/* el mail aparece cuando se carga la dirección: refresco solo esta fila para no perder el foco */
+function mailSlotSync(ctx, tarea, i){
+  if(ctx!=="n2" && ctx!=="dt") return;
+  const el = $("#"+mailSlotId(ctx,tarea,i));
+  if(el) el.innerHTML = mailRowInner((assignStore(ctx)[tarea]||[])[i], tarea, i, ctx);
+}
+function mailToggle(tarea, i){
+  const r = (n2AssignData[tarea]||[])[i]; if(!r) return;
+  r.mailOn = r.mailOn === false;
+  mailSlotSync("n2", tarea, i);
+  toast(r.mailOn ? "Se le manda la propuesta a "+(r.nombre||r.email) : "No se le manda mail a "+(r.nombre||r.email));
+}
+
+/* ---------- enviar la propuesta desde la ficha (proyecto ya creado) ---------- */
+async function mailSend(tarea, i){
+  const p = detailProject; if(!p) return;
+  const r = (p.asignaciones[tarea]||[])[i];
+  if(!r || !(r.email||"").trim()){ toast("Cargá el mail de la persona primero", true); return; }
+  const quien = r.nombre || r.email;
+  const reenvio = !!r.mailSentAt;
+  const ok = await t23Confirm(
+    (reenvio ? "Se le vuelve a enviar la propuesta a " : "Se le va a enviar la propuesta a ")+quien+" ("+r.email+"), con el timeline del proyecto y su rol marcado. Podés revisarla antes con \u201cEditar mail\u201d.",
+    { titulo: reenvio?"REENVIAR PROPUESTA":"ENVIAR PROPUESTA", ok: reenvio?"Reenviar":"Enviar", cancelar:"Cancelar" });
+  if(ok !== true) return;
+  const prevEstado = r.estado, prevSent = r.mailSentAt;
+  /* mandarle una propuesta lo vuelve candidato: todavía no dijo que sí */
+  if(!r.estado) r.estado = "candidato";
+  r.mailSentAt = new Date().toISOString();
+  renderDetail();
+  if(DEMO){ toast("✔ Propuesta enviada a "+quien+" (demo)"); return; }
+  t23LoadShow();
+  try{
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({
+      id: p.id,
+      asignaciones_json: JSON.stringify(p.asignaciones),
+      mails: [{ rol:tarea, to:r.email.trim(), nombre:r.nombre||"", enviar:true,
+                subject: mailFinalSubject(r, tarea, "dt"), html: mailFinalHTML(r, tarea, "dt") }]
+    })});
+    toast("✔ Propuesta enviada a "+quien);
+    onProjectsLoaded();
+  }catch(e){
+    r.estado = prevEstado; r.mailSentAt = prevSent; renderDetail();
+    toast("No pude enviar la propuesta: "+e.message, true);
+  }finally{ t23LoadHide(); }
+}
+
+/* ---------- popup de edición ---------- */
+let mailEditing = null;   // { ctx, tarea, i, rol, nombre, email } — la fila en edición
+function mailOpen(tarea, i, ctx){
+  ctx = ctx || "n2";
+  const r = (assignStore(ctx)[tarea]||[])[i]; if(!r) return;
+  mailEditing = { ctx, tarea, i, rol:tarea, nombre:r.nombre||"", email:r.email||"" };
+  const d = mailProjectData(ctx);
+  $("#mailWho").textContent = (r.nombre||r.email) + " · " + tarea + " · " + r.email;
+  $("#mailSubject").value = (r.mailSubject||"").trim() || mailSubjectDefault(d.proyecto, tarea);
+  $("#mailIntro").value = (r.mailIntro||"").trim() || mailIntroDefault(r.nombre||"", d.cliente, tarea);
+  $("#mailHtml").value = (r.mailHtml||"");
+  $("#mailAdvBox").open = !!(r.mailHtml||"").trim();
+  mailLive();
+  $("#ovMail").classList.add("open");   // no toca el scroll del body: queda uno abierto detrás
+}
+function mailClose(){ $("#ovMail").classList.remove("open"); mailEditing = null; }
+/* al desplegar el HTML lo precargo con el mail actual, para editar sobre algo real */
+function mailAdvToggle(){
+  const box = $("#mailAdvBox"), ta = $("#mailHtml");
+  if(box.open && !ta.value.trim() && mailEditing){
+    ta.value = mailBuildHTML(mailProjectData(mailEditing.ctx), mailEditing.rol, mailEditing.nombre, $("#mailIntro").value);
+  }
+  mailLive();
+}
+function mailPreviewHTML(){
+  if(!mailEditing) return "";
+  const raw = $("#mailHtml").value.trim();
+  return raw || mailBuildHTML(mailProjectData(mailEditing.ctx), mailEditing.rol, mailEditing.nombre, $("#mailIntro").value);
+}
+function mailLive(){
+  if(!mailEditing) return;
+  const raw = $("#mailHtml").value.trim();
+  $("#mailRawWarn").style.display = raw ? "block" : "none";
+  $("#mailIntro").disabled = !!raw;
+  const asunto = ($("#mailSubject").value||"").trim();
+  $("#mailPrev").srcdoc =
+    '<div style="font-family:Helvetica,Arial,sans-serif;padding:14px 16px;">'+
+    '<div style="font-size:11px;letter-spacing:1.5px;color:#8A8A8A;text-transform:uppercase;">Asunto</div>'+
+    '<div style="font-size:15px;font-weight:bold;margin:2px 0 14px;border-bottom:1px solid #ddd;padding-bottom:12px;">'+mailEsc(asunto||"(sin asunto)")+'</div>'+
+    mailPreviewHTML()+'</div>';
+}
+function mailReset(){
+  if(!mailEditing) return;
+  const d = mailProjectData(mailEditing.ctx);
+  $("#mailSubject").value = mailSubjectDefault(d.proyecto, mailEditing.rol);
+  $("#mailIntro").value = mailIntroDefault(mailEditing.nombre, d.cliente, mailEditing.rol);
+  $("#mailHtml").value = "";
+  $("#mailAdvBox").open = false;
+  mailLive();
+  toast("Mail vuelto al automático");
+}
+function mailSave(){
+  if(!mailEditing) return;
+  const { ctx, tarea, i, rol, nombre } = mailEditing;
+  const r = (assignStore(ctx)[tarea]||[])[i];
+  if(!r){ mailClose(); return; }
+  const d = mailProjectData(ctx);
+  const subject = ($("#mailSubject").value||"").trim();
+  const intro = ($("#mailIntro").value||"").trim();
+  const raw = ($("#mailHtml").value||"").trim();
+  /* guardo solo lo que difiere del automático, así el mail sigue tomando los
+     cambios del proyecto (nombre, síntesis, fechas) mientras no lo pisen */
+  r.mailSubject = subject === mailSubjectDefault(d.proyecto, rol) ? "" : subject;
+  r.mailIntro = intro === mailIntroDefault(nombre, d.cliente, rol) ? "" : intro;
+  r.mailHtml = (raw && raw !== mailBuildHTML(d, rol, nombre, intro)) ? raw : "";
+  mailClose();
+  /* en la ficha el override viaja al sheet con el próximo guardado del equipo */
+  if(ctx==="dt"){ detailDirty = true; renderDetail(); }
+  else mailSlotSync(ctx, tarea, i);
+  toast(mailIsEdited(r) ? "✔ Mail guardado para "+(r.nombre||r.email) : "Mail sin cambios: queda el automático");
 }
 
 /* ---------------- nuevo proyecto ---------------- */
@@ -1181,59 +1731,122 @@ function renderNPAssigns(){
     if(!npTaskDates[t]) npTaskDates[t]={inicio:"",fin:"",notas:""};
   });
   $("#npAssigns").innerHTML = [...npSelected].map(t=>assignBlockHTML(t, npAssignData[t], "np")).join("");
+  renderCreationCal("np");
 }
 function assignBlockHTML(tarea, rows, ctx){
   const td = taskDatesStore(ctx)[tarea] || {};
   const tq = String(tarea).replace(/'/g,"\\'");
+  /* En la ficha la gente no se borra, se gobierna por estado:
+       Pre-producción  → confirmado / rechazado (el rechazado se minimiza)
+       Ejecutando y más → los rechazados salen del cuadro y los que quedan
+                          se prenden y apagan (activo / inactivo)
+     La cruz de borrar solo sobrevive en los formularios de creación y, en la
+     ficha, en una fila recién agregada que todavía está vacía. */
+  const dt = ctx==="dt";
+  const enCurso = dt && detailProject && detailProject.status !== "por_activarse";
+  const vacia = r => !((r.nombre||"").trim() || (r.email||"").trim());
+
+  const chip = (clase, txt) => `<span class="chipst ${clase}">${txt}</span>`;
+
   const stateRow = (r,i)=>{
-    if(ctx!=="dt" || !r.estado) return "";
-    const chip = r.estado==="confirmado" ? '<span class="chipst conf">Confirmado</span>'
-               : r.estado==="rechazado"  ? '<span class="chipst rech">Rechazado</span>'
-               : '<span class="chipst cand">Candidato</span>';
-    const acts = r.estado==="candidato"
-      ? `<button class="mini-btn" onclick="candSet('${tq}',${i},'confirmado')">✓ Confirmar</button><button class="mini-btn no" onclick="candSet('${tq}',${i},'rechazado')">✕ Rechazar</button>`
-      : `<button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
-    return `<div class="cand-state">${chip}${acts}</div>`;
+    if(!dt || vacia(r)) return "";
+    const b = (estado, txt, clase="") => `<button class="mini-btn ${clase}" onclick="candSet('${tq}',${i},'${estado}')">${txt}</button>`;
+    /* si se le mandó la propuesta y todavía no contestó, la fecha queda a la vista */
+    const enviado = (dt && r.estado==="candidato" && r.mailSentAt)
+      ? `<span class="who" style="margin-left:2px">✉ enviada ${esc(mailFechaCorta(r.mailSentAt))}</span>` : "";
+    if(!enCurso){
+      /* pre-producción: se resuelve el candidato */
+      if(!r.estado) return "";
+      if(r.estado==="inactivo") return `<div class="cand-state">${chip("inact","Inactivo")}${b("confirmado","↺ Reactivar")}</div>`;
+      const c = r.estado==="confirmado" ? chip("conf","Confirmado") : chip("cand","Candidato");
+      const acts = r.estado==="candidato"
+        ? b("confirmado","✓ Confirmar") + b("rechazado","✕ Rechazar","no")
+        : `<button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
+      return `<div class="cand-state">${c}${acts}${enviado}</div>`;
+    }
+    /* en curso: activo / inactivo. Sin estado (alta manual) cuenta como activo.
+       Excepción: un candidato sigue siendo candidato — es gente que se sumó con
+       el proyecto en marcha y todavía tiene que decir que sí. Si se rechaza,
+       sale del cuadro igual que los rechazados de pre-producción. */
+    if(r.estado==="candidato")
+      return `<div class="cand-state">${chip("cand","Candidato")}${b("confirmado","✓ Confirmar")}${b("rechazado","✕ Rechazar","no")}${enviado}</div>`;
+    if(r.estado==="inactivo") return `<div class="cand-state">${chip("inact","Inactivo")}${b("confirmado","↺ Reactivar")}</div>`;
+    return `<div class="cand-state">${chip("conf","Activo")}${b("inactivo","Desactivar","no")}</div>`;
+  };
+
+  const visibles = rows.map((r,i)=>({r,i})).filter(({r})=> !(enCurso && r.estado==="rechazado"));
+  const filaHTML = ({r,i})=>{
+    /* rechazado en pre-producción: una línea y listo, para no comerse la pantalla */
+    if(dt && !enCurso && r.estado==="rechazado" && !vacia(r)) return `
+      <div class="assign-min">
+        <span class="nm">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}</span>
+        ${chip("rech","Rechazado")}
+        <button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>
+      </div>`;
+    const quitar = (!dt || vacia(r))
+      ? `<button class="icon-btn" onclick="delAssign('${ctx}','${tq}',${i})" title="Quitar">✕</button>`
+      : `<span class="icon-slot" title="Acá nadie se borra: en pre-producción se rechaza, en ejecución se desactiva"></span>`;
+    return `
+      <div class="assign-row">
+        <input type="text" placeholder="Nombre" autocomplete="off" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tq}',${i},'nombre',this.value);acOpen(this,'${ctx}','${tq}',${i})" onkeydown="acKey(event)" onblur="acBlur(this,'${ctx}','${tq}',${i})">
+        <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tq}',${i},'email',this.value)" onblur="mailSlotSync('${ctx}','${tq}',${i})">
+        ${quitar}
+        <input type="text" placeholder="Discord" value="${esc(r.discord||'')}" oninput="setAssign('${ctx}','${tq}',${i},'discord',this.value)">
+        <input type="tel" placeholder="Teléfono" value="${esc(r.telefono||'')}" oninput="setAssign('${ctx}','${tq}',${i},'telefono',this.value)">
+      </div>
+      <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>${stateRow(r,i)}`;
   };
   return `<div class="assign-block">
     <div class="ttl">${esc(tarea)} — ${ctx==="n2"?"candidatos":"equipo"} + fechas</div>
-    ${rows.map((r,i)=>`
-      <div class="assign-row">
-        <input type="text" placeholder="Nombre" autocomplete="off" value="${esc(r.nombre)}" oninput="setAssign('${ctx}','${tq}',${i},'nombre',this.value);acOpen(this,'${ctx}','${tq}',${i})" onkeydown="acKey(event)" onblur="acBlur(this,'${ctx}','${tq}',${i})">
-        <input type="email" placeholder="mail@team23.online" value="${esc(r.email)}" oninput="setAssign('${ctx}','${tq}',${i},'email',this.value)">
-        <button class="icon-btn" onclick="delAssign('${ctx}','${tq}',${i})" title="Quitar">✕</button>
-        <input type="text" placeholder="Discord" value="${esc(r.discord||'')}" oninput="setAssign('${ctx}','${tq}',${i},'discord',this.value)">
-        <input type="tel" placeholder="Teléfono" value="${esc(r.telefono||'')}" oninput="setAssign('${ctx}','${tq}',${i},'telefono',this.value)">
-      </div>${stateRow(r,i)}`).join("")}
+    ${visibles.map(filaHTML).join("")}
     <button class="addline" onclick="addAssign('${ctx}','${tarea}')">+ agregar persona</button>
     <div class="frow" style="margin-top:var(--space-4)">
       <div><label class="f">Inicio</label><input type="date" value="${esc(td.inicio||"")}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value)"></div>
       <div><label class="f">Fin</label><input type="date" value="${esc(td.fin||"")}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value)"></div>
     </div>
+    <div id="${notaSlotId(ctx,tarea)}">${notaBoxHTML(ctx, tarea, false)}</div>
   </div>`;
 }
-/* confirmar / rechazar candidatos desde la ficha; persiste al toque */
+/* confirmar / rechazar en pre-producción, activar / desactivar en curso; persiste al toque */
+const ESTADO_TOAST = {
+  confirmado: n => "✔ "+n+" confirmado",
+  rechazado:  () => "Candidato rechazado",
+  candidato:  () => "Vuelve a candidato",
+  inactivo:   n => n+" desactivado en el proyecto"
+};
 async function candSet(tarea, i, estado){
   const p = detailProject;
   const row = (p.asignaciones[tarea]||[])[i];
   if(!row) return;
   const prev = row.estado;
+  const quien = row.nombre || row.email;
+  /* reactivar es volver a confirmado, pero el aviso tiene que decir otra cosa */
+  const msg = (estado==="confirmado" && prev==="inactivo")
+    ? quien+" vuelve a estar activo"
+    : (ESTADO_TOAST[estado] || (()=>"Estado actualizado"))(quien);
   row.estado = estado;
   renderDetail();
-  if(DEMO){ toast(estado==="confirmado"?"✔ "+(row.nombre||row.email)+" confirmado (demo)":estado==="rechazado"?"Candidato rechazado (demo)":"Vuelve a candidato (demo)"); return; }
+  if(DEMO){ toast(msg+" (demo)"); return; }
   try{
     await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, asignaciones_json: JSON.stringify(p.asignaciones) })});
-    toast(estado==="confirmado"?"✔ "+(row.nombre||row.email)+" confirmado":estado==="rechazado"?"Candidato rechazado":"Vuelve a candidato");
+    toast(msg);
   }catch(e){ row.estado = prev; renderDetail(); toast("No pude guardar el cambio: "+e.message, true); }
 }
 function taskDatesStore(ctx){ return ctx==="np" ? npTaskDates : ctx==="n2" ? n2TaskDates : (detailProject.taskDates = detailProject.taskDates||{}); }
 function setTaskDate(ctx,t,field,val){
   const s = taskDatesStore(ctx); s[t] = s[t]||{inicio:"",fin:"",notas:""}; s[t][field]=val;
-  if(ctx==="dt") renderDetail();   // refresca las barras del calendario
+  ctx==="dt" ? renderDetail() : renderCreationCal(ctx);   // refresca las barras del calendario
 }
 function assignStore(ctx){ return ctx==="np" ? npAssignData : ctx==="n2" ? n2AssignData : detailProject.asignaciones; }
 function setAssign(ctx,t,i,k,v){ assignStore(ctx)[t][i][k]=v; }
-function addAssign(ctx,t){ assignStore(ctx)[t].push({nombre:"",email:"",discord:"",telefono:""}); ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
+function addAssign(ctx,t){
+  /* en la ficha, alguien que se suma al proyecto arranca como candidato: es lo que
+     habilita mandarle la propuesta y después confirmarlo o rechazarlo */
+  const fila = {nombre:"",email:"",discord:"",telefono:""};
+  if(ctx==="dt") fila.estado = "candidato";
+  assignStore(ctx)[t].push(fila);
+  ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail();
+}
 function delAssign(ctx,t,i){ assignStore(ctx)[t].splice(i,1); if(!assignStore(ctx)[t].length) assignStore(ctx)[t]=[{nombre:"",email:"",discord:"",telefono:""}]; ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
 
 async function createProject(){
@@ -1263,18 +1876,20 @@ async function createProject(){
     prod_nombre: $("#npProdNombre").value.trim(), prod_email: $("#npProdEmail").value.trim(),
     coord_nombre: $("#npCoordNombre").value.trim(), coord_email: $("#npCoordEmail").value.trim(),
     tareas: [...npSelected], asignaciones: asigs, taskDates: tDates, sintesis: npSintesis,
-    storyboard_url: npStoryboardUrl, tratamiento_url: npTratamientoUrl
+    storyboard_url: npStoryboardUrl, tratamiento_url: npTratamientoUrl,
+    auto_drive: npAuto.drive, auto_frame: npAuto.frame, auto_discord: npAuto.discord
   };
 
   const btn = $("#btnCreate");
-  btn.disabled = true; btn.textContent = "Creando Drive + Frame.io…";
+  btn.disabled = true; btn.textContent = autoBusyLabel(npAuto);
+  t23LoadShow("crear");
 
   try{
     let proj;
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"}, calendario:[] };
+        links:autoDemoLinks(npAuto), calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
       proj.tareas = proj.tareas||body.tareas; proj.asignaciones = proj.asignaciones||body.asignaciones;
@@ -1286,11 +1901,13 @@ async function createProject(){
     closeModal("ovNew");
     if(currentView!=="proyectos") switchView("proyectos");
     openDetail(proj.id);
-    toast("✔ Proyecto creado, carpetas de Drive y Frame.io listas");
+    const nOn = autoNames(npAuto);
+    toast(nOn.length ? "✔ Proyecto creado, "+nOn.join(" + ")+" listo" : "✔ Proyecto creado, sin automatizaciones");
     rosterSyncFromAsigs(asigs);
   }catch(e){
     toast("Error al crear: "+e.message, true);
   }finally{
+    t23LoadHide();
     btn.disabled = false; btn.textContent = "Crear proyecto";
   }
 }
@@ -1298,62 +1915,18 @@ async function createProject(){
 /* ---------------- detalle ---------------- */
 let detailProject = null;
 let detailReadOnly = false; // true cuando se abre desde la vista Equipo: oculta controles de edición
-let tareasOpen = false; // colapsa/expande la sección "Tareas TEAM23" en la ficha
+let calView = null;   // Date del mes visible
+let weekView = null;  // Date dentro de la semana visible (vista semanal de cierre)
+let selDay = null;    // 'YYYY-MM-DD' del día seleccionado
+let calCtx = "dt";    // dónde vive el calendario visible: dt (ficha) / np (alta manual) / n2 (debrief IA)
+let calAuto = true;   // saltar automáticamente al mes de la primera fecha en el armado
+let tareasOpen = false; // colapsa/expande la sección "Tareas TEAM 23" en la ficha
 function toggleTareasOpen(){ tareasOpen = !tareasOpen; renderDetail(); }
 let calSectionOpen = false; // colapsa/expande la sección "Calendario" en la ficha
 function toggleCalSectionOpen(){ calSectionOpen = !calSectionOpen; renderDetail(); }
 
-/* ---------------- síntesis: colapsable + edición en popup grande (ficha/np/n2) ---------------- */
-let sxOpen = {dt:false, np:false, n2:false};
-let n2SintesisVal = "";
-function sxGet(ctx){ return ctx==="dt" ? (detailProject&&detailProject.sintesis||"") : ctx==="np" ? npSintesis : n2SintesisVal; }
-function sxRenderCtx(ctx){
-  if(ctx==="dt") renderDetail();
-  else if(ctx==="np") $("#npSintesisBlock").innerHTML = sintesisBlockHTML("np", npSintesis);
-  else $("#n2SintesisBlock").innerHTML = sintesisBlockHTML("n2", n2SintesisVal);
-}
-function toggleSx(ctx){ sxOpen[ctx] = !sxOpen[ctx]; sxRenderCtx(ctx); }
-function openSxEdit(ctx){
-  sxEditCtx = ctx;
-  $("#sxEditTa").value = sxGet(ctx);
-  openModal("ovSintesisEdit");
-  setTimeout(()=>$("#sxEditTa").focus(), 50);
-}
-async function saveSxEdit(){
-  const ctx = sxEditCtx, val = $("#sxEditTa").value.trim();
-  const btn = $("#btnSxSave");
-  if(ctx==="np"){ npSintesis = val; closeModal("ovSintesisEdit"); sxRenderCtx("np"); return; }
-  if(ctx==="n2"){ n2SintesisVal = val; closeModal("ovSintesisEdit"); sxRenderCtx("n2"); return; }
-  // ctx === "dt": persiste contra n8n (o solo en memoria en DEMO)
-  const p = detailProject, prev = p.sintesis;
-  btn.disabled = true; btn.textContent = "Guardando…";
-  p.sintesis = val;
-  if(DEMO){ btn.disabled=false; btn.textContent="Guardar síntesis"; closeModal("ovSintesisEdit"); renderDetail(); toast("✔ Síntesis actualizada (demo)"); return; }
-  try{
-    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, sintesis: val })});
-    closeModal("ovSintesisEdit"); renderDetail(); toast("✔ Síntesis actualizada");
-  }catch(e){
-    p.sintesis = prev; toast("No pude guardar la síntesis: "+e.message, true);
-  }finally{ btn.disabled = false; btn.textContent = "Guardar síntesis"; }
-}
-let sxEditCtx = null;
-/* bloque reusado: header colapsable + texto + botón que abre el popup de edición */
-function sintesisBlockHTML(ctx, text){
-  const open = sxOpen[ctx];
-  const body = text
-    ? `<p style="font-size:15px;white-space:pre-line;margin:0 0 10px">${esc(text)}</p><button class="addline" onclick="openSxEdit('${ctx}')">✎ editar síntesis</button>`
-    : `<button class="addline" onclick="openSxEdit('${ctx}')">+ agregar síntesis</button>`;
-  return `<div class="glabel" style="cursor:pointer" onclick="toggleSx('${ctx}')">
-      <span>Síntesis</span>
-      <button class="dd-toggle${open?"":" closed"}" tabindex="-1"><span>▾</span></button>
-    </div>
-    <div style="${open?"":"display:none"}">${body}</div>`;
-}
-let calView = null;   // Date del mes visible
-let weekView = null;  // Date dentro de la semana visible (vista semanal de cierre)
-let selDay = null;    // 'YYYY-MM-DD' del día seleccionado
-
 function openDetail(id, readOnly=false){
+  calCtx = "dt";
   detailProject = projects.find(p=>p.id===id);
   if(!detailProject) return;
   detailSnapshot = JSON.parse(JSON.stringify(detailProject));
@@ -1361,7 +1934,6 @@ function openDetail(id, readOnly=false){
   detailReadOnly = readOnly;
   tareasOpen = false;
   calSectionOpen = false;
-  sxOpen.dt = false;
   detailProject.tareas = detailProject.tareas||[];
   detailProject.asignaciones = detailProject.asignaciones||{};
   detailProject.taskDates = detailProject.taskDates||{};
@@ -1416,6 +1988,25 @@ function statusBadge(s){
 /* entradas unificadas del calendario:
    fases-desde-tareas (tarea + fechas de taskDates) + fases/hitos independientes de calendario.
    src:"task" → se edita por nombre de tarea (taskDates); src:"cal" → por índice en calendario. */
+
+/* síntesis con estructura liviana: párrafos, etiquetas ("Puntos clave:") y bullets */
+function sintesisHTML(txt, small){
+  const fs = small ? "13.5px" : "15.5px";
+  const lines = String(txt||"").split(/\r?\n/);
+  let out = "", list = [];
+  const flush = ()=>{ if(list.length){ out += `<ul class="sx-list">${list.join("")}</ul>`; list = []; } };
+  lines.forEach(raw=>{
+    const l = raw.trim();
+    if(!l){ flush(); return; }
+    const m = l.match(/^[•·\-\*]\s+(.*)$/);
+    if(m){ list.push(`<li>${esc(m[1])}</li>`); return; }
+    flush();
+    if(/^[^:]{2,40}:$/.test(l)){ out += `<div class="sx-label">${esc(l.slice(0,-1))}</div>`; return; }
+    out += `<p class="sx-p" style="font-size:${fs}">${esc(l)}</p>`;
+  });
+  flush();
+  return `<div class="sx">${out}</div>`;
+}
 function allCalEntries(p){
   const out = [];
   (p.tareas||[]).forEach(t=>{
@@ -1447,7 +2038,7 @@ function renderDetail(){
   const completado = p.status==="completado";
   const lockFields = ro || cierre || completado;   // en cierre/completado no se edita ningún campo (tareas/calendario)
   const lockMeta = ro || p.status!=="por_activarse"; // datos del proyecto + equipo: editables solo en pre-producción
-  const lockTareas = lockFields || p.status==="entregando"; // tareas TEAM23 (equipo + fechas): solo lectura desde Entregando
+  const lockTareas = lockFields || p.status==="entregando"; // tareas TEAM 23 (equipo + fechas): solo lectura desde Entregando
   const lookMap = faseLookMap(p);
 
   // en completado la ficha es un archivo: solo carpeta raíz (+ finales + documentos)
@@ -1459,10 +2050,10 @@ function renderDetail(){
   const finalesLink = p.links?.finales;
   const finalesHref = finalesLink && finalesLink!=='#';
   const finalesBtn = cierre
-    ? `<a class="finales-btn on" href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 5. FINALES <span>↗</span></a>`
+    ? `<a class="finales-btn on" href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>5. FINALES <span>↗</span></a>`
     : completado
-    ? `<a href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>📁 5. FINALES <span>↗</span></a>`
-    : `<span class="finales-btn off" title="Se habilita cuando el proyecto pasa a cierre">📁 5. FINALES</span>`;
+    ? `<a href="${esc(finalesLink||'#')}"${finalesHref ? ' target="_blank"' : ' onclick="return false"'}>5. FINALES <span>↗</span></a>`
+    : `<span class="finales-btn off" title="Se habilita cuando el proyecto pasa a cierre">5. FINALES</span>`;
   const docLinks = DRIVE_DOCS
     .filter(([k])=>p.links && p.links[k])
     .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
@@ -1484,12 +2075,14 @@ function renderDetail(){
 
   const assigns = lockTareas
     ? p.tareas.map(t=>{
-        const rows = (p.asignaciones[t]||[]).filter(r=>r.nombre||r.email);
+        /* de Entregando en adelante el cuadro ya no muestra a los rechazados
+           (salieron al activar); los inactivos quedan visibles pero marcados */
+        const rows = (p.asignaciones[t]||[]).filter(r=>(r.nombre||r.email) && r.estado!=="rechazado");
         const d = (p.taskDates&&p.taskDates[t])||{};
         const range = d.inicio ? ` <small style="color:var(--gray);font-weight:var(--weight-regular)">(${fmtShort(d.inicio)} – ${fmtShort(d.fin||d.inicio)})</small>` : "";
         if(!rows.length && !range) return "";
         return `<div class="assign-block"><div class="ttl">${esc(t)} — asignados${range}</div>${rows.map(r=>
-          `<div style="font-size:${"var(--fs-caption)"};margin-bottom:4px">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}</div>`).join("")}</div>`;
+          `<div style="font-size:${"var(--fs-caption)"};margin-bottom:4px${r.estado==="inactivo"?";color:var(--gray);text-decoration:line-through":""}">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}${r.estado==="inactivo"?' <span class="chipst inact" style="text-decoration:none">Inactivo</span>':""}</div>`).join("")}</div>`;
       }).join("")
     : p.tareas.map(t=>assignBlockHTML(t, p.asignaciones[t]||[{nombre:"",email:"",discord:"",telefono:""}], "dt")).join("");
 
@@ -1509,7 +2102,7 @@ function renderDetail(){
         <td><span style="display:flex;align-items:center;gap:6px;font-weight:var(--weight-bold)">${esc(e.fase)}<small style="color:var(--gray);font-weight:var(--weight-regular)">tarea</small></span></td>
         <td><input type="date" value="${esc(e.inicio)}" oninput="taskDateSet('${t}','inicio',this.value)" onchange="renderDetail()"></td>
         <td><input type="date" value="${esc(e.fin)}" oninput="taskDateSet('${t}','fin',this.value)" onchange="renderDetail()"></td>
-        <td><input type="text" value="${esc(e.notas||"")}" oninput="taskDateSet('${t}','notas',this.value)" placeholder=""></td>
+        ${notaCeldaHTML({kind:"caltask", tarea:e.key})}
         <td></td>
       </tr>`;
     }
@@ -1518,17 +2111,17 @@ function renderDetail(){
       <td><input type="text" value="${esc(e.fase)}" oninput="calSet(${e.idx},'fase',this.value)" onchange="renderDetail()" placeholder="Fase"></td>
       <td><input type="date" value="${esc(e.inicio)}" oninput="calSet(${e.idx},'inicio',this.value)" onchange="renderDetail()"></td>
       <td><input type="date" value="${esc(e.fin)}" oninput="calSet(${e.idx},'fin',this.value)" onchange="renderDetail()"></td>
-      <td><input type="text" value="${esc(e.notas||"")}" oninput="calSet(${e.idx},'notas',this.value)" placeholder=""></td>
+      ${notaCeldaHTML({kind:"cal", idx:e.idx})}
       <td><button class="icon-btn" onclick="calDel(${e.idx})">✕</button></td>
     </tr>`;
   }).join("");
 
-  const sintesisContent = `
-    <div style="margin-top:var(--space-5)">
-      ${sintesisBlockHTML("dt", p.sintesis)}
-      ${p.storyboard_url?`<p style="margin:10px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Storyboard ↗</a></p>`:""}
+  const sintesisContent = (p.sintesis || p.storyboard_url || p.tratamiento_url || !lockFields) ? `
+    <div>
+      ${(p.sintesis || !lockFields) ? sxBoxHTML("dt", lockFields) : ""}
+      ${p.storyboard_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.storyboard_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Storyboard ↗</a></p>`:""}
       ${p.tratamiento_url?`<p style="margin:8px 0 0;font-size:15.5px"><a href="${esc(p.tratamiento_url)}" target="_blank" style="color:var(--red);font-weight:var(--weight-bold);text-decoration:none">Tratamiento/Referencias ↗</a></p>`:""}
-    </div>`;
+    </div>` : "";
   const checklistBlock = checklistHTML(p, ro);
 
   $("#detailBody").innerHTML = `
@@ -1610,7 +2203,7 @@ function renderDetail(){
     ${cierre||completado ? "" : `
     <div class="fgroup">
       <div class="glabel" style="cursor:pointer" onclick="toggleTareasOpen()">
-        <span>Tareas TEAM23</span>
+        <span>Tareas TEAM 23</span>
         <button class="dd-toggle${tareasOpen?"":" closed"}" tabindex="-1"><span>▾</span></button>
       </div>
       <div style="${tareasOpen?"":"display:none"}">
@@ -1668,10 +2261,23 @@ function renderDetail(){
 /* ---------------- calendario mensual ---------------- */
 function navMonth(delta){
   calView = new Date(calView.getFullYear(), calView.getMonth()+delta, 1);
-  renderDetail();
+  calAuto = false;
+  calCtx==="dt" ? renderDetail() : renderCreationCal(calCtx);
 }
-function selectDay(key){ selDay = key; renderDetail(); }
-function closeDayPanel(){ selDay = null; renderDetail(); }
+function selectDay(key){ selDay = key; calCtx==="dt" ? renderDetail() : renderCreationCal(calCtx); }
+function closeDayPanel(){ selDay = null; calCtx==="dt" ? renderDetail() : renderCreationCal(calCtx); }
+
+/* vista previa del calendario durante el armado (np = alta manual, n2 = debrief IA) */
+function renderCreationCal(ctx){
+  const el = $(ctx==="n2" ? "#n2CalPrev" : "#npCalPrev"); if(!el) return;
+  const sel = ctx==="n2" ? n2Selected : npSelected;
+  const store = taskDatesStore(ctx);
+  const p = { tareas:[...sel], taskDates: store, calendario: [] };
+  const dated = [...sel].map(t=>(store[t]&&store[t].inicio)||"").filter(Boolean).sort();
+  if(!dated.length){ el.innerHTML=""; return; }
+  if(calAuto || !calView){ const d = parseYMD(dated[0]); if(d) calView = new Date(d.getFullYear(), d.getMonth(), 1); }
+  el.innerHTML = `<div class="kicker" style="margin:var(--space-5) 0 var(--space-3)">Calendario del proyecto — vista previa</div>` + monthCalendarHTML(p, faseLookMap(p));
+}
 
 function buildMonthGrid(y, m){
   const first = new Date(y, m, 1);
@@ -1950,19 +2556,20 @@ function renderDashboard(){ $("#dashboardBody").innerHTML = dashboardHTML(); }
 let loadScope = "activo"; // 'activo' | 'pre' — qué proyectos mira "Carga de trabajo"
 function setLoadScope(s){ loadScope = s; renderDashboard(); }
 
-/* una sola persona = una sola entrada, sume equipo interno (EP/Productor/Coordinador) y
-   asignaciones de tareas por igual — antes se separaban en dos listas y una misma persona
-   con ambos roles aparecía duplicada con conteos parciales */
+/* equipo interno primero (EP/Productor/Coordinador), después los asignados a tareas */
 function computeLoad(list){
-  const load = {};
-  const bump = (nombre,email) => { const key=(nombre||email||"").trim(); if(key) load[key]=(load[key]||0)+1; };
+  const teamLoad = {}, taskLoad = {};
+  const bump = (store,nombre,email) => { const key=(nombre||email||"").trim(); if(key) store[key]=(store[key]||0)+1; };
   list.forEach(p=>{
-    Object.values(p.asignaciones||{}).forEach(rows=>(rows||[]).forEach(r=>bump(r.nombre,r.email)));
-    bump(p.ep_nombre, p.ep_email);
-    bump(p.prod_nombre, p.prod_email);
-    bump(p.coord_nombre, p.coord_email);
+    Object.values(p.asignaciones||{}).forEach(rows=>(rows||[]).forEach(r=>bump(taskLoad,r.nombre,r.email)));
+    bump(teamLoad, p.ep_nombre, p.ep_email);
+    bump(teamLoad, p.prod_nombre, p.prod_email);
+    bump(teamLoad, p.coord_nombre, p.coord_email);
   });
-  return Object.entries(load).sort((a,b)=>b[1]-a[1]);
+  return [
+    ...Object.entries(teamLoad).sort((a,b)=>b[1]-a[1]),
+    ...Object.entries(taskLoad).sort((a,b)=>b[1]-a[1])
+  ];
 }
 /* más de 1 proyecto en el scope = sobrecargado → se marca en rojo (mismo rojo de alerta del resto del hub) */
 function loadListHTML(rows, emptyMsg){
@@ -2225,6 +2832,7 @@ function ensureTracker(p){
   p.tracker.notas = p.tracker.notas || {};
   p.tracker.nombres = p.tracker.nombres || {};
   p.tracker.inactivos = p.tracker.inactivos || {};
+  p.tracker.finalizados = p.tracker.finalizados || {};   // { key: {fecha, marcadoEl} }
   return p.tracker;
 }
 
@@ -2251,21 +2859,29 @@ function ultimaJornada(t, key){
 function trackerParticipants(p){
   const t = ensureTracker(p);
   const list = [], seen = new Set();
-  const add = (key, nombre, rol, removido)=>{
+  /* ref = {tarea, i} apunta a la fila de asignaciones. Cuando existe, el estado
+     activo/inactivo se lee y se escribe ahí: es la misma fuente que la ficha, no
+     una copia. El equipo interno (EP/Prod/Coord) y la gente que ya no está
+     asignada no tienen fila, así que para esos manda t.inactivos. */
+  const add = (key, nombre, rol, removido, ref)=>{
     if(!key || seen.has(key)) return;
     seen.add(key);
-    list.push({key, nombre, rol, removido:!!removido, inactivo:!!t.inactivos[key]});
+    const fila = ref ? ((p.asignaciones[ref.tarea]||[])[ref.i]||{}) : null;
+    const inactivo = fila ? fila.estado==="inactivo" : !!t.inactivos[key];
+    list.push({key, nombre, rol, removido:!!removido, inactivo, ref:ref||null, fin:t.finalizados[key]||null});
     t.nombres[key] = nombre;
   };
   if(p.ep_nombre) add("ep", p.ep_nombre, "EP");
   if(p.prod_nombre) add("prod", p.prod_nombre, "Prod");
   if(p.coord_nombre) add("coord", p.coord_nombre, "Coord");
   Object.entries(p.asignaciones||{}).forEach(([tarea, rows])=>{
-    (rows||[]).forEach(r=>{
+    (rows||[]).forEach((r,i)=>{
       if(!r || !r.nombre) return;
-      if(r.estado && r.estado!=="confirmado") return;
+      /* los inactivos SÍ van (grisados): antes se caían del cuadro y se perdían
+         de vista las jornadas que ya tenían cargadas */
+      if(r.estado && r.estado!=="confirmado" && r.estado!=="inactivo") return;
       const key = r.email && r.email.trim() ? "e:"+r.email.trim().toLowerCase() : "n:"+tarea+"|"+r.nombre;
-      add(key, r.nombre, tarea);
+      add(key, r.nombre, tarea, false, {tarea, i});
     });
   });
   // participantes que ya no están asignados pero tienen jornadas cargadas: se conservan, grisados
@@ -2298,6 +2914,12 @@ function openTracker(id){
 
 function toggleJornada(key, dateKey){
   const t = ensureTracker(trkProject);
+  /* con el trabajo finalizado el conteo queda cerrado: hay que reactivarlo antes
+     de volver a tocar jornadas, así nadie suma días sobre algo ya cerrado */
+  if(t.finalizados[key]){
+    toast("El conteo de "+(t.nombres[key]||"esta persona")+" está cerrado. Reactivalo para volver a cargar jornadas.", true);
+    return;
+  }
   t.jornadas[key] = t.jornadas[key] || {};
   if(t.jornadas[key][dateKey]) delete t.jornadas[key][dateKey];
   else t.jornadas[key][dateKey] = true;
@@ -2312,18 +2934,121 @@ function setTrackerNota(dateKey, val){
 }
 
 function toggleInactivo(key){
-  const t = ensureTracker(trkProject);
+  const p = trkProject, t = ensureTracker(p);
+  const pp = trackerParticipants(p).find(x=>x.key===key);
+  const fila = pp && pp.ref ? (p.asignaciones[pp.ref.tarea]||[])[pp.ref.i] : null;
+  if(fila){
+    /* misma fuente que la ficha: acá se cambia el estado de la persona, no una copia */
+    fila.estado = fila.estado==="inactivo" ? "confirmado" : "inactivo";
+    renderTracker();
+    refrescarFicha();
+    toast(fila.estado==="inactivo" ? pp.nombre+" desactivado en el proyecto" : pp.nombre+" vuelve a estar activo");
+    saveTracker(true);
+    return;
+  }
   if(t.inactivos[key]) delete t.inactivos[key];
   else t.inactivos[key] = true;
   renderTracker();
   saveTracker();
 }
+/* si la ficha del mismo proyecto está abierta detrás, que se vea el cambio */
+function refrescarFicha(){
+  if(detailProject && trkProject && detailProject.id === trkProject.id) renderDetail();
+  onProjectsLoaded();
+}
 
-async function saveTracker(){
+async function saveTracker(conEquipo, extra){
   if(DEMO) return;
+  const body = { id:trkProject.id, tracker_json: JSON.stringify(trkProject.tracker) };
+  /* el estado activo/inactivo vive en asignaciones_json, así que cuando cambia
+     hay que mandar las dos cosas en la misma llamada */
+  if(conEquipo) body.asignaciones_json = JSON.stringify(trkProject.asignaciones||{});
+  /* seam para el aviso a administración: wf4 ignora las claves que no conoce, así
+     que esto viaja inerte hasta que exista la rama que lo lea */
+  if(extra) Object.assign(body, extra);
   try{
-    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({id:trkProject.id,tracker_json:JSON.stringify(trkProject.tracker)})});
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify(body)});
   }catch(e){ toast("No pude guardar el tracker: "+e.message, true); }
+}
+
+/* ---------- \"Finalizó\": deja registrado el último día de trabajo ---------- */
+let finKey = null;
+function finOpen(key){
+  const p = trkProject, t = ensureTracker(p);
+  const pp = trackerParticipants(p).find(x=>x.key===key); if(!pp) return;
+  finKey = key;
+  const ult = ultimaJornada(t, key);
+  const jor = Object.values(t.jornadas[key]||{}).filter(Boolean).length;
+  const hoy = ymd(new Date());
+  $("#finWho").textContent = pp.nombre + " · " + pp.rol;
+  $("#finFecha").value = (pp.fin && pp.fin.fecha) || hoy;
+  $("#finHint").innerHTML = `Jornadas cargadas: <b>${jor}</b>` +
+    (ult ? ` · Última jornada marcada: <b>${fmtShort(ult)}</b> <button class="mini-btn" onclick="finUsarUltima('${ult}')">usar esa fecha</button>` : "") +
+    (pp.fin ? `<div style="margin-top:6px">Ya estaba marcado como finalizado el <b>${fmtShort(pp.fin.fecha)}</b>: al confirmar se sobreescribe.</div>` : "");
+  $("#ovFin").classList.add("open");
+}
+function finClose(){ $("#ovFin").classList.remove("open"); finKey = null; }
+function finUsarUltima(f){ $("#finFecha").value = f; }
+async function finSave(btn){
+  if(!finKey) return;
+  const p = trkProject, t = ensureTracker(p);
+  const fecha = ($("#finFecha").value||"").trim();
+  if(!fecha){ toast("Elegí el día en que finalizó", true); return; }
+  const pp = trackerParticipants(p).find(x=>x.key===finKey);
+  const key = finKey;
+  const prev = t.finalizados[key] || null;
+  t.finalizados[key] = { fecha, marcadoEl: new Date().toISOString() };
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
+    await saveTracker(false, { finalizacion: {
+      key, nombre: pp?pp.nombre:"", rol: pp?pp.rol:"", fecha,
+      jornadas: Object.values(t.jornadas[key]||{}).filter(Boolean).length,
+      proyecto: p.nombre||"", proyecto_id: p.id
+    }});
+    finClose(); renderTracker();
+    toast("✔ "+(pp?pp.nombre:"La persona")+" finalizó el "+fmtShort(fecha));
+  }catch(e){
+    if(prev) t.finalizados[key] = prev; else delete t.finalizados[key];
+    toast("No pude registrar la finalización: "+e.message, true);
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
+}
+/* ---------- "Reactivar": vuelve a abrir el conteo de jornadas ---------- */
+let reactKey = null;
+function reactOpen(key){
+  const p = trkProject, t = ensureTracker(p);
+  const pp = trackerParticipants(p).find(x=>x.key===key); if(!pp || !pp.fin) return;
+  reactKey = key;
+  const jor = Object.values(t.jornadas[key]||{}).filter(Boolean).length;
+  $("#reactWho").textContent = pp.nombre + " · " + pp.rol;
+  $("#reactHint").innerHTML =
+    `Hoy figura como finalizada el <b>${fmtShort(pp.fin.fecha)}</b>, con <b>${jor}</b> jornada${jor===1?"":"s"} cargada${jor===1?"":"s"}.` +
+    `<div style="margin-top:6px">Las jornadas ya cargadas no se tocan: solo se vuelve a habilitar la carga.</div>`;
+  $("#ovReact").classList.add("open");
+}
+function reactClose(){ $("#ovReact").classList.remove("open"); reactKey = null; }
+async function reactSave(btn){
+  if(!reactKey) return;
+  const p = trkProject, t = ensureTracker(p);
+  const key = reactKey;
+  const pp = trackerParticipants(p).find(x=>x.key===key);
+  const prev = t.finalizados[key];
+  delete t.finalizados[key];
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
+    await saveTracker(false, { reactivacion: {
+      key, nombre: pp?pp.nombre:"", rol: pp?pp.rol:"",
+      fechaPrevia: prev?prev.fecha:"", jornadas: Object.values(t.jornadas[key]||{}).filter(Boolean).length,
+      proyecto: p.nombre||"", proyecto_id: p.id
+    }});
+    reactClose(); renderTracker();
+    toast("✔ Conteo reactivado para "+(pp?pp.nombre:"la persona"));
+  }catch(e){
+    if(prev) t.finalizados[key] = prev;
+    renderTracker();
+    toast("No pude reactivar el conteo: "+e.message, true);
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
 function trackerHTML(p){
@@ -2343,7 +3068,15 @@ function trackerHTML(p){
 
   const head = `<tr>
     <th class="trk-day">Día</th><th class="trk-date">Fecha</th>
-    ${parts.map(pp=>`<th class="${(pp.removido||pp.inactivo)?"trk-removido":""}">${esc(pp.nombre)}<div class="trk-rol">${esc(pp.rol)}${pp.inactivo?" · inactivo":""}</div><button class="trk-toggle" title="${pp.inactivo?"Reactivar":"Marcar inactivo"}" onclick="toggleInactivo('${pp.key}')">${pp.inactivo?"↺ activar":"○ inactivar"}</button></th>`).join("")}
+    ${parts.map(pp=>{
+      const marca = pp.fin ? " · finalizó "+fmtShort(pp.fin.fecha) : pp.inactivo ? " · inactivo" : "";
+      const btnEstado = pp.removido ? "" :
+        `<button class="trk-toggle" title="${pp.inactivo?"Reactivar en el proyecto":"Marcar inactivo en el proyecto"}" onclick="toggleInactivo('${pp.key}')">${pp.inactivo?"↺ activar":"○ inactivar"}</button>`;
+      const btnFin = pp.fin
+        ? `<button class="trk-toggle react" title="Volver a abrir el conteo de jornadas" onclick="reactOpen('${pp.key}')">↺ Reactivar</button>`
+        : `<button class="trk-toggle" title="Registrar el último día de trabajo y cerrar el conteo" onclick="finOpen('${pp.key}')">Finalizó</button>`;
+      return `<th class="${(pp.removido||pp.inactivo||pp.fin)?"trk-removido":""}">${esc(pp.nombre)}<div class="trk-rol">${esc(pp.rol)}${marca}</div>${btnEstado}${btnFin}</th>`;
+    }).join("")}
     <th>Notas / hitos</th>
   </tr>`;
 
@@ -2352,7 +3085,9 @@ function trackerHTML(p){
     const isWeekend = [0,6].includes(d.getDay());
     const cells = parts.map(pp=>{
       const on = !!(t.jornadas[pp.key] && t.jornadas[pp.key][key]);
-      return `<td class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""}" onclick="toggleJornada('${pp.key}','${key}')">${on?"✕":""}</td>`;
+      const cerrado = !!pp.fin;   // conteo cerrado por finalización
+      const tip = cerrado ? ' title="Conteo cerrado: reactivalo para cargar jornadas"' : "";
+      return `<td class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""} ${cerrado?"trk-cerrado":""}"${tip} onclick="toggleJornada('${pp.key}','${key}')">${on?"✕":""}</td>`;
     }).join("");
     return `<tr class="${isWeekend?"trk-weekend":""}">
       <td class="trk-day">${d.toLocaleDateString("es-AR",{weekday:"short"}).toUpperCase()}</td>
@@ -2364,13 +3099,20 @@ function trackerHTML(p){
 
   const totalJor = parts.reduce((s,pp)=>s+Object.values(t.jornadas[pp.key]||{}).filter(Boolean).length,0);
   const resumen = `<div class="trk-resumen">
-    <table><thead><tr><th>Nombre</th><th>Rol</th><th>Jornadas</th><th>Última jornada</th></tr></thead><tbody>
+    <table><thead><tr><th>Nombre</th><th>Rol</th><th>Jornadas</th><th>Última jornada</th><th>Finalizó</th></tr></thead><tbody>
       ${parts.map(pp=>{
         const jor = Object.values(t.jornadas[pp.key]||{}).filter(Boolean).length;
         const ult = ultimaJornada(t, pp.key);
-        return `<tr${(pp.removido||pp.inactivo)?' style="color:var(--gray)"':""}><td>${esc(pp.nombre)}${pp.removido?' <small style="color:var(--gray)">(ya no asignado)</small>':pp.inactivo?' <small style="color:var(--gray)">(inactivo)</small>':""}</td><td>${esc(pp.rol)}</td><td>${jor}</td><td>${ult?fmtShort(ult):"—"}</td></tr>`;
+        const nota = pp.removido ? ' <small style="color:var(--gray)">(ya no asignado)</small>'
+                   : pp.inactivo ? ' <small style="color:var(--gray)">(inactivo)</small>' : "";
+        /* la fecha de finalización es el dato que va a administración */
+        const fin = pp.fin ? `<b>${fmtShort(pp.fin.fecha)}</b>` : "—";
+        const desfasada = pp.fin && ult && pp.fin.fecha !== ult
+          ? ` <small style="color:var(--red)">≠ última jornada</small>` : "";
+        const conteo = pp.fin ? `${jor} <small style="color:var(--gray)">cerrado</small>` : String(jor);
+        return `<tr${(pp.removido||pp.inactivo)?' style="color:var(--gray)"':""}><td>${esc(pp.nombre)}${nota}</td><td>${esc(pp.rol)}</td><td>${conteo}</td><td>${ult?fmtShort(ult):"—"}</td><td>${fin}${desfasada}</td></tr>`;
       }).join("")}
-      <tr style="font-weight:var(--weight-bold);border-top:2px solid var(--ink)"><td>TOTAL</td><td></td><td>${totalJor}</td><td></td></tr>
+      <tr style="font-weight:var(--weight-bold);border-top:2px solid var(--ink)"><td>TOTAL</td><td></td><td>${totalJor}</td><td></td><td></td></tr>
     </tbody></table>
   </div>`;
 
@@ -2381,6 +3123,185 @@ function renderTracker(){
   $("#trkBody").innerHTML = trackerHTML(trkProject);
 }
 
+/* ================================================================
+   NOTAS DE TAREA / FASE
+   Eran un input de una línea: con una nota larga no se leía nada. Ahora
+   se muestran enteras (con wrap) y se editan en el popup ovNota. Hay tres
+   puntos de entrada al mismo dato:
+     task    → bloque de la tarea en el armado y en la ficha (setTaskDate)
+     caltask → fila de tarea en la tabla del calendario (taskDateSet)
+     cal     → fase independiente de la tabla del calendario (calSet)
+   Ojo: la ficha marca detailDirty con los eventos input/change de sus
+   campos. Al editar desde un popup esos eventos no ocurren, así que las
+   banderas se prenden a mano o los cambios se pierden sin avisar.
+================================================================ */
+let notaTarget = null;
+function notaValue(tg){
+  if(!tg) return "";
+  if(tg.kind==="cal") return (((detailProject||{}).calendario||[])[tg.idx]||{}).notas || "";
+  if(tg.kind==="caltask") return (((detailProject||{}).taskDates||{})[tg.tarea]||{}).notas || "";
+  return ((taskDatesStore(tg.ctx)||{})[tg.tarea]||{}).notas || "";
+}
+function notaEtiqueta(tg){
+  if(!tg) return "";
+  if(tg.kind==="cal"){
+    const f = (((detailProject||{}).calendario||[])[tg.idx]||{}).fase;
+    return (f||"Fase sin nombre")+" · fase del calendario";
+  }
+  const dónde = tg.kind==="caltask" || tg.ctx==="dt" ? "tarea del proyecto" : "tarea · armado";
+  return tg.tarea+" · "+dónde;
+}
+/* caja legible dentro del bloque de la tarea */
+function notaSlotId(ctx, tarea){ return "notabox-"+ctx+"-"+String(tarea).replace(/[^a-zA-Z0-9]/g,""); }
+function notaBoxHTML(ctx, tarea, readOnly){
+  const txt = ((taskDatesStore(ctx)||{})[tarea]||{}).notas || "";
+  const tq = String(tarea).replace(/'/g,"\\'");
+  const editar = readOnly ? "" :
+    `<button class="mini-btn" onclick="notaOpen('task','${ctx}','${tq}')">${txt?"✎ editar":"+ agregar"}</button>`;
+  return `<div class="nota-box ${txt?"tiene":""}">
+    <div class="nota-head"><span class="lbl">Notas</span>${editar}</div>
+    <div class="nota-txt ${txt?"":"vacia"}">${txt?esc(txt):"Sin notas para esta tarea."}</div>
+  </div>`;
+}
+function notaSlotSync(ctx, tarea){
+  const el = $("#"+notaSlotId(ctx,tarea));
+  if(el) el.innerHTML = notaBoxHTML(ctx, tarea, false);
+}
+/* celda de la tabla del calendario: preview recortado, click para abrir */
+function notaCeldaHTML(tg){
+  const txt = notaValue(tg);
+  const args = tg.kind==="cal" ? `'cal',${tg.idx}` : `'caltask','${String(tg.tarea).replace(/'/g,"\\'")}'`;
+  return `<td class="cal-nota" onclick="notaOpen(${args})" title="${txt?esc(txt):"Sin notas"}">
+    <span class="txt ${txt?"":"vacia"}">${txt?esc(txt):"+ agregar"}</span></td>`;
+}
+function notaOpen(kind, a, b){
+  notaTarget = kind==="cal" ? {kind:"cal", idx:Number(a)}
+             : kind==="caltask" ? {kind:"caltask", tarea:a}
+             : {kind:"task", ctx:a, tarea:b};
+  $("#notaWho").textContent = notaEtiqueta(notaTarget);
+  $("#notaTa").value = notaValue(notaTarget);
+  $("#ovNota").classList.add("open");
+  setTimeout(()=>{ const ta=$("#notaTa"); if(ta) ta.focus(); }, 30);
+}
+function notaClose(){ $("#ovNota").classList.remove("open"); notaTarget = null; }
+function notaSave(){
+  if(!notaTarget) return;
+  const tg = notaTarget;
+  const val = ($("#notaTa").value||"").trim();
+  if(tg.kind==="cal"){
+    calSet(tg.idx, "notas", val);          // ya prende calDirty
+    notaClose(); renderDetail();
+  }else if(tg.kind==="caltask"){
+    taskDateSet(tg.tarea, "notas", val);
+    detailDirty = true;                    // el input/change de la ficha no corrió
+    notaClose(); renderDetail();
+  }else{
+    setTaskDate(tg.ctx, tg.tarea, "notas", val);   // refresca el calendario del armado
+    if(tg.ctx==="dt") detailDirty = true;
+    notaClose();
+    if(tg.ctx!=="dt") notaSlotSync(tg.ctx, tg.tarea);
+  }
+  toast(val ? "✔ Notas guardadas" : "Notas vacías");
+}
+
+/* ================================================================
+   SÍNTESIS: caja colapsable + popup de edición
+   Vive en tres lugares (ficha, alta manual, debrief) con el mismo
+   componente. El portal de proveedores tiene su propia copia y no se
+   toca. El texto no se edita nunca en línea: siempre en el popup, que
+   tiene lugar de sobra y muestra cómo va a quedar formateado.
+================================================================ */
+const sxAbierta = { dt:false, np:false, n2:false };   // arranca colapsada; la preferencia dura la sesión, por contexto
+function sxValue(ctx){
+  if(ctx==="dt") return (detailProject && detailProject.sintesis) || "";
+  if(ctx==="np") return npSintesis || "";
+  return (($("#n2Sintesis")||{}).value) || "";
+}
+function sxSetValue(ctx, v){
+  if(ctx==="dt"){ if(detailProject) detailProject.sintesis = v; return; }
+  if(ctx==="np"){ npSintesis = v; return; }
+  if($("#n2Sintesis")) $("#n2Sintesis").value = v;
+}
+/* lo que se muestra al lado del título cuando está colapsada */
+function sxPreviewLine(txt){
+  const l = String(txt||"").split(/\r?\n/).map(s=>s.trim()).find(Boolean) || "";
+  const limpia = l.replace(/^[•·\-\*]\s+/,"");
+  return limpia.length > 90 ? limpia.slice(0,90)+"…" : limpia;
+}
+function sxBoxHTML(ctx, readOnly){
+  const txt = sxValue(ctx);
+  const abierta = sxAbierta[ctx] !== false;
+  const editar = readOnly ? "" :
+    `<button class="addline" onclick="sxOpen('${ctx}')">${txt?"✎ editar síntesis":"+ agregar síntesis"}</button>`;
+  return `<div class="sx-box ${abierta?"":"closed"}" id="sxbox-${ctx}">
+    <button type="button" class="sx-head" onclick="sxToggle('${ctx}')" aria-expanded="${abierta}" aria-controls="sxbody-${ctx}">
+      <span class="cr">▾</span><span class="ttl">Síntesis</span>
+      <span class="prev">${abierta?"":esc(sxPreviewLine(txt))}</span>
+    </button>
+    <div class="sx-body" id="sxbody-${ctx}">
+      ${txt ? sintesisHTML(txt) : `<div class="sx-empty">Todavía no hay síntesis.</div>`}
+      ${editar}
+    </div>
+  </div>`;
+}
+/* np y n2 viven en contenedores fijos del formulario; dt se arma dentro de renderDetail */
+function sxRender(ctx){
+  const el = $("#sx-"+ctx);
+  if(el) el.innerHTML = sxBoxHTML(ctx, false);
+}
+function sxToggle(ctx){
+  const abierta = sxAbierta[ctx] !== false;
+  sxAbierta[ctx] = !abierta;
+  const box = $("#sxbox-"+ctx);
+  if(!box){ ctx==="dt" ? renderDetail() : sxRender(ctx); return; }
+  /* toco el DOM en vez de re-renderizar: no se pierde el scroll ni el foco */
+  box.classList.toggle("closed", abierta);
+  const head = box.querySelector(".sx-head");
+  if(head) head.setAttribute("aria-expanded", String(!abierta));
+  const prev = box.querySelector(".prev");
+  if(prev) prev.textContent = abierta ? sxPreviewLine(sxValue(ctx)) : "";
+}
+let sxCtx = null;   // contexto que está editando el popup
+function sxOpen(ctx){
+  sxCtx = ctx;
+  $("#sxWho").textContent = ctx==="dt"
+    ? ((detailProject&&detailProject.nombre)||"Proyecto")
+    : (ctx==="np" ? "Nuevo proyecto · alta manual" : "Nuevo proyecto · desde debrief");
+  $("#sxTa").value = sxValue(ctx);
+  sxLive();
+  $("#ovSintesis").classList.add("open");   // sin tocar el scroll: queda un modal abierto detrás
+  setTimeout(()=>{ const ta=$("#sxTa"); if(ta) ta.focus(); }, 30);
+}
+function sxClose(){ $("#ovSintesis").classList.remove("open"); sxCtx = null; }
+function sxLive(){
+  const v = ($("#sxTa").value||"").trim();
+  $("#sxPrev").innerHTML = v ? sintesisHTML(v) : `<div class="sx-empty">Vacía por ahora.</div>`;
+}
+async function sxSave(btn){
+  if(!sxCtx) return;
+  const ctx = sxCtx;
+  const val = ($("#sxTa").value||"").trim();
+  /* en el armado alcanza con dejarlo en el formulario: viaja al crear el proyecto */
+  if(ctx!=="dt"){
+    sxSetValue(ctx, val);
+    sxClose(); sxRender(ctx);
+    toast(val ? "✔ Síntesis actualizada" : "Síntesis vacía");
+    return;
+  }
+  const p = detailProject; if(!p){ sxClose(); return; }
+  const prev = p.sintesis;
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  p.sintesis = val;
+  try{
+    if(!DEMO) await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, sintesis: val })});
+    sxClose(); renderDetail();
+    toast("✔ Síntesis actualizada"+(DEMO?" (demo)":""));
+  }catch(e){
+    p.sintesis = prev;
+    toast("No pude guardar la síntesis: "+e.message, true);
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
+}
 async function saveProjectInfo(btn){
   const _lbl = btn ? btn.textContent : "";
   if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
@@ -2400,13 +3321,74 @@ async function saveProjectInfo(btn){
   }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
+/* ---------------- confirm + loader con estética del hub ---------------- */
+function t23Confirm(msg, opts={}){
+  return new Promise(res=>{
+    const ov = document.createElement("div");
+    ov.className = "t23-ov";
+    ov.innerHTML = `<div class="t23-card">
+      <div class="kicker" style="margin-bottom:10px">${esc(opts.titulo||"CONFIRMAR")}</div>
+      <p style="font-size:15px;margin:0 0 18px;line-height:1.5">${esc(msg)}</p>
+      <div class="actions" style="justify-content:flex-end;margin:0;flex-wrap:wrap">
+        <button class="btn small" data-a="no">${esc(opts.cancelar||"Cancelar")}</button>
+        ${opts.extra?`<button class="btn small" data-a="extra">${esc(opts.extra)}</button>`:""}
+        <button class="btn small ${opts.peligro?"danger":"primary"}" data-a="si">${esc(opts.ok||"Aceptar")}</button>
+      </div></div>`;
+    const done = v=>{ ov.remove(); res(v); };
+    ov.addEventListener("click", e=>{
+      const a = e.target.closest("[data-a]");
+      if(a) done(a.dataset.a==="si" ? true : a.dataset.a==="extra" ? "extra" : false);
+      else if(e.target===ov) done(false);
+    });
+    document.body.appendChild(ov);
+  });
+}
+
+const FRASES_CARGA = [
+  "Sincronizando el caos",
+  "Un segundo, que esto quede prolijo",
+  "Cargando… ponete cómodo, pero no tanto",
+  "Acomodando los pixeles uno por uno",
+  "Negociando con la nube",
+  "No apagues el equipo, actualización 3 de 47",
+  "Tiempo estimado: 4 minutos… 2 horas… 30 segundos"
+];
+const FRASES_ACCION = { crear: "Convenciendo a Drive y a Frame de trabajar juntos", borrar: "Haciendo desaparecer el borrador sin dejar rastro" };
+let t23LoadEl = null, t23LoadTimer = null;
+function t23LoadShow(accion){
+  t23LoadHide();
+  const pool = [...FRASES_CARGA].sort(()=>Math.random()-.5);
+  if(accion && FRASES_ACCION[accion]) pool.unshift(FRASES_ACCION[accion]);
+  let i = 0;
+  t23LoadEl = document.createElement("div");
+  t23LoadEl.className = "t23-ov";
+  t23LoadEl.innerHTML = `<div class="t23-card t23-load">
+    <div class="t23-eyes"><div class="t23-eye"></div><div class="t23-eye"></div></div>
+    <div class="t23-bar"></div>
+    <div class="t23-frase">${esc(pool[0])}</div>
+  </div>`;
+  document.body.appendChild(t23LoadEl);
+  const fr = t23LoadEl.querySelector(".t23-frase");
+  t23LoadTimer = setInterval(()=>{
+    i = (i+1) % pool.length;
+    fr.style.opacity = 0;
+    setTimeout(()=>{ if(t23LoadEl){ fr.textContent = pool[i]; fr.style.opacity = 1; } }, 250);
+  }, 3000);
+}
+function t23LoadHide(){
+  if(t23LoadTimer){ clearInterval(t23LoadTimer); t23LoadTimer = null; }
+  if(t23LoadEl){ t23LoadEl.remove(); t23LoadEl = null; }
+}
+
 async function deleteProject(){
   const p = detailProject;
-  if(!confirm(`¿Eliminar "${p.nombre}"? Esta acción no se puede deshacer.`)) return;
+  if(!await t23Confirm(`Vas a eliminar "${p.nombre}" con sus canales de Discord y su registro. Las carpetas de Drive y Frame quedan intactas.`, {titulo:"ELIMINAR PROYECTO", ok:"Eliminar", peligro:true})) return;
   if(!DEMO){
+    t23LoadShow();
     try{
       await api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id:p.id})});
     }catch(e){ toast("Error al eliminar: "+e.message, true); return; }
+    finally{ t23LoadHide(); }
   }
   projects = projects.filter(x=>x.id!==p.id);
   closeModal("ovDetail");
@@ -2517,19 +3499,19 @@ function printCalendar(){
 
   $("#printArea").innerHTML = `
     <h1>${esc(p.nombre)}</h1>
-    <div class="pmeta">CALENDARIO · ${esc(p.cliente)} · TEAM23</div>
+    <div class="pmeta">CALENDARIO · ${esc(p.cliente)} · TEAM 23</div>
     <div class="pmonth">${mtitle}</div>
     <table class="pgrid"><thead><tr>${WDAYS.map(w=>`<th>${w}</th>`).join("")}</tr></thead><tbody>${rowsHTML}</tbody></table>
     <h3>Fases</h3>
     <table class="plist"><thead><tr><th>Fase</th><th>Inicio</th><th>Fin</th><th>Notas</th></tr></thead><tbody>${faseList}</tbody></table>
     ${hitoList?`<h3>Hitos</h3><table class="plist"><thead><tr><th>Fecha</th><th>Hito</th></tr></thead><tbody>${hitoList}</tbody></table>`:""}
-    <div class="pfoot">GENERADO ${new Date().toLocaleDateString("es-AR")} · TEAM23 PRODUCTION HUB</div>`;
+    <div class="pfoot">GENERADO ${new Date().toLocaleDateString("es-AR")} · TEAM 23 PRODUCTION HUB</div>`;
   window.print();
 }
 
 /* ---------------- helpers UI ---------------- */
 function openModal(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; }
-function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; if(id==="ovDirectorio") dirChipClose(true); acClose(); }
+function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; acClose(); }
 
 /* kick off wizard */
 const KICKOFF_QUESTIONS = [
@@ -2633,14 +3615,15 @@ function kickOffComplete(){
   }
   // Inicializar el estado del nuevo proyecto
   npSelected = new Set(); npAssignData = {}; npTaskDates = {};
+  npAuto = autoDefaults(); renderAuto("np");
   npSintesis = kickOffResumen;
+  sxRender("np");
   npStoryboardUrl = kickOffLinks.storyboard || "";
   npTratamientoUrl = kickOffLinks.tratamiento || "";
-  sxOpen.np = false;
   ["npNombre","npCliente","npAgencia","npProductora","npDirector","npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"]
     .forEach(id=>$("#"+id).value="");
+  calCtx = "np"; calAuto = true;
   renderNPTasks();
-  sxRenderCtx("np");
   openModal("ovNew");
 }
 
@@ -2662,16 +3645,119 @@ function chooseOption(n){
 /* ---------------- Opción 2: crear desde debrief (IA) ---------------- */
 let n2Selected = new Set(), n2AssignData = {}, n2TaskDates = {};
 
+/* ---------------- borradores compartidos (viven en el sheet, los ve todo el equipo) ---------------- */
+let currentDraftId = null;
+let n2DraftBase = null;   // snapshot del borrador tal como se abrió, para saber si cambió algo
+function draftsAll(){ return (projects||[]).filter(p=>p.status==="borrador"); }
+function n2Snapshot(){
+  const ids = ["n2Nombre","n2Cliente","n2Agencia","n2Productora","n2Director","n2Sintesis","n2Storyboard",
+               "n2EpNombre","n2EpEmail","n2ProdNombre","n2ProdEmail","n2CoordNombre","n2CoordEmail"];
+  return {
+    debrief: ($("#n2Debrief")||{}).value||"",
+    campos: Object.fromEntries(ids.map(id=>[id, ($("#"+id)||{}).value||""])),
+    tareas: [...n2Selected], assign: n2AssignData, fechas: n2TaskDates,
+    auto: { ...n2Auto },
+    formVisible: $("#n2Form").style.display!=="none"
+  };
+}
+async function saveDraft(){
+  const s = n2Snapshot();
+  const actualizando = !!currentDraftId;   /* borrador que ya existe: se guardan cambios, no se crea */
+  if(!s.campos.n2Nombre.trim() && !s.debrief.trim() && !s.tareas.length){
+    toast("No hay nada para guardar como borrador", true); return false;
+  }
+  const nombre = s.campos.n2Nombre.trim() || "Borrador sin nombre";
+  const cliente = s.campos.n2Cliente.trim();
+  if(DEMO){
+    const p = { id:"draft_demo_"+Date.now(), nombre, cliente, status:"borrador", year:String(new Date().getFullYear()),
+      draft_json: JSON.stringify(s), tareas:[], asignaciones:{}, links:{}, calendario:[], taskDates:{} };
+    if(currentDraftId) projects = projects.filter(x=>x.id!==currentDraftId);
+    projects.push(p); currentDraftId = p.id; n2DraftBase = JSON.stringify(s); renderAll();
+    toast((actualizando?"✔ Cambios guardados":"✔ Borrador guardado")+" (demo)"); return true;
+  }
+  t23LoadShow();
+  try{
+    const p = await api("/webhook/team23/create",{method:"POST",
+      body: JSON.stringify({ modo:"borrador", nombre, cliente, draft: s })});
+    if(!p || !p.id) throw new Error("respuesta vacía");
+    const viejo = currentDraftId;
+    projects.push(p); currentDraftId = p.id;
+    n2DraftBase = JSON.stringify(s);   /* guardado = punto de partida nuevo: cerrar ya no pregunta */
+    if(viejo){
+      projects = projects.filter(x=>x.id!==viejo);
+      api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id:viejo})}).catch(()=>{});
+    }
+    renderAll();
+    toast(actualizando ? "✔ Cambios guardados en el borrador" : "✔ Borrador guardado, lo ve todo el equipo");
+    return true;
+  }catch(e){ toast("No pude guardar el borrador: "+e.message, true); return false; }
+  finally{ t23LoadHide(); }
+}
+async function saveDraftBtn(){ if(await saveDraft()) closeModal("ovNew2"); }
+function openDraft(id){
+  const p = (projects||[]).find(x=>x.id===id); if(!p) return;
+  let d = {}; try{ d = JSON.parse(p.draft_json||"{}"); }catch(e){}
+  openDebrief();
+  currentDraftId = p.id;
+  $("#n2Debrief").value = d.debrief||"";
+  Object.entries(d.campos||{}).forEach(([k,v])=>{ const el=$("#"+k); if(el) el.value=v; });
+  n2Selected = new Set(d.tareas||[]);
+  n2AssignData = d.assign||{};
+  n2TaskDates = d.fechas||{};
+  n2Auto = Object.assign(autoDefaults(), d.auto||{});
+  renderAuto("n2");
+  sxRender("n2");
+  renderN2Tasks();
+  if(d.formVisible || (d.campos||{}).n2Nombre) $("#n2Form").style.display="block";
+  if($("#btnDraft")) $("#btnDraft").textContent = "Guardar cambios";
+  /* recién acá, con todo cargado, queda la foto contra la que se compara al cerrar */
+  n2DraftBase = JSON.stringify(n2Snapshot());
+}
+/* borrados en curso: la ✕ de la tarjeta es chica y se clickea dos veces fácil */
+const borrandoDraft = new Set();
+async function deleteDraftUI(id){
+  if(borrandoDraft.has(id)) return;
+  if(await t23Confirm("Se elimina el borrador para todo el equipo. No tiene automatizaciones asociadas.", {titulo:"ELIMINAR BORRADOR", ok:"Eliminar", peligro:true}) !== true) return;
+  if(borrandoDraft.has(id)) return;   // por si entró otro click mientras estaba el confirm
+  borrandoDraft.add(id);
+  /* el borrado tarda: sin el loader la interfaz queda viva y parece que no pasó nada */
+  t23LoadShow("borrar");
+  try{
+    if(!DEMO) await api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id})});
+    projects = projects.filter(x=>x.id!==id);
+    if(currentDraftId===id){ currentDraftId = null; n2DraftBase = null; }
+    renderAll();
+    toast("✔ Borrador eliminado");
+  }catch(e){
+    toast("No pude eliminar el borrador: "+e.message, true);
+  }finally{
+    borrandoDraft.delete(id);
+    t23LoadHide();
+  }
+}
+function draftCardHTML(p){
+  return `<div class="card draft-card" onclick="openDraft('${p.id}')">
+    <button class="draft-x" onclick="event.stopPropagation();deleteDraftUI('${p.id}')" aria-label="Eliminar borrador">✕</button>
+    <h3>${esc(p.nombre||"Borrador sin nombre")}</h3>
+    <div class="meta">${p.cliente?esc(p.cliente)+" · ":""}borrador compartido</div>
+    <div class="pills"><span class="pill" style="background:#fff;border:1.5px dashed var(--red);color:var(--red)">BORRADOR · sin automatizaciones</span></div>
+  </div>`;
+}
+
 function openDebrief(){
+  currentDraftId = null;
+  n2DraftBase = null;
+  if($("#btnDraft")) $("#btnDraft").textContent = "Guardar borrador";
   n2Selected = new Set(); n2AssignData = {}; n2TaskDates = {};
-  n2SintesisVal = ""; sxOpen.n2 = false;
-  ["n2Debrief","n2Nombre","n2Productora","n2Director","n2Cliente","n2Agencia","n2Storyboard",
+  n2Auto = autoDefaults(); renderAuto("n2");
+  ["n2Debrief","n2Nombre","n2Productora","n2Director","n2Cliente","n2Agencia","n2Sintesis","n2Storyboard",
    "n2EpNombre","n2EpEmail","n2ProdNombre","n2ProdEmail","n2CoordNombre","n2CoordEmail"]
     .forEach(id=>{ const el=$("#"+id); if(el) el.value=""; });
+  sxRender("n2");
   $("#n2Form").style.display="none";
   $("#n2DebriefStep").style.display="block";
+  calCtx = "n2"; calAuto = true;
   renderN2Tasks();
-  sxRenderCtx("n2");
   openModal("ovNew2");
 }
 
@@ -2679,6 +3765,7 @@ async function parseDebrief2(){
   const text = $("#n2Debrief").value.trim();
   if(!text){ toast("Pegá el debrief primero", true); return; }
   const btn = $("#btnParse2"); btn.disabled=true; btn.textContent="Analizando…";
+  t23LoadShow();
   try{
     let r;
     if(DEMO){
@@ -2688,13 +3775,17 @@ async function parseDebrief2(){
         timeline:[{fase:"Online",inicio:"2026-08-01",fin:"2026-08-10",notas:""},{fase:"VFX",inicio:"2026-08-05",fin:"2026-08-15",notas:""}],
         storyboard_url:"" };
     } else {
-      r = await api("/webhook/team23/parse", {method:"POST", body: JSON.stringify({debrief_text:text})});
+      const pedir = () => api("/webhook/team23/parse", {method:"POST", body: JSON.stringify({debrief_text:text})});
+      const vacio = o => !o || (!o.nombre && !o.cliente && !o.sintesis && !(o.tareas||[]).length);
+      r = await pedir();
+      if(vacio(r)){ await new Promise(res=>setTimeout(res,1500)); r = await pedir(); }  /* reintento silencioso ante un hipo */
+      if(vacio(r)) throw new Error("la respuesta llegó vacía dos veces. Esperá unos segundos y reintentá.");
     }
     $("#n2Nombre").value = r.nombre||"";       $("#n2Cliente").value = r.cliente||"";
     $("#n2Agencia").value = r.agencia||"";     $("#n2Productora").value = r.productora||"";
     $("#n2Director").value = r.director||"";
-    n2SintesisVal = r.sintesis||"";   $("#n2Storyboard").value = r.storyboard_url||"";
-    sxOpen.n2 = !!n2SintesisVal; sxRenderCtx("n2");
+    $("#n2Sintesis").value = r.sintesis||"";   $("#n2Storyboard").value = r.storyboard_url||"";
+    sxRender("n2");
     n2Selected = new Set((r.tareas||[]).filter(t=>TAREAS.includes(t)));
     // el timeline que sugiere la IA solo se usa para precargar fecha de la tarea que coincide por nombre
     n2TaskDates = {};
@@ -2703,7 +3794,32 @@ async function parseDebrief2(){
     $("#n2Form").style.display="block";
     toast("✔ Debrief analizado, revisá y ajustá antes de crear");
   }catch(e){ toast("No pude analizar el debrief: "+e.message, true); }
-  finally{ btn.disabled=false; btn.textContent="Analizar debrief"; }
+  finally{ t23LoadHide(); btn.disabled=false; btn.textContent="Analizar debrief"; }
+}
+/* Un armado nuevo está "sucio" si hay algo cargado. Un borrador que ya existe
+   está sucio solo si cambió respecto de cómo se abrió: si no, cerrar no pregunta
+   nada. */
+function n2Dirty(){
+  if(currentDraftId && n2DraftBase !== null){
+    try{ return JSON.stringify(n2Snapshot()) !== n2DraftBase; }catch(e){ return true; }
+  }
+  return !!(($("#n2Debrief")&&$("#n2Debrief").value.trim()) || ($("#n2Nombre")&&$("#n2Nombre").value.trim()) || n2Selected.size);
+}
+async function closeNew2(){
+  if(!n2Dirty()){ closeModal("ovNew2"); return; }
+  /* borrador existente: la pregunta es si se guardan los cambios. Cerrar sin
+     guardar deja el borrador como estaba, nunca lo elimina. */
+  if(currentDraftId){
+    const r = await t23Confirm("Tenés cambios sin guardar en este borrador. Si no los guardás, queda como estaba: el borrador no se elimina.",
+      {titulo:"CAMBIOS SIN GUARDAR", cancelar:"Seguir editando", extra:"No guardar", ok:"Guardar cambios"});
+    if(r === true){ if(await saveDraft()) closeModal("ovNew2"); return; }
+    if(r === "extra") closeModal("ovNew2");
+    return;
+  }
+  /* armado nuevo: todavía no existe nada, así que se ofrece dejarlo como borrador */
+  const r = await t23Confirm("Vas a cerrar el armado sin crear el proyecto.", {titulo:"CERRAR SIN CREAR", ok:"Cerrar sin guardar", peligro:true, extra:"Guardar borrador"});
+  if(r === "extra"){ if(await saveDraft()) closeModal("ovNew2"); return; }
+  if(r === true) closeModal("ovNew2");
 }
 function skipDebrief2(){ $("#n2Form").style.display="block"; }
 
@@ -2722,6 +3838,7 @@ function renderN2Assigns(){
   });
   // misma tarjeta de equipo + fechas que se usa en el alta manual y en la ficha, para no cargar la fecha dos veces
   $("#n2Assigns").innerHTML = [...n2Selected].map(t=>assignBlockHTML(t, n2AssignData[t], "n2")).join("");
+  renderCreationCal("n2");
 }
 
 async function createProject2(){
@@ -2731,16 +3848,36 @@ async function createProject2(){
   if(!nombre || !cliente){ toast("Falta el nombre o el cliente", true); return; }
   if(!epN || !epE){ toast("Cargá el Productor Ejecutivo y su mail", true); return; }
 
+  const ahora = new Date().toISOString();
   const asigs = {};
   Object.entries(n2AssignData).forEach(([t,rows])=>{
     const clean = rows.filter(r=>r.nombre||r.email);
-    if(clean.length) asigs[t]=clean.map(r=>({ nombre:r.nombre, email:r.email, estado:"candidato" }));
+    /* a quien le sale la propuesta al crear le queda la fecha, así después la
+       ficha no dice "sin propuesta enviada" de alguien que sí la recibió */
+    if(clean.length) asigs[t]=clean.map(r=>Object.assign(
+      { nombre:r.nombre, email:r.email, discord:r.discord||"", telefono:r.telefono||"", estado:"candidato" },
+      (r.email && r.mailOn!==false) ? { mailSentAt: ahora } : {}));
   });
   // misma lógica que el alta manual: fecha por tarea, sin timeline aparte
   const tDates = {};
   [...n2Selected].forEach(t=>{
     const d = n2TaskDates[t];
     if(d && (d.inicio||d.fin||d.notas)) tDates[t]=d;
+  });
+  /* un mail por candidato con dirección, ya redactado: lo que se ve en el
+     editor es lo que sale. Los apagados viajan con enviar:false para que
+     queden registrados en la ejecución del workflow. */
+  const mails = [];
+  [...n2Selected].forEach(t=>{
+    (n2AssignData[t]||[]).forEach(r=>{
+      if(!r || !(r.email||"").trim()) return;
+      mails.push({
+        rol: t, to: r.email.trim(), nombre: r.nombre||"",
+        enviar: r.mailOn !== false,
+        subject: mailFinalSubject(r, t, "n2"),
+        html: mailFinalHTML(r, t, "n2")
+      });
+    });
   });
 
   const body = {
@@ -2752,19 +3889,22 @@ async function createProject2(){
     prod_nombre: $("#n2ProdNombre").value.trim(), prod_email: $("#n2ProdEmail").value.trim(),
     coord_nombre: $("#n2CoordNombre").value.trim(), coord_email: $("#n2CoordEmail").value.trim(),
     tareas: [...n2Selected], asignaciones: asigs, taskDates: tDates,
-    sintesis: n2SintesisVal.trim(),
+    sintesis: $("#n2Sintesis").value.trim(),
     storyboard_url: $("#n2Storyboard").value.trim(),
-    debrief_raw: $("#n2Debrief").value.trim()
+    debrief_raw: $("#n2Debrief").value.trim(),
+    mails,
+    auto_drive: n2Auto.drive, auto_frame: n2Auto.frame, auto_discord: n2Auto.discord
   };
 
   const btn = $("#btnCreate2");
-  btn.disabled = true; btn.textContent = "Creando Drive + Frame.io…";
+  btn.disabled = true; btn.textContent = autoBusyLabel(n2Auto);
+  t23LoadShow("crear");
   try{
     let proj;
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#",frameio:"#"},
+        links:autoDemoLinks(n2Auto),
         calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
@@ -2780,11 +3920,21 @@ async function createProject2(){
     closeModal("ovNew2");
     if(currentView!=="proyectos") switchView("proyectos");
     openDetail(proj.id);
-    const nCand = Object.values(asigs).flat().filter(r=>r.email).length;
-    toast(nCand ? "✔ Proyecto creado, propuestas enviadas a "+nCand+" candidato"+(nCand>1?"s":"") : "✔ Proyecto creado, carpetas de Drive y Frame.io listas");
+    const nCand = mails.filter(m=>m.enviar).length;
+    const nOn2 = autoNames(n2Auto);
+    toast(nCand ? "✔ Proyecto creado, propuestas enviadas a "+nCand+" candidato"+(nCand>1?"s":"")
+        : nOn2.length ? "✔ Proyecto creado, "+nOn2.join(" + ")+" listo"
+        : "✔ Proyecto creado, sin automatizaciones");
+    if(currentDraftId){
+      const viejoDraft = currentDraftId; currentDraftId = null; n2DraftBase = null;
+      projects = projects.filter(x=>x.id!==viejoDraft);
+      api("/webhook/team23/delete",{method:"POST",body:JSON.stringify({id:viejoDraft})}).catch(()=>{});
+    }
+    rosterSyncFromAsigs(asigs);
   }catch(e){
     toast("Error al crear: "+e.message, true);
   }finally{
+    t23LoadHide();
     btn.disabled = false; btn.textContent = "Crear proyecto";
   }
 }
@@ -2820,12 +3970,31 @@ if(_ovDet){
   _ovDet.addEventListener("input", ()=>{ detailDirty = true; });
   _ovDet.addEventListener("change", ()=>{ detailDirty = true; });
 }
+/* cierre de overlays: cada uno con su salida (la ficha pregunta, el armado ofrece
+   guardar borrador, el editor de mails no toca el scroll porque queda uno abierto atrás) */
+function closeOverlayById(id){
+  if(id==="ovDetail"){ requestCloseDetail(); return; }
+  if(id==="ovNew2"){ closeNew2(); return; }
+  if(id==="ovMail"){ mailClose(); return; }
+  if(id==="ovSintesis"){ sxClose(); return; }
+  if(id==="ovFin"){ finClose(); return; }
+  if(id==="ovReact"){ reactClose(); return; }
+  if(id==="ovNota"){ notaClose(); return; }
+  closeModal(id);
+}
 document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{
   if(e.target!==ov) return;
-  if(ov.id==="ovDetail"){ requestCloseDetail(); return; }
-  closeModal(ov.id);
+  closeOverlayById(ov.id);
 }));
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id)); });
+/* Escape cierra SOLO el overlay de arriba: con el editor de mails abierto sobre
+   el armado, cerrarlo no se puede llevar puesto el formulario entero */
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape") return;
+  const abiertos = [...document.querySelectorAll(".overlay.open")];
+  if(!abiertos.length) return;
+  const z = el => parseInt(getComputedStyle(el).zIndex,10) || 0;
+  closeOverlayById(abiertos.reduce((a,b)=> z(b) >= z(a) ? b : a).id);
+});
 
 let toastTimer;
 function toast(msg, err=false){
@@ -2856,15 +4025,13 @@ applyViewUI(currentView);
 let sb = null, authUser = null;
 const AUTH_ON = !!CONFIG.SUPABASE_URL;
 function startApp(){ loadProjects(); }
+/* sin login (modo demo local) mostramos igual las herramientas de interno,
+   para poder recorrer el hub completo; con AUTH_ON las gatea authEnter() */
+function showInternalTools(){
+  ["btnLogout","btnUsers","btnDirectorio"].forEach(id=>{ const el=$("#"+id); if(el) el.style.display=""; });
+}
 async function initAuth(){
-  if(!AUTH_ON){
-    /* sin login (demo): mostramos igual lo que en producción solo aparece para internos,
-       ya que acá no hay sesión real contra la que gatear nada */
-    $("#btnUsers").style.display = "";
-    $("#btnDirectorio").style.display = "";
-    startApp();
-    return;
-  }
+  if(!AUTH_ON){ showInternalTools(); startApp(); return; }
   const gate = $("#authGate"); gate.style.display = "flex";
   try{
     const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
@@ -2881,9 +4048,7 @@ async function authEnter(session){
     if(error) throw error;
     if(data.role !== "interno"){ location.replace("/proveedores"); return; }
     $("#authGate").style.display = "none";
-    $("#btnLogout").style.display = "";
-    $("#btnUsers").style.display = "";
-    $("#btnDirectorio").style.display = "";
+    showInternalTools();
     rosterEnsure().catch(()=>{});   /* precarga el directorio para el autocompletado de asignaciones */
     startApp();
   }catch(e){
@@ -2905,10 +4070,7 @@ async function dirToken(){
   if(!session) throw new Error("sin sesión");
   return session.access_token;
 }
-function openDirectorio(){
-  openModal("ovDirectorio");
-  if(!dirData) dirLoad(); else dirRender();
-}
+function openDirectorio(){ switchView("directorio"); }
 async function dirLoad(force){
   $("#dirBody").innerHTML = '<p style="font-size:13px;color:var(--gray);padding:12px">Cargando el directorio…</p>';
   try{
@@ -3082,6 +4244,7 @@ function asigAutofill(input, ctx, t, i){
   setIf('input[type=email]', 'email', cols.mail);
   setIf('input[placeholder="Discord"]', 'discord', cols.discord);
   setIf('input[type=tel]', 'telefono', cols.tel);
+  mailSlotSync(ctx, t, i);   /* si el roster completó el mail, aparecen los controles de propuesta */
 }
 async function rosterSyncFromAsigs(asigs){
   try{

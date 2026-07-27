@@ -1,0 +1,143 @@
+{
+  "name": "TEAM23 · 0 · Setup portada (correr una vez)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "s0817000-0000-0000-0000-000000000001",
+      "name": "Al ejecutar manualmente",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slides.googleapis.com/v1/presentations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSlidesOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'TEAM23 — Portada de proyecto (TEMPLATE)' }) }}",
+        "options": {}
+      },
+      "id": "s0817000-0000-0000-0000-000000000002",
+      "name": "Slides: crear presentación",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const reqs = [\n {\n  \"createSlide\": {\n   \"objectId\": \"portadaSlide\",\n   \"slideLayoutReference\": {\n    \"predefinedLayout\": \"BLANK\"\n   }\n  }\n },\n {\n  \"deleteObject\": {\n   \"objectId\": \"={{ORIGINAL}}\"\n  }\n },\n {\n  \"updatePageProperties\": {\n   \"objectId\": \"portadaSlide\",\n   \"pageProperties\": {\n    \"pageBackgroundFill\": {\n     \"solidFill\": {\n      \"color\": {\n       \"rgbColor\": {\n        \"red\": 0.0392156862745098,\n        \"green\": 0.0392156862745098,\n        \"blue\": 0.0392156862745098\n       }\n      }\n     }\n    }\n   },\n   \"fields\": \"pageBackgroundFill.solidFill\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"ojoIzq\",\n   \"shapeType\": \"ELLIPSE\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 582930,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 582930,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 3893058,\n     \"translateY\": 514350,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"ojoIzq\",\n   \"shapeProperties\": {\n    \"shapeBackgroundFill\": {\n     \"solidFill\": {\n      \"color\": {\n       \"rgbColor\": {\n        \"red\": 1.0,\n        \"green\": 1.0,\n        \"blue\": 1.0\n       }\n      }\n     }\n    },\n    \"outline\": {\n     \"outlineFill\": {\n      \"solidFill\": {\n       \"color\": {\n        \"rgbColor\": {\n         \"red\": 0.0392156862745098,\n         \"green\": 0.0392156862745098,\n         \"blue\": 0.0392156862745098\n        }\n       }\n      }\n     },\n     \"weight\": {\n      \"magnitude\": 12700,\n      \"unit\": \"EMU\"\n     }\n    }\n   },\n   \"fields\": \"shapeBackgroundFill.solidFill,outline.outlineFill.solidFill,outline.weight\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"ojoDer\",\n   \"shapeType\": \"ELLIPSE\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 582930,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 582930,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 4668012,\n     \"translateY\": 514350,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"ojoDer\",\n   \"shapeProperties\": {\n    \"shapeBackgroundFill\": {\n     \"solidFill\": {\n      \"color\": {\n       \"rgbColor\": {\n        \"red\": 1.0,\n        \"green\": 1.0,\n        \"blue\": 1.0\n       }\n      }\n     }\n    },\n    \"outline\": {\n     \"outlineFill\": {\n      \"solidFill\": {\n       \"color\": {\n        \"rgbColor\": {\n         \"red\": 0.0392156862745098,\n         \"green\": 0.0392156862745098,\n         \"blue\": 0.0392156862745098\n        }\n       }\n      }\n     },\n     \"weight\": {\n      \"magnitude\": 12700,\n      \"unit\": \"EMU\"\n     }\n    }\n   },\n   \"fields\": \"shapeBackgroundFill.solidFill,outline.outlineFill.solidFill,outline.weight\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"pupIzq\",\n   \"shapeType\": \"ELLIPSE\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 233172,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 233172,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 4126230,\n     \"translateY\": 761238,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"pupIzq\",\n   \"shapeProperties\": {\n    \"shapeBackgroundFill\": {\n     \"solidFill\": {\n      \"color\": {\n       \"rgbColor\": {\n        \"red\": 0.0392156862745098,\n        \"green\": 0.0392156862745098,\n        \"blue\": 0.0392156862745098\n       }\n      }\n     }\n    },\n    \"outline\": {\n     \"outlineFill\": {\n      \"solidFill\": {\n       \"color\": {\n        \"rgbColor\": {\n         \"red\": 0.0392156862745098,\n         \"green\": 0.0392156862745098,\n         \"blue\": 0.0392156862745098\n        }\n       }\n      }\n     },\n     \"weight\": {\n      \"magnitude\": 6350,\n      \"unit\": \"EMU\"\n     }\n    }\n   },\n   \"fields\": \"shapeBackgroundFill.solidFill,outline.outlineFill.solidFill,outline.weight\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"pupDer\",\n   \"shapeType\": \"ELLIPSE\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 233172,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 233172,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 4805172,\n     \"translateY\": 720090,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"pupDer\",\n   \"shapeProperties\": {\n    \"shapeBackgroundFill\": {\n     \"solidFill\": {\n      \"color\": {\n       \"rgbColor\": {\n        \"red\": 0.0392156862745098,\n        \"green\": 0.0392156862745098,\n        \"blue\": 0.0392156862745098\n       }\n      }\n     }\n    },\n    \"outline\": {\n     \"outlineFill\": {\n      \"solidFill\": {\n       \"color\": {\n        \"rgbColor\": {\n         \"red\": 0.0392156862745098,\n         \"green\": 0.0392156862745098,\n         \"blue\": 0.0392156862745098\n        }\n       }\n      }\n     },\n     \"weight\": {\n      \"magnitude\": 6350,\n      \"unit\": \"EMU\"\n     }\n    }\n   },\n   \"fields\": \"shapeBackgroundFill.solidFill,outline.outlineFill.solidFill,outline.weight\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"cruz0\",\n   \"shapeType\": \"TEXT_BOX\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 308610,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 308610,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 219456,\n     \"translateY\": 150876,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"insertText\": {\n   \"objectId\": \"cruz0\",\n   \"text\": \"+\"\n  }\n },\n {\n  \"updateTextStyle\": {\n   \"objectId\": \"cruz0\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"fontFamily\": \"Archivo Black\",\n    \"fontSize\": {\n     \"magnitude\": 15,\n     \"unit\": \"PT\"\n    },\n    \"foregroundColor\": {\n     \"opaqueColor\": {\n      \"rgbColor\": {\n       \"red\": 1.0,\n       \"green\": 0.16862745098039217,\n       \"blue\": 0.11764705882352941\n      }\n     }\n    }\n   },\n   \"fields\": \"fontFamily,fontSize,foregroundColor\"\n  }\n },\n {\n  \"updateParagraphStyle\": {\n   \"objectId\": \"cruz0\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"alignment\": \"CENTER\"\n   },\n   \"fields\": \"alignment\"\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"cruz0\",\n   \"shapeProperties\": {\n    \"contentAlignment\": \"MIDDLE\"\n   },\n   \"fields\": \"contentAlignment\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"cruz1\",\n   \"shapeType\": \"TEXT_BOX\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 308610,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 308610,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 8606790,\n     \"translateY\": 150876,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"insertText\": {\n   \"objectId\": \"cruz1\",\n   \"text\": \"+\"\n  }\n },\n {\n  \"updateTextStyle\": {\n   \"objectId\": \"cruz1\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"fontFamily\": \"Archivo Black\",\n    \"fontSize\": {\n     \"magnitude\": 15,\n     \"unit\": \"PT\"\n    },\n    \"foregroundColor\": {\n     \"opaqueColor\": {\n      \"rgbColor\": {\n       \"red\": 1.0,\n       \"green\": 0.16862745098039217,\n       \"blue\": 0.11764705882352941\n      }\n     }\n    }\n   },\n   \"fields\": \"fontFamily,fontSize,foregroundColor\"\n  }\n },\n {\n  \"updateParagraphStyle\": {\n   \"objectId\": \"cruz1\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"alignment\": \"CENTER\"\n   },\n   \"fields\": \"alignment\"\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"cruz1\",\n   \"shapeProperties\": {\n    \"contentAlignment\": \"MIDDLE\"\n   },\n   \"fields\": \"contentAlignment\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"cruz2\",\n   \"shapeType\": \"TEXT_BOX\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 308610,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 308610,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 219456,\n     \"translateY\": 4697730,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"insertText\": {\n   \"objectId\": \"cruz2\",\n   \"text\": \"+\"\n  }\n },\n {\n  \"updateTextStyle\": {\n   \"objectId\": \"cruz2\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"fontFamily\": \"Archivo Black\",\n    \"fontSize\": {\n     \"magnitude\": 15,\n     \"unit\": \"PT\"\n    },\n    \"foregroundColor\": {\n     \"opaqueColor\": {\n      \"rgbColor\": {\n       \"red\": 1.0,\n       \"green\": 0.16862745098039217,\n       \"blue\": 0.11764705882352941\n      }\n     }\n    }\n   },\n   \"fields\": \"fontFamily,fontSize,foregroundColor\"\n  }\n },\n {\n  \"updateParagraphStyle\": {\n   \"objectId\": \"cruz2\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"alignment\": \"CENTER\"\n   },\n   \"fields\": \"alignment\"\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"cruz2\",\n   \"shapeProperties\": {\n    \"contentAlignment\": \"MIDDLE\"\n   },\n   \"fields\": \"contentAlignment\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"cruz3\",\n   \"shapeType\": \"TEXT_BOX\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 308610,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 308610,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 8606790,\n     \"translateY\": 4697730,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"insertText\": {\n   \"objectId\": \"cruz3\",\n   \"text\": \"+\"\n  }\n },\n {\n  \"updateTextStyle\": {\n   \"objectId\": \"cruz3\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"fontFamily\": \"Archivo Black\",\n    \"fontSize\": {\n     \"magnitude\": 15,\n     \"unit\": \"PT\"\n    },\n    \"foregroundColor\": {\n     \"opaqueColor\": {\n      \"rgbColor\": {\n       \"red\": 1.0,\n       \"green\": 0.16862745098039217,\n       \"blue\": 0.11764705882352941\n      }\n     }\n    }\n   },\n   \"fields\": \"fontFamily,fontSize,foregroundColor\"\n  }\n },\n {\n  \"updateParagraphStyle\": {\n   \"objectId\": \"cruz3\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"alignment\": \"CENTER\"\n   },\n   \"fields\": \"alignment\"\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"cruz3\",\n   \"shapeProperties\": {\n    \"contentAlignment\": \"MIDDLE\"\n   },\n   \"fields\": \"contentAlignment\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"titulo\",\n   \"shapeType\": \"TEXT_BOX\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 8181594,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 788670,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 480060,\n     \"translateY\": 2043684,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"insertText\": {\n   \"objectId\": \"titulo\",\n   \"text\": \"{{NOMBRE}}\"\n  }\n },\n {\n  \"updateTextStyle\": {\n   \"objectId\": \"titulo\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"fontFamily\": \"Archivo Black\",\n    \"fontSize\": {\n     \"magnitude\": 38,\n     \"unit\": \"PT\"\n    },\n    \"foregroundColor\": {\n     \"opaqueColor\": {\n      \"rgbColor\": {\n       \"red\": 1.0,\n       \"green\": 1.0,\n       \"blue\": 1.0\n      }\n     }\n    }\n   },\n   \"fields\": \"fontFamily,fontSize,foregroundColor\"\n  }\n },\n {\n  \"updateParagraphStyle\": {\n   \"objectId\": \"titulo\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"alignment\": \"CENTER\"\n   },\n   \"fields\": \"alignment\"\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"titulo\",\n   \"shapeProperties\": {\n    \"contentAlignment\": \"MIDDLE\"\n   },\n   \"fields\": \"contentAlignment\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"metaLinea\",\n   \"shapeType\": \"TEXT_BOX\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 8181594,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 288036,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 480060,\n     \"translateY\": 2852928,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"insertText\": {\n   \"objectId\": \"metaLinea\",\n   \"text\": \"{{CLIENTE}}   ·   {{ANIO}}\"\n  }\n },\n {\n  \"updateTextStyle\": {\n   \"objectId\": \"metaLinea\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"fontFamily\": \"Arial\",\n    \"fontSize\": {\n     \"magnitude\": 11,\n     \"unit\": \"PT\"\n    },\n    \"foregroundColor\": {\n     \"opaqueColor\": {\n      \"rgbColor\": {\n       \"red\": 0.7333333333333333,\n       \"green\": 0.7333333333333333,\n       \"blue\": 0.7333333333333333\n      }\n     }\n    }\n   },\n   \"fields\": \"fontFamily,fontSize,foregroundColor\"\n  }\n },\n {\n  \"updateParagraphStyle\": {\n   \"objectId\": \"metaLinea\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"alignment\": \"CENTER\"\n   },\n   \"fields\": \"alignment\"\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"metaLinea\",\n   \"shapeProperties\": {\n    \"contentAlignment\": \"MIDDLE\"\n   },\n   \"fields\": \"contentAlignment\"\n  }\n },\n {\n  \"updateTextStyle\": {\n   \"objectId\": \"metaLinea\",\n   \"textRange\": {\n    \"type\": \"FIXED_RANGE\",\n    \"startIndex\": 11,\n    \"endIndex\": 26\n   },\n   \"style\": {\n    \"foregroundColor\": {\n     \"opaqueColor\": {\n      \"rgbColor\": {\n       \"red\": 1.0,\n       \"green\": 0.16862745098039217,\n       \"blue\": 0.11764705882352941\n      }\n     }\n    }\n   },\n   \"fields\": \"foregroundColor\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"wordmark\",\n   \"shapeType\": \"TEXT_BOX\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 8181594,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 397764,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 480060,\n     \"translateY\": 4402836,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"insertText\": {\n   \"objectId\": \"wordmark\",\n   \"text\": \"TEAM23\"\n  }\n },\n {\n  \"updateTextStyle\": {\n   \"objectId\": \"wordmark\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"fontFamily\": \"Archivo Black\",\n    \"fontSize\": {\n     \"magnitude\": 17,\n     \"unit\": \"PT\"\n    },\n    \"foregroundColor\": {\n     \"opaqueColor\": {\n      \"rgbColor\": {\n       \"red\": 1.0,\n       \"green\": 1.0,\n       \"blue\": 1.0\n      }\n     }\n    }\n   },\n   \"fields\": \"fontFamily,fontSize,foregroundColor\"\n  }\n },\n {\n  \"updateParagraphStyle\": {\n   \"objectId\": \"wordmark\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"alignment\": \"CENTER\"\n   },\n   \"fields\": \"alignment\"\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"wordmark\",\n   \"shapeProperties\": {\n    \"contentAlignment\": \"MIDDLE\"\n   },\n   \"fields\": \"contentAlignment\"\n  }\n },\n {\n  \"createShape\": {\n   \"objectId\": \"tagline\",\n   \"shapeType\": \"TEXT_BOX\",\n   \"elementProperties\": {\n    \"pageObjectId\": \"portadaSlide\",\n    \"size\": {\n     \"width\": {\n      \"magnitude\": 8181594,\n      \"unit\": \"EMU\"\n     },\n     \"height\": {\n      \"magnitude\": 233172,\n      \"unit\": \"EMU\"\n     }\n    },\n    \"transform\": {\n     \"scaleX\": 1,\n     \"scaleY\": 1,\n     \"translateX\": 480060,\n     \"translateY\": 4800600,\n     \"unit\": \"EMU\"\n    }\n   }\n  }\n },\n {\n  \"insertText\": {\n   \"objectId\": \"tagline\",\n   \"text\": \"POST PRODUCTION\"\n  }\n },\n {\n  \"updateTextStyle\": {\n   \"objectId\": \"tagline\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"fontFamily\": \"Arial\",\n    \"fontSize\": {\n     \"magnitude\": 8,\n     \"unit\": \"PT\"\n    },\n    \"foregroundColor\": {\n     \"opaqueColor\": {\n      \"rgbColor\": {\n       \"red\": 0.7333333333333333,\n       \"green\": 0.7333333333333333,\n       \"blue\": 0.7333333333333333\n      }\n     }\n    }\n   },\n   \"fields\": \"fontFamily,fontSize,foregroundColor\"\n  }\n },\n {\n  \"updateParagraphStyle\": {\n   \"objectId\": \"tagline\",\n   \"textRange\": {\n    \"type\": \"ALL\"\n   },\n   \"style\": {\n    \"alignment\": \"CENTER\"\n   },\n   \"fields\": \"alignment\"\n  }\n },\n {\n  \"updateShapeProperties\": {\n   \"objectId\": \"tagline\",\n   \"shapeProperties\": {\n    \"contentAlignment\": \"MIDDLE\"\n   },\n   \"fields\": \"contentAlignment\"\n  }\n }\n];\nreqs[1].deleteObject.objectId = $('Slides: crear presentación').first().json.slides[0].objectId;\nreturn [{ json: { presentationId: $('Slides: crear presentación').first().json.presentationId, body: { requests: reqs } } }];"
+      },
+      "id": "s0817000-0000-0000-0000-000000000003",
+      "name": "Armar diseño",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://slides.googleapis.com/v1/presentations/{{ $json.presentationId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSlidesOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "id": "s0817000-0000-0000-0000-000000000004",
+      "name": "Slides: dibujar portada",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const id = $('Slides: crear presentación').first().json.presentationId;\nreturn [{ json: { portadaTemplateId: id, abrir: 'https://docs.google.com/presentation/d/' + id + '/edit', siguiente: 'Pegar portadaTemplateId en el CONFIG del workflow 3' } }];"
+      },
+      "id": "s0817000-0000-0000-0000-000000000005",
+      "name": "Resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Al ejecutar manualmente": {
+      "main": [
+        [
+          {
+            "node": "Slides: crear presentación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slides: crear presentación": {
+      "main": [
+        [
+          {
+            "node": "Armar diseño",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar diseño": {
+      "main": [
+        [
+          {
+            "node": "Slides: dibujar portada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slides: dibujar portada": {
+      "main": [
+        [
+          {
+            "node": "Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -497,6 +497,45 @@
           "name": "Discord Bot"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body || {};\n/* El hub manda body.mails cuando se suma gente al proyecto ya creado y se le\n   quiere mandar la propuesta. Mismo formato que en wf3: rol, to, nombre,\n   enviar, subject, html. Sin esa clave esta rama no hace nada, así que los\n   updates normales (etapa, equipo, calendario) no disparan ningún mail. */\nif (!Array.isArray(b.mails)) return [];\nreturn b.mails\n  .filter(m => m && m.to && m.html && m.enviar !== false)\n  .map(m => ({ json: {\n    to: String(m.to).trim(),\n    subject: m.subject || ('Propuesta TEAM23 \\u2014 ' + (b.nombre || '')),\n    html: m.html\n  } }));\n"
+      },
+      "id": "m4000004-0000-0000-0000-0000000000b1",
+      "name": "¿Mandar propuestas?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "m4000004-0000-0000-0000-0000000000b2",
+      "name": "Mail de propuesta",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        800,
+        -320
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail account"
+        }
+      }
     }
   ],
   "connections": {
@@ -554,6 +593,11 @@
           },
           {
             "node": "¿Dar accesos?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Mandar propuestas?",
             "type": "main",
             "index": 0
           }
@@ -713,6 +757,17 @@
           },
           {
             "node": "Aviso de accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Mandar propuestas?": {
+      "main": [
+        [
+          {
+            "node": "Mail de propuesta",
             "type": "main",
             "index": 0
           }

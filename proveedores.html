@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="18" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="46" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="21" cy="36" r="7.5" fill="%230A0A0A"/><circle cx="49" cy="36" r="7.5" fill="%230A0A0A"/></svg>'>
-<title>TEAM23 — Proveedores</title>
+<title>TEAM 23 — Proveedores</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="design-system/styles.css">
 <style>
@@ -239,13 +239,18 @@
 .loading-state{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--gray,#777);padding:26px 6px}
 .sync-spin{width:14px;height:14px;border:2px solid var(--gray,#777);border-top-color:transparent;border-radius:50%;animation:t23spin .7s linear infinite;flex:none}
 @keyframes t23spin{to{transform:rotate(360deg)}}
+  .sx .sx-p{margin:0 0 10px;line-height:1.55}
+  .sx .sx-label{font-size:10.5px;letter-spacing:.14em;font-weight:800;text-transform:uppercase;color:var(--gray,#777);margin:12px 0 6px}
+  .sx .sx-list{margin:0 0 10px;padding-left:0;list-style:none}
+  .sx .sx-list li{position:relative;padding-left:18px;font-size:13px;line-height:1.55;margin-bottom:5px}
+  .sx .sx-list li::before{content:"";position:absolute;left:2px;top:7px;width:7px;height:7px;background:var(--red,#FF2B1E);border:1.5px solid var(--ink,#0A0A0A)}
 </style>
 </head>
 <body>
 
 <header>
   <a class="wordmark" href="#" onclick="return false">
-    <span class="t">TEAM23</span>
+    <span class="t">TEAM 23</span>
     <span class="eyes"><span class="eye"><span class="pupil"></span></span><span class="eye"><span class="pupil"></span></span></span>
     <span class="hub-label">PRODUCTION&nbsp;HUB</span>
   </a>
@@ -276,7 +281,7 @@
   </div>
   <div class="foot-right">
     <div class="foot-scope">MX — ARG — WORLDWIDE</div>
-    <div>TEAM23 © <span id="yr"></span></div>
+    <div>TEAM 23 © <span id="yr"></span></div>
   </div>
 </footer>
 
@@ -321,6 +326,26 @@ const DEMO = !CONFIG.SUPABASE_URL;
 let sb=null, session=null, projects=[];
 
 const $ = s=>document.querySelector(s);
+
+/* síntesis con estructura liviana: párrafos, etiquetas ("Puntos clave:") y bullets */
+function sintesisHTML(txt, small){
+  const fs = small ? "13.5px" : "15.5px";
+  const lines = String(txt||"").split(/\r?\n/);
+  let out = "", list = [];
+  const flush = ()=>{ if(list.length){ out += `<ul class="sx-list">${list.join("")}</ul>`; list = []; } };
+  lines.forEach(raw=>{
+    const l = raw.trim();
+    if(!l){ flush(); return; }
+    const m = l.match(/^[•·\-\*]\s+(.*)$/);
+    if(m){ list.push(`<li>${esc(m[1])}</li>`); return; }
+    flush();
+    if(/^[^:]{2,40}:$/.test(l)){ out += `<div class="sx-label">${esc(l.slice(0,-1))}</div>`; return; }
+    out += `<p class="sx-p" style="font-size:${fs}">${esc(l)}</p>`;
+  });
+  flush();
+  return `<div class="sx">${out}</div>`;
+}
+
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function parseYMD(s){ if(!s) return null; const p=String(s).split("-").map(Number); if(p.length<3||!p[0]) return null; return new Date(p[0],p[1]-1,p[2]); }
 function fmtShort(s){ const d=parseYMD(s); return d? d.toLocaleDateString("es-AR",{day:"2-digit",month:"short"}) : ""; }
@@ -339,7 +364,7 @@ function demoData(){
   projects=[{
     id:"demo1", nombre:"SPOTIFY - CDMX", cliente:"Spotify", productora:"LANDIA/TMMT", status:"entregando",
     sintesis:"Hero film + social. Post completa.",
-    links:{driveRoot:"#",frameio:"#",feedback:"#"},
+    links:{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",brief:"#",feedback:"#",notas:"#",frameio:"#"},
     misRoles:["Online"],
     calendario:[
       {tipo:"fase",fase:"Online",inicio:d(6),fin:d(14),notas:""},
@@ -449,7 +474,7 @@ function renderList(){
   renderSummary();
   const list=$("#listProjects"), empty=$("#emptyState");
   if(!projects.length){
-    list.innerHTML=""; empty.innerHTML=`<div class="empty">Todavía no tenés proyectos confirmados con TEAM23.<br>Cuando el estudio te confirme en un proyecto, aparece acá.</div>`;
+    list.innerHTML=""; empty.innerHTML=`<div class="empty">Todavía no tenés proyectos confirmados con TEAM 23.<br>Cuando el estudio te confirme en un proyecto, aparece acá.</div>`;
     return;
   }
   empty.innerHTML="";
@@ -482,16 +507,24 @@ function renderDetail(){
   const stepper=`<div class="stepper">${ETAPAS.map((e,i)=>
     `<span class="step ${i<idx?"done":""}" style="${i===idx?statusPillStyle(e):""}">${ETIQ[e]}</span>`
   ).join("")}</div>`;
-  const linkDefs=[["driveRoot","Drive del proyecto"],["frameio","Frame.io"],["feedback","Feedback"]];
-  const links=linkDefs.filter(([k])=>p.links&&p.links[k]).map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
+  /* Carpetas y documentos del proyecto. El backend (wf8) manda el set completo;
+     acá solo se dibuja lo que llegó, así un proyecto sin Frame.io o sin brief no
+     muestra huecos. El acceso real lo gobierna Drive, no esta lista. */
+  const CARPETAS=[["driveRoot","Unidad del proyecto"],["coord","0. COORD"],["supervision","1. SUPERVISION"],
+                  ["footage","2. FOOTAGE"],["recursos","3. RECURSOS"],["editables","4. EDITABLES"],["finales","5. FINALES"]];
+  const DOCS=[["brief","Brief"],["feedback","Feedback"],["notas","Notas"],["frameio","Frame.io"]];
+  const linkList=defs=>defs.filter(([k])=>p.links&&p.links[k])
+    .map(([k,l])=>`<a href="${esc(p.links[k])}" target="_blank">${l} <span>↗</span></a>`).join("");
+  const carpetas=linkList(CARPETAS), docs=linkList(DOCS);
   const lookMap={}; let n=0;
   (p.calendario||[]).forEach((r,i)=>{ if(r.tipo!=="hito"){ lookMap[i]=n%PHASE_LOOKS.length; n++; } });
   $("#detailBody").innerHTML=`
     <h2>${esc(p.nombre)}</h2>
     <div class="kicker">${esc(p.cliente)}${p.productora?" · "+esc(p.productora):""}${(p.misRoles||[]).length?" · Tu rol: "+p.misRoles.map(esc).join(", "):""}</div>
     ${stepper}
-    ${p.sintesis?`<div class="fgroup"><div class="glabel">Síntesis</div><p style="font-size:13.5px;white-space:pre-line">${esc(p.sintesis)}</p></div>`:""}
-    ${links?`<div class="fgroup"><div class="glabel">Links</div><div class="linkgrid">${links}</div></div>`:""}
+    ${p.sintesis?`<div class="fgroup"><div class="glabel">Síntesis</div>${sintesisHTML(p.sintesis,true)}</div>`:""}
+    ${carpetas?`<div class="fgroup"><div class="glabel">Carpetas de Drive</div><div class="linkgrid">${carpetas}</div></div>`:""}
+    ${docs?`<div class="fgroup"><div class="glabel">Documentos</div><div class="linkgrid">${docs}</div></div>`:""}
     ${(p.calendario||[]).some(r=>r.inicio)?`<div class="fgroup"><div class="glabel">Calendario</div>${monthHTML(p,lookMap)}</div>`:""}`;
 }
 function monthHTML(p, lookMap){
