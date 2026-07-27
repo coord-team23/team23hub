@@ -50,6 +50,7 @@
   .tabrow{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap}
   .tabbar{display:flex;gap:var(--space-2);flex-wrap:wrap}
   .tabbar .status-opt{padding:var(--space-2) var(--space-4);font-size:12px}
+  .tabacts{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
   .wordmark{display:flex;align-items:center;gap:var(--space-3);text-decoration:none;color:var(--ink)}
   .wordmark .t{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:22px;letter-spacing:var(--tracking-tight)}
   .eyes{display:inline-flex;gap:3px}
@@ -386,7 +387,7 @@
     font-size:15px;font-weight:var(--weight-bold);cursor:pointer;line-height:1;
   }
   .cal-nav button:hover{background:var(--ink);color:#fff}
-  .cal-scroll{overflow-x:auto}
+  .cal-scroll{overflow-x:auto;min-width:0}
   .cal-min{min-width:660px}
   .wdays{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:2px solid var(--ink);background:var(--soft)}
   .wdays div{
@@ -429,7 +430,7 @@
   .trk-range{font-size:var(--fs-caption);color:var(--gray);margin-bottom:var(--space-4)}
   .trk-range b{color:var(--ink)}
   .trk-empty{border:var(--stroke-sm) dashed var(--hair);border-radius:var(--radius-lg);padding:var(--space-9);text-align:center;color:var(--gray);font-size:var(--fs-caption)}
-  .trk-wrap{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);overflow:auto;max-height:60vh}
+  .trk-wrap{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);overflow:auto;max-height:60vh;min-width:0}
   /* width:100% + table-layout:fixed reparte el sobrante en partes iguales entre todas las columnas */
   table.trk{border-collapse:collapse;font-size:12px;white-space:nowrap;width:100%;table-layout:fixed}
   table.trk th,table.trk td{border-bottom:1px solid var(--hair);border-right:1px solid var(--hair);padding:5px 8px;text-align:center;overflow:hidden;text-overflow:ellipsis}
@@ -529,7 +530,16 @@
     header{padding:10px 16px}
     .hub-label{display:none}
     .hero{padding:24px 16px 10px;gap:10px}
-    #btnNew{width:100%}
+
+    /* El header se pasaba del viewport y de ahí venía el scroll horizontal de toda
+       la página: la fila de acciones era flex sin wrap, con margin-left:auto y con
+       #btnNew a width:100% adentro. Sumado, más ancho que la pantalla, y "Salir",
+       que es el último, quedaba afuera. Ahora cada grupo toma su propio renglón. */
+    .tabrow{flex-direction:column;align-items:stretch;gap:8px}
+    .tabbar{min-width:0;width:100%}
+    .tabacts{margin-left:0;width:100%}
+    .tabacts .btn{flex:1 1 auto;min-width:0}
+    #btnNew{width:auto;flex:1 1 100%;order:-1}
     .demo-banner{margin:0 16px 8px}
     main{padding:8px 16px 90px}
     section.status-block{margin-top:30px}
@@ -577,6 +587,20 @@
     /* controles de fila: que no queden apretados contra el borde */
     .mail-row,.cand-state,.assign-min{gap:8px}
 
+    /* mails y URLs largos empujaban el layout en lugar de cortarse */
+    .mail-row .who,.assign-min .nm,.modal .kicker,.chk-item .txt,.sx-body{overflow-wrap:anywhere}
+    .assign-min .nm{min-width:0}
+
+    /* tabs: un poco más de alto para el dedo */
+    .tabbar .status-opt{padding:9px 14px}
+
+    /* la ✕ de los modales a pantalla completa, fuera de la barra de estado */
+    .modal .close{top:calc(10px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right))}
+
+    /* el panel del directorio no puede ser más ancho que la pantalla */
+    #dirChipPanel{width:min(340px,calc(100vw - 24px))}
+    .dir-tools input{min-width:0}
+
     /* checks de automatizaciones: 30px es chico para el dedo, y el texto
        de ayuda se lee mejor con la caja un poco más aireada */
     .auto-item{padding:11px 4px;gap:12px}
@@ -592,17 +616,22 @@
     .tbl-scroll{overflow-x:auto;padding-bottom:4px}
     .tbl-scroll table.cal{min-width:540px}
 
-    /* calendario compacto: entra en el ancho del celular */
-    .cal-min{min-width:0}
+    /* Calendario: forzarlo a entrar en 360px dejaba celdas de 50px, con las barras
+       de fase convertidas en tiritas de 12px sin texto y los hitos en puntitos. Era
+       ilegible. Mejor que scrolee de costado dentro de .cal-scroll (mismo patrón que
+       la tabla de fases) y que las barras recuperen su etiqueta. */
+    .cal-min{min-width:520px}
     .cal-head{padding:10px 12px}
     .cal-head .mtitle{font-size:15px}
     .cal-nav button{width:38px;height:38px}
-    .wdays div{padding:5px 3px;font-size:8px;letter-spacing:.06em}
-    .cell{min-height:calc(44px + var(--bh,0px));padding:3px 3px 4px}
-    .dnum{width:18px;height:18px;font-size:10px}
-    .bar{height:12px;font-size:0;padding:0}
+    .wdays div{padding:6px 4px;font-size:9px;letter-spacing:.06em}
+    .cell{min-height:calc(52px + var(--bh,0px));padding:4px 4px 5px}
+    .dnum{width:20px;height:20px;font-size:11px}
+    .bar{height:14px;font-size:8.5px;padding:0 5px;line-height:11px}
     .cell .chips{flex-direction:row;flex-wrap:wrap;gap:3px}
-    .chip{width:9px;height:9px;border-radius:50%;padding:0;font-size:0;background:var(--red);border-color:var(--red);flex:none}
+    .chip{width:10px;height:10px;border-radius:50%;padding:0;font-size:0;background:var(--red);border-color:var(--red);flex:none}
+    /* pista de que se puede arrastrar */
+    .cal-scroll{scroll-snap-type:x proximity;overscroll-behavior-x:contain}
     .daypanel{padding:12px 12px 14px}
     footer{padding:40px 16px 28px;flex-direction:column;align-items:flex-start;gap:20px}
     .foot-right{text-align:left}
@@ -732,7 +761,7 @@
       <button class="status-opt" data-view="proyectos" onclick="switchView('proyectos')">Proyectos</button>
       <button class="status-opt" data-view="calendario" onclick="switchView('calendario')">Calendario</button>
     </nav>
-    <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
+    <div class="tabacts">
       <button class="btn small" id="btnDirectorio" style="display:none" onclick="openDirectorio()">Directorio</button>
       <button class="btn small" id="btnUsers" style="display:none" onclick="openUsers()">Usuarios</button>
       <button class="btn small" id="btnNew">+ NUEVO PROYECTO</button>
