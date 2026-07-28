@@ -352,6 +352,19 @@
   .auto-item.off .txt{color:var(--gray)}
   .auto-note{font-size:12.5px;font-weight:var(--weight-bold);color:var(--red);margin-top:10px;line-height:1.45}
 
+  /* ---------- línea compacta de equipo (ficha) ---------- */
+  .team-line{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    padding:9px 2px;border-bottom:1px solid var(--hair);
+  }
+  .team-line:last-of-type{border-bottom:none}
+  .team-line .rol{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--gray);flex:none;min-width:130px}
+  .team-line .nm{font-size:15px;font-weight:var(--weight-bold);flex:none}
+  .team-line .meta{font-size:12.5px;color:var(--gray);flex:1;min-width:120px;overflow-wrap:anywhere}
+  .team-line .meta.falta{color:var(--red)}
+  .team-line.off .nm,.team-line.off .meta{color:var(--gray)}
+  .team-line.off .nm{text-decoration:line-through}
+
   /* ---------- mails de propuesta a candidatos ---------- */
   .mail-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-2px 0 10px 2px}
   .mail-row .who{font-size:11px;font-weight:var(--weight-bold);letter-spacing:.04em;color:var(--gray)}
@@ -629,8 +642,16 @@
     /* La etiqueta de sección es flex con space-between: con un texto de ayuda largo
        el <small> se iba a la derecha y wrapeaba con sangría, quedando ilegible
        ("CALENDARIO fases + hitos por día... / puntual"). En vertical se lee. */
-    .fgroup>.glabel{flex-direction:column;align-items:flex-start;gap:3px}
-    .fgroup>.glabel small{text-align:left;line-height:1.4}
+    /* La etiqueta de sección es flex con space-between. Con un texto de ayuda largo
+       el <small> se iba a la derecha y wrapeaba con sangría. Se resuelve dejando que
+       envuelva y mandando el <small> a su propio renglón, NO poniendo la etiqueta en
+       columna: eso le tiraría el botón ▾ de los colapsables debajo del título. */
+    .glabel{flex-wrap:wrap;align-items:center;row-gap:3px}
+    .glabel small{flex-basis:100%;order:3;text-align:left;line-height:1.4}
+
+    /* línea de equipo: el rol no compite por ancho con el nombre */
+    .team-line .rol{min-width:0;flex-basis:100%}
+    .team-line{gap:6px;padding:11px 2px}
 
     /* Tabla de fases: a 540px las columnas quedaban tan angostas que los inputs de
        fecha (16px, para que iOS no haga zoom) se desbordaban y se pisaban entre sí
@@ -1133,6 +1154,33 @@
   </div>
 </div>
 
+<!-- ============ MODAL: EDITAR PERSONA ============ -->
+<div class="overlay" id="ovPersona" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="perTitle">
+    <button class="close" onclick="personaClose()" aria-label="Cerrar">✕</button>
+    <h2 id="perTitle">Editar persona</h2>
+    <div class="kicker" id="perWho"></div>
+
+    <div class="mail-warn" id="perAviso" style="display:none"></div>
+
+    <div class="fgroup">
+      <div class="frow">
+        <div><label class="f">Nombre</label><input type="text" id="perNombre" autocomplete="off"></div>
+        <div><label class="f">Mail</label><input type="email" id="perEmail" placeholder="mail@team23.online"></div>
+      </div>
+      <div class="frow" id="perExtra">
+        <div><label class="f">Discord</label><input type="text" id="perDiscord" placeholder="usuario#0000 o @usuario"></div>
+        <div><label class="f">Teléfono</label><input type="tel" id="perTelefono" placeholder="+54 9 11 ..."></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="personaClose()">Cancelar</button>
+      <button class="btn primary" onclick="personaSave()">Guardar datos</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ MODAL: NOTAS DE TAREA / FASE ============ -->
 <div class="overlay" id="ovNota" style="z-index:1100">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="notaTitle">
@@ -1317,19 +1365,14 @@ function projectEndDate(p){
   const ds = (p.calendario||[]).map(r=>parseYMD(r.fin)||parseYMD(r.inicio)).filter(Boolean);
   return ds.length ? new Date(Math.max(...ds.map(d=>d.getTime()))) : null;
 }
-/* un proyecto en ejecución/entregando que pasó su fecha de fin salta solo a "cierre" */
-function autoAdvanceOverdue(){
-  const today = new Date(); today.setHours(0,0,0,0);
-  projects.forEach(p=>{
-    if(p.status==="activo" || p.status==="entregando"){
-      const end = projectEndDate(p);
-      if(end && end < today){
-        p.status = "cierre";
-        if(!DEMO) api("/webhook/team23/update",{method:"POST",body:JSON.stringify({id:p.id,status:"cierre"})}).catch(()=>{});
-      }
-    }
-  });
-}
+/* El avance automático a "cierre" lo hace el workflow 11, una vez por día del lado del
+   servidor. Antes se hacía acá, en cada carga del hub, y tenía tres problemas: corría
+   solo si alguien abría la página, se duplicaba entre pestañas y dispositivos (un aviso
+   de Discord por cada una, y `.catch(()=>{})` se tragaba los errores, así que una
+   escritura fallida lo hacía repetir en cada carga), y `projectEndDate` únicamente
+   miraba `p.calendario`, así que un proyecto con fechas cargadas solo en las tareas no
+   avanzaba nunca. wf11 mira las dos fuentes y corre una sola vez.
+   `projectEndDate` se queda: la usa la vista semanal para posicionarse. */
 
 /* ---------- caché de proyectos + aviso de datos viejos ---------- */
 function cacheLeer(){
@@ -1366,7 +1409,6 @@ async function loadProjects(){
   if(DEMO){
     projects = JSON.parse(JSON.stringify(demoProjects));
     projects.forEach(p=>ensureCalIds(p.calendario));
-    autoAdvanceOverdue();
     onProjectsLoaded(); return;
   }
   /* Caché local: pinta al instante lo último conocido mientras llega lo fresco.
@@ -1392,7 +1434,6 @@ async function loadProjects(){
       links: p.links || {},
       calendario: ensureCalIds((p.calendario || []).map(c=>({ ...c, tipo: c.tipo==="hito"?"hito":"fase" })))
     }));
-    autoAdvanceOverdue();
     onProjectsLoaded();
     cacheGuardar(projects);
     staleBannerHide();
@@ -1855,11 +1896,16 @@ function assignBlockHTML(tarea, rows, ctx){
      ficha, en una fila recién agregada que todavía está vacía. */
   const dt = ctx==="dt";
   const enCurso = dt && detailProject && detailProject.status !== "por_activarse";
+  /* en cierre y completado la ficha ni llega acá (usa el listado de solo lectura),
+     pero si llegara, la fila compacta se muestra sin controles */
+  const lockTareasCtx = dt && detailProject && ["cierre","completado"].includes(detailProject.status);
   const vacia = r => !((r.nombre||"").trim() || (r.email||"").trim());
 
   const chip = (clase, txt) => `<span class="chipst ${clase}">${txt}</span>`;
 
-  const stateRow = (r,i)=>{
+  /* Devuelve solo los chips y botones, sin contenedor: así sirven tanto sueltos
+     debajo del formulario de un candidato como en línea en la fila compacta. */
+  const stateInner = (r,i)=>{
     if(!dt || vacia(r)) return "";
     const b = (estado, txt, clase="") => `<button class="mini-btn ${clase}" onclick="candSet('${tq}',${i},'${estado}')">${txt}</button>`;
     /* si se le mandó la propuesta y todavía no contestó, la fecha queda a la vista */
@@ -1868,25 +1914,47 @@ function assignBlockHTML(tarea, rows, ctx){
     if(!enCurso){
       /* pre-producción: se resuelve el candidato */
       if(!r.estado) return "";
-      if(r.estado==="inactivo") return `<div class="cand-state">${chip("inact","Inactivo")}${b("confirmado","↺ Reactivar")}</div>`;
+      if(r.estado==="inactivo") return chip("inact","Inactivo")+b("confirmado","↺ Reactivar");
       const c = r.estado==="confirmado" ? chip("conf","Confirmado") : chip("cand","Candidato");
       const acts = r.estado==="candidato"
         ? b("confirmado","✓ Confirmar") + b("rechazado","✕ Rechazar","no")
         : `<button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
-      return `<div class="cand-state">${c}${acts}${enviado}</div>`;
+      return c+acts+enviado;
     }
     /* en curso: activo / inactivo. Sin estado (alta manual) cuenta como activo.
        Excepción: un candidato sigue siendo candidato — es gente que se sumó con
        el proyecto en marcha y todavía tiene que decir que sí. Si se rechaza,
        sale del cuadro igual que los rechazados de pre-producción. */
     if(r.estado==="candidato")
-      return `<div class="cand-state">${chip("cand","Candidato")}${b("confirmado","✓ Confirmar")}${b("rechazado","✕ Rechazar","no")}${enviado}</div>`;
-    if(r.estado==="inactivo") return `<div class="cand-state">${chip("inact","Inactivo")}${b("confirmado","↺ Reactivar")}</div>`;
-    return `<div class="cand-state">${chip("conf","Activo")}${b("inactivo","Desactivar","no")}</div>`;
+      return chip("cand","Candidato")+b("confirmado","✓ Confirmar")+b("rechazado","✕ Rechazar","no")+enviado;
+    if(r.estado==="inactivo") return chip("inact","Inactivo")+b("confirmado","↺ Reactivar");
+    return chip("conf","Activo")+b("inactivo","Desactivar","no");
   };
 
+  const stateRow = (r,i)=>{ const s = stateInner(r,i); return s ? `<div class="cand-state">${s}</div>` : ""; };
+
   const visibles = rows.map((r,i)=>({r,i})).filter(({r})=> !(enCurso && r.estado==="rechazado"));
+  /* Fila compacta: quien ya está en el equipo (confirmado, sin estado, o inactivo)
+     no necesita cuatro cajas abiertas — sus datos ya están cargados. Se muestran
+     en una línea con un ✎ que abre el popup, junto a los chips de estado.
+     El candidato pendiente sí conserva el formulario: ahí todavía se está cargando. */
+  const compacta = r => dt && !vacia(r) && r.estado !== "candidato" && r.estado !== "rechazado";
+  const filaCompactaHTML = ({r,i})=>{
+    const meta = [r.email, r.discord ? "@"+String(r.discord).replace(/^@/,"") : "", r.telefono]
+      .map(x=>String(x||"").trim()).filter(Boolean);
+    const apagado = r.estado === "inactivo";
+    return `
+      <div class="team-line${apagado?" off":""}">
+        <span class="nm">${esc(r.nombre || r.email || "Sin nombre")}</span>
+        ${meta.length?`<span class="meta">${esc(meta.join(" · "))}</span>`:`<span class="meta falta">sin mail ni contacto</span>`}
+        ${lockTareasCtx ? "" : `<button class="mini-btn" onclick="personaOpen('asig','${tq}',${i})" title="Editar datos de contacto">✎</button>`}
+        ${lockTareasCtx ? "" : stateInner(r,i)}
+      </div>
+      <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>`;
+  };
+
   const filaHTML = ({r,i})=>{
+    if(compacta(r)) return filaCompactaHTML({r,i});
     /* rechazado en pre-producción: una línea y listo, para no comerse la pantalla */
     if(dt && !enCurso && r.estado==="rechazado" && !vacia(r)) return `
       <div class="assign-min">
@@ -2149,7 +2217,10 @@ function renderDetail(){
   const completado = p.status==="completado";
   const lockFields = ro || cierre || completado;   // en cierre/completado no se edita ningún campo (tareas/calendario)
   const lockMeta = ro || p.status!=="por_activarse"; // datos del proyecto + equipo: editables solo en pre-producción
-  const lockTareas = lockFields || p.status==="entregando"; // tareas TEAM 23 (equipo + fechas): solo lectura desde Entregando
+  /* El equipo se sigue tocando en Entregando: hay que poder sumar, activar y
+     desactivar gente hasta el final de la entrega. Recién en Listo para cierre y
+     Completado queda congelado (lockFields). */
+  const lockTareas = lockFields;
   const lookMap = faseLookMap(p);
 
   // en completado la ficha es un archivo: solo carpeta raíz (+ finales + documentos)
@@ -2300,15 +2371,8 @@ function renderDetail(){
       </div>
     </div>` : `
     <div class="fgroup">
-      <div class="glabel">Equipo interno</div>
-      <div class="frow">
-        <div><label class="f">Productor Ejecutivo</label><input type="text" value="${esc(p.ep_nombre||"")}" oninput="detailProject.ep_nombre=this.value"></div>
-        <div><label class="f">Mail EP</label><input type="email" value="${esc(p.ep_email||"")}" oninput="detailProject.ep_email=this.value"></div>
-        <div><label class="f">Productor</label><input type="text" value="${esc(p.prod_nombre||"")}" oninput="detailProject.prod_nombre=this.value"></div>
-        <div><label class="f">Mail Productor</label><input type="email" value="${esc(p.prod_email||"")}" oninput="detailProject.prod_email=this.value"></div>
-        <div><label class="f">Coordinador</label><input type="text" value="${esc(p.coord_nombre||"")}" oninput="detailProject.coord_nombre=this.value"></div>
-        <div><label class="f">Mail Coordinador</label><input type="email" value="${esc(p.coord_email||"")}" oninput="detailProject.coord_email=this.value"></div>
-      </div>
+      <div class="glabel">Equipo interno <small>cambiarlo es poco común; se edita con el ✎</small></div>
+      ${internoHTML(p)}
     </div>`}
 
     ${cierre||completado ? "" : `
@@ -3234,6 +3298,96 @@ function renderTracker(){
   $("#trkBody").innerHTML = trackerHTML(trkProject);
 }
 
+/* Equipo interno en la ficha: una línea por rol con el ✎ al costado. Antes eran
+   seis inputs abiertos, lo que sugería que se cambia seguido — y no: cambiar de
+   coordinador o de productor a mitad de un proyecto es la excepción. La posibilidad
+   está, pero deja de gritar. */
+function internoHTML(p){
+  const fila = (rol)=>{
+    const def = PER_ROLES[rol];
+    const nombre = (p[def.nombre]||"").trim();
+    const mail = (p[def.mail]||"").trim();
+    return `<div class="team-line${nombre?"":" off"}">
+      <span class="rol">${def.titulo}</span>
+      <span class="nm">${nombre?esc(nombre):"—"}</span>
+      ${mail?`<span class="meta">${esc(mail)}</span>`:(nombre?`<span class="meta falta">sin mail</span>`:"")}
+      <button class="mini-btn" onclick="personaOpen('interno','${rol}')" title="${nombre?"Cambiar":"Cargar"} ${def.titulo.toLowerCase()}">${nombre?"✎":"+ cargar"}</button>
+    </div>`;
+  };
+  return ["ep","prod","coord"].map(fila).join("");
+}
+
+/* ================================================================
+   EDITAR PERSONA (popup)
+   Los datos de contacto de alguien que ya está en el equipo no cambian
+   casi nunca, así que tenerlos como cuatro inputs abiertos era ruido.
+   La fila los muestra en una línea y este popup los edita.
+   Sirve para dos cosas:
+     asig    → una fila de asignaciones (nombre, mail, discord, teléfono)
+     interno → EP / Productor / Coordinador (nombre y mail nada más)
+   Ojo: la ficha marca detailDirty con los eventos input/change de sus
+   propios campos. Editando desde un popup eso no pasa, así que se prende
+   a mano — la misma trampa que con las notas.
+================================================================ */
+let perTarget = null;
+const PER_ROLES = {
+  ep:    { titulo:"Productor Ejecutivo", nombre:"ep_nombre",    mail:"ep_email" },
+  prod:  { titulo:"Productor",           nombre:"prod_nombre",  mail:"prod_email" },
+  coord: { titulo:"Coordinador",         nombre:"coord_nombre", mail:"coord_email" }
+};
+function personaOpen(kind, a, b){
+  const p = detailProject; if(!p) return;
+  if(kind==="interno"){
+    const def = PER_ROLES[a]; if(!def) return;
+    perTarget = { kind, rol:a };
+    $("#perTitle").textContent = def.titulo;
+    $("#perWho").textContent = p.nombre || "Proyecto";
+    $("#perNombre").value = p[def.nombre] || "";
+    $("#perEmail").value = p[def.mail] || "";
+    $("#perExtra").style.display = "none";
+    $("#perAviso").textContent = "Cambiar el "+def.titulo.toLowerCase()+" de un proyecto en marcha es poco frecuente. Los avisos de calendario van a este mail, así que revisá que esté bien antes de guardar.";
+    $("#perAviso").style.display = "block";
+  }else{
+    const r = (p.asignaciones[a]||[])[b]; if(!r) return;
+    perTarget = { kind:"asig", tarea:a, i:b };
+    $("#perTitle").textContent = "Editar persona";
+    $("#perWho").textContent = (r.nombre || r.email || "Sin nombre") + " · " + a;
+    $("#perNombre").value = r.nombre || "";
+    $("#perEmail").value = r.email || "";
+    $("#perDiscord").value = r.discord || "";
+    $("#perTelefono").value = r.telefono || "";
+    $("#perExtra").style.display = "";
+    $("#perAviso").style.display = "none";
+  }
+  $("#ovPersona").classList.add("open");
+  setTimeout(()=>{ const el=$("#perNombre"); if(el) el.focus(); }, 30);
+}
+function personaClose(){ $("#ovPersona").classList.remove("open"); perTarget = null; }
+function personaSave(){
+  if(!perTarget) return;
+  const p = detailProject; if(!p){ personaClose(); return; }
+  const nombre = ($("#perNombre").value||"").trim();
+  const email  = ($("#perEmail").value||"").trim();
+  if(perTarget.kind==="interno"){
+    const def = PER_ROLES[perTarget.rol];
+    p[def.nombre] = nombre;
+    p[def.mail] = email;
+    detailDirty = true;                 // el input/change de la ficha no corrió
+    personaClose(); renderDetail();
+    toast(nombre ? "✔ "+def.titulo+": "+nombre : def.titulo+" sin cargar");
+    return;
+  }
+  const r = (p.asignaciones[perTarget.tarea]||[])[perTarget.i];
+  if(!r){ personaClose(); return; }
+  r.nombre = nombre;
+  r.email = email;
+  r.discord = ($("#perDiscord").value||"").trim();
+  r.telefono = ($("#perTelefono").value||"").trim();
+  detailDirty = true;
+  personaClose(); renderDetail();
+  toast("✔ Datos guardados"+(nombre?" de "+nombre:""));
+}
+
 /* ================================================================
    NOTAS DE TAREA / FASE
    Eran un input de una línea: con una nota larga no se leía nada. Ahora
@@ -4091,6 +4245,7 @@ function closeOverlayById(id){
   if(id==="ovFin"){ finClose(); return; }
   if(id==="ovReact"){ reactClose(); return; }
   if(id==="ovNota"){ notaClose(); return; }
+  if(id==="ovPersona"){ personaClose(); return; }
   closeModal(id);
 }
 document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{
