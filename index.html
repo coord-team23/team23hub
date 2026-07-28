@@ -256,7 +256,8 @@
   }
   .task-pill.on{background:var(--red);border-color:var(--red);color:#fff}
 
-  .assign-block{padding:var(--space-4) 0;margin-top:var(--space-4)}
+  .assign-block{padding:0;margin-top:var(--space-7)}
+  .assign-block:first-of-type{margin-top:var(--space-4)}
   .assign-block .ttl{font-size:var(--fs-caption);font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--space-2)}
   .assign-row{display:grid;grid-template-columns:1fr 1fr 34px;gap:var(--space-2);margin-bottom:var(--space-2)}
   .icon-btn{
@@ -352,18 +353,36 @@
   .auto-item.off .txt{color:var(--gray)}
   .auto-note{font-size:12.5px;font-weight:var(--weight-bold);color:var(--red);margin-top:10px;line-height:1.45}
 
-  /* ---------- línea compacta de equipo (ficha) ---------- */
-  .team-line{
-    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-    padding:9px 2px;border-bottom:1px solid var(--hair);
+  /* ---------- bloque de tarea: encabezado, gente, fechas y notas ---------- */
+  .ab-head{
+    display:flex;align-items:baseline;gap:var(--space-4);flex-wrap:wrap;
+    padding-bottom:var(--space-3);border-bottom:2px solid var(--ink);margin-bottom:2px;
   }
-  .team-line:last-of-type{border-bottom:none}
-  .team-line .rol{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--gray);flex:none;min-width:130px}
-  .team-line .nm{font-size:15px;font-weight:var(--weight-bold);flex:none}
-  .team-line .meta{font-size:12.5px;color:var(--gray);flex:1;min-width:120px;overflow-wrap:anywhere}
-  .team-line .meta.falta{color:var(--red)}
-  .team-line.off .nm,.team-line.off .meta{color:var(--gray)}
-  .team-line.off .nm{text-decoration:line-through}
+  .ab-ttl{font-size:15px;font-weight:var(--weight-bold);letter-spacing:.1em;text-transform:uppercase;flex:none}
+  .ab-when{font-size:12.5px;color:var(--gray);margin-left:auto;flex:none;white-space:nowrap}
+  .ab-when.falta{color:var(--red)}
+  .ab-count{font-size:12.5px;color:var(--gray);flex:none}
+
+  /* gente: grilla de tres columnas para que todo quede alineado hacia abajo */
+  .team-line{
+    display:grid;grid-template-columns:minmax(110px,1fr) minmax(0,1.7fr) auto;
+    align-items:center;gap:var(--space-3);
+    padding:10px 2px;border-bottom:1px solid var(--hair);
+  }
+  .team-line .nm{font-size:15px;font-weight:var(--weight-bold);overflow-wrap:anywhere}
+  .team-line .meta{font-size:12.5px;color:var(--gray);overflow-wrap:anywhere}
+  .team-line .meta.falta{color:var(--gray);font-style:italic}
+  .team-line .acts{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+  .team-line.off{background:var(--soft)}
+  .team-line.off .nm{color:var(--gray);text-decoration:line-through}
+  .team-line.off .meta{color:var(--gray)}
+
+  /* pie: fechas acotadas y notas en una línea cuando están vacías */
+  .ab-foot{display:flex;gap:var(--space-5);flex-wrap:wrap;align-items:flex-end;margin-top:var(--space-4)}
+  .ab-dates{display:flex;gap:var(--space-3);flex:none}
+  .ab-dates label{display:block;font-size:var(--fs-caption);letter-spacing:.08em;text-transform:uppercase;color:var(--gray);margin-bottom:4px}
+  .ab-dates input{width:158px}
+  .ab-notes{flex:1;min-width:200px}
 
   /* ---------- mails de propuesta a candidatos ---------- */
   .mail-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-2px 0 10px 2px}
@@ -649,9 +668,17 @@
     .glabel{flex-wrap:wrap;align-items:center;row-gap:3px}
     .glabel small{flex-basis:100%;order:3;text-align:left;line-height:1.4}
 
-    /* línea de equipo: el rol no compite por ancho con el nombre */
-    .team-line .rol{min-width:0;flex-basis:100%}
-    .team-line{gap:6px;padding:11px 2px}
+    /* la grilla de 3 columnas no entra: nombre y controles arriba, contacto abajo */
+    .team-line{grid-template-columns:1fr auto;gap:4px 8px;padding:11px 2px}
+    .team-line .nm{grid-area:1 / 1 / 2 / 2}
+    .team-line .acts{grid-area:1 / 2 / 2 / 3}
+    .team-line .meta{grid-area:2 / 1 / 3 / 3}
+    .ab-foot{gap:var(--space-4)}
+    .ab-dates{flex:1 1 100%}
+    .ab-dates>div{flex:1}
+    .ab-dates input{width:100%}
+    .ab-notes{flex:1 1 100%;min-width:0}
+    .ab-when{margin-left:0;flex-basis:100%}
 
     /* Tabla de fases: a 540px las columnas quedaban tan angostas que los inputs de
        fecha (16px, para que iOS no haga zoom) se desbordaban y se pisaban entre sí
@@ -791,6 +818,8 @@
 
   /* ---------- notas de tarea / fase: se leen enteras, se editan en popup ---------- */
   .nota-box{border:1.5px solid var(--hair);border-radius:var(--radius-sm);padding:8px 10px;margin-top:var(--space-3)}
+  .nota-box.vacio{display:flex;align-items:center;gap:8px;margin-top:0}
+  .nota-box.tiene{margin-top:0}
   .nota-box.tiene{border-color:var(--ink)}
   .nota-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
   .nota-head .lbl{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--gray);flex:1}
@@ -1154,14 +1183,50 @@
   </div>
 </div>
 
+<!-- ============ MODAL: EQUIPO INTERNO ============ -->
+<div class="overlay" id="ovInterno" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="intTitle">
+    <button class="close" onclick="internoClose()" aria-label="Cerrar">✕</button>
+    <h2 id="intTitle">Equipo interno</h2>
+    <div class="kicker" id="intWho"></div>
+
+    <div class="fgroup">
+      <div class="frow">
+        <div><label class="f">Productor Ejecutivo</label>
+          <input type="text" id="intEpNombre" autocomplete="off" placeholder="Nombre"
+                 oninput="acOpenRol(this,'ep','#intEpEmail')" onfocus="acRolFocus(this,'ep','#intEpEmail')"
+                 onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
+        <div><label class="f">Mail EP</label><input type="email" id="intEpEmail" placeholder="ep@team23.online"></div>
+      </div>
+      <div class="frow">
+        <div><label class="f">Productor</label>
+          <input type="text" id="intProdNombre" autocomplete="off" placeholder="Nombre"
+                 oninput="acOpenRol(this,'prod','#intProdEmail')" onfocus="acRolFocus(this,'prod','#intProdEmail')"
+                 onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
+        <div><label class="f">Mail Productor</label><input type="email" id="intProdEmail" placeholder="prod@team23.online"></div>
+      </div>
+      <div class="frow">
+        <div><label class="f">Coordinador</label>
+          <input type="text" id="intCoordNombre" autocomplete="off" placeholder="Nombre"
+                 oninput="acOpenRol(this,'coord','#intCoordEmail')" onfocus="acRolFocus(this,'coord','#intCoordEmail')"
+                 onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
+        <div><label class="f">Mail Coordinador</label><input type="email" id="intCoordEmail" placeholder="coord@team23.online"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="internoClose()">Cancelar</button>
+      <button class="btn primary" onclick="internoSave()">Guardar equipo interno</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ MODAL: EDITAR PERSONA ============ -->
 <div class="overlay" id="ovPersona" style="z-index:1100">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="perTitle">
     <button class="close" onclick="personaClose()" aria-label="Cerrar">✕</button>
     <h2 id="perTitle">Editar persona</h2>
     <div class="kicker" id="perWho"></div>
-
-    <div class="mail-warn" id="perAviso" style="display:none"></div>
 
     <div class="fgroup">
       <div class="frow">
@@ -1366,6 +1431,11 @@ async function api(path, opts={}){
 }
 
 /* fecha de finalización = la última fecha del calendario (fin de fase o hito) */
+/* "7 jul" — para los resúmenes donde el año se sobreentiende */
+function fechaCorta(s){
+  const d = parseYMD(s);
+  return d ? d.toLocaleDateString("es-AR",{day:"numeric",month:"short"}).replace(".","") : "";
+}
 function projectEndDate(p){
   const ds = (p.calendario||[]).map(r=>parseYMD(r.fin)||parseYMD(r.inicio)).filter(Boolean);
   return ds.length ? new Date(Math.max(...ds.map(d=>d.getTime()))) : null;
@@ -1478,8 +1548,8 @@ function cardHTML(p, readOnly=false){
   const fLink = p.links?.frameio && p.links.frameio!=="#" ? `<a href="${esc(p.links.frameio)}" target="_blank" onclick="event.stopPropagation()">FRAME.IO ↗</a>` : "";
   return `<div class="card" onclick="openDetail('${p.id}'${readOnly?",true":""})">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3)">
-      <h3 style="margin-bottom:0">${esc(p.nombre)}</h3>
-      ${pills?`<div class="pills" style="flex:none;justify-content:flex-end">${pills}</div>`:""}
+      <h3 style="margin-bottom:0;min-width:0;overflow-wrap:anywhere">${esc(p.nombre)}</h3>
+      ${pills?`<div class="pills" style="flex:0 1 auto;min-width:0;max-width:60%;justify-content:flex-end">${pills}</div>`:""}
     </div>
     <div class="meta">${meta||"&nbsp;"}</div>
     ${inProgress(p.status)?`<div style="margin-bottom:var(--space-3)">${statusBadge(p.status)}</div>`:""}
@@ -1951,9 +2021,9 @@ function assignBlockHTML(tarea, rows, ctx){
     return `
       <div class="team-line${apagado?" off":""}">
         <span class="nm">${esc(r.nombre || r.email || "Sin nombre")}</span>
-        ${meta.length?`<span class="meta">${esc(meta.join(" · "))}</span>`:`<span class="meta falta">sin mail ni contacto</span>`}
-        ${lockTareasCtx ? "" : `<button class="mini-btn" onclick="personaOpen('asig','${tq}',${i})" title="Editar datos de contacto">✎</button>`}
-        ${lockTareasCtx ? "" : stateInner(r,i)}
+        ${meta.length?`<span class="meta">${esc(meta.join(" · "))}</span>`:`<span class="meta falta">sin contacto cargado</span>`}
+        <span class="acts">${lockTareasCtx ? "" :
+          stateInner(r,i) + `<button class="mini-btn" onclick="personaOpen('asig','${tq}',${i})" title="Editar datos de contacto">✎</button>`}</span>
       </div>
       <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>`;
   };
@@ -1980,15 +2050,27 @@ function assignBlockHTML(tarea, rows, ctx){
       </div>
       <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>${stateRow(r,i)}`;
   };
+  /* el rango va en el encabezado: se entiende la tarea sin leer los inputs */
+  const rango = (td.inicio || td.fin)
+    ? `<span class="ab-when">${esc(fechaCorta(td.inicio) || "?")} → ${esc(fechaCorta(td.fin) || "?")}</span>`
+    : `<span class="ab-when falta">sin fechas</span>`;
+  const cuantos = visibles.filter(({r})=>!vacia(r)).length;
+
   return `<div class="assign-block">
-    <div class="ttl">${esc(tarea)} — ${ctx==="n2"?"candidatos":"equipo"} + fechas</div>
+    <div class="ab-head">
+      <span class="ab-ttl">${esc(tarea)}</span>
+      <span class="ab-count">${cuantos} ${cuantos===1?"persona":"personas"}</span>
+      ${rango}
+    </div>
     ${visibles.map(filaHTML).join("")}
     <button class="addline" onclick="addAssign('${ctx}','${tarea}')">+ agregar persona</button>
-    <div class="frow" style="margin-top:var(--space-4)">
-      <div><label class="f">Inicio</label><input type="date" value="${esc(td.inicio||"")}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value)"></div>
-      <div><label class="f">Fin</label><input type="date" value="${esc(td.fin||"")}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value)"></div>
+    <div class="ab-foot">
+      <div class="ab-dates">
+        <div><label>Inicio</label><input type="date" value="${esc(td.inicio||"")}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value)"></div>
+        <div><label>Fin</label><input type="date" value="${esc(td.fin||"")}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value)"></div>
+      </div>
+      <div class="ab-notes" id="${notaSlotId(ctx,tarea)}">${notaBoxHTML(ctx, tarea, false)}</div>
     </div>
-    <div id="${notaSlotId(ctx,tarea)}">${notaBoxHTML(ctx, tarea, false)}</div>
   </div>`;
 }
 /* confirmar / rechazar en pre-producción, activar / desactivar en curso; persiste al toque */
@@ -2381,7 +2463,7 @@ function renderDetail(){
       </div>
     </div>` : `
     <div class="fgroup">
-      <div class="glabel">Equipo interno <small>cambiarlo es poco común; se edita con el ✎</small></div>
+      <div class="glabel">Equipo interno <button class="mini-btn" onclick="internoOpen()">✎ editar</button></div>
       ${internoHTML(p)}
     </div>`}
 
@@ -2741,20 +2823,66 @@ function renderDashboard(){ $("#dashboardBody").innerHTML = dashboardHTML(); }
 let loadScope = "activo"; // 'activo' | 'pre' — qué proyectos mira "Carga de trabajo"
 function setLoadScope(s){ loadScope = s; renderDashboard(); }
 
-/* equipo interno primero (EP/Productor/Coordinador), después los asignados a tareas */
+/* Carga de trabajo: UNA entrada por persona, contada en PROYECTOS.
+   Antes había dos diccionarios (equipo interno y asignados a tareas) que se
+   concatenaban, así que quien era EP de tres proyectos y además estaba asignado a
+   una tarea aparecía dos veces: "Narf (3 proyectos)" y "Narf (1 proyecto)".
+   Además la clave era el nombre crudo, así que una diferencia de mayúsculas o de
+   acento partía a la misma persona en dos. */
 function computeLoad(list){
-  const teamLoad = {}, taskLoad = {};
-  const bump = (store,nombre,email) => { const key=(nombre||email||"").trim(); if(key) store[key]=(store[key]||0)+1; };
+  /* Se recorre dos veces. La primera arma el índice de quién es quién: la misma
+     persona puede figurar con nombre y mail en un proyecto y solo con el mail en
+     otro, y si se agrupa por lo que venga se parte en dos entradas. */
+  const ocurrencias = [];
+  const mailsDeNombre = new Map();   // nombre norm → Set de mails norm
+  const nombreDeMail = new Map();    // mail norm   → nombre norm
+  const anotar = (nombre, email, pid) => {
+    const nom = String(nombre||"").replace(/\s+/g," ").trim();
+    const mail = String(email||"").trim();
+    if(!nom && !mail) return;
+    const kn = rosterNorm(nom), km = rosterNorm(mail);
+    if(kn && km){
+      if(!mailsDeNombre.has(kn)) mailsDeNombre.set(kn, new Set());
+      mailsDeNombre.get(kn).add(km);
+      if(!nombreDeMail.has(km)) nombreDeMail.set(km, kn);
+    }
+    ocurrencias.push({ nom, mail, kn, km, pid });
+  };
   list.forEach(p=>{
-    Object.values(p.asignaciones||{}).forEach(rows=>(rows||[]).forEach(r=>bump(taskLoad,r.nombre,r.email)));
-    bump(teamLoad, p.ep_nombre, p.ep_email);
-    bump(teamLoad, p.prod_nombre, p.prod_email);
-    bump(teamLoad, p.coord_nombre, p.coord_email);
+    const pid = String(p.id);
+    Object.values(p.asignaciones||{}).forEach(rows=>(rows||[]).forEach(r=>{
+      if(!r) return;
+      /* rechazados e inactivos no son carga; los candidatos sí, ya están comprometidos */
+      if(r.estado === "rechazado" || r.estado === "inactivo") return;
+      anotar(r.nombre, r.email, pid);
+    }));
+    anotar(p.ep_nombre, p.ep_email, pid);
+    anotar(p.prod_nombre, p.prod_email, pid);
+    anotar(p.coord_nombre, p.coord_email, pid);
   });
-  return [
-    ...Object.entries(teamLoad).sort((a,b)=>b[1]-a[1]),
-    ...Object.entries(taskLoad).sort((a,b)=>b[1]-a[1])
-  ];
+
+  const porPersona = new Map();
+  ocurrencias.forEach(o=>{
+    /* nombre conocido para ese mail, o el nombre, o el mail como último recurso */
+    let k = o.kn || nombreDeMail.get(o.km) || o.km;
+    /* dos mails distintos bajo el mismo nombre son dos personas: no se fusionan */
+    const mails = mailsDeNombre.get(k);
+    if(mails && mails.size > 1 && o.km) k += "|" + o.km;
+    let e = porPersona.get(k);
+    if(!e){ e = { nombre:"", mail:"", tieneNombre:false, proyectos:new Set() }; porPersona.set(k, e); }
+    /* el primer nombre real gana; el mail es solo el respaldo si nunca aparece uno */
+    if(o.nom && !e.tieneNombre){ e.nombre = o.nom; e.tieneNombre = true; }
+    if(!e.mail && o.mail) e.mail = o.mail;
+    e.proyectos.add(o.pid);
+  });
+  const entradas = [...porPersona.values()].map(e=>({ ...e, nombre: e.nombre || e.mail }));
+  /* dos personas distintas con el mismo nombre existen: se distinguen con el mail
+     para que no se vean como una entrada repetida */
+  const repetidos = new Map();
+  entradas.forEach(e=>repetidos.set(e.nombre, (repetidos.get(e.nombre)||0)+1));
+  return entradas
+    .map(e=>[ repetidos.get(e.nombre) > 1 && e.mail ? e.nombre+" · "+e.mail : e.nombre, e.proyectos.size ])
+    .sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0],"es"));
 }
 /* más de 1 proyecto en el scope = sobrecargado → se marca en rojo (mismo rojo de alerta del resto del hub) */
 function loadListHTML(rows, emptyMsg){
@@ -3313,18 +3441,17 @@ function renderTracker(){
    coordinador o de productor a mitad de un proyecto es la excepción. La posibilidad
    está, pero deja de gritar. */
 function internoHTML(p){
-  const fila = (rol)=>{
+  const col = (rol)=>{
     const def = PER_ROLES[rol];
     const nombre = (p[def.nombre]||"").trim();
     const mail = (p[def.mail]||"").trim();
-    return `<div class="team-line${nombre?"":" off"}">
-      <span class="rol">${def.titulo}</span>
-      <span class="nm">${nombre?esc(nombre):"—"}</span>
-      ${mail?`<span class="meta">${esc(mail)}</span>`:(nombre?`<span class="meta falta">sin mail</span>`:"")}
-      <button class="mini-btn" onclick="personaOpen('interno','${rol}')" title="${nombre?"Cambiar":"Cargar"} ${def.titulo.toLowerCase()}">${nombre?"✎":"+ cargar"}</button>
+    return `<div>
+      <label class="f">${def.titulo}</label>
+      <div style="font-size:var(--fs-body)${nombre?"":";color:var(--gray)"}">${nombre?esc(nombre):"—"}</div>
+      ${mail?`<div style="font-size:12.5px;color:var(--gray);overflow-wrap:anywhere">${esc(mail)}</div>`:""}
     </div>`;
   };
-  return ["ep","prod","coord"].map(fila).join("");
+  return `<div class="frow">${["ep","prod","coord"].map(col).join("")}</div>`;
 }
 
 /* ================================================================
@@ -3462,19 +3589,39 @@ function personaAutofill(o){
     set("#perTelefono", o.tel);
   }
 }
+/* Los tres roles internos se editan juntos en un solo popup: son pocos campos y
+   normalmente se toca más de uno a la vez. Los nombres autocompletan filtrado por
+   rol, igual que en los formularios de creación. */
+function internoOpen(){
+  const p = detailProject; if(!p) return;
+  $("#intWho").textContent = p.nombre || "Proyecto";
+  ["ep","prod","coord"].forEach(rol=>{
+    const def = PER_ROLES[rol];
+    const clave = rol==="ep" ? "Ep" : rol==="prod" ? "Prod" : "Coord";
+    $("#int"+clave+"Nombre").value = p[def.nombre] || "";
+    $("#int"+clave+"Email").value  = p[def.mail] || "";
+  });
+  $("#ovInterno").classList.add("open");
+  setTimeout(()=>{ const el=$("#intEpNombre"); if(el) el.focus(); }, 30);
+  rosterEnsure().catch(()=>{});
+}
+function internoClose(){ acClose(); $("#ovInterno").classList.remove("open"); }
+function internoSave(){
+  const p = detailProject; if(!p){ internoClose(); return; }
+  ["ep","prod","coord"].forEach(rol=>{
+    const def = PER_ROLES[rol];
+    const clave = rol==="ep" ? "Ep" : rol==="prod" ? "Prod" : "Coord";
+    p[def.nombre] = ($("#int"+clave+"Nombre").value||"").trim();
+    p[def.mail]   = ($("#int"+clave+"Email").value||"").trim();
+  });
+  detailDirty = true;   // el input/change de la ficha no corre desde un modal
+  internoClose(); renderDetail();
+  toast("✔ Equipo interno actualizado");
+}
+
 function personaOpen(kind, a, b){
   const p = detailProject; if(!p) return;
-  if(kind==="interno"){
-    const def = PER_ROLES[a]; if(!def) return;
-    perTarget = { kind, rol:a };
-    $("#perTitle").textContent = def.titulo;
-    $("#perWho").textContent = p.nombre || "Proyecto";
-    $("#perNombre").value = p[def.nombre] || "";
-    $("#perEmail").value = p[def.mail] || "";
-    $("#perExtra").style.display = "none";
-    $("#perAviso").textContent = "Cambiar el "+def.titulo.toLowerCase()+" de un proyecto en marcha es poco frecuente. Los avisos de calendario van a este mail, así que revisá que esté bien antes de guardar.";
-    $("#perAviso").style.display = "block";
-  }else{
+  {
     const r = (p.asignaciones[a]||[])[b]; if(!r) return;
     perTarget = { kind:"asig", tarea:a, i:b };
     $("#perTitle").textContent = "Editar persona";
@@ -3484,7 +3631,6 @@ function personaOpen(kind, a, b){
     $("#perDiscord").value = r.discord || "";
     $("#perTelefono").value = r.telefono || "";
     $("#perExtra").style.display = "";
-    $("#perAviso").style.display = "none";
   }
   $("#perFuente").textContent = "";
   $("#ovPersona").classList.add("open");
@@ -3495,13 +3641,7 @@ function personaOpen(kind, a, b){
     if(!perTarget) return;
     const n = perSugerencias(perTarget.kind, perTarget.rol).length;
     const el = $("#perFuente"); if(!el) return;
-    if(perTarget.kind === "interno"){
-      const def = PER_ROLES[perTarget.rol];
-      el.textContent = n ? "· "+n+" sugerencia"+(n===1?"":"s")+" (equipo interno + Directorio con especialidad "+def.titulo.toLowerCase()+")"
-                         : "· sin sugerencias para este rol en el Directorio";
-    }else{
-      el.textContent = n ? "· "+n+" del Directorio" : "";
-    }
+    el.textContent = n ? "· "+n+" del Directorio" : "";
   }).catch(()=>{
     const el = $("#perFuente");
     if(el) el.textContent = "· no pude leer el Directorio, escribilo a mano";
@@ -3513,15 +3653,6 @@ function personaSave(){
   const p = detailProject; if(!p){ personaClose(); return; }
   const nombre = ($("#perNombre").value||"").trim();
   const email  = ($("#perEmail").value||"").trim();
-  if(perTarget.kind==="interno"){
-    const def = PER_ROLES[perTarget.rol];
-    p[def.nombre] = nombre;
-    p[def.mail] = email;
-    detailDirty = true;                 // el input/change de la ficha no corrió
-    personaClose(); renderDetail();
-    toast(nombre ? "✔ "+def.titulo+": "+nombre : def.titulo+" sin cargar");
-    return;
-  }
   const r = (p.asignaciones[perTarget.tarea]||[])[perTarget.i];
   if(!r){ personaClose(); return; }
   r.nombre = nombre;
@@ -3568,9 +3699,11 @@ function notaBoxHTML(ctx, tarea, readOnly){
   const tq = String(tarea).replace(/'/g,"\\'");
   const editar = readOnly ? "" :
     `<button class="mini-btn" onclick="notaOpen('task','${ctx}','${tq}')">${txt?"✎ editar":"+ agregar"}</button>`;
-  return `<div class="nota-box ${txt?"tiene":""}">
+  /* vacía = una línea; una caja grande para "sin notas" era mucho peso por nada */
+  if(!txt) return `<div class="nota-box vacio"><span class="lbl">Notas</span>${editar}</div>`;
+  return `<div class="nota-box tiene">
     <div class="nota-head"><span class="lbl">Notas</span>${editar}</div>
-    <div class="nota-txt ${txt?"":"vacia"}">${txt?esc(txt):"Sin notas para esta tarea."}</div>
+    <div class="nota-txt">${esc(txt)}</div>
   </div>`;
 }
 function notaSlotSync(ctx, tarea){
@@ -4426,6 +4559,7 @@ function closeOverlayById(id){
   if(id==="ovReact"){ reactClose(); return; }
   if(id==="ovNota"){ notaClose(); return; }
   if(id==="ovPersona"){ personaClose(); return; }
+  if(id==="ovInterno"){ internoClose(); return; }
   closeModal(id);
 }
 document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{
