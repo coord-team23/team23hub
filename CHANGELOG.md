@@ -2,6 +2,46 @@
 
 Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
 
+## 2026-07-26 — Landing, mes en completados, y reconciliación de tus fixes de mobile
+
+Importante primero: **confirmamos que Netlify deploya desde `coord-team23/team23hub`**, no desde `t34M23/team23hub`. De acá en más, cada sincronización se pushea a los **dos** repos (ya lo hicimos con este commit) para que el sitio live se actualice solo.
+
+### home.html (landing) — rediseño
+
+- Se sacó el sector superior (wordmark + botón "Ingresar") y la sección "Qué datos usa TEAM 23 Hub y para qué" (esa info sigue en `/privacidad`, solo se sacó de la landing).
+- Tarjetas y el bloque "¿Quién puede entrar?" ahora con `border-radius:var(--radius-lg)`, igual que el resto del hub (antes tenían esquina recta).
+- El `h1` tenía `font-weight:900` y `letter-spacing:-1px` hardcodeados — no coincidía con el resto del hub, que usa `var(--weight-bold)` (700) + `var(--tracking-tight)`. Ya alineado, más el mismo `-webkit-text-stroke` que usa `.hero h1` en `index.html`.
+- El subtítulo pasó de `<p>` a `<h2>`, con menos interlineado, y el texto se acortó a: *"Plataforma de gestión del estudio TEAM 23 para organizar cada proyecto de principio a fin..."*
+- Kicker actualizado a "Dirección Creativa, Post Producción & New Media Lab", con `letter-spacing:-0.04em` (el mismo valor de `--tracking-tight`).
+- Footer reemplazado por el mismo de `index.html` (logo + "MX — ARG — WORLDWIDE" + copyright), antes tenía uno propio con links de privacidad/contacto sueltos.
+
+### Kerning de Nimbus, unificado en toda la plataforma
+
+`login.html`, `home.html` y `privacidad.html` no tenían `letter-spacing` en el `body` — `index.html` y `proveedores.html` sí. Se agregó `var(--tracking-tight)` a los tres para que el kerning sea consistente en todo el sitio, no solo en el hub y el portal.
+
+### Header: botones unificados con las tabs
+
+- "Directorio" / "Usuarios" / "+ Nuevo Proyecto" / "Salir" ahora comparten exactamente el mismo stroke (2px, antes 4px), la misma altura y las mayúsculas de "Status"/"Proyectos"/"Calendario".
+- "Salir" pasa a ser solo un ícono de flecha (antes decía "Salir" y ocupaba mucho ancho en mobile).
+- En modo demo (sin `CONFIG.SUPABASE_URL`) esos tres botones ahora se muestran solos, para poder recorrer el hub completo local sin login real.
+
+### Completados: agrupado por mes + año
+
+Al marcar un proyecto "Completado" ahora se guarda el mes además del año (`p.month`), y el listado de completados agrupa mostrando "Marzo de 2026" en vez de solo "2026". Los completados de antes de este cambio (sin mes guardado) siguen agrupándose bien, solo por año. Wireado en `n8n/2-get-projects.json` y `n8n/4-update-project.json` (campo `month`) — si tenés algo tocando esos workflows del lado tuyo, avisame para no pisarnos.
+
+### Reconciliación con tus 4 commits nuevos (fixes de responsive mobile)
+
+Encontramos que habías seguido puliendo el responsive en `index.html` desde la última sincronización — historias no relacionadas (subiste todo por "Add files via upload"), así que el merge automático marcó todo como conflicto add/add. Se resolvió a mano: base nuestra + tu delta real reaplicado encima. Nada tuyo se perdió — el push a tu repo fue un fast-forward limpio (`c895141..95202b6`), sin forzar nada.
+
+Lo tuyo que quedó adoptado:
+- Header en columna en mobile (antes se desbordaba del viewport y "Salir" quedaba directamente afuera de la pantalla).
+- Tabs en una sola línea con scroll horizontal en vez de wrap.
+- Tracker de jornadas y calendario: en vez de aplastar las columnas hasta ilegibles, ahora scrollean de costado.
+- Grilla de asignación (nombre/mail/discord/teléfono) con `grid-area` explícito — antes el campo Discord se colaba en la columna de la cruz de borrar.
+- Alturas mínimas más generosas en checkboxes/botones chicos para que se puedan tocar con el dedo.
+- Popups (síntesis, notas, mail) con menos alto fijo, para no obligar a scrollear tanto en pantallas chicas.
+- Se descartó de nuevo `n8n/index.html` — el mismo archivo accidental (una copia vieja de `index.html` subida por error a esa carpeta) que ya habíamos sacado la vez pasada, había vuelto a aparecer.
+
 ## 2026-07-25 — Reconciliación con la versión de Eyal + rebrand TEAM 23
 
 Este merge trajo tu último estado de `coord-team23/team23hub` (67 commits desde la vez pasada) hacia `t34M23/team23hub`, resolviendo los lugares donde ambos tocamos lo mismo. Punto de rollback si algo se rompe: tag `pre-eyal-merge-2026-07-25`.
