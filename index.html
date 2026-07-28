@@ -915,7 +915,7 @@
 <!-- ============ MODAL: NUEVO PROYECTO ============ -->
 <div class="overlay" id="ovNew">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newTitle">
-    <button class="close" onclick="closeModal('ovNew')" aria-label="Cerrar">✕</button>
+    <button class="close" onclick="closeNew()" aria-label="Cerrar">✕</button>
     <h2 id="newTitle">Nuevo proyecto</h2>
     <div class="kicker">Al crearlo se genera Drive + Frame.io + documentos, automáticamente</div>
 
@@ -960,7 +960,7 @@
     </div>
 
     <div class="actions">
-      <button class="btn" onclick="closeModal('ovNew')">Cancelar</button>
+      <button class="btn" onclick="closeNew()">Cancelar</button>
       <button class="btn primary" id="btnCreate" onclick="createProject()">Crear proyecto</button>
     </div>
   </div>
@@ -4204,12 +4204,46 @@ async function parseDebrief2(){
 /* Un armado nuevo está "sucio" si hay algo cargado. Un borrador que ya existe
    está sucio solo si cambió respecto de cómo se abrió: si no, cerrar no pregunta
    nada. */
+/* ¿Hay algo cargado en el formulario? Mira TODOS los campos, no solo el nombre y el
+   debrief: si cargaste el equipo interno, la productora o una fecha y cerrás, eso se
+   pierde igual y hay que preguntar. */
+function hayAlgoCargado({campos, tareas, assign, fechas, extras}){
+  if(Object.values(campos||{}).some(v=>String(v||"").trim())) return true;
+  if((tareas||[]).length) return true;
+  if(Object.values(assign||{}).some(rows=>(rows||[]).some(r=>r && (String(r.nombre||"").trim() || String(r.email||"").trim())))) return true;
+  if(Object.values(fechas||{}).some(d=>d && (d.inicio || d.fin || d.notas))) return true;
+  if((extras||[]).some(v=>String(v||"").trim())) return true;
+  return false;
+}
 function n2Dirty(){
+  /* Borrador que ya existe: la pregunta es si cambió algo desde que se abrió, no si
+     hay contenido — si no, abrir y cerrar sin tocar nada preguntaría siempre. */
   if(currentDraftId && n2DraftBase !== null){
     try{ return JSON.stringify(n2Snapshot()) !== n2DraftBase; }catch(e){ return true; }
   }
-  return !!(($("#n2Debrief")&&$("#n2Debrief").value.trim()) || ($("#n2Nombre")&&$("#n2Nombre").value.trim()) || n2Selected.size);
+  const s = n2Snapshot();
+  return hayAlgoCargado({ campos:s.campos, tareas:s.tareas, assign:s.assign, fechas:s.fechas, extras:[s.debrief] });
 }
+/* El alta manual no tenía guarda: la ✕, Cancelar y el click afuera cerraban directo
+   y se perdía todo. No ofrece "guardar borrador" porque el borrador vive en el estado
+   del flujo de debrief, no en este. */
+function npDirty(){
+  const ids = ["npNombre","npCliente","npAgencia","npProductora","npDirector",
+               "npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"];
+  return hayAlgoCargado({
+    campos: Object.fromEntries(ids.map(id=>[id, ($("#"+id)||{}).value||""])),
+    tareas: [...npSelected], assign: npAssignData, fechas: npTaskDates,
+    /* lo que trajo el kick off también cuenta: si cerrás, hay que rehacerlo */
+    extras: [npSintesis, npStoryboardUrl, npTratamientoUrl]
+  });
+}
+async function closeNew(){
+  if(!npDirty()){ closeModal("ovNew"); return; }
+  const r = await t23Confirm("Vas a cerrar el armado sin crear el proyecto. Lo que cargaste se pierde.",
+    { titulo:"CERRAR SIN CREAR", ok:"Cerrar sin guardar", peligro:true });
+  if(r === true) closeModal("ovNew");
+}
+
 async function closeNew2(){
   if(!n2Dirty()){ closeModal("ovNew2"); return; }
   /* borrador existente: la pregunta es si se guardan los cambios. Cerrar sin
@@ -4379,6 +4413,7 @@ if(_ovDet){
    guardar borrador, el editor de mails no toca el scroll porque queda uno abierto atrás) */
 function closeOverlayById(id){
   if(id==="ovDetail"){ requestCloseDetail(); return; }
+  if(id==="ovNew"){ closeNew(); return; }
   if(id==="ovNew2"){ closeNew2(); return; }
   if(id==="ovMail"){ mailClose(); return; }
   if(id==="ovSintesis"){ sxClose(); return; }
