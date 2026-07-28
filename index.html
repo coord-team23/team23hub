@@ -1165,7 +1165,12 @@
 
     <div class="fgroup">
       <div class="frow">
-        <div><label class="f">Nombre</label><input type="text" id="perNombre" autocomplete="off"></div>
+        <div>
+          <label class="f">Nombre <small id="perFuente" style="color:var(--gray);letter-spacing:0;font-weight:var(--weight-regular);text-transform:none"></small></label>
+          <input type="text" id="perNombre" autocomplete="off"
+                 oninput="acOpenPersona(this)" onfocus="acOpenPersona(this)"
+                 onkeydown="acKey(event)" onblur="setTimeout(acClose,150)">
+        </div>
         <div><label class="f">Mail</label><input type="email" id="perEmail" placeholder="mail@team23.online"></div>
       </div>
       <div class="frow" id="perExtra">
@@ -3331,10 +3336,99 @@ function internoHTML(p){
 ================================================================ */
 let perTarget = null;
 const PER_ROLES = {
-  ep:    { titulo:"Productor Ejecutivo", nombre:"ep_nombre",    mail:"ep_email" },
-  prod:  { titulo:"Productor",           nombre:"prod_nombre",  mail:"prod_email" },
-  coord: { titulo:"Coordinador",         nombre:"coord_nombre", mail:"coord_email" }
+  ep: {
+    titulo:"Productor Ejecutivo", nombre:"ep_nombre", mail:"ep_email",
+    /* El Directorio es el spreadsheet de proveedores: los EP no están ahí y no
+       tiene mucho sentido meterlos. Van fijos acá. Si algún día se los carga al
+       Directorio con la especialidad correspondiente, aparecen por las dos vías
+       y se deduplican por nombre.
+       ↓ Completar los mails: los avisos de calendario salen a esa dirección. */
+    tags: ["productor ejecutivo","ejecutivo","ep"],
+    fijos: [ {nombre:"Narf", email:""}, {nombre:"Mile", email:""}, {nombre:"Teo", email:""} ]
+  },
+  prod: {
+    titulo:"Productor", nombre:"prod_nombre", mail:"prod_email",
+    tags: ["productor","produccion"], excluye: ["ejecutivo"], fijos: []
+  },
+  coord: {
+    titulo:"Coordinador", nombre:"coord_nombre", mail:"coord_email",
+    tags: ["coordinador","coordinacion","coord"], fijos: []
+  }
 };
+/* Sugerencias para el nombre en el popup.
+   interno → lista fija del rol + gente del Directorio etiquetada con ese rol en
+             la columna "especialidad" (son muchas menos personas que el Directorio
+             completo, y filtrar evita tener que buscar entre todos los proveedores).
+   asig    → el Directorio entero, como en el formulario de tareas. */
+function perSugerencias(){
+  const salida = [], vistos = new Map();
+  const sumar = (o)=>{
+    const k = rosterNorm(o.nombre);
+    if(!k) return;
+    const ya = vistos.get(k);
+    if(ya){
+      /* mismo nombre por las dos vías (p. ej. un EP que además está en el Directorio):
+         se queda una sola entrada y se completa con los datos que le falten */
+      ["email","discord","tel"].forEach(f=>{ if(!ya[f] && o[f]) ya[f] = o[f]; });
+      return;
+    }
+    vistos.set(k, o); salida.push(o);
+  };
+  const interno = perTarget && perTarget.kind === "interno";
+  const def = interno ? PER_ROLES[perTarget.rol] : null;
+  if(def) (def.fijos||[]).forEach(f=>sumar({ nombre:f.nombre, email:f.email||"", fuente:"equipo interno" }));
+  if(!dirData) return salida;
+  const c = rosterCols();
+  if(c.nombre < 0) return salida;
+  dirData.rows.forEach(r=>{
+    const nombre = String(r.v[c.nombre]||"").trim();
+    if(!nombre) return;
+    const esp = c.especialidad >= 0 ? String(r.v[c.especialidad]||"") : "";
+    if(interno){
+      /* la especialidad es multivalor separada por comas */
+      const etiquetas = esp.split(",").map(s=>rosterNorm(s)).filter(Boolean);
+      const pega = etiquetas.some(e => def.tags.some(tag => e.includes(tag)))
+                && !etiquetas.some(e => (def.excluye||[]).some(x => e.includes(x)));
+      if(!pega) return;
+    }
+    sumar({
+      nombre,
+      email: c.mail >= 0 ? String(r.v[c.mail]||"").trim() : "",
+      discord: c.discord >= 0 ? String(r.v[c.discord]||"").trim() : "",
+      tel: c.tel >= 0 ? String(r.v[c.tel]||"").trim() : "",
+      fuente: esp.trim() || "directorio"
+    });
+  });
+  return salida;
+}
+/* Autocompletado del popup: mismo panel y mismas teclas que el de tareas, pero con
+   la fuente filtrada y llenando los campos del propio popup al elegir. */
+function acOpenPersona(input){
+  const q = rosterNorm(input.value);
+  const todas = perSugerencias();
+  const items = (q ? todas.filter(o=>rosterNorm(o.nombre).includes(q)) : todas).slice(0, 8);
+  if(!items.length){ acClose(); return; }
+  acState = { input, items, hi:-1, onPick: personaAutofill };
+  const pn = acPanel();
+  pn.innerHTML = items.map((o,ix)=>
+    `<div class="ac-item" onmousedown="event.preventDefault();acPick(${ix})">${esc(o.nombre)}`+
+    (o.fuente?` <span style="color:var(--gray);font-size:11.5px">${esc(o.fuente)}</span>`:"")+`</div>`).join("");
+  const r = input.getBoundingClientRect();
+  pn.style.display = "block";
+  pn.style.left = r.left + "px";
+  pn.style.top = (r.bottom + 2) + "px";
+  pn.style.width = r.width + "px";
+}
+/* al elegir, completa lo que esté vacío — no pisa lo que ya escribiste */
+function personaAutofill(o){
+  const set = (sel, val)=>{ const el = $(sel); if(el && !el.value.trim() && val) el.value = val; };
+  $("#perNombre").value = o.nombre;
+  set("#perEmail", o.email);
+  if(perTarget && perTarget.kind === "asig"){
+    set("#perDiscord", o.discord);
+    set("#perTelefono", o.tel);
+  }
+}
 function personaOpen(kind, a, b){
   const p = detailProject; if(!p) return;
   if(kind==="interno"){
@@ -3359,10 +3453,28 @@ function personaOpen(kind, a, b){
     $("#perExtra").style.display = "";
     $("#perAviso").style.display = "none";
   }
+  $("#perFuente").textContent = "";
   $("#ovPersona").classList.add("open");
   setTimeout(()=>{ const el=$("#perNombre"); if(el) el.focus(); }, 30);
+  /* el directorio se lee una sola vez y queda en memoria; si todavía no está,
+     se pide ahora para que las sugerencias existan */
+  rosterEnsure().then(()=>{
+    if(!perTarget) return;
+    const n = perSugerencias().length;
+    const el = $("#perFuente"); if(!el) return;
+    if(perTarget.kind === "interno"){
+      const def = PER_ROLES[perTarget.rol];
+      el.textContent = n ? "· "+n+" sugerencia"+(n===1?"":"s")+" (equipo interno + Directorio con especialidad "+def.titulo.toLowerCase()+")"
+                         : "· sin sugerencias para este rol en el Directorio";
+    }else{
+      el.textContent = n ? "· "+n+" del Directorio" : "";
+    }
+  }).catch(()=>{
+    const el = $("#perFuente");
+    if(el) el.textContent = "· no pude leer el Directorio, escribilo a mano";
+  });
 }
-function personaClose(){ $("#ovPersona").classList.remove("open"); perTarget = null; }
+function personaClose(){ acClose(); $("#ovPersona").classList.remove("open"); perTarget = null; }
 function personaSave(){
   if(!perTarget) return;
   const p = detailProject; if(!p){ personaClose(); return; }
@@ -4418,7 +4530,8 @@ function rosterNorm(s){ return String(s||"").normalize("NFD").replace(/[\u0300-\
 function rosterCols(){
   const h = (dirData ? dirData.headers : []).map(rosterNorm);
   const find = (...keys) => h.findIndex(x => keys.some(k => x.includes(k)));
-  return { nombre: find("nombre"), mail: find("mail","correo"), discord: find("discord"), tel: find("tel") };
+  return { nombre: find("nombre"), mail: find("mail","correo"), discord: find("discord"), tel: find("tel"),
+           especialidad: find("especialidad","rol","puesto") };
 }
 function rosterEnsure(){
   if(dirData) return Promise.resolve(dirData);
@@ -4468,9 +4581,12 @@ function acOpen(input, ctx, t, i){
 }
 function acPick(ix){
   if(!acState) return;
-  const { input, ctx, t, i, items } = acState;
-  input.value = items[ix];
-  setAssign(ctx, t, i, "nombre", items[ix]);
+  const { input, ctx, t, i, items, onPick } = acState;
+  const it = items[ix];
+  /* el panel se comparte: tareas manda strings, el popup de persona manda objetos */
+  if(onPick){ onPick(it); acClose(); return; }
+  input.value = it;
+  setAssign(ctx, t, i, "nombre", it);
   asigAutofill(input, ctx, t, i);
   acClose();
 }
