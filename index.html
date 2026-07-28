@@ -934,15 +934,15 @@
     <div class="fgroup">
       <div class="glabel">Equipo interno <small>nombre + mail (para los avisos de calendario)</small></div>
       <div class="frow">
-        <div><label class="f">Productor Ejecutivo *</label><input type="text" id="npEpNombre" placeholder="Nombre"></div>
+        <div><label class="f">Productor Ejecutivo *</label><input type="text" id="npEpNombre" autocomplete="off" oninput="acOpenRol(this,'ep','#npEpEmail')" onfocus="acRolFocus(this,'ep','#npEpEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
         <div><label class="f">Mail EP *</label><input type="email" id="npEpEmail" placeholder="ep@team23.online"></div>
       </div>
       <div class="frow">
-        <div><label class="f">Productor</label><input type="text" id="npProdNombre" placeholder="Nombre"></div>
+        <div><label class="f">Productor</label><input type="text" id="npProdNombre" autocomplete="off" oninput="acOpenRol(this,'prod','#npProdEmail')" onfocus="acRolFocus(this,'prod','#npProdEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
         <div><label class="f">Mail Productor</label><input type="email" id="npProdEmail" placeholder="prod@team23.online"></div>
       </div>
       <div class="frow">
-        <div><label class="f">Coordinador</label><input type="text" id="npCoordNombre" placeholder="Nombre"></div>
+        <div><label class="f">Coordinador</label><input type="text" id="npCoordNombre" autocomplete="off" oninput="acOpenRol(this,'coord','#npCoordEmail')" onfocus="acRolFocus(this,'coord','#npCoordEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
         <div><label class="f">Mail Coordinador</label><input type="email" id="npCoordEmail" placeholder="coord@team23.online"></div>
       </div>
     </div>
@@ -1096,15 +1096,15 @@
       <div class="fgroup">
         <div class="glabel">3 · Equipo interno <small>nombre + mail (para los avisos de calendario)</small></div>
         <div class="frow">
-          <div><label class="f">Productor Ejecutivo *</label><input type="text" id="n2EpNombre" placeholder="Nombre"></div>
+          <div><label class="f">Productor Ejecutivo *</label><input type="text" id="n2EpNombre" autocomplete="off" oninput="acOpenRol(this,'ep','#n2EpEmail')" onfocus="acRolFocus(this,'ep','#n2EpEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
           <div><label class="f">Mail EP *</label><input type="email" id="n2EpEmail" placeholder="ep@team23.online"></div>
         </div>
         <div class="frow">
-          <div><label class="f">Productor</label><input type="text" id="n2ProdNombre"></div>
+          <div><label class="f">Productor</label><input type="text" id="n2ProdNombre" autocomplete="off" oninput="acOpenRol(this,'prod','#n2ProdEmail')" onfocus="acRolFocus(this,'prod','#n2ProdEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
           <div><label class="f">Mail Productor</label><input type="email" id="n2ProdEmail"></div>
         </div>
         <div class="frow">
-          <div><label class="f">Coordinador</label><input type="text" id="n2CoordNombre"></div>
+          <div><label class="f">Coordinador</label><input type="text" id="n2CoordNombre" autocomplete="off" oninput="acOpenRol(this,'coord','#n2CoordEmail')" onfocus="acRolFocus(this,'coord','#n2CoordEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
           <div><label class="f">Mail Coordinador</label><input type="email" id="n2CoordEmail"></div>
         </div>
       </div>
@@ -3360,7 +3360,7 @@ const PER_ROLES = {
              la columna "especialidad" (son muchas menos personas que el Directorio
              completo, y filtrar evita tener que buscar entre todos los proveedores).
    asig    → el Directorio entero, como en el formulario de tareas. */
-function perSugerencias(){
+function perSugerencias(kind, rol){
   const salida = [], vistos = new Map();
   const sumar = (o)=>{
     const k = rosterNorm(o.nombre);
@@ -3374,8 +3374,8 @@ function perSugerencias(){
     }
     vistos.set(k, o); salida.push(o);
   };
-  const interno = perTarget && perTarget.kind === "interno";
-  const def = interno ? PER_ROLES[perTarget.rol] : null;
+  const interno = kind === "interno";
+  const def = interno ? PER_ROLES[rol] : null;
   if(def) (def.fijos||[]).forEach(f=>sumar({ nombre:f.nombre, email:f.email||"", fuente:"equipo interno" }));
   if(!dirData) return salida;
   const c = rosterCols();
@@ -3401,11 +3401,39 @@ function perSugerencias(){
   });
   return salida;
 }
+/* Autocompletado por rol para los campos de equipo interno de los formularios de
+   creación (alta manual y debrief). Mismo panel y mismas teclas; al elegir completa
+   el mail de al lado solo si está vacío. */
+function acOpenRol(input, rol, mailSel){
+  const q = rosterNorm(input.value);
+  const todas = perSugerencias("interno", rol);
+  const items = (q ? todas.filter(o=>rosterNorm(o.nombre).includes(q)) : todas).slice(0, 8);
+  if(!items.length){ acClose(); return; }
+  acState = { input, items, hi:-1, onPick: (o)=>{
+    input.value = o.nombre;
+    const m = $(mailSel);
+    if(m && !m.value.trim() && o.email) m.value = o.email;
+  }};
+  const pn = acPanel();
+  pn.innerHTML = items.map((o,ix)=>
+    `<div class="ac-item" onmousedown="event.preventDefault();acPick(${ix})">${esc(o.nombre)}`+
+    (o.fuente?` <span style="color:var(--gray);font-size:11.5px">${esc(o.fuente)}</span>`:"")+`</div>`).join("");
+  const r = input.getBoundingClientRect();
+  pn.style.display = "block";
+  pn.style.left = r.left + "px";
+  pn.style.top = (r.bottom + 2) + "px";
+  pn.style.width = r.width + "px";
+}
+/* al enfocar puede ser la primera vez: se pide el Directorio y después se abre */
+function acRolFocus(input, rol, mailSel){
+  rosterEnsure().then(()=>{ if(document.activeElement === input) acOpenRol(input, rol, mailSel); }).catch(()=>{});
+}
+
 /* Autocompletado del popup: mismo panel y mismas teclas que el de tareas, pero con
    la fuente filtrada y llenando los campos del propio popup al elegir. */
 function acOpenPersona(input){
   const q = rosterNorm(input.value);
-  const todas = perSugerencias();
+  const todas = perSugerencias(perTarget && perTarget.kind, perTarget && perTarget.rol);
   const items = (q ? todas.filter(o=>rosterNorm(o.nombre).includes(q)) : todas).slice(0, 8);
   if(!items.length){ acClose(); return; }
   acState = { input, items, hi:-1, onPick: personaAutofill };
@@ -3460,7 +3488,7 @@ function personaOpen(kind, a, b){
      se pide ahora para que las sugerencias existan */
   rosterEnsure().then(()=>{
     if(!perTarget) return;
-    const n = perSugerencias().length;
+    const n = perSugerencias(perTarget.kind, perTarget.rol).length;
     const el = $("#perFuente"); if(!el) return;
     if(perTarget.kind === "interno"){
       const def = PER_ROLES[perTarget.rol];
