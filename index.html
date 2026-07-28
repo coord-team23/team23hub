@@ -2221,7 +2221,12 @@ function renderDetail(){
   const cierre = p.status==="cierre";
   const completado = p.status==="completado";
   const lockFields = ro || cierre || completado;   // en cierre/completado no se edita ningún campo (tareas/calendario)
-  const lockMeta = ro || p.status!=="por_activarse"; // datos del proyecto + equipo: editables solo en pre-producción
+  const lockMeta = ro || p.status!=="por_activarse"; // datos del proyecto: editables solo en pre-producción
+  /* El equipo interno es la excepción: cambiar de coordinador, productor o EP a mitad
+     de un proyecto es raro, pero pasa, y los avisos de calendario salen a esos mails.
+     La opción tiene que seguir estando en cualquier etapa. Solo la vista de solo
+     lectura (abrir la ficha desde Equipo) lo muestra congelado. */
+  const lockInterno = ro;
   /* El equipo se sigue tocando en Entregando: hay que poder sumar, activar y
      desactivar gente hasta el final de la entrega. Recién en Listo para cierre y
      Completado queda congelado (lockFields). */
@@ -2365,7 +2370,7 @@ function renderDetail(){
       </div>
     </div>
 
-    ${lockMeta ? `
+    ${lockInterno ? `
     <div class="fgroup">
       <div class="glabel">Equipo interno</div>
       <div class="frow">
