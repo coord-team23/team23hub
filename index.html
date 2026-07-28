@@ -256,8 +256,14 @@
   }
   .task-pill.on{background:var(--red);border-color:var(--red);color:#fff}
 
-  .assign-block{padding:0;margin-top:var(--space-7)}
+  /* Cada tarea es una tarjeta cerrada: la banda gris del encabezado marca dónde
+     empieza cada una, que es lo que faltaba para no leerlas como un flujo continuo. */
+  .assign-block{
+    border:2px solid var(--ink);border-radius:var(--radius-md);overflow:hidden;
+    margin-top:var(--space-5);background:var(--paper);
+  }
   .assign-block:first-of-type{margin-top:var(--space-4)}
+  .ab-body{padding:var(--space-2) var(--space-5) var(--space-5)}
   .assign-block .ttl{font-size:var(--fs-caption);font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--space-2)}
   .assign-row{display:grid;grid-template-columns:1fr 1fr 34px;gap:var(--space-2);margin-bottom:var(--space-2)}
   .icon-btn{
@@ -356,7 +362,8 @@
   /* ---------- bloque de tarea: encabezado, gente, fechas y notas ---------- */
   .ab-head{
     display:flex;align-items:baseline;gap:var(--space-4);flex-wrap:wrap;
-    padding-bottom:var(--space-3);border-bottom:2px solid var(--ink);margin-bottom:2px;
+    background:var(--soft);padding:10px var(--space-5);
+    border-bottom:2px solid var(--ink);
   }
   .ab-ttl{font-size:15px;font-weight:var(--weight-bold);letter-spacing:.1em;text-transform:uppercase;flex:none}
   .ab-when{font-size:12.5px;color:var(--gray);margin-left:auto;flex:none;white-space:nowrap}
@@ -373,6 +380,7 @@
   .team-line .meta{font-size:12.5px;color:var(--gray);overflow-wrap:anywhere}
   .team-line .meta.falta{color:var(--gray);font-style:italic}
   .team-line .acts{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+  .team-line:last-of-type{border-bottom:none}
   .team-line.off{background:var(--soft)}
   .team-line.off .nm{color:var(--gray);text-decoration:line-through}
   .team-line.off .meta{color:var(--gray)}
@@ -673,6 +681,8 @@
     .team-line .nm{grid-area:1 / 1 / 2 / 2}
     .team-line .acts{grid-area:1 / 2 / 2 / 3}
     .team-line .meta{grid-area:2 / 1 / 3 / 3}
+    .ab-head{padding:9px var(--space-4)}
+    .ab-body{padding:var(--space-2) var(--space-4) var(--space-4)}
     .ab-foot{gap:var(--space-4)}
     .ab-dates{flex:1 1 100%}
     .ab-dates>div{flex:1}
@@ -2053,7 +2063,9 @@ function assignBlockHTML(tarea, rows, ctx){
   /* el rango va en el encabezado: se entiende la tarea sin leer los inputs */
   const rango = (td.inicio || td.fin)
     ? `<span class="ab-when">${esc(fechaCorta(td.inicio) || "?")} → ${esc(fechaCorta(td.fin) || "?")}</span>`
-    : `<span class="ab-when falta">sin fechas</span>`;
+    /* en la ficha, una tarea sin fechas es un problema y va en rojo. En el armado
+       todavía no las cargaste: marcarlo en rojo es retar antes de tiempo. */
+    : `<span class="ab-when${dt?" falta":""}">sin fechas</span>`;
   const cuantos = visibles.filter(({r})=>!vacia(r)).length;
 
   return `<div class="assign-block">
@@ -2062,6 +2074,7 @@ function assignBlockHTML(tarea, rows, ctx){
       <span class="ab-count">${cuantos} ${cuantos===1?"persona":"personas"}</span>
       ${rango}
     </div>
+    <div class="ab-body">
     ${visibles.map(filaHTML).join("")}
     <button class="addline" onclick="addAssign('${ctx}','${tarea}')">+ agregar persona</button>
     <div class="ab-foot">
@@ -2070,6 +2083,7 @@ function assignBlockHTML(tarea, rows, ctx){
         <div><label>Fin</label><input type="date" value="${esc(td.fin||"")}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value)"></div>
       </div>
       <div class="ab-notes" id="${notaSlotId(ctx,tarea)}">${notaBoxHTML(ctx, tarea, false)}</div>
+    </div>
     </div>
   </div>`;
 }
@@ -2355,8 +2369,21 @@ function renderDetail(){
         const d = (p.taskDates&&p.taskDates[t])||{};
         const range = d.inicio ? ` <small style="color:var(--gray);font-weight:var(--weight-regular)">(${fmtShort(d.inicio)} – ${fmtShort(d.fin||d.inicio)})</small>` : "";
         if(!rows.length && !range) return "";
-        return `<div class="assign-block"><div class="ttl">${esc(t)} — asignados${range}</div>${rows.map(r=>
-          `<div style="font-size:${"var(--fs-caption)"};margin-bottom:4px${r.estado==="inactivo"?";color:var(--gray);text-decoration:line-through":""}">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}${r.estado==="inactivo"?' <span class="chipst inact" style="text-decoration:none">Inactivo</span>':""}</div>`).join("")}</div>`;
+        const cuantos = rows.length;
+        return `<div class="assign-block">
+          <div class="ab-head">
+            <span class="ab-ttl">${esc(t)}</span>
+            <span class="ab-count">${cuantos} ${cuantos===1?"persona":"personas"}</span>
+            ${d.inicio ? `<span class="ab-when">${esc(fechaCorta(d.inicio))} → ${esc(fechaCorta(d.fin||d.inicio))}</span>` : `<span class="ab-when falta">sin fechas</span>`}
+          </div>
+          <div class="ab-body">${rows.length ? rows.map(r=>
+            `<div class="team-line${r.estado==="inactivo"?" off":""}">
+               <span class="nm">${esc(r.nombre||r.email||"Sin nombre")}</span>
+               <span class="meta">${esc(r.email||"")}</span>
+               <span class="acts">${r.estado==="inactivo"?'<span class="chipst inact">Inactivo</span>':""}</span>
+             </div>`).join("") : `<div style="font-size:12.5px;color:var(--gray);padding:8px 0">Sin gente asignada</div>`}
+          </div>
+        </div>`;
       }).join("")
     : p.tareas.map(t=>assignBlockHTML(t, p.asignaciones[t]||[{nombre:"",email:"",discord:"",telefono:""}], "dt")).join("");
 
