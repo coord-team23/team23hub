@@ -900,6 +900,8 @@
   </div>
 </div>
 
+<div class="demo-banner" id="setupBanner" style="display:none"></div>
+
 <div class="demo-banner" id="staleBanner" style="display:none"></div>
 
 <div class="demo-banner" id="demoBanner" style="display:none">
@@ -1495,6 +1497,15 @@ function staleBannerShow(motivo, ts){
   el.style.display = "block";
 }
 function staleBannerHide(){ const el = $("#staleBanner"); if(el) el.style.display = "none"; }
+function setupBanner(faltan){
+  const el = $("#setupBanner"); if(!el) return;
+  if(!faltan || !faltan.length){ el.style.display = "none"; return; }
+  el.innerHTML = `<b>FALTA UNA COLUMNA EN LA HOJA</b> — La pestaña <code>Projects</code> no tiene `+
+    faltan.map(c=>`<code>${esc(c)}</code>`).join(", ")+
+    `. Sin eso, lo que se guarde en ese campo se pierde en la siguiente carga y no da error. `+
+    `Agregá la columna con ese nombre exacto en el encabezado y recargá.`;
+  el.style.display = "block";
+}
 
 async function loadProjects(){
   if(DEMO){
@@ -1529,6 +1540,9 @@ async function loadProjects(){
     onProjectsLoaded();
     cacheGuardar(projects);
     staleBannerHide();
+    /* wf2 avisa si a la hoja le falta alguna columna que el hub necesita: sin ella
+       el dato se guarda "bien" y se pierde en la siguiente carga, sin error visible */
+    setupBanner(data.columnasFaltantes||[]);
     if(hadCache){
       const nuevos = projects.filter(p=>!prevIds.has(p.id)).length;
       if(nuevos) toast("✔ "+nuevos+(nuevos>1?" proyectos nuevos":" proyecto nuevo"));
