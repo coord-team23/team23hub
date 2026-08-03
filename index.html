@@ -1080,7 +1080,8 @@
       Hiciste cambios en este proyecto que todavía no se guardaron.
     </p>
     <div class="actions stack">
-      <button class="btn primary" onclick="confirmSaveExit(this)">Guardar y salir</button>
+      <button class="btn primary" onclick="confirmSaveExit(this,false)">Guardar y salir</button>
+      <button class="btn" id="btnSaveAvisar" onclick="confirmSaveExit(this,true)">Guardar, avisar al equipo y salir</button>
       <button class="btn" onclick="closeModal('ovConfirm')">Seguir editando</button>
       <div class="sep"></div>
       <button class="btn danger-out" onclick="confirmDiscard()">Descartar cambios</button>
@@ -1865,9 +1866,10 @@ function mailRowInner(r, tarea, i, ctx){
        proyecto, el bloque no tiene nada que hacer ahí. La fecha del envío no se
        pierde: pasa al chip de estado. */
     if(r.mailSentAt || r.estado !== "candidato") return "";
+    /* sin la etiqueta "Propuesta" al lado, y en blanco: en negro parecía un estado
+       encendido y no un botón */
     return `<div class="mail-row">
-      <span class="who">✉ Propuesta</span>
-      <button class="mini-btn on" onclick="mailSend('${tq}',${i})">Enviar propuesta</button>
+      <button class="mini-btn" onclick="mailSend('${tq}',${i})">✉ Enviar propuesta por email</button>
       ${editar}${editado}
     </div>`;
   }
@@ -2655,7 +2657,8 @@ function renderDetail(){
         ${dayPanelHTML(p, lookMap, lockFields)}
 
         <div class="actions" style="justify-content:flex-start;margin-top:16px">
-          ${lockFields?"":`<button class="btn primary small" onclick="saveCalendar(false,this)">Guardar calendario y avisar al equipo</button>`}
+          ${lockFields?"":`<button class="btn small" onclick="saveCalendar(false,this,false)">Guardar cambios de calendario</button>
+            <button class="btn primary small" onclick="saveCalendar(false,this,true)">Guardar y avisar al equipo</button>`}
           <button class="btn small" onclick="printCalendar()">Descargar PDF</button>
         </div>
       `}
@@ -3350,12 +3353,14 @@ function trackerParticipants(p){
       if(ya.rol.split(" · ").indexOf(rol) < 0) ya.rol += " · " + rol;
       ya.claves.push(key);
       if(ya.ref === null && ref) ya.ref = ref;          // si en algún puesto es asignado, ese manda el estado
+      if(!(fila && fila.estado === "candidato")) ya.pendiente = false;   // confirmado en otro puesto
       if(!ya.fin && t.finalizados[key]) ya.fin = t.finalizados[key];
       t.nombres[key] = nombre;
       return;
     }
     const inactivo = fila ? fila.estado==="inactivo" : !!t.inactivos[key];
-    const item = {key, claves:[key], nombre, rol, removido:!!removido, inactivo, ref:ref||null, fin:t.finalizados[key]||null};
+    const pendiente = !!(fila && fila.estado === "candidato");
+    const item = {key, claves:[key], nombre, rol, removido:!!removido, inactivo, pendiente, ref:ref||null, fin:t.finalizados[key]||null};
     porPersona.set(ident, item);
     list.push(item);
     t.nombres[key] = nombre;
@@ -3369,9 +3374,10 @@ function trackerParticipants(p){
   Object.entries(p.asignaciones||{}).forEach(([tarea, rows])=>{
     (rows||[]).forEach((r,i)=>{
       if(!r || !r.nombre) return;
-      /* los inactivos SÍ van (grisados): antes se caían del cuadro y se perdían
-         de vista las jornadas que ya tenían cargadas */
-      if(r.estado && r.estado!=="confirmado" && r.estado!=="inactivo") return;
+      /* Los inactivos van grisados (si no se perdían de vista sus jornadas), y los
+         candidatos también aparecen pero sin poder cargar días: antes no existían en
+         el cuadro y no había forma de saber por qué. Los rechazados sí quedan afuera. */
+      if(r.estado === "rechazado") return;
       const key = r.email && r.email.trim() ? "e:"+r.email.trim().toLowerCase() : "n:"+tarea+"|"+r.nombre;
       add(key, r.nombre, tarea, false, {tarea, i}, r.email);
     });
@@ -3410,6 +3416,11 @@ function toggleJornada(key, dateKey, ci){
      de volver a tocar jornadas, así nadie suma días sobre algo ya cerrado */
   if(t.finalizados[key]){
     toast("El conteo de "+(t.nombres[key]||"esta persona")+" está cerrado. Reactivalo para volver a cargar jornadas.", true);
+    return;
+  }
+  const ppEstado = trackerParticipants(trkProject).find(x=>x.key===key);
+  if(ppEstado && ppEstado.pendiente){
+    toast((ppEstado.nombre||"Esta persona")+" todavía es candidato. Confirmalo en la ficha para poder cargarle jornadas.", true);
     return;
   }
   /* si la persona quedó unificada desde varios puestos, sus días pueden estar
@@ -3588,13 +3599,18 @@ function trackerHTML(p){
   const head = `<tr>
     <th class="trk-day">Día</th><th class="trk-date">Fecha</th>
     ${parts.map(pp=>{
-      const marca = pp.fin ? " · finalizó "+fmtShort(pp.fin.fecha) : pp.inactivo ? " · inactivo" : "";
+      const marca = pp.pendiente ? " · sin confirmar"
+                 : pp.fin ? " · finalizó "+fmtShort(pp.fin.fecha)
+                 : pp.inactivo ? " · inactivo" : "";
       const btnEstado = pp.removido ? "" :
         `<button class="trk-toggle" title="${pp.inactivo?"Reactivar en el proyecto":"Marcar inactivo en el proyecto"}" onclick="toggleInactivo('${pp.key}')">${pp.inactivo?"↺ activar":"○ inactivar"}</button>`;
       const btnFin = pp.fin
         ? `<button class="trk-toggle react" title="Volver a abrir el conteo de jornadas" onclick="reactOpen('${pp.key}')">↺ Reactivar</button>`
         : `<button class="trk-toggle" title="Registrar el último día de trabajo y cerrar el conteo" onclick="finOpen('${pp.key}')">Finalizó</button>`;
-      return `<th class="${(pp.removido||pp.inactivo||pp.fin)?"trk-removido":""}">${esc(pp.nombre)}<div class="trk-rol">${esc(pp.rol)}${marca}</div>${btnEstado}${btnFin}</th>`;
+      /* al candidato no se le ofrece inactivar ni finalizar: primero hay que resolverlo
+         en la ficha. El cuadro solo muestra que está y por qué no se puede cargar. */
+      const acciones = pp.pendiente ? "" : btnEstado + btnFin;
+      return `<th class="${(pp.removido||pp.inactivo||pp.fin||pp.pendiente)?"trk-removido":""}">${esc(pp.nombre)}<div class="trk-rol">${esc(pp.rol)}${marca}</div>${acciones}</th>`;
     }).join("")}
     <th>Notas / hitos</th>
   </tr>`;
@@ -3608,8 +3624,9 @@ function trackerHTML(p){
     const isWeekend = [0,6].includes(d.getDay());
     const cells = parts.map((pp, ci)=>{
       const on = !!dias[pp.key + "|" + key];
-      const cerrado = !!pp.fin;   // conteo cerrado por finalización
-      const tip = cerrado ? ' title="Conteo cerrado: reactivalo para cargar jornadas"' : "";
+      const cerrado = !!pp.fin || pp.pendiente;   // finalizado, o candidato sin confirmar
+      const tip = pp.pendiente ? ' title="Todavía es candidato: confirmalo en la ficha para cargarle jornadas"'
+                : cerrado ? ' title="Conteo cerrado: reactivalo para cargar jornadas"' : "";
       return `<td id="jc-${ci}-${key}" class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""} ${cerrado?"trk-cerrado":""}"${tip} onclick="toggleJornada('${pp.key}','${key}',${ci})">${on?"✕":""}</td>`;
     }).join("");
     return `<tr class="${isWeekend?"trk-weekend":""}">
@@ -3636,6 +3653,7 @@ function trackerResumenHTML(p){
         const jor = cuentaDias(t, pp);
         const ult = ultimaJornada(t, pp.key, pp);
         const nota = pp.removido ? ' <small style="color:var(--gray)">(ya no asignado)</small>'
+                   : pp.pendiente ? ' <small style="color:var(--red)">(sin confirmar)</small>'
                    : pp.inactivo ? ' <small style="color:var(--gray)">(inactivo)</small>' : "";
         /* la fecha de finalización es el dato que va a administración */
         const fin = pp.fin ? `<b>${fmtShort(pp.fin.fecha)}</b>` : "—";
@@ -4335,7 +4353,11 @@ function projectRecipients(p){
    por id (1 evento por fase/hito) en lugar de duplicarlos en cada guardado.
    deletedEventIds son los ids de fases/hitos borrados desde el último guardado,
    para que ese mismo workflow borre sus eventos correspondientes en Calendar. */
-async function saveCalendar(isFirst, btn){
+/* `avisar` decide si salen el mail al equipo y el aviso a Discord. Guardar y avisar
+   son dos cosas distintas: se puede acomodar el calendario varias veces y recién
+   avisar cuando quedó. Al cerrar la ficha se guarda SIN avisar, que es lo prudente
+   para un guardado incidental. */
+async function saveCalendar(isFirst, btn, avisar){
   const _lbl = btn ? btn.textContent : "";
   if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
   try{
@@ -4347,16 +4369,16 @@ async function saveCalendar(isFirst, btn){
   }));
   if(!entries.length){ toast("Cargá al menos una fase o un hito", true); return; }
   const deletedEventIds = p._deletedCalIds || [];
-  if(DEMO){ toast("✔ Calendario guardado, mail enviado al equipo (demo)"); p._deletedCalIds=[]; return; }
+  if(DEMO){ toast(avisar ? "✔ Calendario guardado y equipo avisado (demo)" : "✔ Calendario guardado (demo)"); p._deletedCalIds=[]; return; }
   try{
     await api("/webhook/team23/calendar",{method:"POST",body:JSON.stringify({
-      projectId:p.id, projectName:p.nombre, entries, deletedEventIds,
+      projectId:p.id, projectName:p.nombre, entries, deletedEventIds, avisar: !!avisar,
       taskDates_json: JSON.stringify(p.taskDates||{}),
       recipients: projectRecipients(p), isFirst
     })});
     p._deletedCalIds = [];
     detailDirty = false; calDirty = false; snapDetail();
-    toast("✔ Calendario guardado, se avisó por mail al equipo");
+    toast(avisar ? "✔ Calendario guardado, se avisó al equipo" : "✔ Calendario guardado (sin avisar)");
   }catch(e){ toast("Error al guardar el calendario: "+e.message, true); }
   }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
@@ -4884,15 +4906,19 @@ async function createProject2(){
 let detailDirty = false, calDirty = false, detailSnapshot = null;
 function snapDetail(){ if(detailProject) detailSnapshot = JSON.parse(JSON.stringify(detailProject)); }
 function requestCloseDetail(){
-  if(detailDirty || calDirty){ openModal("ovConfirm"); return; }
+  if(detailDirty || calDirty){
+    /* el aviso es del calendario: si no cambió, ofrecerlo sería mentir */
+    const bAv = $("#btnSaveAvisar"); if(bAv) bAv.style.display = calDirty ? "" : "none";
+    openModal("ovConfirm"); return;
+  }
   closeModal("ovDetail");
 }
-async function confirmSaveExit(btn){
+async function confirmSaveExit(btn, avisar){
   const _lbl = btn ? btn.textContent : "";
   if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
   try{
     if(detailDirty){ await saveProjectInfo(); await saveTeam(); }
-    if(calDirty){ await saveCalendar(false); }
+    if(calDirty){ await saveCalendar(false, null, !!avisar); }
     detailDirty = false; calDirty = false;
     closeModal("ovConfirm"); closeModal("ovDetail");
   }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
