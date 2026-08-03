@@ -357,6 +357,8 @@
   .auto-item .txt{font-size:15px;font-weight:var(--weight-bold);letter-spacing:.01em;flex:1}
   .auto-item .txt small{display:block;font-size:12.5px;font-weight:var(--weight-regular);color:var(--gray);letter-spacing:0;margin-top:2px}
   .auto-item.off .txt{color:var(--gray)}
+  .auto-link{margin-top:8px}
+  .auto-link input{font-size:13px;padding:7px 10px}
   .auto-note{font-size:12.5px;font-weight:var(--weight-bold);color:var(--red);margin-top:10px;line-height:1.45}
 
   /* ---------- bloque de tarea: encabezado, gente, fechas y notas ---------- */
@@ -387,7 +389,9 @@
 
   /* pie: fechas acotadas y notas en una línea cuando están vacías */
   .ab-foot{display:flex;gap:var(--space-5);flex-wrap:wrap;align-items:flex-end;margin-top:var(--space-4)}
-  .ab-dates{display:flex;gap:var(--space-3);flex:none}
+  .ab-dates{display:flex;flex-direction:column;gap:var(--space-2);flex:none}
+  .ab-dates .rango{display:flex;gap:var(--space-3);align-items:flex-end}
+  .ab-dates .addline{padding:2px 0;font-size:12px}
   .ab-dates label{display:block;font-size:var(--fs-caption);letter-spacing:.08em;text-transform:uppercase;color:var(--gray);margin-bottom:4px}
   .ab-dates input{width:158px}
   .ab-notes{flex:1;min-width:200px}
@@ -1193,6 +1197,27 @@
   </div>
 </div>
 
+<!-- ============ MODAL: LINKS DEL PROYECTO ============ -->
+<div class="overlay" id="ovLinks" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lkTitle">
+    <button class="close" onclick="linksClose()" aria-label="Cerrar">✕</button>
+    <h2 id="lkTitle">Links del proyecto</h2>
+    <div class="kicker" id="lkWho"></div>
+
+    <p style="font-size:15px;line-height:1.5;margin:0 0 var(--space-7);color:var(--gray)">
+      Para vincular carpetas o proyectos que ya existen, o que no se crearon al armar el proyecto.
+      Lo que dejes vacío no se muestra en la ficha.
+    </p>
+
+    <div class="fgroup" id="lkCampos"></div>
+
+    <div class="actions">
+      <button class="btn" onclick="linksClose()">Cancelar</button>
+      <button class="btn primary" onclick="linksSave(this)">Guardar links</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ MODAL: EQUIPO INTERNO ============ -->
 <div class="overlay" id="ovInterno" style="z-index:1100">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="intTitle">
@@ -1680,22 +1705,49 @@ const autoDefaults = () => ({ drive:true, frame:true, discord:true });
 let npAuto = autoDefaults();
 let n2Auto = autoDefaults();
 function autoStore(ctx){ return ctx==="n2" ? n2Auto : npAuto; }
+/* Links pegados a mano cuando se elige no crear Drive o Frame automáticamente.
+   Viajan en el body y wf3 los usa para lo que no generó. */
+let npLinks = {}, n2Links = {};
+function linksStore(ctx){ return ctx==="n2" ? n2Links : npLinks; }
+function setManualLink(ctx, k, v){ linksStore(ctx)[k] = String(v||"").trim(); }
+const AUTO_LINK = { drive:["driveRoot","Link de la unidad de Drive","https://drive.google.com/drive/folders/..."],
+                    frame:["frameio","Link del proyecto de Frame.io","https://next.frame.io/project/..."] };
 function renderAuto(ctx){
   const box = $("#"+ctx+"Auto"); if(!box) return;
   const st = autoStore(ctx);
   const off = AUTO_DEFS.filter(([k])=>!st[k]).map(([,label])=>label.replace("Crear ",""));
-  box.innerHTML = AUTO_DEFS.map(([k,label,hint])=>`
+  const L = linksStore(ctx);
+  box.innerHTML = AUTO_DEFS.map(([k,label,hint])=>{
+    /* si se apaga Drive o Frame, se puede pegar acá el link de algo que ya exista;
+       también se puede dejar vacío y vincularlo después desde la ficha */
+    const def = !st[k] && AUTO_LINK[k];
+    const campo = def ? `
+      <div class="auto-link">
+        <label class="f">${esc(def[1])} <small style="color:var(--gray);letter-spacing:0;font-weight:var(--weight-regular);text-transform:none">opcional, se puede cargar después</small></label>
+        <input type="url" value="${esc(L[def[0]]||"")}" placeholder="${esc(def[2])}"
+               oninput="setManualLink('${ctx}','${def[0]}',this.value)">
+      </div>` : "";
+    return `
     <div class="auto-item ${st[k]?"":"off"}">
       <button class="chk-box ${st[k]?"done":""}" onclick="toggleAuto('${ctx}','${k}')"
               aria-pressed="${st[k]}" aria-label="${esc(label)}">${st[k]?"✓":""}</button>
-      <span class="txt">${esc(label)}<small>${esc(hint)}</small></span>
-    </div>`).join("") +
-    (off.length ? `<div class="auto-note">No se va a crear: ${esc(off.join(" · "))}. El proyecto se crea igual, pero desde el hub no hay forma de generarlo después: queda a mano.</div>` : "");
+      <span class="txt">${esc(label)}<small>${esc(hint)}</small>${campo}</span>
+    </div>`;}).join("") +
+    (off.length ? `<div class="auto-note">No se va a crear: ${esc(off.join(" · "))}. El proyecto se crea igual; podés pegar los links de arriba ahora o vincularlos después desde la ficha.</div>` : "");
 }
 function toggleAuto(ctx,k){ const st = autoStore(ctx); st[k] = !st[k]; renderAuto(ctx); }
 /* etiqueta del botón mientras corre + texto del toast, según lo que quedó encendido */
 function autoNames(st){ return [st.drive&&"Drive", st.frame&&"Frame.io", st.discord&&"Discord"].filter(Boolean); }
 function autoBusyLabel(st){ const n = autoNames(st); return n.length ? "Creando "+n.join(" + ")+"…" : "Creando proyecto…"; }
+/* Solo viajan los links de lo que se eligió no crear: si Drive está encendido, un
+   link pegado a mano sería confuso — wf3 va a generar la unidad igual. */
+function manualLinks(store, st){
+  const out = {};
+  Object.entries(AUTO_LINK).forEach(([k,[clave]])=>{
+    if(!st[k] && String(store[clave]||"").trim()) out[clave] = String(store[clave]).trim();
+  });
+  return out;
+}
 function autoDemoLinks(st){
   const L = {};
   if(st.drive) Object.assign(L,{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#"});
@@ -1722,16 +1774,20 @@ function mailProjectData(ctx){
   const orden = (a,b)=>String(a.inicio||"9999").localeCompare(String(b.inicio||"9999"));
   if(ctx==="dt"){
     const p = detailProject || {};
-    const timeline = (p.tareas||[])
-      .map(t=>{ const d = (p.taskDates||{})[t]||{}; return { fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||"" }; })
+    const timeline = (p.tareas||[]).flatMap(t=>{
+        const d = (p.taskDates||{})[t]||{};
+        return taskRangos(d).map((r,ri)=>({ fase: t+(ri?" ("+(ri+1)+")":""), inicio:r.inicio, fin:r.fin, notas: ri?"":(d.notas||"") }));
+      })
       .filter(t=>t.inicio||t.fin||t.notas).sort(orden);
     return {
       proyecto: p.nombre||"", cliente: p.cliente||"", sintesis: p.sintesis||"",
       storyboard: p.storyboard_url || p.tratamiento_url || "", timeline
     };
   }
-  const timeline = [...n2Selected]
-    .map(t=>{ const d = n2TaskDates[t]||{}; return { fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||"" }; })
+  const timeline = [...n2Selected].flatMap(t=>{
+      const d = n2TaskDates[t]||{};
+      return taskRangos(d).map((r,ri)=>({ fase: t+(ri?" ("+(ri+1)+")":""), inicio:r.inicio, fin:r.fin, notas: ri?"":(d.notas||"") }));
+    })
     .filter(t=>t.inicio||t.fin||t.notas).sort(orden);
   return {
     proyecto: ($("#n2Nombre")||{}).value?.trim() || "",
@@ -2061,8 +2117,9 @@ function assignBlockHTML(tarea, rows, ctx){
       <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>${stateRow(r,i)}`;
   };
   /* el rango va en el encabezado: se entiende la tarea sin leer los inputs */
-  const rango = (td.inicio || td.fin)
-    ? `<span class="ab-when">${esc(fechaCorta(td.inicio) || "?")} → ${esc(fechaCorta(td.fin) || "?")}</span>`
+  const conFechas = taskRangos(td).filter(r=>r.inicio || r.fin);
+  const rango = conFechas.length
+    ? `<span class="ab-when">${conFechas.map(r=>esc((fechaCorta(r.inicio)||"?")+" → "+(fechaCorta(r.fin)||"?"))).join(" · ")}</span>`
     /* en la ficha, una tarea sin fechas es un problema y va en rojo. En el armado
        todavía no las cargaste: marcarlo en rojo es retar antes de tiempo. */
     : `<span class="ab-when${dt?" falta":""}">sin fechas</span>`;
@@ -2079,8 +2136,13 @@ function assignBlockHTML(tarea, rows, ctx){
     <button class="addline" onclick="addAssign('${ctx}','${tarea}')">+ agregar persona</button>
     <div class="ab-foot">
       <div class="ab-dates">
-        <div><label>Inicio</label><input type="date" value="${esc(td.inicio||"")}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value)"></div>
-        <div><label>Fin</label><input type="date" value="${esc(td.fin||"")}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value)"></div>
+        ${taskRangos(td).map((r,ri)=>`
+          <div class="rango">
+            <div><label>${ri?"Inicio "+(ri+1):"Inicio"}</label><input type="date" value="${esc(r.inicio)}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value,${ri})"></div>
+            <div><label>${ri?"Fin "+(ri+1):"Fin"}</label><input type="date" value="${esc(r.fin)}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value,${ri})"></div>
+            ${ri?`<button class="icon-btn" onclick="delRango('${ctx}','${tarea}',${ri})" title="Quitar este rango">✕</button>`:`<span class="icon-slot"></span>`}
+          </div>`).join("")}
+        <button class="addline" onclick="addRango('${ctx}','${tarea}')">+ agregar rango de fechas</button>
       </div>
       <div class="ab-notes" id="${notaSlotId(ctx,tarea)}">${notaBoxHTML(ctx, tarea, false)}</div>
     </div>
@@ -2113,9 +2175,35 @@ async function candSet(tarea, i, estado){
   }catch(e){ row.estado = prev; renderDetail(); toast("No pude guardar el cambio: "+e.message, true); }
 }
 function taskDatesStore(ctx){ return ctx==="np" ? npTaskDates : ctx==="n2" ? n2TaskDates : (detailProject.taskDates = detailProject.taskDates||{}); }
-function setTaskDate(ctx,t,field,val){
-  const s = taskDatesStore(ctx); s[t] = s[t]||{inicio:"",fin:"",notas:""}; s[t][field]=val;
+function setTaskDate(ctx,t,field,val,ri){
+  const s = taskDatesStore(ctx);
+  const d = s[t] = s[t]||{inicio:"",fin:"",notas:""};
+  if(!ri){ d[field] = val; }
+  else {
+    d.rangos = d.rangos || [];
+    while(d.rangos.length < ri) d.rangos.push({inicio:"",fin:""});
+    d.rangos[ri-1][field] = val;
+  }
+  if(ctx==="dt") detailDirty = true;
   ctx==="dt" ? renderDetail() : renderCreationCal(ctx);   // refresca las barras del calendario
+}
+/* Una tarea puede ocurrir en tramos separados (VFX una semana, pausa, otra semana).
+   El primer rango vive en inicio/fin; estos son los adicionales. */
+function addRango(ctx,t){
+  const s = taskDatesStore(ctx);
+  const d = s[t] = s[t]||{inicio:"",fin:"",notas:""};
+  d.rangos = d.rangos || [];
+  d.rangos.push({inicio:"",fin:""});
+  if(ctx==="dt") detailDirty = true;
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
+}
+function delRango(ctx,t,ri){
+  const s = taskDatesStore(ctx);
+  const d = s[t]; if(!d || !d.rangos || ri < 1) return;
+  d.rangos.splice(ri-1,1);
+  if(!d.rangos.length) delete d.rangos;
+  if(ctx==="dt") detailDirty = true;
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
 }
 function assignStore(ctx){ return ctx==="np" ? npAssignData : ctx==="n2" ? n2AssignData : detailProject.asignaciones; }
 function setAssign(ctx,t,i,k,v){ assignStore(ctx)[t][i][k]=v; }
@@ -2144,7 +2232,7 @@ async function createProject(){
   const tDates = {};
   [...npSelected].forEach(t=>{
     const d = npTaskDates[t];
-    if(d && (d.inicio||d.fin||d.notas)) tDates[t]=d;
+    if(d && (d.notas || taskTieneFechas(d))) tDates[t]=d;
   });
 
   const body = {
@@ -2157,7 +2245,8 @@ async function createProject(){
     coord_nombre: $("#npCoordNombre").value.trim(), coord_email: $("#npCoordEmail").value.trim(),
     tareas: [...npSelected], asignaciones: asigs, taskDates: tDates, sintesis: npSintesis,
     storyboard_url: npStoryboardUrl, tratamiento_url: npTratamientoUrl,
-    auto_drive: npAuto.drive, auto_frame: npAuto.frame, auto_discord: npAuto.discord
+    auto_drive: npAuto.drive, auto_frame: npAuto.frame, auto_discord: npAuto.discord,
+    links: manualLinks(npLinks, npAuto)
   };
 
   const btn = $("#btnCreate");
@@ -2169,7 +2258,7 @@ async function createProject(){
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:autoDemoLinks(npAuto), calendario:[] };
+        links:Object.assign(autoDemoLinks(npAuto), manualLinks(npLinks, npAuto)), calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
       proj.tareas = proj.tareas||body.tareas; proj.asignaciones = proj.asignaciones||body.asignaciones;
@@ -2287,27 +2376,57 @@ function sintesisHTML(txt, small){
   flush();
   return `<div class="sx">${out}</div>`;
 }
+/* Rangos de una tarea. El PRIMERO vive en `inicio`/`fin` y no dentro del array:
+   así los workflows, el portal y todo lo que ya está guardado en el sheet lo siguen
+   leyendo igual. Los adicionales van en `rangos`. Migración cero. */
+function taskTieneFechas(d){ return taskRangos(d).some(r=>r.inicio||r.fin); }
+function taskRangos(d){
+  d = d || {};
+  const out = [{ inicio: d.inicio||"", fin: d.fin||"" }];
+  (d.rangos||[]).forEach(r => out.push({ inicio:(r&&r.inicio)||"", fin:(r&&r.fin)||"" }));
+  return out;
+}
 function allCalEntries(p){
   const out = [];
   (p.tareas||[]).forEach(t=>{
     const d = (p.taskDates && p.taskDates[t]) || {};
-    out.push({id:"task:"+t, src:"task", key:t, tipo:"fase", fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||""});
+    taskRangos(d).forEach((r, ri)=>{
+      /* un rango adicional vacío no ensucia el calendario; el primero sí se muestra
+         siempre, para que la tarea exista aunque todavía no tenga fechas */
+      if(ri > 0 && !r.inicio && !r.fin) return;
+      out.push({
+        id:"task:"+t+(ri?":"+ri:""), src:"task", key:t, ri,
+        tipo:"fase", fase: t + (ri ? " ("+(ri+1)+")" : ""),
+        inicio:r.inicio, fin:r.fin, notas: ri===0 ? (d.notas||"") : ""
+      });
+    });
   });
   (p.calendario||[]).forEach((r,i)=>{
     out.push({id:r.id||("cal:"+i), src:"cal", idx:i, tipo:(r.tipo||"fase"), fase:r.fase, inicio:r.inicio, fin:r.fin, notas:r.notas||""});
   });
   return out;
 }
-function taskDateSet(t,field,val){
+function taskDateSet(t,field,val,ri){
   detailProject.taskDates = detailProject.taskDates||{};
-  detailProject.taskDates[t] = detailProject.taskDates[t]||{inicio:"",fin:"",notas:""};
-  detailProject.taskDates[t][field] = val;
+  const d = detailProject.taskDates[t] = detailProject.taskDates[t]||{inicio:"",fin:"",notas:""};
+  if(!ri){ d[field] = val; return; }
+  d.rangos = d.rangos || [];
+  while(d.rangos.length < ri) d.rangos.push({inicio:"",fin:""});
+  d.rangos[ri-1][field] = val;
 }
 
 function faseLookMap(p){
   const map = {};
   let n = 0;
-  allCalEntries(p).forEach(e=>{ if(e.tipo!=="hito"){ map[e.id]=n%PHASE_LOOKS.length; n++; } });
+  /* todos los rangos de una misma tarea comparten color: si no, VFX (1) y VFX (2)
+     se verían como dos fases distintas en el calendario */
+  const porTarea = {};
+  allCalEntries(p).forEach(e=>{
+    if(e.tipo==="hito") return;
+    const clave = e.src==="task" ? "task:"+e.key : e.id;
+    if(porTarea[clave] === undefined){ porTarea[clave] = n%PHASE_LOOKS.length; n++; }
+    map[e.id] = porTarea[clave];
+  });
   return map;
 }
 
@@ -2355,7 +2474,7 @@ function renderDetail(){
   const frameLink = p.links?.frameio
     ? `<a class="frame-cta" href="${esc(p.links.frameio)}" target="_blank">Abrir proyecto en Frame.io ↗</a>
        <div class="sublabel" style="margin-top:10px">Adentro: 1. Footage · 2. Offline · 3. Online · 4. Masters</div>`
-    : `<span style="font-size:12.5px;color:var(--gray)">Sin link de Frame.io</span>`;
+    : `<span style="font-size:12.5px;color:var(--gray)">Sin proyecto de Frame.io${ro?"":` — <a href="#" onclick="linksOpen();return false" style="color:var(--red);font-weight:var(--weight-bold)">vincular uno existente</a>`}</span>`;
 
   const taskPills = lockTareas
     ? (p.tareas.length ? p.tareas.map(t=>`<span class="pill">${esc(t)}</span>`).join("") : `<span style="font-size:12.5px;color:var(--gray)">Sin tareas asignadas</span>`)
@@ -2367,14 +2486,17 @@ function renderDetail(){
            (salieron al activar); los inactivos quedan visibles pero marcados */
         const rows = (p.asignaciones[t]||[]).filter(r=>(r.nombre||r.email) && r.estado!=="rechazado");
         const d = (p.taskDates&&p.taskDates[t])||{};
-        const range = d.inicio ? ` <small style="color:var(--gray);font-weight:var(--weight-regular)">(${fmtShort(d.inicio)} – ${fmtShort(d.fin||d.inicio)})</small>` : "";
+        const cf = taskRangos(d).filter(r=>r.inicio||r.fin);
+        const range = cf.length ? ` <small style="color:var(--gray);font-weight:var(--weight-regular)">(${cf.map(r=>fmtShort(r.inicio)+" – "+fmtShort(r.fin||r.inicio)).join(" · ")})</small>` : "";
         if(!rows.length && !range) return "";
         const cuantos = rows.length;
         return `<div class="assign-block">
           <div class="ab-head">
             <span class="ab-ttl">${esc(t)}</span>
             <span class="ab-count">${cuantos} ${cuantos===1?"persona":"personas"}</span>
-            ${d.inicio ? `<span class="ab-when">${esc(fechaCorta(d.inicio))} → ${esc(fechaCorta(d.fin||d.inicio))}</span>` : `<span class="ab-when falta">sin fechas</span>`}
+            ${(()=>{ const cf = taskRangos(d).filter(r=>r.inicio||r.fin);
+               return cf.length ? `<span class="ab-when">${cf.map(r=>esc((fechaCorta(r.inicio)||"?")+" → "+(fechaCorta(r.fin)||"?"))).join(" · ")}</span>`
+                                : `<span class="ab-when falta">sin fechas</span>`; })()}
           </div>
           <div class="ab-body">${rows.length ? rows.map(r=>
             `<div class="team-line${r.estado==="inactivo"?" off":""}">
@@ -2401,10 +2523,10 @@ function renderDetail(){
       return `<tr>
         ${dot}
         <td><span style="display:flex;align-items:center;gap:6px;font-weight:var(--weight-bold)">${esc(e.fase)}<small style="color:var(--gray);font-weight:var(--weight-regular)">tarea</small></span></td>
-        <td><input type="date" value="${esc(e.inicio)}" oninput="taskDateSet('${t}','inicio',this.value)" onchange="renderDetail()"></td>
-        <td><input type="date" value="${esc(e.fin)}" oninput="taskDateSet('${t}','fin',this.value)" onchange="renderDetail()"></td>
-        ${notaCeldaHTML({kind:"caltask", tarea:e.key})}
-        <td></td>
+        <td><input type="date" value="${esc(e.inicio)}" oninput="taskDateSet('${t}','inicio',this.value,${e.ri||0})" onchange="renderDetail()"></td>
+        <td><input type="date" value="${esc(e.fin)}" oninput="taskDateSet('${t}','fin',this.value,${e.ri||0})" onchange="renderDetail()"></td>
+        ${e.ri ? `<td></td>` : notaCeldaHTML({kind:"caltask", tarea:e.key})}
+        <td>${e.ri ? `<button class="icon-btn" onclick="delRango('dt','${t}',${e.ri})" title="Quitar este rango">✕</button>` : ""}</td>
       </tr>`;
     }
     return `<tr>
@@ -2466,14 +2588,16 @@ function renderDetail(){
       <div class="glabel">Documentos & carpetas</div>
       <div class="link-split">
         <div class="link-box">
-          <div class="lb-head"><span class="lb-dot"></span> Google Drive</div>
+          <div class="lb-head"><span class="lb-dot"></span> Google Drive
+            ${ro?"":`<button class="mini-btn" style="margin-left:auto" onclick="linksOpen()">${driveLinks?"✎ links":"+ vincular"}</button>`}</div>
           <div class="sublabel" style="margin-top:0">Carpetas</div>
           <div class="linkgrid">${driveLinks || '<span style="font-size:12.5px;color:var(--gray)">Sin links de Drive</span>'}${finalesBtn}</div>
           <div class="sublabel">Documentos y tools</div>
           <div class="linkgrid">${trackerBtn}${feedbackBtn}${docLinks}</div>
         </div>
         <div class="link-box">
-          <div class="lb-head"><span class="lb-dot frame"></span> Frame.io</div>
+          <div class="lb-head"><span class="lb-dot frame"></span> Frame.io
+            ${ro?"":`<button class="mini-btn" style="margin-left:auto" onclick="linksOpen()">${p.links&&p.links.frameio?"✎ link":"+ vincular"}</button>`}</div>
           ${frameLink}
         </div>
       </div>
@@ -3463,6 +3587,60 @@ function renderTracker(){
   $("#trkBody").innerHTML = trackerHTML(trkProject);
 }
 
+/* ================================================================
+   LINKS DEL PROYECTO (popup)
+   wf3 crea Drive y Frame cuando los dejás encendidos. Si los apagaste, o si
+   la unidad ya existía de antes, acá se pegan a mano. También sirve para
+   corregir un link mal generado. Guarda `links_json` por wf4, que ya lo tiene
+   en su lista blanca, así que no hay que tocar ningún workflow.
+================================================================ */
+const LINK_CAMPOS = [
+  ["Google Drive", [
+    ["driveRoot","Unidad del proyecto"],["coord","0. COORD"],["supervision","1. SUPERVISION"],
+    ["footage","2. FOOTAGE"],["recursos","3. RECURSOS"],["editables","4. EDITABLES"],["finales","5. FINALES"]
+  ]],
+  ["Documentos", [
+    ["brief","Brief"],["feedback","Feedback"],["notas","Notas"],["desglose","Desglose"]
+  ]],
+  ["Frame.io", [ ["frameio","Proyecto de Frame.io"] ]]
+];
+function linksOpen(){
+  const p = detailProject; if(!p) return;
+  p.links = p.links || {};
+  $("#lkWho").textContent = p.nombre || "Proyecto";
+  $("#lkCampos").innerHTML = LINK_CAMPOS.map(([grupo, campos])=>`
+    <div class="glabel" style="margin-top:var(--space-5)">${esc(grupo)}</div>
+    ${campos.map(([k,label])=>`
+      <div style="margin-bottom:8px">
+        <label class="f">${esc(label)}</label>
+        <input type="url" id="lk_${k}" value="${esc(p.links[k]||"")}" placeholder="https://…">
+      </div>`).join("")}`).join("");
+  $("#ovLinks").classList.add("open");
+  setTimeout(()=>{ const el=$("#lk_driveRoot"); if(el) el.focus(); }, 30);
+}
+function linksClose(){ $("#ovLinks").classList.remove("open"); }
+async function linksSave(btn){
+  const p = detailProject; if(!p){ linksClose(); return; }
+  const antes = Object.assign({}, p.links||{});
+  const nuevos = {};
+  LINK_CAMPOS.forEach(([,campos])=>campos.forEach(([k])=>{
+    const el = $("#lk_"+k); if(!el) return;
+    const v = (el.value||"").trim();
+    if(v) nuevos[k] = v;          /* vacío = no se guarda, así la ficha no muestra links muertos */
+  }));
+  p.links = nuevos;
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
+    if(!DEMO) await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, links_json: JSON.stringify(nuevos) })});
+    linksClose(); renderDetail(); onProjectsLoaded();
+    toast("✔ Links actualizados");
+  }catch(e){
+    p.links = antes;
+    toast("No pude guardar los links: "+e.message, true);
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
+}
+
 /* Equipo interno en la ficha: una línea por rol con el ✎ al costado. Antes eran
    seis inputs abiertos, lo que sugería que se cambia seguido — y no: cambiar de
    coordinador o de productor a mitad de un proyecto es la excepción. La posibilidad
@@ -4185,7 +4363,7 @@ function kickOffComplete(){
   }
   // Inicializar el estado del nuevo proyecto
   npSelected = new Set(); npAssignData = {}; npTaskDates = {};
-  npAuto = autoDefaults(); renderAuto("np");
+  npAuto = autoDefaults(); npLinks = {}; renderAuto("np");
   npSintesis = kickOffResumen;
   sxRender("np");
   npStoryboardUrl = kickOffLinks.storyboard || "";
@@ -4226,7 +4404,7 @@ function n2Snapshot(){
     debrief: ($("#n2Debrief")||{}).value||"",
     campos: Object.fromEntries(ids.map(id=>[id, ($("#"+id)||{}).value||""])),
     tareas: [...n2Selected], assign: n2AssignData, fechas: n2TaskDates,
-    auto: { ...n2Auto },
+    auto: { ...n2Auto }, links: { ...n2Links },
     formVisible: $("#n2Form").style.display!=="none"
   };
 }
@@ -4275,6 +4453,7 @@ function openDraft(id){
   n2AssignData = d.assign||{};
   n2TaskDates = d.fechas||{};
   n2Auto = Object.assign(autoDefaults(), d.auto||{});
+  n2Links = Object.assign({}, d.links||{});
   renderAuto("n2");
   sxRender("n2");
   renderN2Tasks();
@@ -4319,7 +4498,7 @@ function openDebrief(){
   n2DraftBase = null;
   if($("#btnDraft")) $("#btnDraft").textContent = "Guardar borrador";
   n2Selected = new Set(); n2AssignData = {}; n2TaskDates = {};
-  n2Auto = autoDefaults(); renderAuto("n2");
+  n2Auto = autoDefaults(); n2Links = {}; renderAuto("n2");
   ["n2Debrief","n2Nombre","n2Productora","n2Director","n2Cliente","n2Agencia","n2Sintesis","n2Storyboard",
    "n2EpNombre","n2EpEmail","n2ProdNombre","n2ProdEmail","n2CoordNombre","n2CoordEmail"]
     .forEach(id=>{ const el=$("#"+id); if(el) el.value=""; });
@@ -4376,7 +4555,7 @@ function hayAlgoCargado({campos, tareas, assign, fechas, extras}){
   if(Object.values(campos||{}).some(v=>String(v||"").trim())) return true;
   if((tareas||[]).length) return true;
   if(Object.values(assign||{}).some(rows=>(rows||[]).some(r=>r && (String(r.nombre||"").trim() || String(r.email||"").trim())))) return true;
-  if(Object.values(fechas||{}).some(d=>d && (d.inicio || d.fin || d.notas))) return true;
+  if(Object.values(fechas||{}).some(d=>d && (d.notas || taskTieneFechas(d)))) return true;
   if((extras||[]).some(v=>String(v||"").trim())) return true;
   return false;
 }
@@ -4466,7 +4645,7 @@ async function createProject2(){
   const tDates = {};
   [...n2Selected].forEach(t=>{
     const d = n2TaskDates[t];
-    if(d && (d.inicio||d.fin||d.notas)) tDates[t]=d;
+    if(d && (d.notas || taskTieneFechas(d))) tDates[t]=d;
   });
   /* un mail por candidato con dirección, ya redactado: lo que se ve en el
      editor es lo que sale. Los apagados viajan con enviar:false para que
@@ -4497,7 +4676,8 @@ async function createProject2(){
     storyboard_url: $("#n2Storyboard").value.trim(),
     debrief_raw: $("#n2Debrief").value.trim(),
     mails,
-    auto_drive: n2Auto.drive, auto_frame: n2Auto.frame, auto_discord: n2Auto.discord
+    auto_drive: n2Auto.drive, auto_frame: n2Auto.frame, auto_discord: n2Auto.discord,
+    links: manualLinks(n2Links, n2Auto)
   };
 
   const btn = $("#btnCreate2");
@@ -4508,7 +4688,7 @@ async function createProject2(){
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:autoDemoLinks(n2Auto),
+        links:Object.assign(autoDemoLinks(n2Auto), manualLinks(n2Links, n2Auto)),
         calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
@@ -4587,6 +4767,7 @@ function closeOverlayById(id){
   if(id==="ovNota"){ notaClose(); return; }
   if(id==="ovPersona"){ personaClose(); return; }
   if(id==="ovInterno"){ internoClose(); return; }
+  if(id==="ovLinks"){ linksClose(); return; }
   closeModal(id);
 }
 document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{

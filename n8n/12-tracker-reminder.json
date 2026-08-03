@@ -1,0 +1,231 @@
+{
+  "name": "Team23 — 12. Recordatorio del tracker de jornadas",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1,5"
+            }
+          ]
+        }
+      },
+      "id": "c1200012-0000-0000-0000-000000000001",
+      "name": "Lunes y viernes 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "dbSheetId",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "discordCoordId",
+              "value": "PEGAR_ID_DEL_CANAL_DE_COORDINACION",
+              "type": "string"
+            },
+            {
+              "id": "c3",
+              "name": "ventanaDias",
+              "value": "7",
+              "type": "string"
+            },
+            {
+              "id": "c4",
+              "name": "estadosChequeados",
+              "value": "activo,entregando",
+              "type": "string"
+            },
+            {
+              "id": "c5",
+              "name": "avisarSiTodoAlDia",
+              "value": "true",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c1200012-0000-0000-0000-000000000002",
+      "name": "CONFIG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "options": {}
+      },
+      "id": "c1200012-0000-0000-0000-000000000003",
+      "name": "Leer Projects",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        400,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Calendar"
+        },
+        "options": {}
+      },
+      "id": "c1200012-0000-0000-0000-000000000004",
+      "name": "Leer Calendar",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        600,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      },
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const CFG = $('CONFIG').first().json;\nconst canal = String(CFG.discordCoordId || '').trim();\nif (!/^\\d{5,}$/.test(canal)) {\n  console.log('[wf12] discordCoordId sin configurar: no se manda nada');\n  return [];\n}\n\nconst ventana = Number(CFG.ventanaDias || 7);\nconst estados = String(CFG.estadosChequeados || 'activo,entregando')\n  .split(',').map(s => s.trim()).filter(Boolean);\nconst avisarSiOk = String(CFG.avisarSiTodoAlDia || 'true') !== 'false';\n\nconst hoy = new Date(); hoy.setHours(0, 0, 0, 0);\nconst corte = new Date(hoy); corte.setDate(corte.getDate() - ventana);\n\nconst parse = (s) => {\n  const m = /^(\\d{4})-(\\d{2})-(\\d{2})/.exec(String(s || '').trim());\n  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;\n};\nconst dmy = (d) => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');\nconst diasDesde = (d) => Math.round((hoy - d) / 86400000);\n\nconst proyectos = $('Leer Projects').all().map(i => i.json).filter(r => r && r.id);\nconst cal = $('Leer Calendar').all().map(i => i.json).filter(r => r && r.project_id);\n\nconst atrasados = [], alDia = [], sinEmpezar = [];\n\nfor (const p of proyectos) {\n  if (!estados.includes(String(p.status || '').trim())) continue;\n\n  /* ¿Ya arrancó? Pedir jornadas de algo que empieza el mes que viene es ruido. */\n  const inicios = [];\n  let td = {};\n  try { td = JSON.parse(p.taskDates_json || '{}') || {}; } catch (e) { td = {}; }\n  /* mismo criterio que wf11: se miran todos los rangos, no solo el primero */\n  Object.values(td).forEach(d => {\n    if (!d) return;\n    const tramos = [{ inicio: d.inicio, fin: d.fin }].concat(Array.isArray(d.rangos) ? d.rangos : []);\n    tramos.forEach(r => { const f = parse(r && (r.inicio || r.fin)); if (f) inicios.push(f); });\n  });\n  cal.filter(r => String(r.project_id) === String(p.id))\n     .forEach(r => { const f = parse(r.inicio || r.fin); if (f) inicios.push(f); });\n  const arranque = inicios.length ? new Date(Math.min(...inicios.map(d => d.getTime()))) : null;\n  if (arranque && arranque > hoy) { sinEmpezar.push(p.nombre || p.id); continue; }\n\n  /* El tracker no guarda fecha de modificación, así que la señal de \"actualizado\"\n     es la jornada más reciente marcada, mirando a todos los participantes. */\n  let tr = {};\n  try { tr = JSON.parse(p.tracker_json || '{}') || {}; } catch (e) { tr = {}; }\n  const marcas = [];\n  Object.values(tr.jornadas || {}).forEach(dias => {\n    Object.keys(dias || {}).forEach(k => { if (dias[k]) { const f = parse(k); if (f) marcas.push(f); } });\n  });\n\n  if (!marcas.length) {\n    atrasados.push({ nombre: p.nombre || p.id, detalle: 'sin ninguna jornada cargada' });\n    continue;\n  }\n  const ultima = new Date(Math.max(...marcas.map(d => d.getTime())));\n  if (ultima < corte) {\n    const n = diasDesde(ultima);\n    atrasados.push({ nombre: p.nombre || p.id, detalle: '\\u00faltima jornada ' + dmy(ultima) + ' (hace ' + n + ' d\\u00eda' + (n === 1 ? '' : 's') + ')' });\n  } else {\n    alDia.push(p.nombre || p.id);\n  }\n}\n\nconsole.log('[wf12] atrasados ' + atrasados.length + ' \\u00b7 al d\\u00eda ' + alDia.length + ' \\u00b7 sin empezar ' + sinEmpezar.length);\nif (!atrasados.length && !avisarSiOk) return [];\n\nconst lineas = ['\\ud83d\\uddd3\\ufe0f **Recordatorio: actualizar el tracker de jornadas**'];\nif (atrasados.length) {\n  lineas.push('', 'Sin cargas en los \\u00faltimos ' + ventana + ' d\\u00edas:');\n  atrasados.slice(0, 20).forEach(a => lineas.push('\\u2022 **' + a.nombre + '** \\u00b7 ' + a.detalle));\n  if (atrasados.length > 20) lineas.push('\\u2026y ' + (atrasados.length - 20) + ' m\\u00e1s');\n  if (alDia.length) lineas.push('', 'Al d\\u00eda: ' + alDia.length + ' proyecto' + (alDia.length === 1 ? '' : 's') + '.');\n} else {\n  lineas.push('', 'Todos los proyectos en curso est\\u00e1n al d\\u00eda.');\n}\nreturn [{ json: { channelId: canal, content: lineas.join('\\n').slice(0, 1900) } }];\n"
+      },
+      "id": "c1200012-0000-0000-0000-000000000005",
+      "name": "Armar recordatorio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+        "options": {}
+      },
+      "id": "c1200012-0000-0000-0000-000000000006",
+      "name": "Discord: recordatorio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Lunes y viernes 09:00": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "Leer Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Projects": {
+      "main": [
+        [
+          {
+            "node": "Leer Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Calendar": {
+      "main": [
+        [
+          {
+            "node": "Armar recordatorio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar recordatorio": {
+      "main": [
+        [
+          {
+            "node": "Discord: recordatorio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "pinData": {}
+}
