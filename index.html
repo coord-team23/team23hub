@@ -241,7 +241,7 @@
   .sublabel{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin:var(--space-3) 0 var(--space-2)}
   .frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:var(--space-3);margin-bottom:var(--space-3)}
   label.f{display:block;font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--gray);margin-bottom:var(--space-1)}
-  input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{
+  input[type=text],input[type=email],input[type=tel],input[type=date],input[type=url],select,textarea{
     width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3) var(--space-3);
     border:2px solid var(--ink);border-radius:var(--radius-md);background:#fff;color:var(--ink);
   }
@@ -717,7 +717,7 @@
     .auto-item .chk-box{width:36px;height:36px;line-height:32px;font-size:22px}
 
     /* inputs: 16px evita el auto-zoom de iOS al enfocar */
-    input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{font-size:16px}
+    input[type=text],input[type=email],input[type=tel],input[type=date],input[type=url],select,textarea{font-size:16px}
     /* La grilla de 2 columnas dejaba que la autoubicación mandara el campo Discord
        (4º hijo) a la columna de 44px: quedaba una cajita ilegible al costado. Con
        las áreas explícitas cada campo va donde tiene que ir.
@@ -844,6 +844,9 @@
   .cal-nota .txt.vacia{color:var(--gray)}
   .cal-nota:hover{background:var(--soft)}
   #ovNota .modal{width:min(680px,100%)}
+  #ovLinks .modal{width:min(780px,100%)}
+  #ovLinks .lk-grid{display:flex;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-5)}
+  #ovLinks .lk-grid>div{flex:1 1 300px;min-width:0}
   #notaTa{min-height:220px;font-size:15px;line-height:1.6}
   /* popup de edición: la caja grande que faltaba */
   #ovSintesis .modal{width:min(820px,100%)}
@@ -3609,12 +3612,12 @@ function linksOpen(){
   p.links = p.links || {};
   $("#lkWho").textContent = p.nombre || "Proyecto";
   $("#lkCampos").innerHTML = LINK_CAMPOS.map(([grupo, campos])=>`
-    <div class="glabel" style="margin-top:var(--space-5)">${esc(grupo)}</div>
-    ${campos.map(([k,label])=>`
-      <div style="margin-bottom:8px">
+    <div class="glabel">${esc(grupo)}</div>
+    <div class="lk-grid">${campos.map(([k,label])=>`
+      <div>
         <label class="f">${esc(label)}</label>
         <input type="url" id="lk_${k}" value="${esc(p.links[k]||"")}" placeholder="https://…">
-      </div>`).join("")}`).join("");
+      </div>`).join("")}</div>`).join("");
   $("#ovLinks").classList.add("open");
   setTimeout(()=>{ const el=$("#lk_driveRoot"); if(el) el.focus(); }, 30);
 }
