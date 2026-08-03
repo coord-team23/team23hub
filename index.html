@@ -533,6 +533,9 @@
   table.trk td.trk-date{position:sticky;left:54px;background:#fff;z-index:1;text-align:left;color:var(--gray)}
   table.trk th.trk-date{position:sticky;left:54px;background:#fff;z-index:3}
   table.trk tr.trk-weekend td{background:var(--soft)}
+  /* el día de hoy, para encontrarlo de un vistazo al abrir */
+  table.trk tr.trk-hoy td{box-shadow:inset 0 2px 0 var(--red), inset 0 -2px 0 var(--red)}
+  table.trk tr.trk-hoy td.trk-date{color:var(--red);font-weight:var(--weight-bold)}
   table.trk tr.trk-weekend td.trk-day,table.trk tr.trk-weekend td.trk-date{background:var(--soft)}
   table.trk td.trk-cell{cursor:pointer}
   table.trk td.trk-cell:hover{background:var(--soft)}
@@ -2228,6 +2231,10 @@ async function candSet(tarea, i, estado){
   if(DEMO){ toast(msg+" (demo)"); return; }
   try{
     await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, asignaciones_json: JSON.stringify(p.asignaciones) })});
+    /* Este cambio ya quedó guardado: si no se refresca el snapshot, un "Descartar
+       cambios" posterior lo revierte en memoria y el próximo guardado escribe el
+       estado viejo de vuelta en el sheet. */
+    snapDetail();
     toast(msg);
   }catch(e){ row.estado = prev; renderDetail(); toast("No pude guardar el cambio: "+e.message, true); }
 }
@@ -2372,9 +2379,10 @@ function openDetail(id, readOnly=false){
   if(detailProject.status!=="completado" && !detailProject.calendario.some(r=>(r.tipo||"fase")!=="hito")){
     detailProject.calendario.push({id:uid(), tipo:"fase", fase:"Entrega Masters", inicio:"", fin:"", notas:""});
   }
-  const f = detailProject.calendario.find(r=>(r.tipo||"fase")!=="hito" && r.inicio);
-  const base = f? parseYMD(f.inicio) : new Date();
-  calView = new Date(base.getFullYear(), base.getMonth(), 1);
+  /* Abre en el mes de HOY, que es lo que uno quiere ver al entrar. Si el proyecto
+     todavía no empezó o ya terminó, abrir en un mes vacío no sirve: se acota al
+     rango del proyecto. */
+  calView = new Date(mesDeApertura(detailProject));
   // la vista semanal (cierre) arranca en la semana del deadline, o en la actual
   weekView = projectEndDate(detailProject) || new Date();
   selDay = null;
@@ -2828,6 +2836,18 @@ function buildMonthGrid(y, m){
   for(let i=0;i<days.length;i+=7) weeks.push(days.slice(i,i+7));
   const mtitle = first.toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase();
   return {weeks, mtitle};
+}
+
+/* Mes con el que conviene abrir: hoy, o el extremo más cercano si el proyecto
+   está enteramente en el pasado o en el futuro. */
+function mesDeApertura(p){
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const fechas = allCalEntries(p).flatMap(e=>[parseYMD(e.inicio), parseYMD(e.fin)]).filter(Boolean);
+  if(!fechas.length) return new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  const min = new Date(Math.min(...fechas.map(d=>d.getTime())));
+  const max = new Date(Math.max(...fechas.map(d=>d.getTime())));
+  const ref = hoy < min ? min : hoy > max ? max : hoy;
+  return new Date(ref.getFullYear(), ref.getMonth(), 1);
 }
 
 function monthCalendarHTML(p, lookMap){
@@ -3537,6 +3557,22 @@ function openTracker(id){
   $("#trkKicker").textContent = trkProject.nombre + (trkProject.cliente ? " · "+trkProject.cliente : "");
   renderTracker();
   openModal("ovTracker");
+  /* el cuadro puede tener meses de filas: arrancar arriba de todo obliga a buscar
+     el día de hoy a mano cada vez */
+  setTimeout(()=>trackerIrAHoy(), 40);
+}
+function trackerIrAHoy(){
+  const wrap = document.querySelector("#trkBody .trk-wrap");
+  if(!wrap) return;
+  const fila = document.getElementById("trkd-"+ymd(new Date()));
+  if(fila){
+    /* un tercio arriba: se ve hoy y también lo que viene, sin quedar pegado al borde */
+    wrap.scrollTop = Math.max(0, fila.offsetTop - Math.round(wrap.clientHeight/3));
+    return;
+  }
+  /* hoy fuera del rango: si el proyecto ya pasó conviene el final, si no el principio */
+  const r = trackerRange(trkProject);
+  if(r && new Date() > r.end) wrap.scrollTop = wrap.scrollHeight;
 }
 
 function toggleJornada(key, dateKey, ci){
@@ -3628,6 +3664,8 @@ async function saveTracker(conEquipo, extra){
   if(extra) Object.assign(body, extra);
   try{
     await api("/webhook/team23/update",{method:"POST",body:JSON.stringify(body)});
+    /* mismo motivo que en candSet: lo guardado no debe poder revertirse con Descartar */
+    if(conEquipo && detailProject && trkProject && detailProject.id === trkProject.id) snapDetail();
   }catch(e){ toast("No pude guardar el tracker: "+e.message, true); }
 }
 
@@ -3747,6 +3785,7 @@ function trackerHTML(p){
     <th>Notas / hitos</th>
   </tr>`;
 
+  const hoyKey = ymd(new Date());
   /* un mapa plano para no recalcular la unión por celda */
   const dias = {};
   parts.forEach(pp=>{ Object.keys(diasDe(t, pp)).forEach(f=>{ dias[pp.key+"|"+f] = true; }); });
@@ -3761,7 +3800,7 @@ function trackerHTML(p){
                 : cerrado ? ' title="Conteo cerrado: reactivalo para cargar jornadas"' : "";
       return `<td id="jc-${ci}-${key}" class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""} ${cerrado?"trk-cerrado":""}"${tip} onclick="toggleJornada('${pp.key}','${key}',${ci})">${on?"✕":""}</td>`;
     }).join("");
-    return `<tr class="${isWeekend?"trk-weekend":""}">
+    return `<tr id="trkd-${key}" class="${isWeekend?"trk-weekend":""} ${key===hoyKey?"trk-hoy":""}">
       <td class="trk-day">${d.toLocaleDateString("es-AR",{weekday:"short"}).toUpperCase()}</td>
       <td class="trk-date">${fmtShort(key)}</td>
       ${cells}
@@ -5085,8 +5124,14 @@ async function confirmSaveExit(btn, avisar){
 }
 function confirmDiscard(){
   if(detailSnapshot){
-    const i = projects.findIndex(p=>p.id===detailSnapshot.id);
-    if(i>=0) projects[i] = JSON.parse(JSON.stringify(detailSnapshot));
+    const actual = projects.find(p=>p.id===detailSnapshot.id);
+    if(actual){
+      /* Se restaura EN EL MISMO objeto. Reemplazarlo en el array dejaba a
+         detailProject y a trkProject apuntando a uno huérfano: la ficha y el tracker
+         seguían mostrando y guardando datos de un proyecto que ya no estaba en la lista. */
+      Object.keys(actual).forEach(k=>{ delete actual[k]; });
+      Object.assign(actual, JSON.parse(JSON.stringify(detailSnapshot)));
+    }
   }
   detailDirty = false; calDirty = false;
   closeModal("ovConfirm"); closeModal("ovDetail");
