@@ -1228,29 +1228,7 @@
     <h2 id="intTitle">Equipo interno</h2>
     <div class="kicker" id="intWho"></div>
 
-    <div class="fgroup">
-      <div class="frow">
-        <div><label class="f">Productor Ejecutivo</label>
-          <input type="text" id="intEpNombre" autocomplete="off" placeholder="Nombre"
-                 oninput="acOpenRol(this,'ep','#intEpEmail')" onfocus="acRolFocus(this,'ep','#intEpEmail')"
-                 onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
-        <div><label class="f">Mail EP</label><input type="email" id="intEpEmail" placeholder="ep@team23.online"></div>
-      </div>
-      <div class="frow">
-        <div><label class="f">Productor</label>
-          <input type="text" id="intProdNombre" autocomplete="off" placeholder="Nombre"
-                 oninput="acOpenRol(this,'prod','#intProdEmail')" onfocus="acRolFocus(this,'prod','#intProdEmail')"
-                 onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
-        <div><label class="f">Mail Productor</label><input type="email" id="intProdEmail" placeholder="prod@team23.online"></div>
-      </div>
-      <div class="frow">
-        <div><label class="f">Coordinador</label>
-          <input type="text" id="intCoordNombre" autocomplete="off" placeholder="Nombre"
-                 oninput="acOpenRol(this,'coord','#intCoordEmail')" onfocus="acRolFocus(this,'coord','#intCoordEmail')"
-                 onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
-        <div><label class="f">Mail Coordinador</label><input type="email" id="intCoordEmail" placeholder="coord@team23.online"></div>
-      </div>
-    </div>
+    <div class="fgroup" id="intCampos"></div>
 
     <div class="actions">
       <button class="btn" onclick="internoClose()">Cancelar</button>
@@ -1544,6 +1522,7 @@ async function loadProjects(){
       tareas: p.tareas || [],
       asignaciones: p.asignaciones || {},
       taskDates: p.taskDates || (p.taskDates_json ? (()=>{try{return JSON.parse(p.taskDates_json)}catch(e){return {}}})() : {}),
+      equipo: p.equipo || (p.equipo_json ? (()=>{try{return JSON.parse(p.equipo_json)}catch(e){return {}}})() : {}),
       links: p.links || {},
       calendario: ensureCalIds((p.calendario || []).map(c=>({ ...c, tipo: c.tipo==="hito"?"hito":"fase" })))
     }));
@@ -3317,8 +3296,18 @@ function trackerRange(p){
 }
 
 /* última jornada marcada por una persona (fecha real de finalización) */
-function ultimaJornada(t, key){
-  const marks = Object.keys(t.jornadas[key]||{}).filter(k=>t.jornadas[key][k]);
+/* Días marcados de una persona: unión de todas sus claves. Alguien que figuraba como
+   Productor y además asignado a una tarea puede tener jornadas repartidas en dos. */
+function diasDe(t, pp){
+  const set = {};
+  (pp.claves || [pp.key]).forEach(k=>{
+    Object.entries(t.jornadas[k]||{}).forEach(([d,v])=>{ if(v) set[d] = true; });
+  });
+  return set;
+}
+function cuentaDias(t, pp){ return Object.keys(diasDe(t, pp)).length; }
+function ultimaJornada(t, key, pp){
+  const marks = pp ? Object.keys(diasDe(t, pp)) : Object.keys(t.jornadas[key]||{}).filter(k=>t.jornadas[key][k]);
   if(!marks.length) return "";
   return marks.sort().slice(-1)[0];
 }
@@ -3330,17 +3319,38 @@ function trackerParticipants(p){
      activo/inactivo se lee y se escribe ahí: es la misma fuente que la ficha, no
      una copia. El equipo interno (EP/Prod/Coord) y la gente que ya no está
      asignada no tienen fila, así que para esos manda t.inactivos. */
-  const add = (key, nombre, rol, removido, ref)=>{
+  /* Identidad, para no listar dos veces a quien ocupa más de un puesto (el Productor
+     que también coordina, o el EP asignado a una tarea). Se cruza por mail cuando hay,
+     y si no por nombre normalizado. `claves` guarda todas las claves de jornadas de
+     esa persona: los días se leen como unión de todas. */
+  const porPersona = new Map();
+  const add = (key, nombre, rol, removido, ref, email)=>{
     if(!key || seen.has(key)) return;
     seen.add(key);
     const fila = ref ? ((p.asignaciones[ref.tarea]||[])[ref.i]||{}) : null;
+    const mail = String((email!==undefined ? email : (fila&&fila.email))||"").trim().toLowerCase();
+    const ident = mail || ("n:"+rosterNorm(nombre));
+    const ya = porPersona.get(ident);
+    if(ya){
+      if(ya.rol.split(" · ").indexOf(rol) < 0) ya.rol += " · " + rol;
+      ya.claves.push(key);
+      if(ya.ref === null && ref) ya.ref = ref;          // si en algún puesto es asignado, ese manda el estado
+      if(!ya.fin && t.finalizados[key]) ya.fin = t.finalizados[key];
+      t.nombres[key] = nombre;
+      return;
+    }
     const inactivo = fila ? fila.estado==="inactivo" : !!t.inactivos[key];
-    list.push({key, nombre, rol, removido:!!removido, inactivo, ref:ref||null, fin:t.finalizados[key]||null});
+    const item = {key, claves:[key], nombre, rol, removido:!!removido, inactivo, ref:ref||null, fin:t.finalizados[key]||null};
+    porPersona.set(ident, item);
+    list.push(item);
     t.nombres[key] = nombre;
   };
-  if(p.ep_nombre) add("ep", p.ep_nombre, "EP");
-  if(p.prod_nombre) add("prod", p.prod_nombre, "Prod");
-  if(p.coord_nombre) add("coord", p.coord_nombre, "Coord");
+  [["ep","EP"],["prod","Prod"],["coord","Coord"]].forEach(([rol,sigla])=>{
+    rolPersonas(p, rol).forEach((x,i)=>{
+      if(!x.nombre) return;
+      add(rol+(i?"_"+i:""), x.nombre, sigla+(i?" 2":""), false, null, x.email);
+    });
+  });
   Object.entries(p.asignaciones||{}).forEach(([tarea, rows])=>{
     (rows||[]).forEach((r,i)=>{
       if(!r || !r.nombre) return;
@@ -3348,7 +3358,7 @@ function trackerParticipants(p){
          de vista las jornadas que ya tenían cargadas */
       if(r.estado && r.estado!=="confirmado" && r.estado!=="inactivo") return;
       const key = r.email && r.email.trim() ? "e:"+r.email.trim().toLowerCase() : "n:"+tarea+"|"+r.nombre;
-      add(key, r.nombre, tarea, false, {tarea, i});
+      add(key, r.nombre, tarea, false, {tarea, i}, r.email);
     });
   });
   // participantes que ya no están asignados pero tienen jornadas cargadas: se conservan, grisados
@@ -3387,8 +3397,15 @@ function toggleJornada(key, dateKey){
     toast("El conteo de "+(t.nombres[key]||"esta persona")+" está cerrado. Reactivalo para volver a cargar jornadas.", true);
     return;
   }
+  /* si la persona quedó unificada desde varios puestos, sus días pueden estar
+     repartidos en varias claves: se escribe en la primaria y se limpia el resto,
+     así el día no queda marcado por duplicado */
+  const pp = trackerParticipants(trkProject).find(x=>x.key===key);
+  const otras = pp ? pp.claves.filter(k=>k!==key) : [];
+  const estaba = (pp ? pp.claves : [key]).some(k=>t.jornadas[k] && t.jornadas[k][dateKey]);
+  otras.forEach(k=>{ if(t.jornadas[k]) delete t.jornadas[k][dateKey]; });
   t.jornadas[key] = t.jornadas[key] || {};
-  if(t.jornadas[key][dateKey]) delete t.jornadas[key][dateKey];
+  if(estaba) delete t.jornadas[key][dateKey];
   else t.jornadas[key][dateKey] = true;
   renderTracker();
   saveTracker();
@@ -3444,8 +3461,8 @@ function finOpen(key){
   const p = trkProject, t = ensureTracker(p);
   const pp = trackerParticipants(p).find(x=>x.key===key); if(!pp) return;
   finKey = key;
-  const ult = ultimaJornada(t, key);
-  const jor = Object.values(t.jornadas[key]||{}).filter(Boolean).length;
+  const ult = ultimaJornada(t, key, pp);
+  const jor = cuentaDias(t, pp);
   const hoy = ymd(new Date());
   $("#finWho").textContent = pp.nombre + " · " + pp.rol;
   $("#finFecha").value = (pp.fin && pp.fin.fecha) || hoy;
@@ -3486,7 +3503,7 @@ function reactOpen(key){
   const p = trkProject, t = ensureTracker(p);
   const pp = trackerParticipants(p).find(x=>x.key===key); if(!pp || !pp.fin) return;
   reactKey = key;
-  const jor = Object.values(t.jornadas[key]||{}).filter(Boolean).length;
+  const jor = cuentaDias(t, pp);
   $("#reactWho").textContent = pp.nombre + " · " + pp.rol;
   $("#reactHint").innerHTML =
     `Hoy figura como finalizada el <b>${fmtShort(pp.fin.fecha)}</b>, con <b>${jor}</b> jornada${jor===1?"":"s"} cargada${jor===1?"":"s"}.` +
@@ -3547,11 +3564,15 @@ function trackerHTML(p){
     <th>Notas / hitos</th>
   </tr>`;
 
+  /* un mapa plano para no recalcular la unión por celda */
+  const dias = {};
+  parts.forEach(pp=>{ Object.keys(diasDe(t, pp)).forEach(f=>{ dias[pp.key+"|"+f] = true; }); });
+
   const rows = days.map(d=>{
     const key = ymd(d);
     const isWeekend = [0,6].includes(d.getDay());
     const cells = parts.map(pp=>{
-      const on = !!(t.jornadas[pp.key] && t.jornadas[pp.key][key]);
+      const on = !!dias[pp.key + "|" + key];
       const cerrado = !!pp.fin;   // conteo cerrado por finalización
       const tip = cerrado ? ' title="Conteo cerrado: reactivalo para cargar jornadas"' : "";
       return `<td class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""} ${cerrado?"trk-cerrado":""}"${tip} onclick="toggleJornada('${pp.key}','${key}')">${on?"✕":""}</td>`;
@@ -3564,12 +3585,12 @@ function trackerHTML(p){
     </tr>`;
   }).join("");
 
-  const totalJor = parts.reduce((s,pp)=>s+Object.values(t.jornadas[pp.key]||{}).filter(Boolean).length,0);
+  const totalJor = parts.reduce((s,pp)=>s+cuentaDias(t, pp),0);
   const resumen = `<div class="trk-resumen">
     <table><thead><tr><th>Nombre</th><th>Rol</th><th>Jornadas</th><th>Última jornada</th><th>Finalizó</th></tr></thead><tbody>
       ${parts.map(pp=>{
-        const jor = Object.values(t.jornadas[pp.key]||{}).filter(Boolean).length;
-        const ult = ultimaJornada(t, pp.key);
+        const jor = cuentaDias(t, pp);
+        const ult = ultimaJornada(t, pp.key, pp);
         const nota = pp.removido ? ' <small style="color:var(--gray)">(ya no asignado)</small>'
                    : pp.inactivo ? ' <small style="color:var(--gray)">(inactivo)</small>' : "";
         /* la fecha de finalización es el dato que va a administración */
@@ -3651,12 +3672,13 @@ async function linksSave(btn){
 function internoHTML(p){
   const col = (rol)=>{
     const def = PER_ROLES[rol];
-    const nombre = (p[def.nombre]||"").trim();
-    const mail = (p[def.mail]||"").trim();
+    const gente = rolPersonas(p, rol).filter((x,i)=> i===0 || x.nombre || x.email);
+    const uno = (x,i)=>`
+      <div style="font-size:var(--fs-body)${x.nombre?"":";color:var(--gray)"}${i?";margin-top:6px":""}">${x.nombre?esc(x.nombre):"—"}${i?` <small style="color:var(--gray);font-weight:var(--weight-regular)">(entró después)</small>`:""}</div>
+      ${x.email?`<div style="font-size:12.5px;color:var(--gray);overflow-wrap:anywhere">${esc(x.email)}</div>`:""}`;
     return `<div>
       <label class="f">${def.titulo}</label>
-      <div style="font-size:var(--fs-body)${nombre?"":";color:var(--gray)"}">${nombre?esc(nombre):"—"}</div>
-      ${mail?`<div style="font-size:12.5px;color:var(--gray);overflow-wrap:anywhere">${esc(mail)}</div>`:""}
+      ${gente.map(uno).join("")}
     </div>`;
   };
   return `<div class="frow">${["ep","prod","coord"].map(col).join("")}</div>`;
@@ -3675,6 +3697,30 @@ function internoHTML(p){
    a mano — la misma trampa que con las notas.
 ================================================================ */
 let perTarget = null;
+/* Personas de un rol interno. La PRIMERA vive en las columnas planas
+   (`ep_nombre`/`ep_email`) y las adicionales en `equipo_json`, igual que los rangos
+   de fechas: así el portal, wf3 y wf5 siguen leyendo lo de siempre.
+   El segundo puesto existe para los handoffs: entra un productor nuevo y el anterior
+   queda registrado, en vez de pisarlo. */
+function rolPersonas(p, rol){
+  const def = PER_ROLES[rol];
+  const out = [{ nombre:(p[def.nombre]||"").trim(), email:(p[def.mail]||"").trim() }];
+  const extra = ((p.equipo||{})[rol]) || [];
+  extra.forEach(x=> out.push({ nombre:String((x&&x.nombre)||"").trim(), email:String((x&&x.email)||"").trim() }));
+  return out;
+}
+function rolSetPersona(p, rol, i, nombre, email){
+  const def = PER_ROLES[rol];
+  if(i === 0){ p[def.nombre] = nombre; p[def.mail] = email; return; }
+  p.equipo = p.equipo || {};
+  p.equipo[rol] = p.equipo[rol] || [];
+  while(p.equipo[rol].length < i) p.equipo[rol].push({nombre:"",email:""});
+  p.equipo[rol][i-1] = { nombre, email };
+  /* si el segundo queda vacío se borra, para no arrastrar entradas fantasma */
+  p.equipo[rol] = p.equipo[rol].filter(x=>x.nombre || x.email);
+  if(!p.equipo[rol].length) delete p.equipo[rol];
+}
+
 const PER_ROLES = {
   ep: {
     titulo:"Productor Ejecutivo", nombre:"ep_nombre", mail:"ep_email",
@@ -3800,27 +3846,48 @@ function personaAutofill(o){
 /* Los tres roles internos se editan juntos en un solo popup: son pocos campos y
    normalmente se toca más de uno a la vez. Los nombres autocompletan filtrado por
    rol, igual que en los formularios de creación. */
+/* segundos puestos visibles en el popup: se revelan si ya hay alguien o al pedirlo */
+let intSegundo = { ep:false, prod:false, coord:false };
+function internoRender(){
+  const p = detailProject; if(!p) return;
+  $("#intCampos").innerHTML = ["ep","prod","coord"].map(rol=>{
+    const def = PER_ROLES[rol];
+    const gente = rolPersonas(p, rol);
+    const hay2 = intSegundo[rol] || !!(gente[1] && (gente[1].nombre || gente[1].email));
+    const fila = (i)=>{
+      const x = gente[i] || {nombre:"",email:""};
+      const sufijo = i ? " 2" : "";
+      return `<div class="frow">
+        <div><label class="f">${def.titulo}${sufijo}${i?` <small style="color:var(--gray);letter-spacing:0;font-weight:var(--weight-regular);text-transform:none">quien tomó el puesto después</small>`:""}</label>
+          <input type="text" id="int_${rol}_${i}_n" value="${esc(x.nombre)}" autocomplete="off" placeholder="Nombre"
+                 oninput="acOpenRol(this,'${rol}','#int_${rol}_${i}_m')" onfocus="acRolFocus(this,'${rol}','#int_${rol}_${i}_m')"
+                 onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
+        <div><label class="f">Mail${sufijo}</label><input type="email" id="int_${rol}_${i}_m" value="${esc(x.email)}" placeholder="${rol}@team23.online"></div>
+      </div>`;
+    };
+    return fila(0) + (hay2 ? fila(1)
+      : `<button class="addline" onclick="intAddSegundo('${rol}')">+ agregar otro ${def.titulo.toLowerCase()}</button>`);
+  }).join("");
+}
+function intAddSegundo(rol){ intSegundo[rol] = true; internoRender(); }
 function internoOpen(){
   const p = detailProject; if(!p) return;
   $("#intWho").textContent = p.nombre || "Proyecto";
-  ["ep","prod","coord"].forEach(rol=>{
-    const def = PER_ROLES[rol];
-    const clave = rol==="ep" ? "Ep" : rol==="prod" ? "Prod" : "Coord";
-    $("#int"+clave+"Nombre").value = p[def.nombre] || "";
-    $("#int"+clave+"Email").value  = p[def.mail] || "";
-  });
+  intSegundo = { ep:false, prod:false, coord:false };
+  internoRender();
   $("#ovInterno").classList.add("open");
-  setTimeout(()=>{ const el=$("#intEpNombre"); if(el) el.focus(); }, 30);
+  setTimeout(()=>{ const el=$("#int_ep_0_n"); if(el) el.focus(); }, 30);
   rosterEnsure().catch(()=>{});
 }
 function internoClose(){ acClose(); $("#ovInterno").classList.remove("open"); }
 function internoSave(){
   const p = detailProject; if(!p){ internoClose(); return; }
   ["ep","prod","coord"].forEach(rol=>{
-    const def = PER_ROLES[rol];
-    const clave = rol==="ep" ? "Ep" : rol==="prod" ? "Prod" : "Coord";
-    p[def.nombre] = ($("#int"+clave+"Nombre").value||"").trim();
-    p[def.mail]   = ($("#int"+clave+"Email").value||"").trim();
+    [0,1].forEach(i=>{
+      const n = $("#int_"+rol+"_"+i+"_n"), m = $("#int_"+rol+"_"+i+"_m");
+      if(!n && !m) return;                       // el slot 2 puede no estar en pantalla
+      rolSetPersona(p, rol, i, ((n&&n.value)||"").trim(), ((m&&m.value)||"").trim());
+    });
   });
   detailDirty = true;   // el input/change de la ficha no corre desde un modal
   internoClose(); renderDetail();
@@ -4155,7 +4222,8 @@ async function saveTeam(btn){
   if(DEMO){ toast("✔ Equipo actualizado (demo)"); onProjectsLoaded(); return; }
   try{
     await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({
-      id:p.id, ep_nombre:p.ep_nombre, ep_email:p.ep_email, prod_nombre:p.prod_nombre, prod_email:p.prod_email,
+      id:p.id, equipo_json: JSON.stringify(p.equipo||{}),
+      ep_nombre:p.ep_nombre, ep_email:p.ep_email, prod_nombre:p.prod_nombre, prod_email:p.prod_email,
       coord_nombre:p.coord_nombre, coord_email:p.coord_email,
       tareas_json: JSON.stringify(p.tareas), asignaciones_json: JSON.stringify(p.asignaciones),
       taskDates_json: JSON.stringify(p.taskDates||{})
