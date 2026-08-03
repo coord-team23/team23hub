@@ -1923,9 +1923,10 @@ function mailOpen(tarea, i, ctx){
   $("#mailHtml").value = (r.mailHtml||"");
   $("#mailAdvBox").open = !!(r.mailHtml||"").trim();
   mailLive();
-  $("#ovMail").classList.add("open");   // no toca el scroll del body: queda uno abierto detrás
+  $("#ovMail").classList.add("open"); modalArmar("ovMail");   // no toca el scroll del body: queda uno abierto detrás
 }
-function mailClose(){ $("#ovMail").classList.remove("open"); mailEditing = null; }
+function mailCerrar(){ modalLimpiar("ovMail"); $("#ovMail").classList.remove("open"); mailEditing = null; }
+function mailClose(){ modalSalir("ovMail", mailCerrar); }
 /* al desplegar el HTML lo precargo con el mail actual, para editar sobre algo real */
 function mailAdvToggle(){
   const box = $("#mailAdvBox"), ta = $("#mailHtml");
@@ -1965,7 +1966,7 @@ function mailSave(){
   if(!mailEditing) return;
   const { ctx, tarea, i, rol, nombre } = mailEditing;
   const r = (assignStore(ctx)[tarea]||[])[i];
-  if(!r){ mailClose(); return; }
+  if(!r){ mailCerrar(); return; }
   const d = mailProjectData(ctx);
   const subject = ($("#mailSubject").value||"").trim();
   const intro = ($("#mailIntro").value||"").trim();
@@ -1975,7 +1976,7 @@ function mailSave(){
   r.mailSubject = subject === mailSubjectDefault(d.proyecto, rol) ? "" : subject;
   r.mailIntro = intro === mailIntroDefault(nombre, d.cliente, rol) ? "" : intro;
   r.mailHtml = (raw && raw !== mailBuildHTML(d, rol, nombre, intro)) ? raw : "";
-  mailClose();
+  mailCerrar();
   /* en la ficha el override viaja al sheet con el próximo guardado del equipo */
   if(ctx==="dt"){ detailDirty = true; renderDetail(); }
   else mailSlotSync(ctx, tarea, i);
@@ -3389,7 +3390,7 @@ function openTracker(id){
   openModal("ovTracker");
 }
 
-function toggleJornada(key, dateKey){
+function toggleJornada(key, dateKey, ci){
   const t = ensureTracker(trkProject);
   /* con el trabajo finalizado el conteo queda cerrado: hay que reactivarlo antes
      de volver a tocar jornadas, así nadie suma días sobre algo ya cerrado */
@@ -3407,8 +3408,26 @@ function toggleJornada(key, dateKey){
   t.jornadas[key] = t.jornadas[key] || {};
   if(estaba) delete t.jornadas[key][dateKey];
   else t.jornadas[key][dateKey] = true;
-  renderTracker();
+  /* Se toca solo la celda y se refresca el resumen. Rehacer todo el cuadro
+     destruía el contenedor con scroll y volvía siempre arriba: cargar una semana
+     de jornadas era scrollear otra vez después de cada click. */
+  const celda = (ci===undefined) ? null : document.getElementById("jc-"+ci+"-"+dateKey);
+  if(celda){
+    celda.classList.toggle("on", !estaba);
+    celda.textContent = estaba ? "" : "✕";
+    /* si la persona estaba unificada desde varios puestos, la limpieza de las otras
+       claves puede haber apagado celdas de otras columnas: se refresca la fila */
+    if(otras.length) renderTracker();
+    else trackerResumenSync();
+  } else {
+    renderTracker();
+  }
   saveTracker();
+}
+function trackerResumenSync(){
+  const el = document.querySelector("#trkBody .trk-resumen");
+  if(el) el.outerHTML = trackerResumenHTML(trkProject);
+  else renderTracker();
 }
 
 function setTrackerNota(dateKey, val){
@@ -3469,9 +3488,10 @@ function finOpen(key){
   $("#finHint").innerHTML = `Jornadas cargadas: <b>${jor}</b>` +
     (ult ? ` · Última jornada marcada: <b>${fmtShort(ult)}</b> <button class="mini-btn" onclick="finUsarUltima('${ult}')">usar esa fecha</button>` : "") +
     (pp.fin ? `<div style="margin-top:6px">Ya estaba marcado como finalizado el <b>${fmtShort(pp.fin.fecha)}</b>: al confirmar se sobreescribe.</div>` : "");
-  $("#ovFin").classList.add("open");
+  $("#ovFin").classList.add("open"); modalArmar("ovFin");
 }
-function finClose(){ $("#ovFin").classList.remove("open"); finKey = null; }
+function finCerrar(){ modalLimpiar("ovFin"); $("#ovFin").classList.remove("open"); finKey = null; }
+function finClose(){ modalSalir("ovFin", finCerrar); }
 function finUsarUltima(f){ $("#finFecha").value = f; }
 async function finSave(btn){
   if(!finKey) return;
@@ -3490,7 +3510,7 @@ async function finSave(btn){
       jornadas: Object.values(t.jornadas[key]||{}).filter(Boolean).length,
       proyecto: p.nombre||"", proyecto_id: p.id
     }});
-    finClose(); renderTracker();
+    finCerrar(); renderTracker();
     toast("✔ "+(pp?pp.nombre:"La persona")+" finalizó el "+fmtShort(fecha));
   }catch(e){
     if(prev) t.finalizados[key] = prev; else delete t.finalizados[key];
@@ -3508,9 +3528,10 @@ function reactOpen(key){
   $("#reactHint").innerHTML =
     `Hoy figura como finalizada el <b>${fmtShort(pp.fin.fecha)}</b>, con <b>${jor}</b> jornada${jor===1?"":"s"} cargada${jor===1?"":"s"}.` +
     `<div style="margin-top:6px">Las jornadas ya cargadas no se tocan: solo se vuelve a habilitar la carga.</div>`;
-  $("#ovReact").classList.add("open");
+  $("#ovReact").classList.add("open"); modalArmar("ovReact");
 }
-function reactClose(){ $("#ovReact").classList.remove("open"); reactKey = null; }
+function reactCerrar(){ modalLimpiar("ovReact"); $("#ovReact").classList.remove("open"); reactKey = null; }
+function reactClose(){ modalSalir("ovReact", reactCerrar); }
 async function reactSave(btn){
   if(!reactKey) return;
   const p = trkProject, t = ensureTracker(p);
@@ -3526,7 +3547,7 @@ async function reactSave(btn){
       fechaPrevia: prev?prev.fecha:"", jornadas: Object.values(t.jornadas[key]||{}).filter(Boolean).length,
       proyecto: p.nombre||"", proyecto_id: p.id
     }});
-    reactClose(); renderTracker();
+    reactCerrar(); renderTracker();
     toast("✔ Conteo reactivado para "+(pp?pp.nombre:"la persona"));
   }catch(e){
     if(prev) t.finalizados[key] = prev;
@@ -3571,11 +3592,11 @@ function trackerHTML(p){
   const rows = days.map(d=>{
     const key = ymd(d);
     const isWeekend = [0,6].includes(d.getDay());
-    const cells = parts.map(pp=>{
+    const cells = parts.map((pp, ci)=>{
       const on = !!dias[pp.key + "|" + key];
       const cerrado = !!pp.fin;   // conteo cerrado por finalización
       const tip = cerrado ? ' title="Conteo cerrado: reactivalo para cargar jornadas"' : "";
-      return `<td class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""} ${cerrado?"trk-cerrado":""}"${tip} onclick="toggleJornada('${pp.key}','${key}')">${on?"✕":""}</td>`;
+      return `<td id="jc-${ci}-${key}" class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""} ${cerrado?"trk-cerrado":""}"${tip} onclick="toggleJornada('${pp.key}','${key}',${ci})">${on?"✕":""}</td>`;
     }).join("");
     return `<tr class="${isWeekend?"trk-weekend":""}">
       <td class="trk-day">${d.toLocaleDateString("es-AR",{weekday:"short"}).toUpperCase()}</td>
@@ -3585,8 +3606,17 @@ function trackerHTML(p){
     </tr>`;
   }).join("");
 
+  const resumen = trackerResumenHTML(trkProject);
+
+  return rangeLine + `<div class="trk-wrap"><table class="trk"><thead>${head}</thead><tbody>${rows}</tbody></table></div>` + resumen;
+}
+/* separado del cuadro para poder refrescar solo esto al marcar una jornada, sin
+   rehacer la grilla (que es la que tiene el scroll y volvía siempre arriba) */
+function trackerResumenHTML(p){
+  const t = ensureTracker(p);
+  const parts = trackerParticipants(p);
   const totalJor = parts.reduce((s,pp)=>s+cuentaDias(t, pp),0);
-  const resumen = `<div class="trk-resumen">
+  return `<div class="trk-resumen">
     <table><thead><tr><th>Nombre</th><th>Rol</th><th>Jornadas</th><th>Última jornada</th><th>Finalizó</th></tr></thead><tbody>
       ${parts.map(pp=>{
         const jor = cuentaDias(t, pp);
@@ -3603,12 +3633,16 @@ function trackerHTML(p){
       <tr style="font-weight:var(--weight-bold);border-top:2px solid var(--ink)"><td>TOTAL</td><td></td><td>${totalJor}</td><td></td><td></td></tr>
     </tbody></table>
   </div>`;
-
-  return rangeLine + `<div class="trk-wrap"><table class="trk"><thead>${head}</thead><tbody>${rows}</tbody></table></div>` + resumen;
 }
 
 function renderTracker(){
+  /* el cuadro vive en un contenedor con scroll propio; reemplazar el innerHTML lo
+     destruye y el nuevo nace arriba de todo. Se guarda y se repone la posición. */
+  const antes = document.querySelector("#trkBody .trk-wrap");
+  const sx = antes ? antes.scrollLeft : 0, sy = antes ? antes.scrollTop : 0;
   $("#trkBody").innerHTML = trackerHTML(trkProject);
+  const ahora = document.querySelector("#trkBody .trk-wrap");
+  if(ahora && (sx || sy)){ ahora.scrollLeft = sx; ahora.scrollTop = sy; }
 }
 
 /* ================================================================
@@ -3639,12 +3673,13 @@ function linksOpen(){
         <label class="f">${esc(label)}</label>
         <input type="url" id="lk_${k}" value="${esc(p.links[k]||"")}" placeholder="https://…">
       </div>`).join("")}</div>`).join("");
-  $("#ovLinks").classList.add("open");
+  $("#ovLinks").classList.add("open"); modalArmar("ovLinks");
   setTimeout(()=>{ const el=$("#lk_driveRoot"); if(el) el.focus(); }, 30);
 }
-function linksClose(){ $("#ovLinks").classList.remove("open"); }
+function linksCerrar(){ modalLimpiar("ovLinks"); $("#ovLinks").classList.remove("open"); }
+function linksClose(){ modalSalir("ovLinks", linksCerrar); }
 async function linksSave(btn){
-  const p = detailProject; if(!p){ linksClose(); return; }
+  const p = detailProject; if(!p){ linksCerrar(); return; }
   const antes = Object.assign({}, p.links||{});
   const nuevos = {};
   LINK_CAMPOS.forEach(([,campos])=>campos.forEach(([k])=>{
@@ -3657,7 +3692,7 @@ async function linksSave(btn){
   if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
   try{
     if(!DEMO) await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, links_json: JSON.stringify(nuevos) })});
-    linksClose(); renderDetail(); onProjectsLoaded();
+    linksCerrar(); renderDetail(); onProjectsLoaded();
     toast("✔ Links actualizados");
   }catch(e){
     p.links = antes;
@@ -3869,19 +3904,25 @@ function internoRender(){
       : `<button class="addline" onclick="intAddSegundo('${rol}')">+ agregar otro ${def.titulo.toLowerCase()}</button>`);
   }).join("");
 }
-function intAddSegundo(rol){ intSegundo[rol] = true; internoRender(); }
+function intAddSegundo(rol){
+  intSegundo[rol] = true; internoRender();
+  /* revelar el slot vacío no es un cambio: se recalcula la huella para no
+     preguntar al cerrar si después no se escribió nada */
+  modalArmar("ovInterno");
+}
 function internoOpen(){
   const p = detailProject; if(!p) return;
   $("#intWho").textContent = p.nombre || "Proyecto";
   intSegundo = { ep:false, prod:false, coord:false };
   internoRender();
-  $("#ovInterno").classList.add("open");
+  $("#ovInterno").classList.add("open"); modalArmar("ovInterno");
   setTimeout(()=>{ const el=$("#int_ep_0_n"); if(el) el.focus(); }, 30);
   rosterEnsure().catch(()=>{});
 }
-function internoClose(){ acClose(); $("#ovInterno").classList.remove("open"); }
+function internoCerrar(){ modalLimpiar("ovInterno"); acClose(); $("#ovInterno").classList.remove("open"); }
+function internoClose(){ modalSalir("ovInterno", internoCerrar); }
 function internoSave(){
-  const p = detailProject; if(!p){ internoClose(); return; }
+  const p = detailProject; if(!p){ internoCerrar(); return; }
   ["ep","prod","coord"].forEach(rol=>{
     [0,1].forEach(i=>{
       const n = $("#int_"+rol+"_"+i+"_n"), m = $("#int_"+rol+"_"+i+"_m");
@@ -3890,7 +3931,7 @@ function internoSave(){
     });
   });
   detailDirty = true;   // el input/change de la ficha no corre desde un modal
-  internoClose(); renderDetail();
+  internoCerrar(); renderDetail();
   toast("✔ Equipo interno actualizado");
 }
 
@@ -3908,7 +3949,7 @@ function personaOpen(kind, a, b){
     $("#perExtra").style.display = "";
   }
   $("#perFuente").textContent = "";
-  $("#ovPersona").classList.add("open");
+  $("#ovPersona").classList.add("open"); modalArmar("ovPersona");
   setTimeout(()=>{ const el=$("#perNombre"); if(el) el.focus(); }, 30);
   /* el directorio se lee una sola vez y queda en memoria; si todavía no está,
      se pide ahora para que las sugerencias existan */
@@ -3922,20 +3963,21 @@ function personaOpen(kind, a, b){
     if(el) el.textContent = "· no pude leer el Directorio, escribilo a mano";
   });
 }
-function personaClose(){ acClose(); $("#ovPersona").classList.remove("open"); perTarget = null; }
+function personaCerrar(){ modalLimpiar("ovPersona"); acClose(); $("#ovPersona").classList.remove("open"); perTarget = null; }
+function personaClose(){ modalSalir("ovPersona", personaCerrar); }
 function personaSave(){
   if(!perTarget) return;
-  const p = detailProject; if(!p){ personaClose(); return; }
+  const p = detailProject; if(!p){ personaCerrar(); return; }
   const nombre = ($("#perNombre").value||"").trim();
   const email  = ($("#perEmail").value||"").trim();
   const r = (p.asignaciones[perTarget.tarea]||[])[perTarget.i];
-  if(!r){ personaClose(); return; }
+  if(!r){ personaCerrar(); return; }
   r.nombre = nombre;
   r.email = email;
   r.discord = ($("#perDiscord").value||"").trim();
   r.telefono = ($("#perTelefono").value||"").trim();
   detailDirty = true;
-  personaClose(); renderDetail();
+  personaCerrar(); renderDetail();
   toast("✔ Datos guardados"+(nombre?" de "+nombre:""));
 }
 
@@ -3998,25 +4040,26 @@ function notaOpen(kind, a, b){
              : {kind:"task", ctx:a, tarea:b};
   $("#notaWho").textContent = notaEtiqueta(notaTarget);
   $("#notaTa").value = notaValue(notaTarget);
-  $("#ovNota").classList.add("open");
+  $("#ovNota").classList.add("open"); modalArmar("ovNota");
   setTimeout(()=>{ const ta=$("#notaTa"); if(ta) ta.focus(); }, 30);
 }
-function notaClose(){ $("#ovNota").classList.remove("open"); notaTarget = null; }
+function notaCerrar(){ modalLimpiar("ovNota"); $("#ovNota").classList.remove("open"); notaTarget = null; }
+function notaClose(){ modalSalir("ovNota", notaCerrar); }
 function notaSave(){
   if(!notaTarget) return;
   const tg = notaTarget;
   const val = ($("#notaTa").value||"").trim();
   if(tg.kind==="cal"){
     calSet(tg.idx, "notas", val);          // ya prende calDirty
-    notaClose(); renderDetail();
+    notaCerrar(); renderDetail();
   }else if(tg.kind==="caltask"){
     taskDateSet(tg.tarea, "notas", val);
     detailDirty = true;                    // el input/change de la ficha no corrió
-    notaClose(); renderDetail();
+    notaCerrar(); renderDetail();
   }else{
     setTaskDate(tg.ctx, tg.tarea, "notas", val);   // refresca el calendario del armado
     if(tg.ctx==="dt") detailDirty = true;
-    notaClose();
+    notaCerrar();
     if(tg.ctx!=="dt") notaSlotSync(tg.ctx, tg.tarea);
   }
   toast(val ? "✔ Notas guardadas" : "Notas vacías");
@@ -4087,10 +4130,11 @@ function sxOpen(ctx){
     : (ctx==="np" ? "Nuevo proyecto · alta manual" : "Nuevo proyecto · desde debrief");
   $("#sxTa").value = sxValue(ctx);
   sxLive();
-  $("#ovSintesis").classList.add("open");   // sin tocar el scroll: queda un modal abierto detrás
+  $("#ovSintesis").classList.add("open"); modalArmar("ovSintesis");   // sin tocar el scroll: queda un modal abierto detrás
   setTimeout(()=>{ const ta=$("#sxTa"); if(ta) ta.focus(); }, 30);
 }
-function sxClose(){ $("#ovSintesis").classList.remove("open"); sxCtx = null; }
+function sxCerrar(){ modalLimpiar("ovSintesis"); $("#ovSintesis").classList.remove("open"); sxCtx = null; }
+function sxClose(){ modalSalir("ovSintesis", sxCerrar); }
 function sxLive(){
   const v = ($("#sxTa").value||"").trim();
   $("#sxPrev").innerHTML = v ? sintesisHTML(v) : `<div class="sx-empty">Vacía por ahora.</div>`;
@@ -4102,18 +4146,18 @@ async function sxSave(btn){
   /* en el armado alcanza con dejarlo en el formulario: viaja al crear el proyecto */
   if(ctx!=="dt"){
     sxSetValue(ctx, val);
-    sxClose(); sxRender(ctx);
+    sxCerrar(); sxRender(ctx);
     toast(val ? "✔ Síntesis actualizada" : "Síntesis vacía");
     return;
   }
-  const p = detailProject; if(!p){ sxClose(); return; }
+  const p = detailProject; if(!p){ sxCerrar(); return; }
   const prev = p.sintesis;
   const _lbl = btn ? btn.textContent : "";
   if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
   p.sintesis = val;
   try{
     if(!DEMO) await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, sintesis: val })});
-    sxClose(); renderDetail();
+    sxCerrar(); renderDetail();
     toast("✔ Síntesis actualizada"+(DEMO?" (demo)":""));
   }catch(e){
     p.sintesis = prev;
@@ -4140,6 +4184,34 @@ async function saveProjectInfo(btn){
 }
 
 /* ---------------- confirm + loader con estética del hub ---------------- */
+/* ================================================================
+   GUARDA DE SALIDA PARA POPUPS
+   Cualquier popup con campos pide confirmación si se tocó algo y se intenta
+   cerrar sin guardar. Antes un click afuera lo cerraba y se perdía lo escrito.
+   Uso:
+     al abrir y llenar los campos → modalArmar("ovX")
+     el cierre del ✕ / Cancelar / click afuera → modalSalir("ovX", xCerrar)
+     al guardar → modalLimpiar("ovX") antes de cerrar, para que no pregunte
+   Un popup sin campos (ovReact) da huella vacía y nunca pregunta.
+================================================================ */
+const modalSnap = {};
+function modalHuella(id){
+  const ov = document.getElementById(id);
+  if(!ov) return "";
+  return [...ov.querySelectorAll("input,textarea,select")]
+    .map(el => (el.type==="checkbox"||el.type==="radio") ? (el.checked?"1":"0") : (el.value||""))
+    .join("\u0001");
+}
+function modalArmar(id){ modalSnap[id] = modalHuella(id); }
+function modalLimpiar(id){ delete modalSnap[id]; }
+function modalSucio(id){ return modalSnap[id] !== undefined && modalHuella(id) !== modalSnap[id]; }
+async function modalSalir(id, cerrar){
+  if(!modalSucio(id)){ modalLimpiar(id); cerrar(); return; }
+  const r = await t23Confirm("Hiciste cambios en esta ventana que todavía no se guardaron.",
+    { titulo:"CERRAR SIN GUARDAR", cancelar:"Seguir editando", ok:"Cerrar sin guardar", peligro:true });
+  if(r === true){ modalLimpiar(id); cerrar(); }
+}
+
 function t23Confirm(msg, opts={}){
   return new Promise(res=>{
     const ov = document.createElement("div");
