@@ -370,6 +370,25 @@
   .ab-ttl{font-size:15px;font-weight:var(--weight-bold);letter-spacing:.1em;text-transform:uppercase;flex:none}
   .ab-when{font-size:12.5px;color:var(--gray);margin-left:auto;flex:none;white-space:nowrap}
   .ab-when.falta{color:var(--red)}
+  .fase-sw{
+    width:16px;height:16px;border:2px solid var(--ink);border-radius:5px;padding:0;
+    cursor:pointer;flex:none;background:var(--soft);
+  }
+  .fase-sw:hover{transform:scale(1.15)}
+  #colorPanel{
+    display:none;position:fixed;z-index:1300;background:#fff;border:2px solid var(--ink);
+    border-radius:var(--radius-md);padding:8px;box-shadow:4px 4px 0 var(--ink);
+    width:196px;display:none;flex-wrap:wrap;gap:6px;
+  }
+  #colorPanel[style*="display: block"]{display:flex !important}
+  .cp-sw{width:26px;height:26px;border:2px solid var(--ink);border-radius:6px;cursor:pointer;padding:0}
+  .cp-sw.on{outline:3px solid var(--ink);outline-offset:2px}
+  .cp-auto{
+    flex:1 1 100%;font-family:var(--font-secondary);font-size:11px;font-weight:var(--weight-bold);
+    border:2px solid var(--ink);background:#fff;color:var(--ink);border-radius:var(--radius-full);
+    padding:5px;cursor:pointer;
+  }
+  .cp-auto.on{background:var(--ink);color:#fff}
   .ab-count{font-size:12.5px;color:var(--gray);flex:none}
 
   /* gente: grilla de tres columnas para que todo quede alineado hacia abajo */
@@ -576,23 +595,56 @@
   /* ---------- print (PDF del calendario) ---------- */
   #printArea{display:none}
   @media print{
+    @page{ size:A4 landscape; margin:10mm; }
+    /* Sin esto el navegador descarta TODOS los fondos al imprimir, que era la razón
+       por la que el PDF anterior sólo podía marcar el color con un ▪ diminuto. */
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
     body>*:not(#printArea){display:none !important}
-    #printArea{display:block;padding:14px;font-family:var(--font-primary),Helvetica,sans-serif;color:#000}
-    #printArea h1{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:26px;text-transform:uppercase;letter-spacing:var(--tracking-tight)}
-    #printArea .pmeta{font-size:10px;letter-spacing:.15em;color:#555;margin:4px 0 14px;text-transform:uppercase}
-    #printArea .pmonth{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:16px;text-transform:uppercase;margin:10px 0 6px}
-    #printArea table.pgrid{width:100%;border-collapse:collapse;table-layout:fixed}
-    #printArea table.pgrid th{border:1px solid #000;font-size:8.5px;letter-spacing:.12em;padding:4px;text-transform:uppercase;background:#F2F2F0}
-    #printArea table.pgrid td{border:1px solid #999;vertical-align:top;padding:3px 4px;height:72px;font-size:8.5px}
-    #printArea .pd{font-weight:700;font-size:9.5px;margin-bottom:2px}
-    #printArea .pd.om{color:#bbb}
-    #printArea .pl{line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #printArea .ph{line-height:1.35;color:#FF2B1E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #printArea h3{font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin:16px 0 6px}
-    #printArea table.plist{width:100%;border-collapse:collapse;font-size:11px}
-    #printArea table.plist th{text-align:left;border-bottom:2px solid #000;padding:5px;font-size:9px;text-transform:uppercase;letter-spacing:.1em}
-    #printArea table.plist td{padding:5px;border-bottom:1px solid #ccc}
-    #printArea .pfoot{margin-top:22px;font-size:9px;letter-spacing:.15em;color:#777}
+    #printArea{display:block;font-family:var(--font-primary),Helvetica,sans-serif;color:#0A0A0A}
+
+    /* encabezado */
+    #printArea .phead{display:flex;align-items:flex-end;justify-content:space-between;
+      border-bottom:3px solid #0A0A0A;padding-bottom:8px;margin-bottom:14px}
+    #printArea h1{font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:-.02em;margin:0;line-height:1}
+    #printArea .psub{font-size:11px;color:#666;margin-top:4px}
+    #printArea .pmonth{font-weight:800;font-size:19px;text-transform:uppercase;letter-spacing:.02em;text-align:right;line-height:1}
+    #printArea .pmark{font-size:9px;letter-spacing:.18em;color:#888;text-transform:uppercase;text-align:right;margin-top:4px}
+
+    /* leyenda de colores */
+    #printArea .pleg{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+    #printArea .pleg span{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700}
+    #printArea .pleg i{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.35);display:inline-block}
+
+    /* grilla del mes */
+    #printArea table.pgrid{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed}
+    #printArea table.pgrid th{font-size:8.5px;letter-spacing:.16em;padding:5px 4px;text-transform:uppercase;
+      background:#0A0A0A;color:#fff;border-radius:4px}
+    #printArea table.pgrid td{vertical-align:top;padding:4px;height:88px;font-size:8.5px;
+      background:#FAFAF8;border-radius:6px;border:1px solid #E4E4E0}
+    #printArea table.pgrid td.wknd{background:#F1F1EE}
+    #printArea table.pgrid td.om{background:#fff;border-color:#F0F0EE}
+    #printArea .pd{font-weight:800;font-size:11px;margin-bottom:4px;line-height:1}
+    #printArea .pd.om{color:#C8C8C4}
+    /* barra de fase: el color ahora se ve de verdad */
+    #printArea .pbar{border-radius:4px;padding:2px 5px;margin-bottom:2px;font-weight:700;font-size:8px;
+      line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #printArea .pbar.ini{box-shadow:inset 3px 0 0 rgba(0,0,0,.45)}
+    #printArea .phito{background:#FF2B1E;color:#fff;border-radius:4px;padding:2px 5px;margin-bottom:2px;
+      font-weight:700;font-size:8px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    /* tablas de detalle */
+    #printArea .pcols{display:flex;gap:18px;margin-top:16px;break-inside:avoid}
+    #printArea .pcols>div{flex:1}
+    #printArea h3{font-size:10px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 6px;color:#666}
+    #printArea table.plist{width:100%;border-collapse:collapse;font-size:10px}
+    #printArea table.plist th{text-align:left;border-bottom:2px solid #0A0A0A;padding:5px 6px;
+      font-size:8.5px;text-transform:uppercase;letter-spacing:.12em;color:#666}
+    #printArea table.plist td{padding:5px 6px;border-bottom:1px solid #E4E4E0;vertical-align:top}
+    #printArea table.plist .sw{width:10px;height:10px;border-radius:3px;display:inline-block;
+      border:1px solid rgba(0,0,0,.35);margin-right:6px;vertical-align:-1px}
+    #printArea .pfoot{margin-top:18px;padding-top:8px;border-top:1px solid #E4E4E0;
+      font-size:8.5px;letter-spacing:.16em;color:#999;text-transform:uppercase;
+      display:flex;justify-content:space-between}
   }
   /* ---------- mobile ---------- */
   @media(max-width:640px){
@@ -1395,13 +1447,17 @@ const DEMO = !CONFIG.N8N_BASE;
 const WDAYS = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
 /* looks de fase (calendario por proyecto): paleta Supportive Brand, texto oscuro sobre
    color pleno. Rojo excluido a propósito — queda reservado para peligro/alerta e hitos. */
+/* Paleta de las fases. El negro salió de acá: era el 6º color y con seis o más
+   tareas una quedaba pintada de negro, que en esta interfaz lee como "seleccionado"
+   o como borde, no como una fase más. Lo reemplaza el celeste de apoyo del
+   design system. El rojo queda reservado para los hitos. */
 const PHASE_LOOKS = [
-  {bg:"#AA8CF8", fg:"#0A0A0A", bd:"#AA8CF8"}, /* purple */
-  {bg:"#00F7FF", fg:"#0A0A0A", bd:"#00F7FF"}, /* cyan   */
-  {bg:"#FF61F7", fg:"#0A0A0A", bd:"#FF61F7"}, /* pink   */
-  {bg:"#33FF00", fg:"#0A0A0A", bd:"#33FF00"}, /* green  */
-  {bg:"#F8FF2E", fg:"#0A0A0A", bd:"#F8FF2E"}, /* yellow */
-  {bg:"#0A0A0A", fg:"#FFFFFF", bd:"#0A0A0A"}  /* ink (fallback) */
+  {bg:"#AA8CF8", fg:"#0A0A0A", bd:"#AA8CF8", nombre:"Violeta"},
+  {bg:"#00F7FF", fg:"#0A0A0A", bd:"#00F7FF", nombre:"Cian"},
+  {bg:"#FF61F7", fg:"#0A0A0A", bd:"#FF61F7", nombre:"Rosa"},
+  {bg:"#33FF00", fg:"#0A0A0A", bd:"#33FF00", nombre:"Verde"},
+  {bg:"#F8FF2E", fg:"#0A0A0A", bd:"#F8FF2E", nombre:"Amarillo"},
+  {bg:"#6ACCE0", fg:"#0A0A0A", bd:"#6ACCE0", nombre:"Celeste"}
 ];
 /* colores de marca (Supportive Brand del design system) para distinguir proyectos en el calendario global */
 const PROJECT_COLORS = ["var(--brand-purple)","var(--brand-cyan)","var(--brand-pink)","var(--brand-green)","var(--brand-yellow)","var(--brand-red)"];
@@ -2126,6 +2182,8 @@ function assignBlockHTML(tarea, rows, ctx){
 
   return `<div class="assign-block">
     <div class="ab-head">
+      <button class="fase-sw" style="background:${PHASE_LOOKS[faseColorDe(ctx, tarea)].bg}"
+              onclick="colorAbrir(event,'${ctx}','${tq}')" title="Color de la fase en el calendario"></button>
       <span class="ab-ttl">${esc(tarea)}</span>
       <span class="ab-count">${cuantos} ${cuantos===1?"persona":"personas"}</span>
       ${rango}
@@ -2414,16 +2472,77 @@ function taskDateSet(t,field,val,ri){
   d.rangos[ri-1][field] = val;
 }
 
+/* Paleta flotante anclada al cuadradito de color. Es un popover, no un modal: elegir
+   un color no merece una ventana con botones de guardar. */
+function colorPanel(){
+  let el = document.getElementById("colorPanel");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "colorPanel";
+    document.body.appendChild(el);
+    document.addEventListener("mousedown", e=>{
+      if(el.style.display==="block" && !el.contains(e.target) && !e.target.closest(".fase-sw")) colorCerrar();
+    });
+  }
+  return el;
+}
+function colorCerrar(){ const el = document.getElementById("colorPanel"); if(el) el.style.display = "none"; }
+function colorAbrir(ev, ctx, tarea){
+  ev.stopPropagation();
+  const p = ctx==="dt" ? detailProject : null;
+  const actual = ctx==="dt" ? faseColorElegido(p, tarea) : (()=>{ const d=(taskDatesStore(ctx)||{})[tarea]; const c=d&&d.color; return typeof c==="number"?c:null; })();
+  const tq = String(tarea).replace(/'/g,"\\'");
+  const el = colorPanel();
+  el.innerHTML = PHASE_LOOKS.map((lk,i)=>
+    `<button class="cp-sw${i===actual?" on":""}" style="background:${lk.bg}" title="${esc(lk.nombre)}"
+             onclick="faseColorSet('${ctx}','${tq}',${i})"></button>`).join("") +
+    `<button class="cp-auto${actual===null?" on":""}" onclick="faseColorSet('${ctx}','${tq}',null)">Automático</button>`;
+  const r = ev.currentTarget.getBoundingClientRect();
+  el.style.display = "block";
+  el.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 210)) + "px";
+  el.style.top = (r.bottom + 6) + "px";
+}
+
+/* El color elegido vive en taskDates[tarea].color, que ya se guarda y se sincroniza:
+   no hace falta ninguna columna nueva. null = automático por orden. */
+function faseColorElegido(p, tarea){
+  const d = (p.taskDates||{})[tarea];
+  const c = d && d.color;
+  return (typeof c === "number" && c >= 0 && c < PHASE_LOOKS.length) ? c : null;
+}
+/* Índice de color en uso para una tarea, sea elegido a mano o repartido por orden.
+   Sirve para pintar el cuadradito del encabezado en los tres contextos. */
+function faseColorDe(ctx, tarea){
+  const p = ctx==="dt" ? detailProject
+          : { tareas: [...(ctx==="n2" ? n2Selected : npSelected)], taskDates: taskDatesStore(ctx), calendario: [] };
+  if(!p) return 0;
+  const i = faseLookMap(p)["task:"+tarea];
+  return (typeof i === "number" && PHASE_LOOKS[i]) ? i : 0;
+}
+function faseColorSet(ctx, tarea, idx){
+  const s = taskDatesStore(ctx);
+  const d = s[tarea] = s[tarea] || {inicio:"",fin:"",notas:""};
+  if(idx === null) delete d.color; else d.color = idx;
+  if(ctx==="dt") detailDirty = true;
+  colorCerrar();
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
+}
 function faseLookMap(p){
   const map = {};
   let n = 0;
-  /* todos los rangos de una misma tarea comparten color: si no, VFX (1) y VFX (2)
-     se verían como dos fases distintas en el calendario */
+  /* Todos los rangos de una misma tarea comparten color: si no, VFX (1) y VFX (2)
+     se verían como dos fases distintas.
+     Si la tarea tiene un color elegido a mano (`taskDates[t].color`) manda ese; si no,
+     se reparte por orden de aparición. */
   const porTarea = {};
   allCalEntries(p).forEach(e=>{
     if(e.tipo==="hito") return;
     const clave = e.src==="task" ? "task:"+e.key : e.id;
-    if(porTarea[clave] === undefined){ porTarea[clave] = n%PHASE_LOOKS.length; n++; }
+    if(porTarea[clave] === undefined){
+      const elegido = e.src==="task" ? faseColorElegido(p, e.key) : null;
+      if(elegido !== null && elegido !== undefined) porTarea[clave] = elegido;
+      else { porTarea[clave] = n%PHASE_LOOKS.length; n++; }
+    }
     map[e.id] = porTarea[clave];
   });
   return map;
@@ -3332,37 +3451,32 @@ function ultimaJornada(t, key, pp){
 
 function trackerParticipants(p){
   const t = ensureTracker(p);
-  const list = [], seen = new Set();
-  /* ref = {tarea, i} apunta a la fila de asignaciones. Cuando existe, el estado
-     activo/inactivo se lee y se escribe ahí: es la misma fuente que la ficha, no
-     una copia. El equipo interno (EP/Prod/Coord) y la gente que ya no está
-     asignada no tienen fila, así que para esos manda t.inactivos. */
-  /* Identidad, para no listar dos veces a quien ocupa más de un puesto (el Productor
-     que también coordina, o el EP asignado a una tarea). Se cruza por mail cuando hay,
-     y si no por nombre normalizado. `claves` guarda todas las claves de jornadas de
-     esa persona: los días se leen como unión de todas. */
+  const list = [];
+  /* Una persona puede ocupar varios puestos a la vez: ser Productor y además estar
+     asignada a VFX y a Color. Se agrupa por identidad (mail si hay, si no el nombre
+     normalizado) y se guardan TODAS sus fuentes:
+       refs           → filas de asignaciones {tarea,i}; ahí vive su estado, igual que en la ficha
+       clavesInternas → puestos internos (ep/prod/coord), cuyo estado vive en t.inactivos
+       claves         → claves de jornadas, para leer los días como unión
+     Antes un Set de claves cortaba la segunda tarea de la misma persona, así que
+     desactivarla sólo apagaba una de las dos filas. */
   const porPersona = new Map();
   const add = (key, nombre, rol, removido, ref, email)=>{
-    if(!key || seen.has(key)) return;
-    seen.add(key);
+    if(!key) return;
     const fila = ref ? ((p.asignaciones[ref.tarea]||[])[ref.i]||{}) : null;
     const mail = String((email!==undefined ? email : (fila&&fila.email))||"").trim().toLowerCase();
     const ident = mail || ("n:"+rosterNorm(nombre));
-    const ya = porPersona.get(ident);
-    if(ya){
-      if(ya.rol.split(" · ").indexOf(rol) < 0) ya.rol += " · " + rol;
-      ya.claves.push(key);
-      if(ya.ref === null && ref) ya.ref = ref;          // si en algún puesto es asignado, ese manda el estado
-      if(!(fila && fila.estado === "candidato")) ya.pendiente = false;   // confirmado en otro puesto
-      if(!ya.fin && t.finalizados[key]) ya.fin = t.finalizados[key];
-      t.nombres[key] = nombre;
-      return;
+    let it = porPersona.get(ident);
+    if(!it){
+      it = {key, claves:[], refs:[], clavesInternas:[], nombre, rol:"", removido:!!removido, fin:null};
+      porPersona.set(ident, it);
+      list.push(it);
     }
-    const inactivo = fila ? fila.estado==="inactivo" : !!t.inactivos[key];
-    const pendiente = !!(fila && fila.estado === "candidato");
-    const item = {key, claves:[key], nombre, rol, removido:!!removido, inactivo, pendiente, ref:ref||null, fin:t.finalizados[key]||null};
-    porPersona.set(ident, item);
-    list.push(item);
+    if(it.claves.indexOf(key) < 0) it.claves.push(key);
+    if(ref) it.refs.push(ref); else it.clavesInternas.push(key);
+    if(rol && it.rol.split(" · ").indexOf(rol) < 0) it.rol = it.rol ? it.rol+" · "+rol : rol;
+    if(!it.fin && t.finalizados[key]) it.fin = t.finalizados[key];
+    if(!it.nombre) it.nombre = nombre;
     t.nombres[key] = nombre;
   };
   [["ep","EP"],["prod","Prod"],["coord","Coord"]].forEach(([rol,sigla])=>{
@@ -3383,10 +3497,25 @@ function trackerParticipants(p){
     });
   });
   // participantes que ya no están asignados pero tienen jornadas cargadas: se conservan, grisados
+  const yaVistas = new Set();
+  list.forEach(it=>it.claves.forEach(k=>yaVistas.add(k)));
   Object.keys(t.jornadas).forEach(key=>{
-    if(seen.has(key)) return;
+    if(yaVistas.has(key)) return;
     if(!Object.values(t.jornadas[key]||{}).some(Boolean)) return;
     add(key, t.nombres[key]||key, "—", true);
+  });
+
+  /* El estado se resuelve al final, mirando TODAS las fuentes de la persona:
+     está activa si lo está en alguna, e inactiva sólo si lo está en todas. */
+  list.forEach(it=>{
+    const filas = it.refs.map(r=>(p.asignaciones[r.tarea]||[])[r.i]).filter(Boolean);
+    const marcas = filas.map(f=>f.estado==="inactivo")
+      .concat(it.clavesInternas.map(k=>!!t.inactivos[k]));
+    it.inactivo = marcas.length ? marcas.every(Boolean) : false;
+    /* un puesto interno es por definición confirmado: si lo tiene, no está pendiente */
+    it.pendiente = !it.clavesInternas.length && filas.length > 0
+                && filas.every(f=>f.estado === "candidato");
+    it.ref = it.refs[0] || null;   // compatibilidad con lo que ya lo usaba
   });
   return list;
 }
@@ -3464,21 +3593,24 @@ function setTrackerNota(dateKey, val){
 function toggleInactivo(key){
   const p = trkProject, t = ensureTracker(p);
   const pp = trackerParticipants(p).find(x=>x.key===key);
-  const fila = pp && pp.ref ? (p.asignaciones[pp.ref.tarea]||[])[pp.ref.i] : null;
-  if(fila){
-    /* misma fuente que la ficha: acá se cambia el estado de la persona, no una copia */
-    fila.estado = fila.estado==="inactivo" ? "confirmado" : "inactivo";
-    renderTracker();
-    refrescarFicha();
-    toast(fila.estado==="inactivo" ? pp.nombre+" desactivado en el proyecto" : pp.nombre+" vuelve a estar activo");
-    saveTracker(true);
-    return;
-  }
-  if(t.inactivos[key]) delete t.inactivos[key];
-  else t.inactivos[key] = true;
+  if(!pp) return;
+  const apagar = !pp.inactivo;
+  /* se escribe en TODAS sus fuentes: si está en dos tareas, las dos quedan igual.
+     Antes sólo se apagaba la primera y en la ficha seguía activo en la otra. */
+  let tocoFicha = false;
+  pp.refs.forEach(r=>{
+    const fila = (p.asignaciones[r.tarea]||[])[r.i];
+    if(!fila) return;
+    fila.estado = apagar ? "inactivo" : "confirmado";
+    tocoFicha = true;
+  });
+  pp.clavesInternas.forEach(k=>{ if(apagar) t.inactivos[k] = true; else delete t.inactivos[k]; });
   renderTracker();
-  saveTracker();
+  if(tocoFicha) refrescarFicha();
+  toast(apagar ? pp.nombre+" desactivado en el proyecto" : pp.nombre+" vuelve a estar activo");
+  saveTracker(tocoFicha);
 }
+
 /* si la ficha del mismo proyecto está abierta detrás, que se vea el cambio */
 function refrescarFicha(){
   if(detailProject && trkProject && detailProject.id === trkProject.id) renderDetail();
@@ -4409,30 +4541,58 @@ function printCalendar(){
         return s<=d && e>=d;
       }).map(f=>{
         const lk = PHASE_LOOKS[lookMap[f.id]||0];
-        const col = lk.bg==="#FFFFFF"? lk.bd : lk.bg;
-        const start = f.inicio===key ? "▶ " : "";
-        return `<div class="pl"><span style="color:${col}">▪</span> ${start}${esc(f.fase)}</div>`;
+        /* la barra va pintada, igual que en pantalla: con print-color-adjust el
+           navegador ya no descarta el fondo */
+        return `<div class="pbar${f.inicio===key?" ini":""}" style="background:${lk.bg};color:${lk.fg}">${esc(f.fase)}</div>`;
       }).join("");
-      const dayHitos = hitos.filter(h=>h.inicio===key).map(h=>`<div class="ph">● ${esc(h.fase)}</div>`).join("");
-      return `<td><div class="pd ${other?"om":""}">${d.getDate()}</div>${other?"":dayFases+dayHitos}</td>`;
+      const dayHitos = hitos.filter(h=>h.inicio===key).map(h=>`<div class="phito">${esc(h.fase)}</div>`).join("");
+      const wknd = [0,6].includes(d.getDay());
+      return `<td class="${other?"om":wknd?"wknd":""}"><div class="pd ${other?"om":""}">${d.getDate()}</div>${other?"":dayFases+dayHitos}</td>`;
     }).join("") + "</tr>";
   }
 
   const mtitle = calView.toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase();
-  const faseList = entries.filter(r=>r.tipo!=="hito" && r.fase).map(r=>
-    `<tr><td><b>${esc(r.fase)}</b></td><td>${esc(r.inicio||"-")}</td><td>${esc(r.fin||"-")}</td><td>${esc(r.notas||"-")}</td></tr>`).join("");
+  const dm = s => s ? fechaCorta(s) : "—";
+
+  /* leyenda: una entrada por fase, con su color */
+  const vistas = new Set();
+  const leyenda = fases.filter(f=>{ const k = f.src==="task"?"task:"+f.key:f.id;
+      if(vistas.has(k)) return false; vistas.add(k); return true; })
+    .map(f=>{ const lk = PHASE_LOOKS[lookMap[f.id]||0];
+      return `<span><i style="background:${lk.bg}"></i>${esc(f.src==="task"?f.key:f.fase)}</span>`; }).join("");
+
+  const faseList = entries.filter(r=>r.tipo!=="hito" && r.fase).map(r=>{
+    const lk = PHASE_LOOKS[lookMap[r.id]||0];
+    return `<tr><td><span class="sw" style="background:${lk.bg}"></span><b>${esc(r.fase)}</b></td>`+
+           `<td>${dm(r.inicio)} → ${dm(r.fin)}</td><td>${esc(r.notas||"—")}</td></tr>`;
+  }).join("");
   const hitoList = entries.filter(r=>r.tipo==="hito" && r.fase).map(r=>
-    `<tr><td>${esc(r.inicio||"-")}</td><td><b>${esc(r.fase)}</b></td></tr>`).join("");
+    `<tr><td>${dm(r.inicio)}</td><td><b>${esc(r.fase)}</b></td></tr>`).join("");
 
   $("#printArea").innerHTML = `
-    <h1>${esc(p.nombre)}</h1>
-    <div class="pmeta">CALENDARIO · ${esc(p.cliente)} · TEAM 23</div>
-    <div class="pmonth">${mtitle}</div>
+    <div class="phead">
+      <div>
+        <h1>${esc(p.nombre)}</h1>
+        <div class="psub">${esc([p.cliente, p.agencia, p.productora].filter(Boolean).join(" · "))}</div>
+      </div>
+      <div>
+        <div class="pmonth">${mtitle}</div>
+        <div class="pmark">TEAM 23 · Production Hub</div>
+      </div>
+    </div>
+    ${leyenda?`<div class="pleg">${leyenda}</div>`:""}
     <table class="pgrid"><thead><tr>${WDAYS.map(w=>`<th>${w}</th>`).join("")}</tr></thead><tbody>${rowsHTML}</tbody></table>
-    <h3>Fases</h3>
-    <table class="plist"><thead><tr><th>Fase</th><th>Inicio</th><th>Fin</th><th>Notas</th></tr></thead><tbody>${faseList}</tbody></table>
-    ${hitoList?`<h3>Hitos</h3><table class="plist"><thead><tr><th>Fecha</th><th>Hito</th></tr></thead><tbody>${hitoList}</tbody></table>`:""}
-    <div class="pfoot">GENERADO ${new Date().toLocaleDateString("es-AR")} · TEAM 23 PRODUCTION HUB</div>`;
+    <div class="pcols">
+      <div>
+        <h3>Fases</h3>
+        <table class="plist"><thead><tr><th>Fase</th><th>Fechas</th><th>Notas</th></tr></thead><tbody>${faseList||'<tr><td colspan="3">—</td></tr>'}</tbody></table>
+      </div>
+      ${hitoList?`<div style="flex:0 0 30%">
+        <h3>Hitos</h3>
+        <table class="plist"><thead><tr><th>Fecha</th><th>Hito</th></tr></thead><tbody>${hitoList}</tbody></table>
+      </div>`:""}
+    </div>
+    <div class="pfoot"><span>${esc(p.nombre)} · ${esc(mtitle)}</span><span>Generado ${new Date().toLocaleDateString("es-AR")}</span></div>`;
   window.print();
 }
 
