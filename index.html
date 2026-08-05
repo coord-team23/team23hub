@@ -908,6 +908,10 @@
   #sxTa{min-height:300px;font-size:15px;line-height:1.6}
   .sx-prevbox{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);background:#fff;max-height:240px;overflow:auto}
 </style>
+<!-- Capa de interacción: press, foco, hit area, motion y contraste.
+     Va DESPUÉS del <style> de arriba a propósito: misma especificidad,
+     gana la última en cargar. Ver design-system/RULES.md -->
+<link rel="stylesheet" href="design-system/interaction.css">
 </head>
 <body>
 <div id="authGate" style="display:none;position:fixed;inset:0;z-index:2000;background:#fff;align-items:center;justify-content:center">
@@ -1551,10 +1555,27 @@ function haceCuanto(ts){
 }
 function staleBannerShow(motivo, ts){
   const el = $("#staleBanner"); if(!el) return;
+  const reintentar = `<button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar</button>`;
   el.innerHTML = ts !== null
-    ? `<b>DATOS VIEJOS</b> — No pude conectar con n8n (${esc(motivo)}), así que esto es lo último guardado, ${esc(haceCuanto(ts))}. Puede faltar o sobrar algo. <button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar</button>`
-    : `<b>SIN DATOS</b> — No pude conectar con n8n (${esc(motivo)}) y no hay nada guardado. Revisá CONFIG y las credenciales del workflow 2, y que esté publicado. <button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar</button>`;
+    /* hay caché, pero se muestra sólo si se pide: ver datos viejos tiene que ser una
+       decisión, no algo que aparece solo y se confunde con lo actual */
+    ? `<b>NO PUDE CARGAR LOS PROYECTOS</b> — ${esc(motivo)}. Hay una copia guardada ${esc(haceCuanto(ts))}, pero puede estar desactualizada.`+
+      reintentar+
+      `<button class="btn small" style="margin-left:8px" onclick="verCache()">Ver la copia guardada</button>`
+    : `<b>SIN DATOS</b> — No pude conectar con n8n (${esc(motivo)}) y no hay ninguna copia guardada. Revisá CONFIG y las credenciales del workflow 2, y que esté publicado.`+reintentar;
   el.style.display = "block";
+}
+/* Pinta la copia guardada a pedido. El banner queda arriba: lo que se está viendo es
+   viejo y tiene que seguir diciéndolo mientras se vea. */
+function verCache(){
+  const c = cacheLeer();
+  if(!c || !c.projects.length){ toast("No hay copia guardada", true); return; }
+  projects = c.projects;
+  projects.forEach(p=>ensureCalIds(p.calendario));
+  onProjectsLoaded();
+  const el = $("#staleBanner");
+  if(el) el.innerHTML = `<b>ESTÁS VIENDO UNA COPIA GUARDADA</b> — ${esc(haceCuanto(c.ts))}, no de ahora. No se guardó nada desde acá hasta que la conexión vuelva.`+
+    `<button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar la carga</button>`;
 }
 function staleBannerHide(){ const el = $("#staleBanner"); if(el) el.style.display = "none"; }
 function setupBanner(faltan){
@@ -1573,18 +1594,17 @@ async function loadProjects(){
     projects.forEach(p=>ensureCalIds(p.calendario));
     onProjectsLoaded(); return;
   }
-  /* Caché local: pinta al instante lo último conocido mientras llega lo fresco.
-     Ojo con esto: si el fetch falla, lo que queda en pantalla ES el caché. Sin un
-     aviso persistente el hub miente y parece que un proyecto no existe — pasó, con
-     el dbSheetId de wf2 en placeholder: el portal leía bien y el hub mostraba una
-     foto vieja sin decirlo. El toast de error duraba 4 segundos y se perdía. */
+  /* Antes esto pintaba el caché al instante y después lo reemplazaba con lo fresco.
+     Se veía rápido, pero mostraba datos posiblemente viejos como si fueran buenos, y
+     si el fetch fallaba quedaban en pantalla sin que nada lo dijera fuerte.
+     Ahora: no se muestra NADA hasta confirmar que lo que hay vino del sheet. El caché
+     sigue existiendo, pero se ofrece de forma explícita si la carga falla. */
   const cache = cacheLeer();
-  if(!projects.length && cache && cache.projects.length){
-    projects = cache.projects; onProjectsLoaded();
-  }
+  const primera = !projects.length;
   const prevIds = new Set(projects.map(p=>p.id));
-  const hadCache = projects.length > 0;
+  const hadCache = !!(cache && cache.projects.length);
   const cacheTs = cache ? cache.ts : 0;
+  if(primera) t23LoadShow("cargar");
   syncPillShow(true);
   try{
     const data = await api("/webhook/team23/projects");
@@ -1603,14 +1623,18 @@ async function loadProjects(){
     /* wf2 avisa si a la hoja le falta alguna columna que el hub necesita: sin ella
        el dato se guarda "bien" y se pierde en la siguiente carga, sin error visible */
     setupBanner(data.columnasFaltantes||[]);
-    if(hadCache){
+    /* sólo tiene sentido anunciar novedades si antes había algo en pantalla */
+    if(!primera){
       const nuevos = projects.filter(p=>!prevIds.has(p.id)).length;
       if(nuevos) toast("✔ "+nuevos+(nuevos>1?" proyectos nuevos":" proyecto nuevo"));
     }
   }catch(e){
-    toast("No pude cargar los proyectos, revisá n8n ("+e.message+")", true);
+    /* no se pinta el caché por las suyas: se ofrece con un botón, así ver datos
+       viejos es una decisión y no una sorpresa */
     staleBannerShow(e.message, hadCache ? cacheTs : null);
+    if(primera) onProjectsLoaded();   // deja las vistas vacías, no a medias
   }finally{
+    t23LoadHide();
     syncPillShow(false);
   }
 }
@@ -1874,7 +1898,7 @@ function mailBuildHTML(d, rol, nombre, intro){
           (conNotas?'<td style="'+td+'font-size:12.5px;color:#555;">'+mailEsc(t.notas||"")+'</td>':'')+
         '</tr>';
       }).join("")+'</tbody></table>'
-    : '<p style="color:#8A8A8A;">Timeline a definir.</p>';
+    : '<p style="color:#5F5F5F;">Timeline a definir.</p>';
   const sb = d.storyboard ? '<p><b>Storyboard / referencias:</b> <a href="'+mailEsc(d.storyboard)+'">'+mailEsc(d.storyboard)+'</a></p>' : "";
   /* sin apertura propia va el saludo armado, igual que siempre (con cliente y rol
      en negrita); con apertura propia va el texto tal cual lo escribieron */
@@ -1889,7 +1913,7 @@ function mailBuildHTML(d, rol, nombre, intro){
     (d.sintesis?'<p style="margin:14px 0 6px;font-weight:bold;font-size:12px;letter-spacing:1px;">DE QUÉ SE TRATA</p><p style="white-space:pre-line;">'+mailEsc(d.sintesis)+'</p>':"")+sb+
     '<p style="margin:14px 0 6px;font-weight:bold;font-size:12px;letter-spacing:1px;">TIMELINE TENTATIVO</p>'+tl+
     '<p style="margin-top:18px;">Si te interesa, respondé este mail con tu disponibilidad y presupuesto para el rol.</p>'+
-    '<p style="margin-top:22px;font-size:10px;color:#8A8A8A;letter-spacing:2px;">TEAM 23 PRODUCTION HUB</p></div>';
+    '<p style="margin-top:22px;font-size:10px;color:#5F5F5F;letter-spacing:2px;">TEAM 23 PRODUCTION HUB</p></div>';
 }
 /* lo que realmente se manda para una fila: HTML crudo si lo editaron, si no el armado */
 function mailFinalHTML(r, rol, ctx){
@@ -2023,7 +2047,7 @@ function mailLive(){
   const asunto = ($("#mailSubject").value||"").trim();
   $("#mailPrev").srcdoc =
     '<div style="font-family:Helvetica,Arial,sans-serif;padding:14px 16px;">'+
-    '<div style="font-size:11px;letter-spacing:1.5px;color:#8A8A8A;text-transform:uppercase;">Asunto</div>'+
+    '<div style="font-size:11px;letter-spacing:1.5px;color:#5F5F5F;text-transform:uppercase;">Asunto</div>'+
     '<div style="font-size:15px;font-weight:bold;margin:2px 0 14px;border-bottom:1px solid #ddd;padding-bottom:12px;">'+mailEsc(asunto||"(sin asunto)")+'</div>'+
     mailPreviewHTML()+'</div>';
 }
@@ -4446,7 +4470,7 @@ const FRASES_CARGA = [
   "No apagues el equipo, actualización 3 de 47",
   "Tiempo estimado: 4 minutos… 2 horas… 30 segundos"
 ];
-const FRASES_ACCION = { crear: "Convenciendo a Drive y a Frame de trabajar juntos", borrar: "Haciendo desaparecer el borrador sin dejar rastro" };
+const FRASES_ACCION = { crear: "Convenciendo a Drive y a Frame de trabajar juntos", borrar: "Haciendo desaparecer el borrador sin dejar rastro", cargar: "Trayendo los proyectos, recién salidos del sheet" };
 let t23LoadEl = null, t23LoadTimer = null;
 function t23LoadShow(accion){
   t23LoadHide();

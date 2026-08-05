@@ -1,0 +1,487 @@
+/* ============================================================================
+   TEAM23 — Capa de interacción (additive)
+   ----------------------------------------------------------------------------
+   Reglas de craft que se apoyan ENCIMA del diseño existente. No rediseña nada:
+   no cambia tipografías, ni radios, ni la paleta de marca, ni el layout.
+   Sólo agrega lo que faltaba (press, foco, hit area, motion coherente) y sube
+   los contrastes que no llegaban al mínimo legible.
+
+   Basado en la skill `apple-design` (WWDC "Designing Fluid Interfaces" /
+   "Principles of Great Design"). Cada bloque cita el principio que lo motiva.
+
+   CARGA: este archivo tiene que ir DESPUÉS del <style> inline de cada página,
+   no antes. Las reglas de acá y las de la página tienen la misma especificidad,
+   así que gana la última en el orden de carga. Ver RULES.md.
+
+   Si algo de acá molesta: se borra el <link> y el proyecto queda exactamente
+   como estaba. No hay dependencias en la otra dirección.
+   ============================================================================ */
+
+:root {
+  /* ---- Rojo: dos pesos, no uno ------------------------------------------
+     #FF0000 da 3.99:1 contra blanco Y contra blanco-sobre-rojo: no llega al
+     4.5:1 que pide texto normal. Pero es el rojo de marca, así que se parte
+     en dos usos en vez de reemplazarlo:
+       --red         (#FF0000) → bordes, anillos, puntos, barras, gráficos.
+                                  Sobre negro da 5.25:1 y ahí funciona igual.
+       --red-strong  (#D40000) → texto rojo chico y rellenos con texto blanco.
+                                  5.53:1 en los dos sentidos. Es el mismo valor
+                                  que el proyecto ya usaba en .btn.danger:hover.
+       --red-deep    (#B00000) → el hover de lo que ahora arranca en red-strong. */
+  --red-strong: #D40000;
+  --red-deep:   #B00000;
+
+  /* ---- Rayas y bordes ----------------------------------------------------
+     --hair (#CAC9CF) da 1.64:1: desaparece en pantallas con poco brillo.
+     Se parte según lo que hace la raya, porque no todas piden lo mismo:
+       --rule-decorative → interior de grillas densas (calendario, tracker).
+                            Sube a ~1.9:1: se ve, sin convertir la grilla en jaula.
+       --rule-functional → 3.37:1. Bordes que delimitan un control o separan
+                            items de una lista: ahí la raya ES la interfaz. */
+  --rule-decorative: #B9B8BF;
+  --rule-functional: #8C8B93;
+
+  /* ---- Grises de texto --------------------------------------------------- */
+  --tx-muted: #5F5F5F;  /* 6.1:1 — reemplaza los #8A8A8A (3.45:1) y los opacity:.5 */
+  --tx-dim:   #6E6E68;  /* ~5:1 — días fuera de mes, antes #C2C2BD a 1.73:1 */
+
+  /* ---- Tracking por tamaño (§15) ----------------------------------------
+     body está en -0.04em y lo hereda todo, incluido el texto de 9–13px de las
+     tablas, donde ese valor pega las letras. El tracking es específico del
+     tamaño: se afloja hacia 0 en lo chico. Lo grande no se toca: -0.04em ya es
+     el look de la marca (ver RULES.md para el ajuste fino del extremo grande). */
+  --tracking-dense: -0.005em;
+}
+
+/* ============================================================================
+   1 · PRESS — responder al pointer-down, no al release          (§1, §10)
+   ----------------------------------------------------------------------------
+   `:active` no aparecía ni una vez en todo el repo. En CSS `:active` dispara en
+   el pointer-down, así que es exactamente el feedback instantáneo que pide el
+   principio: el control se hunde en el momento en que lo tocás, y recién en el
+   release corre la acción.
+
+   Lenguaje único, para que todo el hub se sienta igual:
+     · lo que se levanta en hover, en press vuelve a bajar y encoge un pelo
+     · lo plano encoge (scale .97)
+     · las celdas de tabla no escalan (transform en <td> es frágil): se oscurecen
+   La transición de entrada al press va en --dur-instant: el press tiene que
+   leerse como inmediato, no como una animación.
+   ============================================================================ */
+
+/* -- botones y links-botón ------------------------------------------------- */
+.btn,
+.modal .close,
+.icon-btn,
+.mini-btn,
+.addline,
+.cal-nav button,
+.dp-close,
+.trk-toggle,
+.draft-card .draft-x,
+.glabel .dd-toggle,
+.sx-head,
+.mail-adv summary,
+.card .links a,
+.linkgrid a,
+.frame-cta,
+.finales-btn,
+.task-pill,
+.status-opt,
+.chk-box,
+.cp-sw,
+.cp-auto,
+.dchip-opt,
+.fase-sw,
+.dir-table th,
+details.year summary,
+#acPanel .ac-item {
+  transition:
+    transform        var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    border-color     var(--dur-fast) var(--ease-out),
+    color            var(--dur-fast) var(--ease-out);
+}
+
+.btn:active,
+.modal .close:active,
+.icon-btn:active,
+.mini-btn:active,
+.cal-nav button:active,
+.trk-toggle:active,
+.glabel .dd-toggle:active,
+.card .links a:active,
+.linkgrid a:active,
+.frame-cta:active,
+.finales-btn:active,
+.task-pill:active,
+.status-opt:active,
+.chk-box:active,
+.cp-sw:active,
+.cp-auto:active,
+.dchip-opt:active,
+.dir-table th:active,
+#acPanel .ac-item:active {
+  transform: scale(.97);
+  transition-duration: var(--dur-instant);
+}
+
+/* el .btn se levanta 2px en hover: en press vuelve al piso */
+.btn:active { transform: translateY(0) scale(.97); }
+
+/* glifos sueltos: no hay caja que encoger, se marcan por color */
+.addline:active,
+.dp-close:active,
+.draft-card .draft-x:active,
+.mail-adv summary:active { color: var(--red-strong); }
+
+/* la muestra de color es de 16px: encogerla la haría desaparecer */
+.fase-sw:active { transform: scale(1.06); transition-duration: var(--dur-instant); }
+
+/* cabeceras de acordeón: fondo, no escala (arrastrarían todo el panel) */
+.sx-head:active,
+details.year summary:active { background: var(--soft); transition-duration: var(--dur-instant); }
+
+/* -- cards ----------------------------------------------------------------- */
+.card,
+.opt-card {
+  transition:
+    transform  var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+/* en press la card se apoya contra la página: baja y la sombra se acorta */
+.card:active {
+  transform: rotate(0) translateY(-1px) scale(.995);
+  box-shadow: var(--shadow-flat-sm);
+  transition-duration: var(--dur-instant);
+}
+.opt-card:active {
+  transform: translateY(-1px) scale(.995);
+  box-shadow: var(--shadow-flat-sm);
+  transition-duration: var(--dur-instant);
+}
+
+/* Los tiles del dashboard reusan .card con cursor:default inline, pero seguían
+   levantándose y tirando sombra en hover: prometían un click que no existe. */
+.stat-grid .card:hover,
+.stat-grid .card:active { transform: none; box-shadow: none; }
+
+/* -- celdas clickeables ---------------------------------------------------
+   Un tinte por background-image compone sobre el background-color sin tener
+   que saber cuál es, y sin tocar box-shadow (que acá lleva el anillo de
+   selección de .cell.sel y el marcador de "hoy" del tracker). */
+.cell,
+.cal-nota,
+.dir-chipcell,
+table.trk td.trk-cell { transition: background-color var(--dur-fast) var(--ease-out); }
+
+.cell:active,
+.cal-nota:active,
+.dir-chipcell:active,
+table.trk td.trk-cell:not(.trk-cerrado):active {
+  background-image: linear-gradient(rgba(0, 0, 0, .06), rgba(0, 0, 0, .06));
+}
+
+/* -- hover pegado en touch ------------------------------------------------
+   Sin puntero, el :hover queda fijo después del tap y el control se ve
+   "encendido" para siempre. En touch el press ya da todo el feedback. */
+@media (hover: none) {
+  .btn:hover { transform: none; }
+  .card:hover { transform: none; box-shadow: none; }
+  .grid .card:nth-child(odd):hover  { transform: rotate(-.4deg); }
+  .grid .card:nth-child(even):hover { transform: rotate(.35deg); }
+  .opt-card:hover { transform: none; box-shadow: none; }
+  .fase-sw:hover { transform: none; }
+}
+
+/* ============================================================================
+   2 · FOCO — un solo anillo, visible, en todo lo enfocable      (§16 craft)
+   ----------------------------------------------------------------------------
+   Antes: sólo `.btn` tenía `:focus-visible`, y el anillo de los inputs era
+   `rgba(255,0,0,.35)` → compone a ~1.4:1 sobre blanco, por debajo del 3:1 que
+   pide un indicador de foco. Encima sin `outline-offset`, pegado al borde
+   negro de 2px del propio input.
+   ============================================================================ */
+
+:where(
+  a[href], button, input, select, textarea, summary,
+  [tabindex]:not([tabindex="-1"]), [role="button"], [contenteditable="true"]
+):focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 2px;
+}
+
+/* inputs: anillo sólido en vez del rojo al 35%.
+   `outline:none` sólo en :focus porque la línea siguiente lo reemplaza — los
+   campos de texto siempre matchean :focus-visible, también con el mouse. */
+input:focus, select:focus, textarea:focus { outline: none; }
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 2px;
+}
+table.trk input.trk-nota:focus-visible,
+.dir-table td[contenteditable]:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 0;
+  background: #fff;
+}
+
+/* Sobre relleno rojo el anillo rojo es invisible: ahí va tinta. */
+.btn.danger:focus-visible,
+.finales-btn.on:focus-visible,
+.chk-box.done:focus-visible,
+.task-pill.on:focus-visible { outline-color: var(--ink); }
+
+/* .cp-sw usaba `outline` como estado SELECCIONADO, así que el swatch elegido y
+   el swatch enfocado se veían igual. La selección pasa a doble anillo por
+   box-shadow y `outline` queda libre para lo que es: el foco. */
+.cp-sw.on { outline: none; box-shadow: 0 0 0 2px var(--paper), 0 0 0 5px var(--ink); }
+
+/* ============================================================================
+   3 · HIT AREA — ~10px de holgura alrededor del objetivo             (§10)
+   ----------------------------------------------------------------------------
+   Controles por debajo de 24×24 (WCAG 2.2 SC 2.5.8). Se agranda el área de
+   click con un ::after transparente, sin mover nada del layout.
+   ============================================================================ */
+.fase-sw, .trk-toggle, .draft-card .draft-x, .dp-close, .addline { position: relative; }
+.fase-sw::after,
+.trk-toggle::after,
+.draft-card .draft-x::after,
+.dp-close::after,
+.addline::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: inherit;
+}
+
+/* ============================================================================
+   4 · MOTION — una escala, curvas espejadas, nada de `all`      (§3, §7, §11)
+   ============================================================================ */
+
+/* `.btn` transicionaba background y color pero NO border-color, y cuatro de sus
+   variantes cambian el borde en hover: el fill hacía fade y el borde saltaba.
+   Queda arreglado en la lista del bloque 1, que sí incluye border-color. */
+
+/* `all` transiciona también lo que no querés (y lo que se agregue mañana). */
+.task-pill {
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color     var(--dur-fast) var(--ease-out),
+    color            var(--dur-fast) var(--ease-out);
+}
+
+/* Toast: la única entrada/salida realmente animada del proyecto. Se le pone el
+   par de curvas espejado — entra con --ease-out, sale con su inverso — y se
+   saca `all`, que hacía que un toast de error crossfadeara de tinta a rojo. */
+#toast {
+  transition:
+    opacity   var(--dur-slow) var(--ease-in),
+    transform var(--dur-slow) var(--ease-in);
+}
+#toast.show { transition-timing-function: var(--ease-out); }
+
+/* Carets de los colapsables */
+.sx-head .cr,
+.glabel .dd-toggle span { transition: transform var(--dur-base) var(--ease-out); }
+
+/* ---- z-index: el toast estaba por debajo de todo lo que lo dispara --------
+   #toast estaba en 200; los overlays en 80/1100/1200, .t23-ov en 9000 y los
+   popovers en 9999. Los toasts se disparan desde los handlers de guardado
+   DENTRO de los modales, así que el único canal de feedback de la app se
+   renderizaba detrás del modal que lo emitía. El feedback tiene que llegar. */
+#toast { z-index: 12000; }
+
+/* ---- t23sweep animaba `left`: layout en cada frame, infinito ------------
+   Mismo movimiento, sobre transform (compositor). -11.8% y 205.9% son -4% y
+   70% del contenedor expresados sobre el ancho propio del ::after (34%). */
+.t23-bar::after { left: 0; will-change: transform; }
+@keyframes t23sweep {
+  from { transform: translateX(-11.8%); }
+  to   { transform: translateX(205.9%); }
+}
+
+/* ============================================================================
+   5 · CONTRASTE                                                (§16 craft)
+   ============================================================================ */
+
+/* -- rojo: relleno con texto blanco --------------------------------------- */
+.btn.danger,
+.task-pill.on,
+.finales-btn.on,
+.chk-box.done,
+#toast.err { background: var(--red-strong); border-color: var(--red-strong); }
+.dnum.today { background: var(--red-strong); }
+.btn.danger:hover,
+.finales-btn.on:hover { background: var(--red-deep); border-color: var(--red-deep); }
+
+/* -- rojo: texto chico sobre claro ---------------------------------------- */
+#btnNew,
+.btn.danger-out,
+.demo-banner b,
+.linkgrid a span,
+.chipst.rech,
+.mini-btn.no,
+.pill.warn,
+.auto-note,
+.ab-when.falta,
+.mail-warn,
+.opt-card .opt-num,
+.chip,
+.trk-toggle.react,
+table.trk tr.trk-hoy td.trk-date { color: var(--red-strong); }
+#btnNew,
+.btn.danger-out,
+.chipst.rech,
+.mini-btn.no,
+.pill.warn,
+.trk-toggle.react { border-color: var(--red-strong); }
+.card .links a:hover,
+.dp-close:hover,
+.draft-card .draft-x:hover { color: var(--red-strong); }
+
+/* -- rayas ---------------------------------------------------------------- */
+table.cal td,
+.week,
+.cell,
+table.trk th,
+table.trk td { border-color: var(--rule-decorative); }
+
+.actions.stack .sep,
+.assign-min,
+.gate-item,
+.chk-item,
+.auto-item,
+.trk-resumen td,
+.nota-box,
+.trk-toggle { border-color: var(--rule-functional); }
+.dir-table td { border-bottom-color: var(--rule-functional); border-right-color: var(--rule-decorative); }
+#acPanel .ac-item { border-bottom-color: var(--rule-functional); }
+
+/* El borde derecho de las columnas congeladas del tracker es la frontera entre
+   lo que se queda quieto y lo que scrollea: eso sí es un límite funcional. */
+table.trk td.trk-date,
+table.trk th.trk-date { border-right: 2px solid var(--rule-functional); }
+
+/* -- días fuera de mes: 1.73:1 → ~5:1 ------------------------------------- */
+.cell.om { color: var(--tx-dim); }
+.om .chip { opacity: .85; }
+
+/* -- deshabilitado: gris sólido, no opacidad -----------------------------
+   `opacity:.5` sobre .btn.danger dejaba el texto en ~2.2:1. Un estado
+   deshabilitado tiene que leerse como deshabilitado Y leerse. */
+.btn[disabled] {
+  opacity: 1;
+  background: var(--soft);
+  border-color: var(--rule-functional);
+  color: var(--tx-muted);
+}
+.chk-box[disabled] {
+  opacity: 1;
+  background: var(--soft);
+  border-color: var(--rule-functional);
+  color: var(--tx-muted);
+}
+.finales-btn.off { opacity: 1; color: var(--tx-muted); border-color: var(--rule-functional); }
+
+/* -- print --------------------------------------------------------------- */
+@media print {
+  #printArea .pmark { color: var(--tx-muted); }
+  #printArea .pleg  { color: var(--tx-muted); }
+}
+
+/* ============================================================================
+   6 · TIPOGRAFÍA — tracking específico del tamaño                    (§15)
+   ----------------------------------------------------------------------------
+   Sólo el extremo chico. `body{letter-spacing:-.04em}` es correcto para el
+   cuerpo y es el look de la marca, pero heredado en texto de 9–13px junta
+   demasiado las letras.
+   ============================================================================ */
+.chip,
+.dnum,
+.cal-nota .txt,
+.opt-card p,
+.auto-note,
+.mail-warn,
+.nota-txt,
+.sx-p,
+.sx-list li,
+.mail-adv textarea,
+.team-line .nm,
+table.trk td,
+table.cal td,
+.dir-table td,
+#acPanel .ac-item { letter-spacing: var(--tracking-dense); }
+
+/* ============================================================================
+   7 · PREFERENCIAS DEL USUARIO                                       (§14)
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* El bloque que ya existía (`*{transition:none;animation:none}`) cubre bien
+     las transiciones. Esto es lo que se le escapaba. */
+
+  /* scroll-behavior:smooth sigue animando el scroll: no es transition ni animation. */
+  html { scroll-behavior: auto !important; }
+
+  /* Los ojitos siguen el cursor desde un listener de mousemove que escribe
+     style.transform. El CSS no puede apagar el listener, pero sí anular el
+     transform inline — que es justo el movimiento continuo que esta query
+     existe para frenar. */
+  .pupil { transform: translate(-50%, -50%) !important; }
+
+  /* Matar el transition de un hover que mueve el elemento no saca el
+     movimiento: lo vuelve un salto. Se saca el movimiento. */
+  .btn:hover      { transform: none !important; }
+  .opt-card:hover { transform: none !important; }
+  .fase-sw:hover  { transform: none !important; }
+  .card:hover     { transform: none !important; }
+  .grid .card:nth-child(odd):hover  { transform: rotate(-.4deg) !important; }
+  .grid .card:nth-child(even):hover { transform: rotate(.35deg) !important; }
+
+  /* Reduced motion no es "sin feedback", es feedback no vestibular: los
+     indicadores de progreso pasan de girar/barrer a pulsar la opacidad. */
+  .sync-spin      { animation: t23pulse 1.4s var(--ease-standard) infinite alternate !important; }
+  .t23-bar::after { animation: t23pulse 1.4s var(--ease-standard) infinite alternate !important; }
+  .t23-eye::after { animation: none !important; }
+
+  /* El crossfade de la frase del loader se hace con un setTimeout de 250ms en JS
+     que estaba calibrado contra `.t23-frase{transition:opacity .25s}`. Al matarlo
+     el `*{transition:none}`, la frase se apagaba del todo por 250ms y volvía de
+     golpe: peor que la animación original. Un crossfade de opacidad no es
+     vestibular, así que acá se mantiene — 250ms exactos, en sync con el JS. */
+  .t23-frase { transition: opacity 250ms var(--ease-standard) !important; }
+}
+@keyframes t23pulse { from { opacity: .35; } to { opacity: 1; } }
+
+@media (prefers-reduced-transparency: reduce) {
+  .overlay, .t23-ov { background: rgba(10, 10, 10, .92); }
+  .om .chip { opacity: 1; }
+}
+
+@media (prefers-contrast: more) {
+  /* Toda la corrección de contraste pasa por tokens, así que subir el piso
+     para quien lo pide es re-declararlos. */
+  :root {
+    --rule-decorative: #6E6D75;
+    --rule-functional: #3C3B42;
+    --tx-dim:   #4A4A45;
+    --tx-muted: #3A3A3A;
+    --red-strong: var(--red-deep);
+  }
+  :where(a[href], button, input, select, textarea, summary,
+         [tabindex]:not([tabindex="-1"]), [role="button"]):focus-visible { outline-width: 4px; }
+}
+
+@media (forced-colors: active) {
+  /* Casi todos los estados "encendido" de la app son un cambio de background,
+     y el background es lo primero que forced-colors reemplaza. Se agrega una
+     pista que no depende del color. */
+  .status-opt.on,
+  .task-pill.on,
+  .dchip-opt.on,
+  .cp-auto.on,
+  .mini-btn.on,
+  .chk-box.done,
+  table.trk td.trk-cell.on { outline: 2px solid CanvasText; outline-offset: -3px; }
+}

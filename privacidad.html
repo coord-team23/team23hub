@@ -58,6 +58,10 @@
   a{color:var(--red,#FF2B1E)}
   .pv-back{display:inline-block;margin-top:34px;font-size:13.5px;text-decoration:none;border:2px solid var(--ink,#0A0A0A);padding:9px 16px;color:var(--ink,#0A0A0A);font-weight:700;box-shadow:4px 4px 0 var(--ink,#0A0A0A)}
 </style>
+<!-- Capa de interacción: press, foco, hit area, motion y contraste.
+     Va DESPUÉS del <style> de arriba a propósito: misma especificidad,
+     gana la última en cargar. Ver design-system/RULES.md -->
+<link rel="stylesheet" href="design-system/interaction.css">
 </head>
 <body>
 <div class="pv-wrap">

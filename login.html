@@ -51,6 +51,10 @@
   .lg-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;display:none;z-index:10}
   .lg-toast.err{background:var(--red,#FF2B1E)}
 </style>
+<!-- Capa de interacción: press, foco, hit area, motion y contraste.
+     Va DESPUÉS del <style> de arriba a propósito: misma especificidad,
+     gana la última en cargar. Ver design-system/RULES.md -->
+<link rel="stylesheet" href="design-system/interaction.css">
 </head>
 <body>
 <div class="login-card">

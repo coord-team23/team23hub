@@ -1,0 +1,31 @@
+/* TEAM23 — Motion tokens
+   Antes de esto había seis duraciones sueltas (.12 / .15 / .18 / .2 / .25 / .3s) y una
+   sola curva (`ease`, la default). Esta es la escala que las reemplaza.
+
+   Traducción de los parámetros de Apple (damping / response) a CSS:
+   una transición CSS no tiene velocidad ni se puede interrumpir a mitad de camino,
+   así que sólo sirve para lo que NO se agarra con el dedo (hover, press, foco,
+   cambios de estado). Todo lo que se arrastra necesita un spring en JS — ver RULES.md.
+
+   - damping 1.0 (sin rebote, el default de la casa)  →  --ease-out
+   - damping ~0.8 (rebote, SÓLO tras un gesto con inercia) → --ease-overshoot
+   - response 0.3–0.4s → --dur-base / --dur-slow */
+
+:root {
+  /* ---- Duración ---- */
+  --dur-instant: 80ms;  /* press: feedback del dedo, casi imperceptible como animación */
+  --dur-fast:   120ms;  /* hover, foco, swaps de color de estado */
+  --dur-base:   180ms;  /* movimiento de un elemento (cards, carets, acordeones) */
+  --dur-slow:   260ms;  /* entradas/salidas de superficies (toast, sheets, popovers) */
+
+  /* ---- Curvas ----
+     --ease-out y --ease-in son el par espejado (inversión de los puntos de control):
+     una transición reversible tiene que volver por el mismo camino por el que fue. */
+  --ease-out:  cubic-bezier(.2, 0, .2, 1);   /* entra / se asienta */
+  --ease-in:   cubic-bezier(.8, 0, .8, 1);   /* sale — espejo exacto de --ease-out */
+  --ease-standard: cubic-bezier(.4, 0, .2, 1);
+
+  /* Rebote. Se usa SÓLO cuando el gesto que lo disparó traía inercia
+     (un flick, un drag que se suelta). Nunca en un hover ni en un menú que aparece. */
+  --ease-overshoot: cubic-bezier(.34, 1.26, .64, 1);
+}
