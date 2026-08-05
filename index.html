@@ -914,6 +914,7 @@
 <link rel="stylesheet" href="design-system/interaction.css">
 </head>
 <body>
+<a class="t23-skip" href="#main">Saltar al contenido</a>
 <div id="authGate" style="display:none;position:fixed;inset:0;z-index:2000;background:#fff;align-items:center;justify-content:center">
   <div style="width:min(430px,92%);border:2px solid var(--ink);border-radius:var(--radius-lg,16px);padding:30px;box-shadow:8px 8px 0 var(--ink);background:#fff">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
@@ -967,7 +968,7 @@
   <b>MODO DEMO</b> — Estás viendo datos de ejemplo. Para conectarlo en serio: configurá <code>CONFIG.N8N_BASE</code> y <code>CONFIG.API_KEY</code> al inicio del archivo, con tus workflows de n8n importados (ver README).
 </div>
 
-<main>
+<main id="main">
   <section id="view-proyectos" class="view">
     <section class="status-block">
       <div class="section-head"><span class="dot"></span><h2>Pre-producción</h2><span class="count" id="cPending"></span></div>
@@ -1154,13 +1155,13 @@
     <h2>Nuevo proyecto</h2>
     <div class="kicker">¿Cómo lo querés crear?</div>
     <div class="opt-grid">
-      <div class="opt-card" onclick="chooseOption(1)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')chooseOption(1)">
+      <div class="opt-card" onclick="chooseOption(1)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseOption(1)}">
         <div class="opt-num">Opción 1</div>
         <h3>Kick off manual</h3>
         <p>El checklist de planificación paso a paso (Discord, timing, storyboard, Notion, adelanto) y después el formulario de siempre.</p>
         <span class="opt-cta">Empezar →</span>
       </div>
-      <div class="opt-card" onclick="chooseOption(2)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')chooseOption(2)">
+      <div class="opt-card" onclick="chooseOption(2)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseOption(2)}">
         <div class="opt-num">Opción 2</div>
         <h3>Desde debrief (IA)</h3>
         <p>Mismo checklist de planificación primero. Después pegás el debrief y la IA precarga nombre, cliente, síntesis, tareas y timeline. Revisás, cargás candidatos y creás.</p>
@@ -2685,7 +2686,7 @@ function renderDetail(){
       <td><input type="date" value="${esc(e.inicio)}" oninput="calSet(${e.idx},'inicio',this.value)" onchange="renderDetail()"></td>
       <td><input type="date" value="${esc(e.fin)}" oninput="calSet(${e.idx},'fin',this.value)" onchange="renderDetail()"></td>
       ${notaCeldaHTML({kind:"cal", idx:e.idx})}
-      <td><button class="icon-btn" onclick="calDel(${e.idx})">✕</button></td>
+      <td><button class="icon-btn" onclick="calDel(${e.idx})" title="Quitar esta fecha">✕</button></td>
     </tr>`;
   }).join("");
 
@@ -3019,7 +3020,7 @@ function dayPanelHTML(p, lookMap, readOnly=false){
     : hitosDia.map(({r,i})=>`
     <div class="hito-row">
       <input type="text" value="${esc(r.fase)}" placeholder="Ej: Corte 1 al cliente, llegada de material…" oninput="calSet(${i},'fase',this.value)" onchange="renderDetail()">
-      <button class="icon-btn" onclick="calDel(${i})">✕</button>
+      <button class="icon-btn" onclick="calDel(${i})" title="Quitar esta fecha">✕</button>
     </div>`).join("");
 
   return `<div class="daypanel">
@@ -5588,5 +5589,9 @@ async function setUserRole(id, email, role, btn){
 }
 initAuth();
 </script>
+<!-- Capa de accesibilidad: teclado, foco en modales y ARIA.
+     Va después del script inline de arriba a propósito: envuelve funciones
+     que ése define (applyViewUI, dirRender). Ver design-system/RULES.md -->
+<script src="design-system/a11y.js"></script>
 </body>
 </html>

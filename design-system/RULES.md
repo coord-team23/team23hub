@@ -14,7 +14,8 @@ Se implementan en:
 | archivo | qué es |
 | --- | --- |
 | `tokens/motion.css` | escala de duración y curvas. Se importa desde `styles.css`. |
-| `interaction.css` | la capa additive. Se linkea **después** del `<style>` de cada página. |
+| `interaction.css` | la capa additive de CSS. Se linkea **después** del `<style>` de cada página. |
+| `a11y.js` | teclado, foco en modales y ARIA. Se carga **después** del script inline. |
 
 ## Por qué el `<link>` va al final del `<head>`
 
@@ -230,45 +231,68 @@ tres señales, y las tres están en `interaction.css`:
   Los estados `.on` / `.done` llevan un `outline: CanvasText` como pista que no
   depende del color.
 
+## 9 · Teclado, foco y semántica (§2 agency, §5 flexibility, §16)
+
+Todo esto vive en `a11y.js`. La decisión de fondo: **se observa el DOM en vez de
+editar los ~20 template strings** que generan los clickeables. Los render de esta
+app reconstruyen el markup entero (`renderDetail()` reemplaza el innerHTML del
+modal), así que cualquier atributo escrito a mano se perdería en el próximo
+render. Un `MutationObserver` los vuelve a poner solos.
+
+- **Todo lo que se puede clickear se puede operar con teclado.** Cualquier
+  `div`/`span`/`td`/`th` con `onclick` recibe `tabindex="0"`, `role="button"` y
+  activación con **Enter y Space** (Space además no scrollea). Eran 19 de 21 los
+  que no lo tenían, incluidas las cards de proyecto — la navegación principal.
+  - Un `<th>` **no** recibe `role="button"`: eso le saca el rol de
+    `columnheader` y rompe la navegación por tabla. Lleva `tabindex` + `aria-sort`.
+  - Las celdas del tracker son un toggle, así que llevan `aria-pressed`, no un
+    rol de botón simple.
+  - Si un elemento ya trae su propio `onkeydown`, se lo saltea: activaría dos veces.
+- **Al escribir markup nuevo, usá `<button>`.** La red de contención de `a11y.js`
+  existe para lo que ya estaba, no como excusa para seguir poniendo `div onclick`.
+- **El trap de foco se hace con `inert` en los hermanos, no con un handler de Tab.**
+  `inert` saca la rama entera del tab order *y* del árbol de accesibilidad, así
+  que el Tab cicla dentro del overlay sin código que lo persiga. `#toast` queda
+  fuera del inert: el feedback tiene que llegar igual.
+- **Abrir un modal mueve el foco al contenedor; cerrarlo lo devuelve al
+  disparador.** Se enfoca el contenedor y no el primer control, para que el lector
+  lea el título y para no pisarle el foco a los inputs que varios handlers
+  enfocan por su cuenta un tick después.
+- **Se observa la clase `.open`, no se envuelve `openModal()`.** Hay ~10 lugares
+  que hacen `classList.add("open")` directo sin pasar por ahí.
+- **Los diálogos anidados van en pila.** `.t23-ov` (confirm y loader) se crean con
+  `appendChild` y no son `.overlay`: se enganchan por el observer de `childList`,
+  y Escape los cierra a ellos primero, respetando la regla de "sólo el de arriba".
+- **Una referencia de `aria-labelledby` se re-verifica, no se asume.** Apuntar el
+  id una vez no sirve si el contenido se re-renderiza: el id desaparece y el
+  diálogo se queda sin nombre. Se chequea que siga resolviendo en cada barrido.
+- **Un botón de ícono necesita nombre.** `title` se copia a `aria-label`, y los
+  glifos conocidos (✕ ✎ ▾ ‹ › + ✓) tienen texto por defecto. Antes se anunciaban
+  como "✕" o directamente vacíos (`.fase-sw` y `.cp-sw` son botones sin contenido
+  cuyo único significado es el color de fondo).
+- **El barrido va con `setTimeout(0)`, no con `requestAnimationFrame`.** rAF no
+  corre en una pestaña de fondo: un render hecho ahí se quedaba sin barrer y los
+  controles aparecían sin teclado al volver. Las dos formas agrupan igual, porque
+  los cientos de `<td>` de `dirRender()` caen todos en la misma task.
+
 ---
 
-## Pendiente — no entra en una capa de CSS
+## Pendiente
 
-Ordenado por impacto. Todo esto necesita tocar HTML/JS.
+Ordenado por impacto.
 
-1. **Los controles centrales son sólo-mouse.** 19 de 21 elementos clickeables no
-   son `<button>`: son `div`/`span`/`td` con `onclick`, sin `tabindex`, sin
-   `role` y sin handler de teclado. Incluye las cards de proyecto (la navegación
-   principal de la app), los toggles día-por-persona del tracker, los chips del
-   directorio y el orden de columnas. Los colapsables ▾ están peor: el `<button>`
-   real lleva `tabindex="-1"` y el handler vive en el `div` padre, que no es
-   enfocable — *Tareas TEAM 23* y *Calendario* no se pueden abrir con teclado.
-   → `<button>` de verdad, o `role="button"` + `tabindex="0"` + Enter **y Space**.
-2. **Los modales declaran `aria-modal="true"` y no lo cumplen.** 17 diálogos, sin
-   mover el foco al abrir, sin trap, sin devolverlo al cerrar, y con todo el
-   fondo todavía en el tab order. El atributo le dice al lector de pantalla que
-   el resto de la página no está disponible, y es falso.
-   → `<dialog>` + `showModal()`, o `inert` en el fondo + foco al abrir/cerrar.
-   El manejo de Escape ya está bien hecho (cierra sólo el de arriba, resolviendo
-   el orden por `z-index` en runtime), pero no alcanza a `.t23-ov`, que no es
-   `.overlay`.
-3. **`aria` faltante**: `aria-current` en las tabs (el estado activo es sólo una
-   clase), `aria-sort` en las cabeceras ordenables, `aria-expanded` en todo lo
-   que colapsa menos `.sx-head`, y nombre accesible en los botones de ícono que
-   hoy se anuncian como "✕" o "▾" (o vacíos, en `.fase-sw` y `.cp-sw`). El
-   autocomplete no tiene ARIA de combobox, así que el highlight con flechas es
-   puramente visual. Ningún skip link en ninguna página.
-4. **Sin debounce en el autocomplete**: cada tecla dispara un scan completo de
-   `dirData.rows` + `getBoundingClientRect` + rebuild de `innerHTML`. El
+1. **Sin debounce en el autocomplete**: cada tecla dispara un scan completo de
+   `dirData.rows` + `getBoundingClientRect` + rebuild de `innerHTML`. Y el
    `mousemove` de los ojitos hace un `getBoundingClientRect` (layout forzado) por
-   ojo por evento, sin `requestAnimationFrame` — que no aparece en el proyecto.
-5. **`px` → `rem`** en tipografía y espaciado (ver §6).
-6. **Dark mode**: definido completo en los tokens (`[data-theme="dark"]`) y
+   ojo **por evento**, sin throttle. Los dos son trabajo en el camino del input,
+   que es justo donde §1 dice que no puede haber nada de más.
+2. **`px` → `rem`** en tipografía y espaciado (ver §6).
+3. **Dark mode**: definido completo en los tokens (`[data-theme="dark"]`) y
    conectado en ningún lado. Tres bloqueos independientes: ninguna página setea
    el atributo, las páginas aliasean sobre primitivos que no swapean
    (`--ink: var(--n-600)` en vez de `var(--tx-primary)`), y hay ~120 hexes
    hardcodeados. Los 5 alias theme-aware de `colors.css:26-30` son código muerto.
-7. **Fuentes**: el webfont se descubre a través de un `@import` anidado tres
+4. **Fuentes**: el webfont se descubre a través de un `@import` anidado tres
    niveles (`<link>` → `styles.css` → `typography.css` → Google Fonts) — cinco
    round trips en serie y el preload scanner no lo ve. El `preconnect` apunta a
    `fonts.googleapis.com` pero no a `fonts.gstatic.com`, que es de donde salen
@@ -276,7 +300,7 @@ Ordenado por impacto. Todo esto necesita tocar HTML/JS.
    de Averia es `cursive` (una tipografía de guionada) y Averia está en `.btn`,
    así que el swap re-envuelve filas enteras de botones. La primaria (Nimbus
    Sans) no existe como archivo: todo renderiza en Helvetica/Arial.
-8. **Bugs de CSS encontrados de paso, sin tocar**:
+5. **Bugs de CSS encontrados de paso, sin tocar**:
    - `.tbl-scroll table.cal{min-width:...}` está declarado dos veces en el mismo
      media query (700px y 540px): gana el 540px, que contradice el comentario que
      explica por qué hacían falta 700.
@@ -286,5 +310,3 @@ Ordenado por impacto. Todo esto necesita tocar HTML/JS.
    - `#colorPanel` (`z-index: 1300`) queda por encima de `ovConfirm` (1200).
    - Zona muerta de 40px entre 721 y 759px: `.stat-grid` ya colapsó a 2 columnas
      y `.link-split` todavía no se expandió.
-   - `proveedores.html` tiene el bloque de reduced-motion sin `animation: none`,
-     así que su spinner sigue girando.

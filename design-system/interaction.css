@@ -237,6 +237,48 @@ table.trk input.trk-nota:focus-visible,
    box-shadow y `outline` queda libre para lo que es: el foco. */
 .cp-sw.on { outline: none; box-shadow: 0 0 0 2px var(--paper), 0 0 0 5px var(--ink); }
 
+/* Sólo para lectores de pantalla: un label que existe en el árbol de
+   accesibilidad y no ocupa lugar en pantalla. Usado en login.html, donde los
+   campos eran placeholder-only. */
+.t23-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* El kicker de login pasó a ser <h1> (la página no tenía ningún encabezado):
+   se le saca el margen que le pone el navegador para que no mueva la tarjeta. */
+h1.kicker { margin-top: 0; }
+
+/* Skip link (§16 wayfinding: "¿cómo salgo de acá?").
+   No había ninguno: con teclado había que tabular todo el header y el tab bar
+   antes de llegar al contenido. Invisible hasta que recibe foco. */
+.t23-skip {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 13000;
+  transform: translateY(-200%);
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--font-secondary);
+  font-size: var(--fs-caption);
+  font-weight: var(--weight-bold);
+  text-decoration: none;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+/* :focus y no :focus-visible: un skip link es siempre de teclado, y así también
+   aparece si algo le manda el foco por código (cambio de vista, por ejemplo). */
+.t23-skip:focus { transform: translateY(0); }
+
 /* ============================================================================
    3 · HIT AREA — ~10px de holgura alrededor del objetivo             (§10)
    ----------------------------------------------------------------------------

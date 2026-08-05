@@ -233,7 +233,7 @@
     footer{padding:40px 16px 28px;flex-direction:column;align-items:flex-start;gap:20px}
     .foot-right{text-align:left}
   }
-  @media (prefers-reduced-motion: reduce){*{transition:none !important}}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
 
 /* ---- estado de carga ---- */
 .loading-state{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--gray,#777);padding:26px 6px}
@@ -251,6 +251,7 @@
 <link rel="stylesheet" href="design-system/interaction.css">
 </head>
 <body>
+<a class="t23-skip" href="#main">Saltar al contenido</a>
 
 <header>
   <a class="wordmark" href="#" onclick="return false">
@@ -273,7 +274,7 @@
   <div class="demo-banner" id="demoBanner" style="display:none">
     <b>MODO DEMO</b> — Datos de ejemplo. Configurá <code>CONFIG</code> con tu Supabase para conectarlo.
   </div>
-  <main>
+  <main id="main">
     <div class="grid" id="listProjects"></div><div id="emptyState"></div>
     <div id="statusSummary"></div>
   </main>
@@ -590,5 +591,6 @@ document.addEventListener("mousemove",e=>{
 
 initApp();
 </script>
+<script src="design-system/a11y.js"></script>
 </body>
 </html>
