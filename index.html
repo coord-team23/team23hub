@@ -791,7 +791,7 @@
 <div id="authGate" style="display:none;position:fixed;inset:0;z-index:2000;background:#fff;align-items:center;justify-content:center">
   <div style="width:min(430px,92%);border:2px solid var(--ink);border-radius:var(--radius-lg,16px);padding:30px;box-shadow:8px 8px 0 var(--ink);background:#fff">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-      <span style="font-family:var(--font-primary);font-weight:900;font-size:24px;letter-spacing:-0.5px">TEAM 23</span>
+      <span style="font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:24px;letter-spacing:var(--tracking-tight)">TEAM 23</span>
       <svg width="34" height="22" viewBox="0 0 64 40" aria-hidden="true"><circle cx="18" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="46" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="21" cy="24" r="7.5" fill="#0A0A0A"/><circle cx="49" cy="24" r="7.5" fill="#0A0A0A"/></svg>
     </div>
     <div class="kicker" style="margin-bottom:14px">Production Hub · acceso del equipo</div>
@@ -1266,6 +1266,12 @@ const PHASE_LOOKS = [
   {bg:"#F8FF2E", fg:"#0A0A0A", bd:"#F8FF2E"}, /* yellow */
   {bg:"#0A0A0A", fg:"#FFFFFF", bd:"#0A0A0A"}  /* ink (fallback) */
 ];
+/* color fijo por tarea (no por posición en el calendario) — mismo TAREA siempre el mismo color,
+   se usa en los pills de selección de tareas (alta y ficha) */
+function taskColor(t){
+  const i = TAREAS.indexOf(t);
+  return PHASE_LOOKS[i>=0 ? i%PHASE_LOOKS.length : PHASE_LOOKS.length-1];
+}
 /* colores de marca (Supportive Brand del design system) para distinguir proyectos en el calendario global */
 const PROJECT_COLORS = ["var(--brand-purple)","var(--brand-cyan)","var(--brand-pink)","var(--brand-green)","var(--brand-yellow)","var(--brand-red)"];
 
@@ -1822,7 +1828,7 @@ function mailSave(){
 let npSelected = new Set();
 function renderNPTasks(){
   $("#npTasks").innerHTML = TAREAS.map(t=>
-    `<span class="task-pill ${npSelected.has(t)?"on":""}" onclick="toggleTask('${t}')">${t}</span>`).join("");
+    `<span class="task-pill ${npSelected.has(t)?"on":""}" ${npSelected.has(t)?`style="background:${taskColor(t).bg};border-color:${taskColor(t).bd};color:${taskColor(t).fg}"`:""} onclick="toggleTask('${t}')">${t}</span>`).join("");
   renderNPAssigns();
 }
 function toggleTask(t){
@@ -2035,6 +2041,8 @@ let tareasOpen = false; // colapsa/expande la sección "Tareas TEAM 23" en la fi
 function toggleTareasOpen(){ tareasOpen = !tareasOpen; renderDetail(); }
 let calSectionOpen = false; // colapsa/expande la sección "Calendario" en la ficha
 function toggleCalSectionOpen(){ calSectionOpen = !calSectionOpen; renderDetail(); }
+let calTableOpen = false; // colapsa/expande la tabla de Fase/Inicio/Fin/Notas (proyectos grandes tienen muchas filas)
+function toggleCalTableOpen(){ calTableOpen = !calTableOpen; renderDetail(); }
 
 function openDetail(id, readOnly=false){
   calCtx = "dt";
@@ -2045,6 +2053,7 @@ function openDetail(id, readOnly=false){
   detailReadOnly = readOnly;
   tareasOpen = false;
   calSectionOpen = false;
+  calTableOpen = false;
   detailProject.tareas = detailProject.tareas||[];
   detailProject.asignaciones = detailProject.asignaciones||{};
   detailProject.taskDates = detailProject.taskDates||{};
@@ -2181,8 +2190,8 @@ function renderDetail(){
     : `<span style="font-size:12.5px;color:var(--gray)">Sin link de Frame.io</span>`;
 
   const taskPills = lockTareas
-    ? (p.tareas.length ? p.tareas.map(t=>`<span class="pill">${esc(t)}</span>`).join("") : `<span style="font-size:12.5px;color:var(--gray)">Sin tareas asignadas</span>`)
-    : TAREAS.map(t=>`<span class="task-pill ${p.tareas.includes(t)?"on":""}" onclick="dToggleTask('${t}')">${t}</span>`).join("");
+    ? (p.tareas.length ? p.tareas.map(t=>`<span class="pill" style="background:${taskColor(t).bg};border-color:${taskColor(t).bd};color:${taskColor(t).fg}">${esc(t)}</span>`).join("") : `<span style="font-size:12.5px;color:var(--gray)">Sin tareas asignadas</span>`)
+    : TAREAS.map(t=>`<span class="task-pill ${p.tareas.includes(t)?"on":""}" ${p.tareas.includes(t)?`style="background:${taskColor(t).bg};border-color:${taskColor(t).bd};color:${taskColor(t).fg}"`:""} onclick="dToggleTask('${t}')">${t}</span>`).join("");
 
   const assigns = lockTareas
     ? p.tareas.map(t=>{
@@ -2341,11 +2350,17 @@ function renderDetail(){
         </div>
       ` : `
         ${lockFields ? "" : `
+        <div class="glabel" style="cursor:pointer;margin-top:0" onclick="toggleCalTableOpen()">
+          <span>Fases</span>
+          <button class="dd-toggle${calTableOpen?"":" closed"}" tabindex="-1"><span>▾</span></button>
+        </div>
+        <div style="${calTableOpen?"":"display:none"}">
         <div class="tbl-scroll"><table class="cal">
           <thead><tr><th></th><th>Fase</th><th>Inicio</th><th>Fin</th><th>Notas</th><th></th></tr></thead>
           <tbody>${calRows || ""}</tbody>
         </table></div>
-        <button class="addline" onclick="calAdd()">+ agregar fase</button>`}
+        <button class="addline" onclick="calAdd()">+ agregar fase</button>
+        </div>`}
 
         ${monthCalendarHTML(p, lookMap)}
         ${dayPanelHTML(p, lookMap, lockFields)}
@@ -3936,7 +3951,7 @@ function skipDebrief2(){ $("#n2Form").style.display="block"; }
 
 function renderN2Tasks(){
   $("#n2Tasks").innerHTML = TAREAS.map(t=>
-    `<span class="task-pill ${n2Selected.has(t)?"on":""}" onclick="toggleN2Task('${t}')">${t}</span>`).join("");
+    `<span class="task-pill ${n2Selected.has(t)?"on":""}" ${n2Selected.has(t)?`style="background:${taskColor(t).bg};border-color:${taskColor(t).bd};color:${taskColor(t).fg}"`:""} onclick="toggleN2Task('${t}')">${t}</span>`).join("");
   renderN2Assigns();
 }
 function toggleN2Task(t){ n2Selected.has(t)? n2Selected.delete(t) : n2Selected.add(t); renderN2Tasks(); }

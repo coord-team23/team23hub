@@ -2,6 +2,22 @@
 
 Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
 
+## 2026-08-07 — Colores fijos por tarea, tabla de Fases colapsable, y tipografía del wordmark
+
+### Pills de tareas: color fijo por tarea, no más rojo genérico
+
+Antes, al seleccionar una tarea (VFX, Color, IA, etc.) el pill se pintaba siempre de rojo, sin distinguir cuál era cuál. Ahora cada tarea tiene un color fijo propio (reutilizando la paleta que ya usa el calendario), consistente en los 4 lugares donde aparecen: alta manual de proyecto, ficha editable, ficha de solo lectura y alta por debrief con IA. Nueva función `taskColor(t)` en `index.html`.
+
+### Tabla de Fases (Fase/Inicio/Fin/Notas), ahora colapsable
+
+En proyectos grandes (caso real: Nissan) esa tabla dentro de "Calendario" podía ocupar muchísimo espacio. Ahora arranca colapsada, con el mismo toggle circular que ya usan "Tareas TEAM 23" y "Calendario" — es un colapsable anidado, independiente del de "Calendario" (podés tener Calendario abierto y Fases cerrado, o viceversa).
+
+### Wordmark "TEAM 23" en el login: tipografía alineada al resto del hub
+
+`login.html` e `index.html` (pantalla de bloqueo `#authGate`) tenían el wordmark con `font-weight:900` y `letter-spacing:-0.5px` hardcodeados — no coincidía con el resto del sistema, que usa los tokens `var(--weight-bold)` / `var(--tracking-tight)`. Ya alineado en ambos.
+
+**Pendiente, no tocado todavía**: `privacidad.html` tiene el mismo patrón de `font-weight:900` hardcodeado en 3 lugares (`.pv-head .mark`, `h1`, `h2`) — mismo fix, lo dejamos para la próxima tanda.
+
 ## 2026-07-26 — Landing, mes en completados, y reconciliación de tus fixes de mobile
 
 Importante primero: **confirmamos que Netlify deploya desde `coord-team23/team23hub`**, no desde `t34M23/team23hub`. De acá en más, cada sincronización se pushea a los **dos** repos (ya lo hicimos con este commit) para que el sitio live se actualice solo.
