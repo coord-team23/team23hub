@@ -51,6 +51,10 @@
   .lg-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;display:none;z-index:10}
   .lg-toast.err{background:var(--red,#FF2B1E)}
 </style>
+<!-- Capa de interacción: press, foco, hit area, motion y contraste.
+     Va DESPUÉS del <style> de arriba a propósito: misma especificidad,
+     gana la última en cargar. Ver design-system/RULES.md -->
+<link rel="stylesheet" href="design-system/interaction.css">
 </head>
 <body>
 <div class="login-card">
@@ -58,12 +62,18 @@
     <span style="font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:24px;letter-spacing:var(--tracking-tight)">TEAM 23</span>
     <svg width="34" height="22" viewBox="0 0 64 40" aria-hidden="true"><circle cx="18" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="46" cy="20" r="14" fill="white" stroke="#0A0A0A" stroke-width="5"/><circle cx="21" cy="24" r="7.5" fill="#0A0A0A"/><circle cx="49" cy="24" r="7.5" fill="#0A0A0A"/></svg>
   </div>
-  <div class="kicker" style="margin-bottom:14px">Production Hub · Acceso</div>
-  <p class="lg-msg" id="lgMsg">Verificando sesión…</p>
+  <h1 class="kicker" style="margin-bottom:14px">Production Hub · Acceso</h1>
+  <!-- role="status": este <p> es el único canal de errores de autenticación, así
+       que el cambio de texto tiene que anunciarse -->
+  <p class="lg-msg" id="lgMsg" role="status" aria-live="polite">Verificando sesión…</p>
   <div id="lgForm" style="display:none">
     <button class="btn" style="width:100%;margin-bottom:2px" onclick="lgGoogle(this)">Continuar con Google</button>
     <div class="lg-or">— O CON MAIL Y CONTRASEÑA —</div>
+    <!-- los campos eran placeholder-only: el placeholder no es un label (desaparece
+         al tipear y varios lectores no lo anuncian). Label real, oculto a la vista. -->
+    <label class="t23-sr" for="lgEmail">Mail</label>
     <input id="lgEmail" type="email" placeholder="tu@mail.com" style="margin-bottom:10px" autocomplete="email">
+    <label class="t23-sr" for="lgPass">Contraseña</label>
     <input id="lgPass" type="password" placeholder="Contraseña" style="margin-bottom:12px" autocomplete="current-password" onkeydown="if(event.key==='Enter')lgSignIn(document.getElementById('lgBtn'))">
     <button class="btn primary" id="lgBtn" style="width:100%" onclick="lgSignIn(this)">Entrar</button>
     <button class="btn small" style="width:100%;margin-top:10px" onclick="lgSignUp(this)">Crear cuenta (primera vez)</button>
@@ -72,7 +82,7 @@
     <a href="/privacidad" style="font-size:11.5px;color:var(--gray,#777);text-decoration:none">Política de privacidad</a>
   </div>
 </div>
-<div class="lg-toast" id="lgToast"></div>
+<div class="lg-toast" id="lgToast" role="status" aria-live="polite"></div>
 <script>
 const CONFIG = {
   SUPABASE_URL: "https://muvmrkacjhygfuialpyn.supabase.co",

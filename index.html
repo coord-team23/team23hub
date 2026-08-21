@@ -241,7 +241,7 @@
   .sublabel{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin:var(--space-3) 0 var(--space-2)}
   .frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:var(--space-3);margin-bottom:var(--space-3)}
   label.f{display:block;font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--gray);margin-bottom:var(--space-1)}
-  input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{
+  input[type=text],input[type=email],input[type=tel],input[type=date],input[type=url],select,textarea{
     width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3) var(--space-3);
     border:2px solid var(--ink);border-radius:var(--radius-md);background:#fff;color:var(--ink);
   }
@@ -256,7 +256,14 @@
   }
   .task-pill.on{background:var(--red);border-color:var(--red);color:#fff}
 
-  .assign-block{padding:var(--space-4) 0;margin-top:var(--space-4)}
+  /* Cada tarea es una tarjeta cerrada: la banda gris del encabezado marca dónde
+     empieza cada una, que es lo que faltaba para no leerlas como un flujo continuo. */
+  .assign-block{
+    border:2px solid var(--ink);border-radius:var(--radius-md);overflow:hidden;
+    margin-top:var(--space-5);background:var(--paper);
+  }
+  .assign-block:first-of-type{margin-top:var(--space-4)}
+  .ab-body{padding:var(--space-2) var(--space-5) var(--space-5)}
   .assign-block .ttl{font-size:var(--fs-caption);font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--space-2)}
   .assign-row{display:grid;grid-template-columns:1fr 1fr 34px;gap:var(--space-2);margin-bottom:var(--space-2)}
   .icon-btn{
@@ -350,7 +357,63 @@
   .auto-item .txt{font-size:15px;font-weight:var(--weight-bold);letter-spacing:.01em;flex:1}
   .auto-item .txt small{display:block;font-size:12.5px;font-weight:var(--weight-regular);color:var(--gray);letter-spacing:0;margin-top:2px}
   .auto-item.off .txt{color:var(--gray)}
+  .auto-link{margin-top:8px}
+  .auto-link input{font-size:13px;padding:7px 10px}
   .auto-note{font-size:12.5px;font-weight:var(--weight-bold);color:var(--red);margin-top:10px;line-height:1.45}
+
+  /* ---------- bloque de tarea: encabezado, gente, fechas y notas ---------- */
+  .ab-head{
+    display:flex;align-items:baseline;gap:var(--space-4);flex-wrap:wrap;
+    background:var(--soft);padding:10px var(--space-5);
+    border-bottom:2px solid var(--ink);
+  }
+  .ab-ttl{font-size:15px;font-weight:var(--weight-bold);letter-spacing:.1em;text-transform:uppercase;flex:none}
+  .ab-when{font-size:12.5px;color:var(--gray);margin-left:auto;flex:none;white-space:nowrap}
+  .ab-when.falta{color:var(--red)}
+  .fase-sw{
+    width:16px;height:16px;border:2px solid var(--ink);border-radius:5px;padding:0;
+    cursor:pointer;flex:none;background:var(--soft);
+  }
+  .fase-sw:hover{transform:scale(1.15)}
+  #colorPanel{
+    display:none;position:fixed;z-index:1300;background:#fff;border:2px solid var(--ink);
+    border-radius:var(--radius-md);padding:8px;box-shadow:4px 4px 0 var(--ink);
+    width:196px;display:none;flex-wrap:wrap;gap:6px;
+  }
+  #colorPanel[style*="display: block"]{display:flex !important}
+  .cp-sw{width:26px;height:26px;border:2px solid var(--ink);border-radius:6px;cursor:pointer;padding:0}
+  .cp-sw.on{outline:3px solid var(--ink);outline-offset:2px}
+  .cp-auto{
+    flex:1 1 100%;font-family:var(--font-secondary);font-size:11px;font-weight:var(--weight-bold);
+    border:2px solid var(--ink);background:#fff;color:var(--ink);border-radius:var(--radius-full);
+    padding:5px;cursor:pointer;
+  }
+  .cp-auto.on{background:var(--ink);color:#fff}
+  .ab-count{font-size:12.5px;color:var(--gray);flex:none}
+
+  /* gente: grilla de tres columnas para que todo quede alineado hacia abajo */
+  .team-line{
+    display:grid;grid-template-columns:minmax(110px,1fr) minmax(0,1.7fr) auto;
+    align-items:center;gap:var(--space-3);
+    padding:10px 2px;border-bottom:1px solid var(--hair);
+  }
+  .team-line .nm{font-size:15px;font-weight:var(--weight-bold);overflow-wrap:anywhere}
+  .team-line .meta{font-size:12.5px;color:var(--gray);overflow-wrap:anywhere}
+  .team-line .meta.falta{color:var(--gray);font-style:italic}
+  .team-line .acts{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+  .team-line:last-of-type{border-bottom:none}
+  .team-line.off{background:var(--soft)}
+  .team-line.off .nm{color:var(--gray);text-decoration:line-through}
+  .team-line.off .meta{color:var(--gray)}
+
+  /* pie: fechas acotadas y notas en una línea cuando están vacías */
+  .ab-foot{display:flex;gap:var(--space-5);flex-wrap:wrap;align-items:flex-end;margin-top:var(--space-4)}
+  .ab-dates{display:flex;flex-direction:column;gap:var(--space-2);flex:none}
+  .ab-dates .rango{display:flex;gap:var(--space-3);align-items:flex-end}
+  .ab-dates .addline{padding:2px 0;font-size:12px}
+  .ab-dates label{display:block;font-size:var(--fs-caption);letter-spacing:.08em;text-transform:uppercase;color:var(--gray);margin-bottom:4px}
+  .ab-dates input{width:158px}
+  .ab-notes{flex:1;min-width:200px}
 
   /* ---------- mails de propuesta a candidatos ---------- */
   .mail-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-2px 0 10px 2px}
@@ -470,6 +533,9 @@
   table.trk td.trk-date{position:sticky;left:54px;background:#fff;z-index:1;text-align:left;color:var(--gray)}
   table.trk th.trk-date{position:sticky;left:54px;background:#fff;z-index:3}
   table.trk tr.trk-weekend td{background:var(--soft)}
+  /* el día de hoy, para encontrarlo de un vistazo al abrir */
+  table.trk tr.trk-hoy td{box-shadow:inset 0 2px 0 var(--red), inset 0 -2px 0 var(--red)}
+  table.trk tr.trk-hoy td.trk-date{color:var(--red);font-weight:var(--weight-bold)}
   table.trk tr.trk-weekend td.trk-day,table.trk tr.trk-weekend td.trk-date{background:var(--soft)}
   table.trk td.trk-cell{cursor:pointer}
   table.trk td.trk-cell:hover{background:var(--soft)}
@@ -532,23 +598,56 @@
   /* ---------- print (PDF del calendario) ---------- */
   #printArea{display:none}
   @media print{
+    @page{ size:A4 landscape; margin:10mm; }
+    /* Sin esto el navegador descarta TODOS los fondos al imprimir, que era la razón
+       por la que el PDF anterior sólo podía marcar el color con un ▪ diminuto. */
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
     body>*:not(#printArea){display:none !important}
-    #printArea{display:block;padding:14px;font-family:var(--font-primary),Helvetica,sans-serif;color:#000}
-    #printArea h1{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:26px;text-transform:uppercase;letter-spacing:var(--tracking-tight)}
-    #printArea .pmeta{font-size:10px;letter-spacing:.15em;color:#555;margin:4px 0 14px;text-transform:uppercase}
-    #printArea .pmonth{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:16px;text-transform:uppercase;margin:10px 0 6px}
-    #printArea table.pgrid{width:100%;border-collapse:collapse;table-layout:fixed}
-    #printArea table.pgrid th{border:1px solid #000;font-size:8.5px;letter-spacing:.12em;padding:4px;text-transform:uppercase;background:#F2F2F0}
-    #printArea table.pgrid td{border:1px solid #999;vertical-align:top;padding:3px 4px;height:72px;font-size:8.5px}
-    #printArea .pd{font-weight:700;font-size:9.5px;margin-bottom:2px}
-    #printArea .pd.om{color:#bbb}
-    #printArea .pl{line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #printArea .ph{line-height:1.35;color:#FF2B1E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #printArea h3{font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin:16px 0 6px}
-    #printArea table.plist{width:100%;border-collapse:collapse;font-size:11px}
-    #printArea table.plist th{text-align:left;border-bottom:2px solid #000;padding:5px;font-size:9px;text-transform:uppercase;letter-spacing:.1em}
-    #printArea table.plist td{padding:5px;border-bottom:1px solid #ccc}
-    #printArea .pfoot{margin-top:22px;font-size:9px;letter-spacing:.15em;color:#777}
+    #printArea{display:block;font-family:var(--font-primary),Helvetica,sans-serif;color:#0A0A0A}
+
+    /* encabezado */
+    #printArea .phead{display:flex;align-items:flex-end;justify-content:space-between;
+      border-bottom:3px solid #0A0A0A;padding-bottom:8px;margin-bottom:14px}
+    #printArea h1{font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:-.02em;margin:0;line-height:1}
+    #printArea .psub{font-size:11px;color:#666;margin-top:4px}
+    #printArea .pmonth{font-weight:800;font-size:19px;text-transform:uppercase;letter-spacing:.02em;text-align:right;line-height:1}
+    #printArea .pmark{font-size:9px;letter-spacing:.18em;color:#888;text-transform:uppercase;text-align:right;margin-top:4px}
+
+    /* leyenda de colores */
+    #printArea .pleg{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+    #printArea .pleg span{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700}
+    #printArea .pleg i{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.35);display:inline-block}
+
+    /* grilla del mes */
+    #printArea table.pgrid{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed}
+    #printArea table.pgrid th{font-size:8.5px;letter-spacing:.16em;padding:5px 4px;text-transform:uppercase;
+      background:#0A0A0A;color:#fff;border-radius:4px}
+    #printArea table.pgrid td{vertical-align:top;padding:4px;height:88px;font-size:8.5px;
+      background:#FAFAF8;border-radius:6px;border:1px solid #E4E4E0}
+    #printArea table.pgrid td.wknd{background:#F1F1EE}
+    #printArea table.pgrid td.om{background:#fff;border-color:#F0F0EE}
+    #printArea .pd{font-weight:800;font-size:11px;margin-bottom:4px;line-height:1}
+    #printArea .pd.om{color:#C8C8C4}
+    /* barra de fase: el color ahora se ve de verdad */
+    #printArea .pbar{border-radius:4px;padding:2px 5px;margin-bottom:2px;font-weight:700;font-size:8px;
+      line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #printArea .pbar.ini{box-shadow:inset 3px 0 0 rgba(0,0,0,.45)}
+    #printArea .phito{background:#FF2B1E;color:#fff;border-radius:4px;padding:2px 5px;margin-bottom:2px;
+      font-weight:700;font-size:8px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    /* tablas de detalle */
+    #printArea .pcols{display:flex;gap:18px;margin-top:16px;break-inside:avoid}
+    #printArea .pcols>div{flex:1}
+    #printArea h3{font-size:10px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 6px;color:#666}
+    #printArea table.plist{width:100%;border-collapse:collapse;font-size:10px}
+    #printArea table.plist th{text-align:left;border-bottom:2px solid #0A0A0A;padding:5px 6px;
+      font-size:8.5px;text-transform:uppercase;letter-spacing:.12em;color:#666}
+    #printArea table.plist td{padding:5px 6px;border-bottom:1px solid #E4E4E0;vertical-align:top}
+    #printArea table.plist .sw{width:10px;height:10px;border-radius:3px;display:inline-block;
+      border:1px solid rgba(0,0,0,.35);margin-right:6px;vertical-align:-1px}
+    #printArea .pfoot{margin-top:18px;padding-top:8px;border-top:1px solid #E4E4E0;
+      font-size:8.5px;letter-spacing:.16em;color:#999;text-transform:uppercase;
+      display:flex;justify-content:space-between}
   }
   /* ---------- mobile ---------- */
   @media(max-width:640px){
@@ -629,8 +728,26 @@
     /* La etiqueta de sección es flex con space-between: con un texto de ayuda largo
        el <small> se iba a la derecha y wrapeaba con sangría, quedando ilegible
        ("CALENDARIO fases + hitos por día... / puntual"). En vertical se lee. */
-    .fgroup>.glabel{flex-direction:column;align-items:flex-start;gap:3px}
-    .fgroup>.glabel small{text-align:left;line-height:1.4}
+    /* La etiqueta de sección es flex con space-between. Con un texto de ayuda largo
+       el <small> se iba a la derecha y wrapeaba con sangría. Se resuelve dejando que
+       envuelva y mandando el <small> a su propio renglón, NO poniendo la etiqueta en
+       columna: eso le tiraría el botón ▾ de los colapsables debajo del título. */
+    .glabel{flex-wrap:wrap;align-items:center;row-gap:3px}
+    .glabel small{flex-basis:100%;order:3;text-align:left;line-height:1.4}
+
+    /* la grilla de 3 columnas no entra: nombre y controles arriba, contacto abajo */
+    .team-line{grid-template-columns:1fr auto;gap:4px 8px;padding:11px 2px}
+    .team-line .nm{grid-area:1 / 1 / 2 / 2}
+    .team-line .acts{grid-area:1 / 2 / 2 / 3}
+    .team-line .meta{grid-area:2 / 1 / 3 / 3}
+    .ab-head{padding:9px var(--space-4)}
+    .ab-body{padding:var(--space-2) var(--space-4) var(--space-4)}
+    .ab-foot{gap:var(--space-4)}
+    .ab-dates{flex:1 1 100%}
+    .ab-dates>div{flex:1}
+    .ab-dates input{width:100%}
+    .ab-notes{flex:1 1 100%;min-width:0}
+    .ab-when{margin-left:0;flex-basis:100%}
 
     /* Tabla de fases: a 540px las columnas quedaban tan angostas que los inputs de
        fecha (16px, para que iOS no haga zoom) se desbordaban y se pisaban entre sí
@@ -655,7 +772,7 @@
     .auto-item .chk-box{width:36px;height:36px;line-height:32px;font-size:22px}
 
     /* inputs: 16px evita el auto-zoom de iOS al enfocar */
-    input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{font-size:16px}
+    input[type=text],input[type=email],input[type=tel],input[type=date],input[type=url],select,textarea{font-size:16px}
     /* La grilla de 2 columnas dejaba que la autoubicación mandara el campo Discord
        (4º hijo) a la columna de 44px: quedaba una cajita ilegible al costado. Con
        las áreas explícitas cada campo va donde tiene que ir.
@@ -770,6 +887,8 @@
 
   /* ---------- notas de tarea / fase: se leen enteras, se editan en popup ---------- */
   .nota-box{border:1.5px solid var(--hair);border-radius:var(--radius-sm);padding:8px 10px;margin-top:var(--space-3)}
+  .nota-box.vacio{display:flex;align-items:center;gap:8px;margin-top:0}
+  .nota-box.tiene{margin-top:0}
   .nota-box.tiene{border-color:var(--ink)}
   .nota-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
   .nota-head .lbl{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--gray);flex:1}
@@ -780,14 +899,22 @@
   .cal-nota .txt.vacia{color:var(--gray)}
   .cal-nota:hover{background:var(--soft)}
   #ovNota .modal{width:min(680px,100%)}
+  #ovLinks .modal{width:min(780px,100%)}
+  #ovLinks .lk-grid{display:flex;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-5)}
+  #ovLinks .lk-grid>div{flex:1 1 300px;min-width:0}
   #notaTa{min-height:220px;font-size:15px;line-height:1.6}
   /* popup de edición: la caja grande que faltaba */
   #ovSintesis .modal{width:min(820px,100%)}
   #sxTa{min-height:300px;font-size:15px;line-height:1.6}
   .sx-prevbox{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);background:#fff;max-height:240px;overflow:auto}
 </style>
+<!-- Capa de interacción: press, foco, hit area, motion y contraste.
+     Va DESPUÉS del <style> de arriba a propósito: misma especificidad,
+     gana la última en cargar. Ver design-system/RULES.md -->
+<link rel="stylesheet" href="design-system/interaction.css">
 </head>
 <body>
+<a class="t23-skip" href="#main">Saltar al contenido</a>
 <div id="authGate" style="display:none;position:fixed;inset:0;z-index:2000;background:#fff;align-items:center;justify-content:center">
   <div style="width:min(430px,92%);border:2px solid var(--ink);border-radius:var(--radius-lg,16px);padding:30px;box-shadow:8px 8px 0 var(--ink);background:#fff">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
@@ -833,13 +960,15 @@
   </div>
 </div>
 
+<div class="demo-banner" id="setupBanner" style="display:none"></div>
+
 <div class="demo-banner" id="staleBanner" style="display:none"></div>
 
 <div class="demo-banner" id="demoBanner" style="display:none">
   <b>MODO DEMO</b> — Estás viendo datos de ejemplo. Para conectarlo en serio: configurá <code>CONFIG.N8N_BASE</code> y <code>CONFIG.API_KEY</code> al inicio del archivo, con tus workflows de n8n importados (ver README).
 </div>
 
-<main>
+<main id="main">
   <section id="view-proyectos" class="view">
     <section class="status-block">
       <div class="section-head"><span class="dot"></span><h2>Pre-producción</h2><span class="count" id="cPending"></span></div>
@@ -894,7 +1023,7 @@
 <!-- ============ MODAL: NUEVO PROYECTO ============ -->
 <div class="overlay" id="ovNew">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newTitle">
-    <button class="close" onclick="closeModal('ovNew')" aria-label="Cerrar">✕</button>
+    <button class="close" onclick="closeNew()" aria-label="Cerrar">✕</button>
     <h2 id="newTitle">Nuevo proyecto</h2>
     <div class="kicker">Al crearlo se genera Drive + Frame.io + documentos, automáticamente</div>
 
@@ -913,15 +1042,15 @@
     <div class="fgroup">
       <div class="glabel">Equipo interno <small>nombre + mail (para los avisos de calendario)</small></div>
       <div class="frow">
-        <div><label class="f">Productor Ejecutivo *</label><input type="text" id="npEpNombre" placeholder="Nombre"></div>
+        <div><label class="f">Productor Ejecutivo *</label><input type="text" id="npEpNombre" autocomplete="off" oninput="acOpenRol(this,'ep','#npEpEmail')" onfocus="acRolFocus(this,'ep','#npEpEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
         <div><label class="f">Mail EP *</label><input type="email" id="npEpEmail" placeholder="ep@team23.online"></div>
       </div>
       <div class="frow">
-        <div><label class="f">Productor</label><input type="text" id="npProdNombre" placeholder="Nombre"></div>
+        <div><label class="f">Productor</label><input type="text" id="npProdNombre" autocomplete="off" oninput="acOpenRol(this,'prod','#npProdEmail')" onfocus="acRolFocus(this,'prod','#npProdEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
         <div><label class="f">Mail Productor</label><input type="email" id="npProdEmail" placeholder="prod@team23.online"></div>
       </div>
       <div class="frow">
-        <div><label class="f">Coordinador</label><input type="text" id="npCoordNombre" placeholder="Nombre"></div>
+        <div><label class="f">Coordinador</label><input type="text" id="npCoordNombre" autocomplete="off" oninput="acOpenRol(this,'coord','#npCoordEmail')" onfocus="acRolFocus(this,'coord','#npCoordEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
         <div><label class="f">Mail Coordinador</label><input type="email" id="npCoordEmail" placeholder="coord@team23.online"></div>
       </div>
     </div>
@@ -939,7 +1068,7 @@
     </div>
 
     <div class="actions">
-      <button class="btn" onclick="closeModal('ovNew')">Cancelar</button>
+      <button class="btn" onclick="closeNew()">Cancelar</button>
       <button class="btn primary" id="btnCreate" onclick="createProject()">Crear proyecto</button>
     </div>
   </div>
@@ -1011,7 +1140,8 @@
       Hiciste cambios en este proyecto que todavía no se guardaron.
     </p>
     <div class="actions stack">
-      <button class="btn primary" onclick="confirmSaveExit(this)">Guardar y salir</button>
+      <button class="btn primary" onclick="confirmSaveExit(this,false)">Guardar y salir</button>
+      <button class="btn" id="btnSaveAvisar" onclick="confirmSaveExit(this,true)">Guardar, avisar al equipo y salir</button>
       <button class="btn" onclick="closeModal('ovConfirm')">Seguir editando</button>
       <div class="sep"></div>
       <button class="btn danger-out" onclick="confirmDiscard()">Descartar cambios</button>
@@ -1025,13 +1155,13 @@
     <h2>Nuevo proyecto</h2>
     <div class="kicker">¿Cómo lo querés crear?</div>
     <div class="opt-grid">
-      <div class="opt-card" onclick="chooseOption(1)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')chooseOption(1)">
+      <div class="opt-card" onclick="chooseOption(1)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseOption(1)}">
         <div class="opt-num">Opción 1</div>
         <h3>Kick off manual</h3>
         <p>El checklist de planificación paso a paso (Discord, timing, storyboard, Notion, adelanto) y después el formulario de siempre.</p>
         <span class="opt-cta">Empezar →</span>
       </div>
-      <div class="opt-card" onclick="chooseOption(2)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')chooseOption(2)">
+      <div class="opt-card" onclick="chooseOption(2)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseOption(2)}">
         <div class="opt-num">Opción 2</div>
         <h3>Desde debrief (IA)</h3>
         <p>Mismo checklist de planificación primero. Después pegás el debrief y la IA precarga nombre, cliente, síntesis, tareas y timeline. Revisás, cargás candidatos y creás.</p>
@@ -1075,15 +1205,15 @@
       <div class="fgroup">
         <div class="glabel">3 · Equipo interno <small>nombre + mail (para los avisos de calendario)</small></div>
         <div class="frow">
-          <div><label class="f">Productor Ejecutivo *</label><input type="text" id="n2EpNombre" placeholder="Nombre"></div>
+          <div><label class="f">Productor Ejecutivo *</label><input type="text" id="n2EpNombre" autocomplete="off" oninput="acOpenRol(this,'ep','#n2EpEmail')" onfocus="acRolFocus(this,'ep','#n2EpEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
           <div><label class="f">Mail EP *</label><input type="email" id="n2EpEmail" placeholder="ep@team23.online"></div>
         </div>
         <div class="frow">
-          <div><label class="f">Productor</label><input type="text" id="n2ProdNombre"></div>
+          <div><label class="f">Productor</label><input type="text" id="n2ProdNombre" autocomplete="off" oninput="acOpenRol(this,'prod','#n2ProdEmail')" onfocus="acRolFocus(this,'prod','#n2ProdEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
           <div><label class="f">Mail Productor</label><input type="email" id="n2ProdEmail"></div>
         </div>
         <div class="frow">
-          <div><label class="f">Coordinador</label><input type="text" id="n2CoordNombre"></div>
+          <div><label class="f">Coordinador</label><input type="text" id="n2CoordNombre" autocomplete="off" oninput="acOpenRol(this,'coord','#n2CoordEmail')" onfocus="acRolFocus(this,'coord','#n2CoordEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
           <div><label class="f">Mail Coordinador</label><input type="email" id="n2CoordEmail"></div>
         </div>
       </div>
@@ -1129,6 +1259,73 @@
     <div class="actions">
       <button class="btn" onclick="finClose()">Cancelar</button>
       <button class="btn primary" onclick="finSave(this)">Confirmar finalización</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: LINKS DEL PROYECTO ============ -->
+<div class="overlay" id="ovLinks" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lkTitle">
+    <button class="close" onclick="linksClose()" aria-label="Cerrar">✕</button>
+    <h2 id="lkTitle">Links del proyecto</h2>
+    <div class="kicker" id="lkWho"></div>
+
+    <p style="font-size:15px;line-height:1.5;margin:0 0 var(--space-7);color:var(--gray)">
+      Para vincular carpetas o proyectos que ya existen, o que no se crearon al armar el proyecto.
+      Lo que dejes vacío no se muestra en la ficha.
+    </p>
+
+    <div class="fgroup" id="lkCampos"></div>
+
+    <div class="actions">
+      <button class="btn" onclick="linksClose()">Cancelar</button>
+      <button class="btn primary" onclick="linksSave(this)">Guardar links</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: EQUIPO INTERNO ============ -->
+<div class="overlay" id="ovInterno" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="intTitle">
+    <button class="close" onclick="internoClose()" aria-label="Cerrar">✕</button>
+    <h2 id="intTitle">Equipo interno</h2>
+    <div class="kicker" id="intWho"></div>
+
+    <div class="fgroup" id="intCampos"></div>
+
+    <div class="actions">
+      <button class="btn" onclick="internoClose()">Cancelar</button>
+      <button class="btn primary" onclick="internoSave()">Guardar equipo interno</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: EDITAR PERSONA ============ -->
+<div class="overlay" id="ovPersona" style="z-index:1100">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="perTitle">
+    <button class="close" onclick="personaClose()" aria-label="Cerrar">✕</button>
+    <h2 id="perTitle">Editar persona</h2>
+    <div class="kicker" id="perWho"></div>
+
+    <div class="fgroup">
+      <div class="frow">
+        <div>
+          <label class="f">Nombre <small id="perFuente" style="color:var(--gray);letter-spacing:0;font-weight:var(--weight-regular);text-transform:none"></small></label>
+          <input type="text" id="perNombre" autocomplete="off"
+                 oninput="acOpenPersona(this)" onfocus="acOpenPersona(this)"
+                 onkeydown="acKey(event)" onblur="setTimeout(acClose,150)">
+        </div>
+        <div><label class="f">Mail</label><input type="email" id="perEmail" placeholder="mail@team23.online"></div>
+      </div>
+      <div class="frow" id="perExtra">
+        <div><label class="f">Discord</label><input type="text" id="perDiscord" placeholder="usuario#0000 o @usuario"></div>
+        <div><label class="f">Teléfono</label><input type="tel" id="perTelefono" placeholder="+54 9 11 ..."></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="personaClose()">Cancelar</button>
+      <button class="btn primary" onclick="personaSave()">Guardar datos</button>
     </div>
   </div>
 </div>
@@ -1258,13 +1455,17 @@ const DEMO = !CONFIG.N8N_BASE;
 const WDAYS = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
 /* looks de fase (calendario por proyecto): paleta Supportive Brand, texto oscuro sobre
    color pleno. Rojo excluido a propósito — queda reservado para peligro/alerta e hitos. */
+/* Paleta de las fases. El negro salió de acá: era el 6º color y con seis o más
+   tareas una quedaba pintada de negro, que en esta interfaz lee como "seleccionado"
+   o como borde, no como una fase más. Lo reemplaza el celeste de apoyo del
+   design system. El rojo queda reservado para los hitos. */
 const PHASE_LOOKS = [
-  {bg:"#AA8CF8", fg:"#0A0A0A", bd:"#AA8CF8"}, /* purple */
-  {bg:"#00F7FF", fg:"#0A0A0A", bd:"#00F7FF"}, /* cyan   */
-  {bg:"#FF61F7", fg:"#0A0A0A", bd:"#FF61F7"}, /* pink   */
-  {bg:"#33FF00", fg:"#0A0A0A", bd:"#33FF00"}, /* green  */
-  {bg:"#F8FF2E", fg:"#0A0A0A", bd:"#F8FF2E"}, /* yellow */
-  {bg:"#0A0A0A", fg:"#FFFFFF", bd:"#0A0A0A"}  /* ink (fallback) */
+  {bg:"#AA8CF8", fg:"#0A0A0A", bd:"#AA8CF8", nombre:"Violeta"},
+  {bg:"#00F7FF", fg:"#0A0A0A", bd:"#00F7FF", nombre:"Cian"},
+  {bg:"#FF61F7", fg:"#0A0A0A", bd:"#FF61F7", nombre:"Rosa"},
+  {bg:"#33FF00", fg:"#0A0A0A", bd:"#33FF00", nombre:"Verde"},
+  {bg:"#F8FF2E", fg:"#0A0A0A", bd:"#F8FF2E", nombre:"Amarillo"},
+  {bg:"#6ACCE0", fg:"#0A0A0A", bd:"#6ACCE0", nombre:"Celeste"}
 ];
 /* color fijo por tarea (no por posición en el calendario) — mismo TAREA siempre el mismo color,
    se usa en los pills de selección de tareas (alta y ficha) */
@@ -1319,23 +1520,23 @@ async function api(path, opts={}){
 }
 
 /* fecha de finalización = la última fecha del calendario (fin de fase o hito) */
+/* "7 jul" — para los resúmenes donde el año se sobreentiende */
+function fechaCorta(s){
+  const d = parseYMD(s);
+  return d ? d.toLocaleDateString("es-AR",{day:"numeric",month:"short"}).replace(".","") : "";
+}
 function projectEndDate(p){
   const ds = (p.calendario||[]).map(r=>parseYMD(r.fin)||parseYMD(r.inicio)).filter(Boolean);
   return ds.length ? new Date(Math.max(...ds.map(d=>d.getTime()))) : null;
 }
-/* un proyecto en ejecución/entregando que pasó su fecha de fin salta solo a "cierre" */
-function autoAdvanceOverdue(){
-  const today = new Date(); today.setHours(0,0,0,0);
-  projects.forEach(p=>{
-    if(p.status==="activo" || p.status==="entregando"){
-      const end = projectEndDate(p);
-      if(end && end < today){
-        p.status = "cierre";
-        if(!DEMO) api("/webhook/team23/update",{method:"POST",body:JSON.stringify({id:p.id,status:"cierre"})}).catch(()=>{});
-      }
-    }
-  });
-}
+/* El avance automático a "cierre" lo hace el workflow 11, una vez por día del lado del
+   servidor. Antes se hacía acá, en cada carga del hub, y tenía tres problemas: corría
+   solo si alguien abría la página, se duplicaba entre pestañas y dispositivos (un aviso
+   de Discord por cada una, y `.catch(()=>{})` se tragaba los errores, así que una
+   escritura fallida lo hacía repetir en cada carga), y `projectEndDate` únicamente
+   miraba `p.calendario`, así que un proyecto con fechas cargadas solo en las tareas no
+   avanzaba nunca. wf11 mira las dos fuentes y corre una sola vez.
+   `projectEndDate` se queda: la usa la vista semanal para posicionarse. */
 
 /* ---------- caché de proyectos + aviso de datos viejos ---------- */
 function cacheLeer(){
@@ -1361,32 +1562,56 @@ function haceCuanto(ts){
 }
 function staleBannerShow(motivo, ts){
   const el = $("#staleBanner"); if(!el) return;
+  const reintentar = `<button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar</button>`;
   el.innerHTML = ts !== null
-    ? `<b>DATOS VIEJOS</b> — No pude conectar con n8n (${esc(motivo)}), así que esto es lo último guardado, ${esc(haceCuanto(ts))}. Puede faltar o sobrar algo. <button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar</button>`
-    : `<b>SIN DATOS</b> — No pude conectar con n8n (${esc(motivo)}) y no hay nada guardado. Revisá CONFIG y las credenciales del workflow 2, y que esté publicado. <button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar</button>`;
+    /* hay caché, pero se muestra sólo si se pide: ver datos viejos tiene que ser una
+       decisión, no algo que aparece solo y se confunde con lo actual */
+    ? `<b>NO PUDE CARGAR LOS PROYECTOS</b> — ${esc(motivo)}. Hay una copia guardada ${esc(haceCuanto(ts))}, pero puede estar desactualizada.`+
+      reintentar+
+      `<button class="btn small" style="margin-left:8px" onclick="verCache()">Ver la copia guardada</button>`
+    : `<b>SIN DATOS</b> — No pude conectar con n8n (${esc(motivo)}) y no hay ninguna copia guardada. Revisá CONFIG y las credenciales del workflow 2, y que esté publicado.`+reintentar;
   el.style.display = "block";
 }
+/* Pinta la copia guardada a pedido. El banner queda arriba: lo que se está viendo es
+   viejo y tiene que seguir diciéndolo mientras se vea. */
+function verCache(){
+  const c = cacheLeer();
+  if(!c || !c.projects.length){ toast("No hay copia guardada", true); return; }
+  projects = c.projects;
+  projects.forEach(p=>ensureCalIds(p.calendario));
+  onProjectsLoaded();
+  const el = $("#staleBanner");
+  if(el) el.innerHTML = `<b>ESTÁS VIENDO UNA COPIA GUARDADA</b> — ${esc(haceCuanto(c.ts))}, no de ahora. No se guardó nada desde acá hasta que la conexión vuelva.`+
+    `<button class="btn small" style="margin-left:8px" onclick="loadProjects()">Reintentar la carga</button>`;
+}
 function staleBannerHide(){ const el = $("#staleBanner"); if(el) el.style.display = "none"; }
+function setupBanner(faltan){
+  const el = $("#setupBanner"); if(!el) return;
+  if(!faltan || !faltan.length){ el.style.display = "none"; return; }
+  el.innerHTML = `<b>FALTA UNA COLUMNA EN LA HOJA</b> — La pestaña <code>Projects</code> no tiene `+
+    faltan.map(c=>`<code>${esc(c)}</code>`).join(", ")+
+    `. Sin eso, lo que se guarde en ese campo se pierde en la siguiente carga y no da error. `+
+    `Agregá la columna con ese nombre exacto en el encabezado y recargá.`;
+  el.style.display = "block";
+}
 
 async function loadProjects(){
   if(DEMO){
     projects = JSON.parse(JSON.stringify(demoProjects));
     projects.forEach(p=>ensureCalIds(p.calendario));
-    autoAdvanceOverdue();
     onProjectsLoaded(); return;
   }
-  /* Caché local: pinta al instante lo último conocido mientras llega lo fresco.
-     Ojo con esto: si el fetch falla, lo que queda en pantalla ES el caché. Sin un
-     aviso persistente el hub miente y parece que un proyecto no existe — pasó, con
-     el dbSheetId de wf2 en placeholder: el portal leía bien y el hub mostraba una
-     foto vieja sin decirlo. El toast de error duraba 4 segundos y se perdía. */
+  /* Antes esto pintaba el caché al instante y después lo reemplazaba con lo fresco.
+     Se veía rápido, pero mostraba datos posiblemente viejos como si fueran buenos, y
+     si el fetch fallaba quedaban en pantalla sin que nada lo dijera fuerte.
+     Ahora: no se muestra NADA hasta confirmar que lo que hay vino del sheet. El caché
+     sigue existiendo, pero se ofrece de forma explícita si la carga falla. */
   const cache = cacheLeer();
-  if(!projects.length && cache && cache.projects.length){
-    projects = cache.projects; onProjectsLoaded();
-  }
+  const primera = !projects.length;
   const prevIds = new Set(projects.map(p=>p.id));
-  const hadCache = projects.length > 0;
+  const hadCache = !!(cache && cache.projects.length);
   const cacheTs = cache ? cache.ts : 0;
+  if(primera) t23LoadShow("cargar");
   syncPillShow(true);
   try{
     const data = await api("/webhook/team23/projects");
@@ -1395,21 +1620,28 @@ async function loadProjects(){
       tareas: p.tareas || [],
       asignaciones: p.asignaciones || {},
       taskDates: p.taskDates || (p.taskDates_json ? (()=>{try{return JSON.parse(p.taskDates_json)}catch(e){return {}}})() : {}),
+      equipo: p.equipo || (p.equipo_json ? (()=>{try{return JSON.parse(p.equipo_json)}catch(e){return {}}})() : {}),
       links: p.links || {},
       calendario: ensureCalIds((p.calendario || []).map(c=>({ ...c, tipo: c.tipo==="hito"?"hito":"fase" })))
     }));
-    autoAdvanceOverdue();
     onProjectsLoaded();
     cacheGuardar(projects);
     staleBannerHide();
-    if(hadCache){
+    /* wf2 avisa si a la hoja le falta alguna columna que el hub necesita: sin ella
+       el dato se guarda "bien" y se pierde en la siguiente carga, sin error visible */
+    setupBanner(data.columnasFaltantes||[]);
+    /* sólo tiene sentido anunciar novedades si antes había algo en pantalla */
+    if(!primera){
       const nuevos = projects.filter(p=>!prevIds.has(p.id)).length;
       if(nuevos) toast("✔ "+nuevos+(nuevos>1?" proyectos nuevos":" proyecto nuevo"));
     }
   }catch(e){
-    toast("No pude cargar los proyectos, revisá n8n ("+e.message+")", true);
+    /* no se pinta el caché por las suyas: se ofrece con un botón, así ver datos
+       viejos es una decisión y no una sorpresa */
     staleBannerShow(e.message, hadCache ? cacheTs : null);
+    if(primera) onProjectsLoaded();   // deja las vistas vacías, no a medias
   }finally{
+    t23LoadHide();
     syncPillShow(false);
   }
 }
@@ -1438,8 +1670,8 @@ function cardHTML(p, readOnly=false){
   const fLink = p.links?.frameio && p.links.frameio!=="#" ? `<a href="${esc(p.links.frameio)}" target="_blank" onclick="event.stopPropagation()">FRAME.IO ↗</a>` : "";
   return `<div class="card" onclick="openDetail('${p.id}'${readOnly?",true":""})">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3)">
-      <h3 style="margin-bottom:0">${esc(p.nombre)}</h3>
-      ${pills?`<div class="pills" style="flex:none;justify-content:flex-end">${pills}</div>`:""}
+      <h3 style="margin-bottom:0;min-width:0;overflow-wrap:anywhere">${esc(p.nombre)}</h3>
+      ${pills?`<div class="pills" style="flex:0 1 auto;min-width:0;max-width:60%;justify-content:flex-end">${pills}</div>`:""}
     </div>
     <div class="meta">${meta||"&nbsp;"}</div>
     ${inProgress(p.status)?`<div style="margin-bottom:var(--space-3)">${statusBadge(p.status)}</div>`:""}
@@ -1560,22 +1792,49 @@ const autoDefaults = () => ({ drive:true, frame:true, discord:true });
 let npAuto = autoDefaults();
 let n2Auto = autoDefaults();
 function autoStore(ctx){ return ctx==="n2" ? n2Auto : npAuto; }
+/* Links pegados a mano cuando se elige no crear Drive o Frame automáticamente.
+   Viajan en el body y wf3 los usa para lo que no generó. */
+let npLinks = {}, n2Links = {};
+function linksStore(ctx){ return ctx==="n2" ? n2Links : npLinks; }
+function setManualLink(ctx, k, v){ linksStore(ctx)[k] = String(v||"").trim(); }
+const AUTO_LINK = { drive:["driveRoot","Link de la unidad de Drive","https://drive.google.com/drive/folders/..."],
+                    frame:["frameio","Link del proyecto de Frame.io","https://next.frame.io/project/..."] };
 function renderAuto(ctx){
   const box = $("#"+ctx+"Auto"); if(!box) return;
   const st = autoStore(ctx);
   const off = AUTO_DEFS.filter(([k])=>!st[k]).map(([,label])=>label.replace("Crear ",""));
-  box.innerHTML = AUTO_DEFS.map(([k,label,hint])=>`
+  const L = linksStore(ctx);
+  box.innerHTML = AUTO_DEFS.map(([k,label,hint])=>{
+    /* si se apaga Drive o Frame, se puede pegar acá el link de algo que ya exista;
+       también se puede dejar vacío y vincularlo después desde la ficha */
+    const def = !st[k] && AUTO_LINK[k];
+    const campo = def ? `
+      <div class="auto-link">
+        <label class="f">${esc(def[1])} <small style="color:var(--gray);letter-spacing:0;font-weight:var(--weight-regular);text-transform:none">opcional, se puede cargar después</small></label>
+        <input type="url" value="${esc(L[def[0]]||"")}" placeholder="${esc(def[2])}"
+               oninput="setManualLink('${ctx}','${def[0]}',this.value)">
+      </div>` : "";
+    return `
     <div class="auto-item ${st[k]?"":"off"}">
       <button class="chk-box ${st[k]?"done":""}" onclick="toggleAuto('${ctx}','${k}')"
               aria-pressed="${st[k]}" aria-label="${esc(label)}">${st[k]?"✓":""}</button>
-      <span class="txt">${esc(label)}<small>${esc(hint)}</small></span>
-    </div>`).join("") +
-    (off.length ? `<div class="auto-note">No se va a crear: ${esc(off.join(" · "))}. El proyecto se crea igual, pero desde el hub no hay forma de generarlo después: queda a mano.</div>` : "");
+      <span class="txt">${esc(label)}<small>${esc(hint)}</small>${campo}</span>
+    </div>`;}).join("") +
+    (off.length ? `<div class="auto-note">No se va a crear: ${esc(off.join(" · "))}. El proyecto se crea igual; podés pegar los links de arriba ahora o vincularlos después desde la ficha.</div>` : "");
 }
 function toggleAuto(ctx,k){ const st = autoStore(ctx); st[k] = !st[k]; renderAuto(ctx); }
 /* etiqueta del botón mientras corre + texto del toast, según lo que quedó encendido */
 function autoNames(st){ return [st.drive&&"Drive", st.frame&&"Frame.io", st.discord&&"Discord"].filter(Boolean); }
 function autoBusyLabel(st){ const n = autoNames(st); return n.length ? "Creando "+n.join(" + ")+"…" : "Creando proyecto…"; }
+/* Solo viajan los links de lo que se eligió no crear: si Drive está encendido, un
+   link pegado a mano sería confuso — wf3 va a generar la unidad igual. */
+function manualLinks(store, st){
+  const out = {};
+  Object.entries(AUTO_LINK).forEach(([k,[clave]])=>{
+    if(!st[k] && String(store[clave]||"").trim()) out[clave] = String(store[clave]).trim();
+  });
+  return out;
+}
 function autoDemoLinks(st){
   const L = {};
   if(st.drive) Object.assign(L,{driveRoot:"#",coord:"#",supervision:"#",footage:"#",recursos:"#",editables:"#",finales:"#",notas:"#",desglose:"#"});
@@ -1602,16 +1861,20 @@ function mailProjectData(ctx){
   const orden = (a,b)=>String(a.inicio||"9999").localeCompare(String(b.inicio||"9999"));
   if(ctx==="dt"){
     const p = detailProject || {};
-    const timeline = (p.tareas||[])
-      .map(t=>{ const d = (p.taskDates||{})[t]||{}; return { fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||"" }; })
+    const timeline = (p.tareas||[]).flatMap(t=>{
+        const d = (p.taskDates||{})[t]||{};
+        return taskRangos(d).map((r,ri)=>({ fase: t+(ri?" ("+(ri+1)+")":""), inicio:r.inicio, fin:r.fin, notas: ri?"":(d.notas||"") }));
+      })
       .filter(t=>t.inicio||t.fin||t.notas).sort(orden);
     return {
       proyecto: p.nombre||"", cliente: p.cliente||"", sintesis: p.sintesis||"",
       storyboard: p.storyboard_url || p.tratamiento_url || "", timeline
     };
   }
-  const timeline = [...n2Selected]
-    .map(t=>{ const d = n2TaskDates[t]||{}; return { fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||"" }; })
+  const timeline = [...n2Selected].flatMap(t=>{
+      const d = n2TaskDates[t]||{};
+      return taskRangos(d).map((r,ri)=>({ fase: t+(ri?" ("+(ri+1)+")":""), inicio:r.inicio, fin:r.fin, notas: ri?"":(d.notas||"") }));
+    })
     .filter(t=>t.inicio||t.fin||t.notas).sort(orden);
   return {
     proyecto: ($("#n2Nombre")||{}).value?.trim() || "",
@@ -1642,7 +1905,7 @@ function mailBuildHTML(d, rol, nombre, intro){
           (conNotas?'<td style="'+td+'font-size:12.5px;color:#555;">'+mailEsc(t.notas||"")+'</td>':'')+
         '</tr>';
       }).join("")+'</tbody></table>'
-    : '<p style="color:#8A8A8A;">Timeline a definir.</p>';
+    : '<p style="color:#5F5F5F;">Timeline a definir.</p>';
   const sb = d.storyboard ? '<p><b>Storyboard / referencias:</b> <a href="'+mailEsc(d.storyboard)+'">'+mailEsc(d.storyboard)+'</a></p>' : "";
   /* sin apertura propia va el saludo armado, igual que siempre (con cliente y rol
      en negrita); con apertura propia va el texto tal cual lo escribieron */
@@ -1657,7 +1920,7 @@ function mailBuildHTML(d, rol, nombre, intro){
     (d.sintesis?'<p style="margin:14px 0 6px;font-weight:bold;font-size:12px;letter-spacing:1px;">DE QUÉ SE TRATA</p><p style="white-space:pre-line;">'+mailEsc(d.sintesis)+'</p>':"")+sb+
     '<p style="margin:14px 0 6px;font-weight:bold;font-size:12px;letter-spacing:1px;">TIMELINE TENTATIVO</p>'+tl+
     '<p style="margin-top:18px;">Si te interesa, respondé este mail con tu disponibilidad y presupuesto para el rol.</p>'+
-    '<p style="margin-top:22px;font-size:10px;color:#8A8A8A;letter-spacing:2px;">TEAM 23 PRODUCTION HUB</p></div>';
+    '<p style="margin-top:22px;font-size:10px;color:#5F5F5F;letter-spacing:2px;">TEAM 23 PRODUCTION HUB</p></div>';
 }
 /* lo que realmente se manda para una fila: HTML crudo si lo editaron, si no el armado */
 function mailFinalHTML(r, rol, ctx){
@@ -1693,9 +1956,10 @@ function mailRowInner(r, tarea, i, ctx){
        proyecto, el bloque no tiene nada que hacer ahí. La fecha del envío no se
        pierde: pasa al chip de estado. */
     if(r.mailSentAt || r.estado !== "candidato") return "";
+    /* sin la etiqueta "Propuesta" al lado, y en blanco: en negro parecía un estado
+       encendido y no un botón */
     return `<div class="mail-row">
-      <span class="who">✉ Propuesta</span>
-      <button class="mini-btn on" onclick="mailSend('${tq}',${i})">Enviar propuesta</button>
+      <button class="mini-btn" onclick="mailSend('${tq}',${i})">✉ Enviar propuesta por email</button>
       ${editar}${editado}
     </div>`;
   }
@@ -1765,9 +2029,10 @@ function mailOpen(tarea, i, ctx){
   $("#mailHtml").value = (r.mailHtml||"");
   $("#mailAdvBox").open = !!(r.mailHtml||"").trim();
   mailLive();
-  $("#ovMail").classList.add("open");   // no toca el scroll del body: queda uno abierto detrás
+  $("#ovMail").classList.add("open"); modalArmar("ovMail");   // no toca el scroll del body: queda uno abierto detrás
 }
-function mailClose(){ $("#ovMail").classList.remove("open"); mailEditing = null; }
+function mailCerrar(){ modalLimpiar("ovMail"); $("#ovMail").classList.remove("open"); mailEditing = null; }
+function mailClose(){ modalSalir("ovMail", mailCerrar); }
 /* al desplegar el HTML lo precargo con el mail actual, para editar sobre algo real */
 function mailAdvToggle(){
   const box = $("#mailAdvBox"), ta = $("#mailHtml");
@@ -1789,7 +2054,7 @@ function mailLive(){
   const asunto = ($("#mailSubject").value||"").trim();
   $("#mailPrev").srcdoc =
     '<div style="font-family:Helvetica,Arial,sans-serif;padding:14px 16px;">'+
-    '<div style="font-size:11px;letter-spacing:1.5px;color:#8A8A8A;text-transform:uppercase;">Asunto</div>'+
+    '<div style="font-size:11px;letter-spacing:1.5px;color:#5F5F5F;text-transform:uppercase;">Asunto</div>'+
     '<div style="font-size:15px;font-weight:bold;margin:2px 0 14px;border-bottom:1px solid #ddd;padding-bottom:12px;">'+mailEsc(asunto||"(sin asunto)")+'</div>'+
     mailPreviewHTML()+'</div>';
 }
@@ -1807,7 +2072,7 @@ function mailSave(){
   if(!mailEditing) return;
   const { ctx, tarea, i, rol, nombre } = mailEditing;
   const r = (assignStore(ctx)[tarea]||[])[i];
-  if(!r){ mailClose(); return; }
+  if(!r){ mailCerrar(); return; }
   const d = mailProjectData(ctx);
   const subject = ($("#mailSubject").value||"").trim();
   const intro = ($("#mailIntro").value||"").trim();
@@ -1817,7 +2082,7 @@ function mailSave(){
   r.mailSubject = subject === mailSubjectDefault(d.proyecto, rol) ? "" : subject;
   r.mailIntro = intro === mailIntroDefault(nombre, d.cliente, rol) ? "" : intro;
   r.mailHtml = (raw && raw !== mailBuildHTML(d, rol, nombre, intro)) ? raw : "";
-  mailClose();
+  mailCerrar();
   /* en la ficha el override viaja al sheet con el próximo guardado del equipo */
   if(ctx==="dt"){ detailDirty = true; renderDetail(); }
   else mailSlotSync(ctx, tarea, i);
@@ -1861,11 +2126,16 @@ function assignBlockHTML(tarea, rows, ctx){
      ficha, en una fila recién agregada que todavía está vacía. */
   const dt = ctx==="dt";
   const enCurso = dt && detailProject && detailProject.status !== "por_activarse";
+  /* en cierre y completado la ficha ni llega acá (usa el listado de solo lectura),
+     pero si llegara, la fila compacta se muestra sin controles */
+  const lockTareasCtx = dt && detailProject && ["cierre","completado"].includes(detailProject.status);
   const vacia = r => !((r.nombre||"").trim() || (r.email||"").trim());
 
   const chip = (clase, txt) => `<span class="chipst ${clase}">${txt}</span>`;
 
-  const stateRow = (r,i)=>{
+  /* Devuelve solo los chips y botones, sin contenedor: así sirven tanto sueltos
+     debajo del formulario de un candidato como en línea en la fila compacta. */
+  const stateInner = (r,i)=>{
     if(!dt || vacia(r)) return "";
     const b = (estado, txt, clase="") => `<button class="mini-btn ${clase}" onclick="candSet('${tq}',${i},'${estado}')">${txt}</button>`;
     /* si se le mandó la propuesta y todavía no contestó, la fecha queda a la vista */
@@ -1874,25 +2144,47 @@ function assignBlockHTML(tarea, rows, ctx){
     if(!enCurso){
       /* pre-producción: se resuelve el candidato */
       if(!r.estado) return "";
-      if(r.estado==="inactivo") return `<div class="cand-state">${chip("inact","Inactivo")}${b("confirmado","↺ Reactivar")}</div>`;
+      if(r.estado==="inactivo") return chip("inact","Inactivo")+b("confirmado","↺ Reactivar");
       const c = r.estado==="confirmado" ? chip("conf","Confirmado") : chip("cand","Candidato");
       const acts = r.estado==="candidato"
         ? b("confirmado","✓ Confirmar") + b("rechazado","✕ Rechazar","no")
         : `<button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
-      return `<div class="cand-state">${c}${acts}${enviado}</div>`;
+      return c+acts+enviado;
     }
     /* en curso: activo / inactivo. Sin estado (alta manual) cuenta como activo.
        Excepción: un candidato sigue siendo candidato — es gente que se sumó con
        el proyecto en marcha y todavía tiene que decir que sí. Si se rechaza,
        sale del cuadro igual que los rechazados de pre-producción. */
     if(r.estado==="candidato")
-      return `<div class="cand-state">${chip("cand","Candidato")}${b("confirmado","✓ Confirmar")}${b("rechazado","✕ Rechazar","no")}${enviado}</div>`;
-    if(r.estado==="inactivo") return `<div class="cand-state">${chip("inact","Inactivo")}${b("confirmado","↺ Reactivar")}</div>`;
-    return `<div class="cand-state">${chip("conf","Activo")}${b("inactivo","Desactivar","no")}</div>`;
+      return chip("cand","Candidato")+b("confirmado","✓ Confirmar")+b("rechazado","✕ Rechazar","no")+enviado;
+    if(r.estado==="inactivo") return chip("inact","Inactivo")+b("confirmado","↺ Reactivar");
+    return chip("conf","Activo")+b("inactivo","Desactivar","no");
   };
 
+  const stateRow = (r,i)=>{ const s = stateInner(r,i); return s ? `<div class="cand-state">${s}</div>` : ""; };
+
   const visibles = rows.map((r,i)=>({r,i})).filter(({r})=> !(enCurso && r.estado==="rechazado"));
+  /* Fila compacta: quien ya está en el equipo (confirmado, sin estado, o inactivo)
+     no necesita cuatro cajas abiertas — sus datos ya están cargados. Se muestran
+     en una línea con un ✎ que abre el popup, junto a los chips de estado.
+     El candidato pendiente sí conserva el formulario: ahí todavía se está cargando. */
+  const compacta = r => dt && !vacia(r) && r.estado !== "candidato" && r.estado !== "rechazado";
+  const filaCompactaHTML = ({r,i})=>{
+    const meta = [r.email, r.discord ? "@"+String(r.discord).replace(/^@/,"") : "", r.telefono]
+      .map(x=>String(x||"").trim()).filter(Boolean);
+    const apagado = r.estado === "inactivo";
+    return `
+      <div class="team-line${apagado?" off":""}">
+        <span class="nm">${esc(r.nombre || r.email || "Sin nombre")}</span>
+        ${meta.length?`<span class="meta">${esc(meta.join(" · "))}</span>`:`<span class="meta falta">sin contacto cargado</span>`}
+        <span class="acts">${lockTareasCtx ? "" :
+          stateInner(r,i) + `<button class="mini-btn" onclick="personaOpen('asig','${tq}',${i})" title="Editar datos de contacto">✎</button>`}</span>
+      </div>
+      <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>`;
+  };
+
   const filaHTML = ({r,i})=>{
+    if(compacta(r)) return filaCompactaHTML({r,i});
     /* rechazado en pre-producción: una línea y listo, para no comerse la pantalla */
     if(dt && !enCurso && r.estado==="rechazado" && !vacia(r)) return `
       <div class="assign-min">
@@ -1913,15 +2205,39 @@ function assignBlockHTML(tarea, rows, ctx){
       </div>
       <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>${stateRow(r,i)}`;
   };
+  /* el rango va en el encabezado: se entiende la tarea sin leer los inputs */
+  const conFechas = taskRangos(td).filter(r=>r.inicio || r.fin);
+  const rango = conFechas.length
+    ? `<span class="ab-when">${conFechas.map(r=>esc((fechaCorta(r.inicio)||"?")+" → "+(fechaCorta(r.fin)||"?"))).join(" · ")}</span>`
+    /* en la ficha, una tarea sin fechas es un problema y va en rojo. En el armado
+       todavía no las cargaste: marcarlo en rojo es retar antes de tiempo. */
+    : `<span class="ab-when${dt?" falta":""}">sin fechas</span>`;
+  const cuantos = visibles.filter(({r})=>!vacia(r)).length;
+
   return `<div class="assign-block">
-    <div class="ttl">${esc(tarea)} — ${ctx==="n2"?"candidatos":"equipo"} + fechas</div>
+    <div class="ab-head">
+      <button class="fase-sw" style="background:${PHASE_LOOKS[faseColorDe(ctx, tarea)].bg}"
+              onclick="colorAbrir(event,'${ctx}','${tq}')" title="Color de la fase en el calendario"></button>
+      <span class="ab-ttl">${esc(tarea)}</span>
+      <span class="ab-count">${cuantos} ${cuantos===1?"persona":"personas"}</span>
+      ${rango}
+    </div>
+    <div class="ab-body">
     ${visibles.map(filaHTML).join("")}
     <button class="addline" onclick="addAssign('${ctx}','${tarea}')">+ agregar persona</button>
-    <div class="frow" style="margin-top:var(--space-4)">
-      <div><label class="f">Inicio</label><input type="date" value="${esc(td.inicio||"")}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value)"></div>
-      <div><label class="f">Fin</label><input type="date" value="${esc(td.fin||"")}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value)"></div>
+    <div class="ab-foot">
+      <div class="ab-dates">
+        ${taskRangos(td).map((r,ri)=>`
+          <div class="rango">
+            <div><label>${ri?"Inicio "+(ri+1):"Inicio"}</label><input type="date" value="${esc(r.inicio)}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value,${ri})"></div>
+            <div><label>${ri?"Fin "+(ri+1):"Fin"}</label><input type="date" value="${esc(r.fin)}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value,${ri})"></div>
+            ${ri?`<button class="icon-btn" onclick="delRango('${ctx}','${tarea}',${ri})" title="Quitar este rango">✕</button>`:`<span class="icon-slot"></span>`}
+          </div>`).join("")}
+        <button class="addline" onclick="addRango('${ctx}','${tarea}')">+ agregar rango de fechas</button>
+      </div>
+      <div class="ab-notes" id="${notaSlotId(ctx,tarea)}">${notaBoxHTML(ctx, tarea, false)}</div>
     </div>
-    <div id="${notaSlotId(ctx,tarea)}">${notaBoxHTML(ctx, tarea, false)}</div>
+    </div>
   </div>`;
 }
 /* confirmar / rechazar en pre-producción, activar / desactivar en curso; persiste al toque */
@@ -1946,13 +2262,43 @@ async function candSet(tarea, i, estado){
   if(DEMO){ toast(msg+" (demo)"); return; }
   try{
     await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, asignaciones_json: JSON.stringify(p.asignaciones) })});
+    /* Este cambio ya quedó guardado: si no se refresca el snapshot, un "Descartar
+       cambios" posterior lo revierte en memoria y el próximo guardado escribe el
+       estado viejo de vuelta en el sheet. */
+    snapDetail();
     toast(msg);
   }catch(e){ row.estado = prev; renderDetail(); toast("No pude guardar el cambio: "+e.message, true); }
 }
 function taskDatesStore(ctx){ return ctx==="np" ? npTaskDates : ctx==="n2" ? n2TaskDates : (detailProject.taskDates = detailProject.taskDates||{}); }
-function setTaskDate(ctx,t,field,val){
-  const s = taskDatesStore(ctx); s[t] = s[t]||{inicio:"",fin:"",notas:""}; s[t][field]=val;
+function setTaskDate(ctx,t,field,val,ri){
+  const s = taskDatesStore(ctx);
+  const d = s[t] = s[t]||{inicio:"",fin:"",notas:""};
+  if(!ri){ d[field] = val; }
+  else {
+    d.rangos = d.rangos || [];
+    while(d.rangos.length < ri) d.rangos.push({inicio:"",fin:""});
+    d.rangos[ri-1][field] = val;
+  }
+  if(ctx==="dt") detailDirty = true;
   ctx==="dt" ? renderDetail() : renderCreationCal(ctx);   // refresca las barras del calendario
+}
+/* Una tarea puede ocurrir en tramos separados (VFX una semana, pausa, otra semana).
+   El primer rango vive en inicio/fin; estos son los adicionales. */
+function addRango(ctx,t){
+  const s = taskDatesStore(ctx);
+  const d = s[t] = s[t]||{inicio:"",fin:"",notas:""};
+  d.rangos = d.rangos || [];
+  d.rangos.push({inicio:"",fin:""});
+  if(ctx==="dt") detailDirty = true;
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
+}
+function delRango(ctx,t,ri){
+  const s = taskDatesStore(ctx);
+  const d = s[t]; if(!d || !d.rangos || ri < 1) return;
+  d.rangos.splice(ri-1,1);
+  if(!d.rangos.length) delete d.rangos;
+  if(ctx==="dt") detailDirty = true;
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
 }
 function assignStore(ctx){ return ctx==="np" ? npAssignData : ctx==="n2" ? n2AssignData : detailProject.asignaciones; }
 function setAssign(ctx,t,i,k,v){ assignStore(ctx)[t][i][k]=v; }
@@ -1981,7 +2327,7 @@ async function createProject(){
   const tDates = {};
   [...npSelected].forEach(t=>{
     const d = npTaskDates[t];
-    if(d && (d.inicio||d.fin||d.notas)) tDates[t]=d;
+    if(d && (d.notas || taskTieneFechas(d))) tDates[t]=d;
   });
 
   const body = {
@@ -1994,7 +2340,8 @@ async function createProject(){
     coord_nombre: $("#npCoordNombre").value.trim(), coord_email: $("#npCoordEmail").value.trim(),
     tareas: [...npSelected], asignaciones: asigs, taskDates: tDates, sintesis: npSintesis,
     storyboard_url: npStoryboardUrl, tratamiento_url: npTratamientoUrl,
-    auto_drive: npAuto.drive, auto_frame: npAuto.frame, auto_discord: npAuto.discord
+    auto_drive: npAuto.drive, auto_frame: npAuto.frame, auto_discord: npAuto.discord,
+    links: manualLinks(npLinks, npAuto)
   };
 
   const btn = $("#btnCreate");
@@ -2006,7 +2353,7 @@ async function createProject(){
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:autoDemoLinks(npAuto), calendario:[] };
+        links:Object.assign(autoDemoLinks(npAuto), manualLinks(npLinks, npAuto)), calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
       proj.tareas = proj.tareas||body.tareas; proj.asignaciones = proj.asignaciones||body.asignaciones;
@@ -2066,9 +2413,10 @@ function openDetail(id, readOnly=false){
   if(detailProject.status!=="completado" && !detailProject.calendario.some(r=>(r.tipo||"fase")!=="hito")){
     detailProject.calendario.push({id:uid(), tipo:"fase", fase:"Entrega Masters", inicio:"", fin:"", notas:""});
   }
-  const f = detailProject.calendario.find(r=>(r.tipo||"fase")!=="hito" && r.inicio);
-  const base = f? parseYMD(f.inicio) : new Date();
-  calView = new Date(base.getFullYear(), base.getMonth(), 1);
+  /* Abre en el mes de HOY, que es lo que uno quiere ver al entrar. Si el proyecto
+     todavía no empezó o ya terminó, abrir en un mes vacío no sirve: se acota al
+     rango del proyecto. */
+  calView = new Date(mesDeApertura(detailProject));
   // la vista semanal (cierre) arranca en la semana del deadline, o en la actual
   weekView = projectEndDate(detailProject) || new Date();
   selDay = null;
@@ -2127,27 +2475,118 @@ function sintesisHTML(txt, small){
   flush();
   return `<div class="sx">${out}</div>`;
 }
+/* Rangos de una tarea. El PRIMERO vive en `inicio`/`fin` y no dentro del array:
+   así los workflows, el portal y todo lo que ya está guardado en el sheet lo siguen
+   leyendo igual. Los adicionales van en `rangos`. Migración cero. */
+function taskTieneFechas(d){ return taskRangos(d).some(r=>r.inicio||r.fin); }
+function taskRangos(d){
+  d = d || {};
+  const out = [{ inicio: d.inicio||"", fin: d.fin||"" }];
+  (d.rangos||[]).forEach(r => out.push({ inicio:(r&&r.inicio)||"", fin:(r&&r.fin)||"" }));
+  return out;
+}
 function allCalEntries(p){
   const out = [];
   (p.tareas||[]).forEach(t=>{
     const d = (p.taskDates && p.taskDates[t]) || {};
-    out.push({id:"task:"+t, src:"task", key:t, tipo:"fase", fase:t, inicio:d.inicio||"", fin:d.fin||"", notas:d.notas||""});
+    taskRangos(d).forEach((r, ri)=>{
+      /* un rango adicional vacío no ensucia el calendario; el primero sí se muestra
+         siempre, para que la tarea exista aunque todavía no tenga fechas */
+      if(ri > 0 && !r.inicio && !r.fin) return;
+      out.push({
+        id:"task:"+t+(ri?":"+ri:""), src:"task", key:t, ri,
+        tipo:"fase", fase: t + (ri ? " ("+(ri+1)+")" : ""),
+        inicio:r.inicio, fin:r.fin, notas: ri===0 ? (d.notas||"") : ""
+      });
+    });
   });
   (p.calendario||[]).forEach((r,i)=>{
     out.push({id:r.id||("cal:"+i), src:"cal", idx:i, tipo:(r.tipo||"fase"), fase:r.fase, inicio:r.inicio, fin:r.fin, notas:r.notas||""});
   });
   return out;
 }
-function taskDateSet(t,field,val){
+function taskDateSet(t,field,val,ri){
   detailProject.taskDates = detailProject.taskDates||{};
-  detailProject.taskDates[t] = detailProject.taskDates[t]||{inicio:"",fin:"",notas:""};
-  detailProject.taskDates[t][field] = val;
+  const d = detailProject.taskDates[t] = detailProject.taskDates[t]||{inicio:"",fin:"",notas:""};
+  if(!ri){ d[field] = val; return; }
+  d.rangos = d.rangos || [];
+  while(d.rangos.length < ri) d.rangos.push({inicio:"",fin:""});
+  d.rangos[ri-1][field] = val;
 }
 
+/* Paleta flotante anclada al cuadradito de color. Es un popover, no un modal: elegir
+   un color no merece una ventana con botones de guardar. */
+function colorPanel(){
+  let el = document.getElementById("colorPanel");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "colorPanel";
+    document.body.appendChild(el);
+    document.addEventListener("mousedown", e=>{
+      if(el.style.display==="block" && !el.contains(e.target) && !e.target.closest(".fase-sw")) colorCerrar();
+    });
+  }
+  return el;
+}
+function colorCerrar(){ const el = document.getElementById("colorPanel"); if(el) el.style.display = "none"; }
+function colorAbrir(ev, ctx, tarea){
+  ev.stopPropagation();
+  const p = ctx==="dt" ? detailProject : null;
+  const actual = ctx==="dt" ? faseColorElegido(p, tarea) : (()=>{ const d=(taskDatesStore(ctx)||{})[tarea]; const c=d&&d.color; return typeof c==="number"?c:null; })();
+  const tq = String(tarea).replace(/'/g,"\\'");
+  const el = colorPanel();
+  el.innerHTML = PHASE_LOOKS.map((lk,i)=>
+    `<button class="cp-sw${i===actual?" on":""}" style="background:${lk.bg}" title="${esc(lk.nombre)}"
+             onclick="faseColorSet('${ctx}','${tq}',${i})"></button>`).join("") +
+    `<button class="cp-auto${actual===null?" on":""}" onclick="faseColorSet('${ctx}','${tq}',null)">Automático</button>`;
+  const r = ev.currentTarget.getBoundingClientRect();
+  el.style.display = "block";
+  el.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 210)) + "px";
+  el.style.top = (r.bottom + 6) + "px";
+}
+
+/* El color elegido vive en taskDates[tarea].color, que ya se guarda y se sincroniza:
+   no hace falta ninguna columna nueva. null = automático por orden. */
+function faseColorElegido(p, tarea){
+  const d = (p.taskDates||{})[tarea];
+  const c = d && d.color;
+  return (typeof c === "number" && c >= 0 && c < PHASE_LOOKS.length) ? c : null;
+}
+/* Índice de color en uso para una tarea, sea elegido a mano o repartido por orden.
+   Sirve para pintar el cuadradito del encabezado en los tres contextos. */
+function faseColorDe(ctx, tarea){
+  const p = ctx==="dt" ? detailProject
+          : { tareas: [...(ctx==="n2" ? n2Selected : npSelected)], taskDates: taskDatesStore(ctx), calendario: [] };
+  if(!p) return 0;
+  const i = faseLookMap(p)["task:"+tarea];
+  return (typeof i === "number" && PHASE_LOOKS[i]) ? i : 0;
+}
+function faseColorSet(ctx, tarea, idx){
+  const s = taskDatesStore(ctx);
+  const d = s[tarea] = s[tarea] || {inicio:"",fin:"",notas:""};
+  if(idx === null) delete d.color; else d.color = idx;
+  if(ctx==="dt") detailDirty = true;
+  colorCerrar();
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
+}
 function faseLookMap(p){
   const map = {};
   let n = 0;
-  allCalEntries(p).forEach(e=>{ if(e.tipo!=="hito"){ map[e.id]=n%PHASE_LOOKS.length; n++; } });
+  /* Todos los rangos de una misma tarea comparten color: si no, VFX (1) y VFX (2)
+     se verían como dos fases distintas.
+     Si la tarea tiene un color elegido a mano (`taskDates[t].color`) manda ese; si no,
+     se reparte por orden de aparición. */
+  const porTarea = {};
+  allCalEntries(p).forEach(e=>{
+    if(e.tipo==="hito") return;
+    const clave = e.src==="task" ? "task:"+e.key : e.id;
+    if(porTarea[clave] === undefined){
+      const elegido = e.src==="task" ? faseColorElegido(p, e.key) : null;
+      if(elegido !== null && elegido !== undefined) porTarea[clave] = elegido;
+      else { porTarea[clave] = n%PHASE_LOOKS.length; n++; }
+    }
+    map[e.id] = porTarea[clave];
+  });
   return map;
 }
 
@@ -2157,8 +2596,16 @@ function renderDetail(){
   const cierre = p.status==="cierre";
   const completado = p.status==="completado";
   const lockFields = ro || cierre || completado;   // en cierre/completado no se edita ningún campo (tareas/calendario)
-  const lockMeta = ro || p.status!=="por_activarse"; // datos del proyecto + equipo: editables solo en pre-producción
-  const lockTareas = lockFields || p.status==="entregando"; // tareas TEAM 23 (equipo + fechas): solo lectura desde Entregando
+  const lockMeta = ro || p.status!=="por_activarse"; // datos del proyecto: editables solo en pre-producción
+  /* El equipo interno es la excepción: cambiar de coordinador, productor o EP a mitad
+     de un proyecto es raro, pero pasa, y los avisos de calendario salen a esos mails.
+     La opción tiene que seguir estando en cualquier etapa. Solo la vista de solo
+     lectura (abrir la ficha desde Equipo) lo muestra congelado. */
+  const lockInterno = ro;
+  /* El equipo se sigue tocando en Entregando: hay que poder sumar, activar y
+     desactivar gente hasta el final de la entrega. Recién en Listo para cierre y
+     Completado queda congelado (lockFields). */
+  const lockTareas = lockFields;
   const lookMap = faseLookMap(p);
 
   // en completado la ficha es un archivo: solo carpeta raíz (+ finales + documentos)
@@ -2187,7 +2634,7 @@ function renderDetail(){
   const frameLink = p.links?.frameio
     ? `<a class="frame-cta" href="${esc(p.links.frameio)}" target="_blank">Abrir proyecto en Frame.io ↗</a>
        <div class="sublabel" style="margin-top:10px">Adentro: 1. Footage · 2. Offline · 3. Online · 4. Masters</div>`
-    : `<span style="font-size:12.5px;color:var(--gray)">Sin link de Frame.io</span>`;
+    : `<span style="font-size:12.5px;color:var(--gray)">Sin proyecto de Frame.io${ro?"":` — <a href="#" onclick="linksOpen();return false" style="color:var(--red);font-weight:var(--weight-bold)">vincular uno existente</a>`}</span>`;
 
   const taskPills = lockTareas
     ? (p.tareas.length ? p.tareas.map(t=>`<span class="pill" style="background:${taskColor(t).bg};border-color:${taskColor(t).bd};color:${taskColor(t).fg}">${esc(t)}</span>`).join("") : `<span style="font-size:12.5px;color:var(--gray)">Sin tareas asignadas</span>`)
@@ -2199,10 +2646,26 @@ function renderDetail(){
            (salieron al activar); los inactivos quedan visibles pero marcados */
         const rows = (p.asignaciones[t]||[]).filter(r=>(r.nombre||r.email) && r.estado!=="rechazado");
         const d = (p.taskDates&&p.taskDates[t])||{};
-        const range = d.inicio ? ` <small style="color:var(--gray);font-weight:var(--weight-regular)">(${fmtShort(d.inicio)} – ${fmtShort(d.fin||d.inicio)})</small>` : "";
+        const cf = taskRangos(d).filter(r=>r.inicio||r.fin);
+        const range = cf.length ? ` <small style="color:var(--gray);font-weight:var(--weight-regular)">(${cf.map(r=>fmtShort(r.inicio)+" – "+fmtShort(r.fin||r.inicio)).join(" · ")})</small>` : "";
         if(!rows.length && !range) return "";
-        return `<div class="assign-block"><div class="ttl">${esc(t)} — asignados${range}</div>${rows.map(r=>
-          `<div style="font-size:${"var(--fs-caption)"};margin-bottom:4px${r.estado==="inactivo"?";color:var(--gray);text-decoration:line-through":""}">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}${r.estado==="inactivo"?' <span class="chipst inact" style="text-decoration:none">Inactivo</span>':""}</div>`).join("")}</div>`;
+        const cuantos = rows.length;
+        return `<div class="assign-block">
+          <div class="ab-head">
+            <span class="ab-ttl">${esc(t)}</span>
+            <span class="ab-count">${cuantos} ${cuantos===1?"persona":"personas"}</span>
+            ${(()=>{ const cf = taskRangos(d).filter(r=>r.inicio||r.fin);
+               return cf.length ? `<span class="ab-when">${cf.map(r=>esc((fechaCorta(r.inicio)||"?")+" → "+(fechaCorta(r.fin)||"?"))).join(" · ")}</span>`
+                                : `<span class="ab-when falta">sin fechas</span>`; })()}
+          </div>
+          <div class="ab-body">${rows.length ? rows.map(r=>
+            `<div class="team-line${r.estado==="inactivo"?" off":""}">
+               <span class="nm">${esc(r.nombre||r.email||"Sin nombre")}</span>
+               <span class="meta">${esc(r.email||"")}</span>
+               <span class="acts">${r.estado==="inactivo"?'<span class="chipst inact">Inactivo</span>':""}</span>
+             </div>`).join("") : `<div style="font-size:12.5px;color:var(--gray);padding:8px 0">Sin gente asignada</div>`}
+          </div>
+        </div>`;
       }).join("")
     : p.tareas.map(t=>assignBlockHTML(t, p.asignaciones[t]||[{nombre:"",email:"",discord:"",telefono:""}], "dt")).join("");
 
@@ -2220,10 +2683,10 @@ function renderDetail(){
       return `<tr>
         ${dot}
         <td><span style="display:flex;align-items:center;gap:6px;font-weight:var(--weight-bold)">${esc(e.fase)}<small style="color:var(--gray);font-weight:var(--weight-regular)">tarea</small></span></td>
-        <td><input type="date" value="${esc(e.inicio)}" oninput="taskDateSet('${t}','inicio',this.value)" onchange="renderDetail()"></td>
-        <td><input type="date" value="${esc(e.fin)}" oninput="taskDateSet('${t}','fin',this.value)" onchange="renderDetail()"></td>
-        ${notaCeldaHTML({kind:"caltask", tarea:e.key})}
-        <td></td>
+        <td><input type="date" value="${esc(e.inicio)}" oninput="taskDateSet('${t}','inicio',this.value,${e.ri||0})" onchange="renderDetail()"></td>
+        <td><input type="date" value="${esc(e.fin)}" oninput="taskDateSet('${t}','fin',this.value,${e.ri||0})" onchange="renderDetail()"></td>
+        ${e.ri ? `<td></td>` : notaCeldaHTML({kind:"caltask", tarea:e.key})}
+        <td>${e.ri ? `<button class="icon-btn" onclick="delRango('dt','${t}',${e.ri})" title="Quitar este rango">✕</button>` : ""}</td>
       </tr>`;
     }
     return `<tr>
@@ -2232,7 +2695,7 @@ function renderDetail(){
       <td><input type="date" value="${esc(e.inicio)}" oninput="calSet(${e.idx},'inicio',this.value)" onchange="renderDetail()"></td>
       <td><input type="date" value="${esc(e.fin)}" oninput="calSet(${e.idx},'fin',this.value)" onchange="renderDetail()"></td>
       ${notaCeldaHTML({kind:"cal", idx:e.idx})}
-      <td><button class="icon-btn" onclick="calDel(${e.idx})">✕</button></td>
+      <td><button class="icon-btn" onclick="calDel(${e.idx})" title="Quitar esta fecha">✕</button></td>
     </tr>`;
   }).join("");
 
@@ -2285,20 +2748,22 @@ function renderDetail(){
       <div class="glabel">Documentos & carpetas</div>
       <div class="link-split">
         <div class="link-box">
-          <div class="lb-head"><span class="lb-dot"></span> Google Drive</div>
+          <div class="lb-head"><span class="lb-dot"></span> Google Drive
+            ${ro?"":`<button class="mini-btn" style="margin-left:auto" onclick="linksOpen()">${driveLinks?"✎ links":"+ vincular"}</button>`}</div>
           <div class="sublabel" style="margin-top:0">Carpetas</div>
           <div class="linkgrid">${driveLinks || '<span style="font-size:12.5px;color:var(--gray)">Sin links de Drive</span>'}${finalesBtn}</div>
           <div class="sublabel">Documentos y tools</div>
           <div class="linkgrid">${trackerBtn}${feedbackBtn}${docLinks}</div>
         </div>
         <div class="link-box">
-          <div class="lb-head"><span class="lb-dot frame"></span> Frame.io</div>
+          <div class="lb-head"><span class="lb-dot frame"></span> Frame.io
+            ${ro?"":`<button class="mini-btn" style="margin-left:auto" onclick="linksOpen()">${p.links&&p.links.frameio?"✎ link":"+ vincular"}</button>`}</div>
           ${frameLink}
         </div>
       </div>
     </div>
 
-    ${lockMeta ? `
+    ${lockInterno ? `
     <div class="fgroup">
       <div class="glabel">Equipo interno</div>
       <div class="frow">
@@ -2309,15 +2774,8 @@ function renderDetail(){
       </div>
     </div>` : `
     <div class="fgroup">
-      <div class="glabel">Equipo interno</div>
-      <div class="frow">
-        <div><label class="f">Productor Ejecutivo</label><input type="text" value="${esc(p.ep_nombre||"")}" oninput="detailProject.ep_nombre=this.value"></div>
-        <div><label class="f">Mail EP</label><input type="email" value="${esc(p.ep_email||"")}" oninput="detailProject.ep_email=this.value"></div>
-        <div><label class="f">Productor</label><input type="text" value="${esc(p.prod_nombre||"")}" oninput="detailProject.prod_nombre=this.value"></div>
-        <div><label class="f">Mail Productor</label><input type="email" value="${esc(p.prod_email||"")}" oninput="detailProject.prod_email=this.value"></div>
-        <div><label class="f">Coordinador</label><input type="text" value="${esc(p.coord_nombre||"")}" oninput="detailProject.coord_nombre=this.value"></div>
-        <div><label class="f">Mail Coordinador</label><input type="email" value="${esc(p.coord_email||"")}" oninput="detailProject.coord_email=this.value"></div>
-      </div>
+      <div class="glabel">Equipo interno <button class="mini-btn" onclick="internoOpen()">✎ editar</button></div>
+      ${internoHTML(p)}
     </div>`}
 
     ${cierre||completado ? "" : `
@@ -2366,7 +2824,8 @@ function renderDetail(){
         ${dayPanelHTML(p, lookMap, lockFields)}
 
         <div class="actions" style="justify-content:flex-start;margin-top:16px">
-          ${lockFields?"":`<button class="btn primary small" onclick="saveCalendar(false,this)">Guardar calendario y avisar al equipo</button>`}
+          ${lockFields?"":`<button class="btn small" onclick="saveCalendar(false,this,false)">Guardar cambios de calendario</button>
+            <button class="btn primary small" onclick="saveCalendar(false,this,true)">Guardar y avisar al equipo</button>`}
           <button class="btn small" onclick="printCalendar()">Descargar PDF</button>
         </div>
       `}
@@ -2417,6 +2876,18 @@ function buildMonthGrid(y, m){
   for(let i=0;i<days.length;i+=7) weeks.push(days.slice(i,i+7));
   const mtitle = first.toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase();
   return {weeks, mtitle};
+}
+
+/* Mes con el que conviene abrir: hoy, o el extremo más cercano si el proyecto
+   está enteramente en el pasado o en el futuro. */
+function mesDeApertura(p){
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const fechas = allCalEntries(p).flatMap(e=>[parseYMD(e.inicio), parseYMD(e.fin)]).filter(Boolean);
+  if(!fechas.length) return new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  const min = new Date(Math.min(...fechas.map(d=>d.getTime())));
+  const max = new Date(Math.max(...fechas.map(d=>d.getTime())));
+  const ref = hoy < min ? min : hoy > max ? max : hoy;
+  return new Date(ref.getFullYear(), ref.getMonth(), 1);
 }
 
 function monthCalendarHTML(p, lookMap){
@@ -2564,7 +3035,7 @@ function dayPanelHTML(p, lookMap, readOnly=false){
     : hitosDia.map(({r,i})=>`
     <div class="hito-row">
       <input type="text" value="${esc(r.fase)}" placeholder="Ej: Corte 1 al cliente, llegada de material…" oninput="calSet(${i},'fase',this.value)" onchange="renderDetail()">
-      <button class="icon-btn" onclick="calDel(${i})">✕</button>
+      <button class="icon-btn" onclick="calDel(${i})" title="Quitar esta fecha">✕</button>
     </div>`).join("");
 
   return `<div class="daypanel">
@@ -2682,20 +3153,66 @@ function renderDashboard(){ $("#dashboardBody").innerHTML = dashboardHTML(); }
 let loadScope = "activo"; // 'activo' | 'pre' — qué proyectos mira "Carga de trabajo"
 function setLoadScope(s){ loadScope = s; renderDashboard(); }
 
-/* equipo interno primero (EP/Productor/Coordinador), después los asignados a tareas */
+/* Carga de trabajo: UNA entrada por persona, contada en PROYECTOS.
+   Antes había dos diccionarios (equipo interno y asignados a tareas) que se
+   concatenaban, así que quien era EP de tres proyectos y además estaba asignado a
+   una tarea aparecía dos veces: "Narf (3 proyectos)" y "Narf (1 proyecto)".
+   Además la clave era el nombre crudo, así que una diferencia de mayúsculas o de
+   acento partía a la misma persona en dos. */
 function computeLoad(list){
-  const teamLoad = {}, taskLoad = {};
-  const bump = (store,nombre,email) => { const key=(nombre||email||"").trim(); if(key) store[key]=(store[key]||0)+1; };
+  /* Se recorre dos veces. La primera arma el índice de quién es quién: la misma
+     persona puede figurar con nombre y mail en un proyecto y solo con el mail en
+     otro, y si se agrupa por lo que venga se parte en dos entradas. */
+  const ocurrencias = [];
+  const mailsDeNombre = new Map();   // nombre norm → Set de mails norm
+  const nombreDeMail = new Map();    // mail norm   → nombre norm
+  const anotar = (nombre, email, pid) => {
+    const nom = String(nombre||"").replace(/\s+/g," ").trim();
+    const mail = String(email||"").trim();
+    if(!nom && !mail) return;
+    const kn = rosterNorm(nom), km = rosterNorm(mail);
+    if(kn && km){
+      if(!mailsDeNombre.has(kn)) mailsDeNombre.set(kn, new Set());
+      mailsDeNombre.get(kn).add(km);
+      if(!nombreDeMail.has(km)) nombreDeMail.set(km, kn);
+    }
+    ocurrencias.push({ nom, mail, kn, km, pid });
+  };
   list.forEach(p=>{
-    Object.values(p.asignaciones||{}).forEach(rows=>(rows||[]).forEach(r=>bump(taskLoad,r.nombre,r.email)));
-    bump(teamLoad, p.ep_nombre, p.ep_email);
-    bump(teamLoad, p.prod_nombre, p.prod_email);
-    bump(teamLoad, p.coord_nombre, p.coord_email);
+    const pid = String(p.id);
+    Object.values(p.asignaciones||{}).forEach(rows=>(rows||[]).forEach(r=>{
+      if(!r) return;
+      /* rechazados e inactivos no son carga; los candidatos sí, ya están comprometidos */
+      if(r.estado === "rechazado" || r.estado === "inactivo") return;
+      anotar(r.nombre, r.email, pid);
+    }));
+    anotar(p.ep_nombre, p.ep_email, pid);
+    anotar(p.prod_nombre, p.prod_email, pid);
+    anotar(p.coord_nombre, p.coord_email, pid);
   });
-  return [
-    ...Object.entries(teamLoad).sort((a,b)=>b[1]-a[1]),
-    ...Object.entries(taskLoad).sort((a,b)=>b[1]-a[1])
-  ];
+
+  const porPersona = new Map();
+  ocurrencias.forEach(o=>{
+    /* nombre conocido para ese mail, o el nombre, o el mail como último recurso */
+    let k = o.kn || nombreDeMail.get(o.km) || o.km;
+    /* dos mails distintos bajo el mismo nombre son dos personas: no se fusionan */
+    const mails = mailsDeNombre.get(k);
+    if(mails && mails.size > 1 && o.km) k += "|" + o.km;
+    let e = porPersona.get(k);
+    if(!e){ e = { nombre:"", mail:"", tieneNombre:false, proyectos:new Set() }; porPersona.set(k, e); }
+    /* el primer nombre real gana; el mail es solo el respaldo si nunca aparece uno */
+    if(o.nom && !e.tieneNombre){ e.nombre = o.nom; e.tieneNombre = true; }
+    if(!e.mail && o.mail) e.mail = o.mail;
+    e.proyectos.add(o.pid);
+  });
+  const entradas = [...porPersona.values()].map(e=>({ ...e, nombre: e.nombre || e.mail }));
+  /* dos personas distintas con el mismo nombre existen: se distinguen con el mail
+     para que no se vean como una entrada repetida */
+  const repetidos = new Map();
+  entradas.forEach(e=>repetidos.set(e.nombre, (repetidos.get(e.nombre)||0)+1));
+  return entradas
+    .map(e=>[ repetidos.get(e.nombre) > 1 && e.mail ? e.nombre+" · "+e.mail : e.nombre, e.proyectos.size ])
+    .sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0],"es"));
 }
 /* más de 1 proyecto en el scope = sobrecargado → se marca en rojo (mismo rojo de alerta del resto del hub) */
 function loadListHTML(rows, emptyMsg){
@@ -2976,45 +3493,89 @@ function trackerRange(p){
 }
 
 /* última jornada marcada por una persona (fecha real de finalización) */
-function ultimaJornada(t, key){
-  const marks = Object.keys(t.jornadas[key]||{}).filter(k=>t.jornadas[key][k]);
+/* Días marcados de una persona: unión de todas sus claves. Alguien que figuraba como
+   Productor y además asignado a una tarea puede tener jornadas repartidas en dos. */
+function diasDe(t, pp){
+  const set = {};
+  (pp.claves || [pp.key]).forEach(k=>{
+    Object.entries(t.jornadas[k]||{}).forEach(([d,v])=>{ if(v) set[d] = true; });
+  });
+  return set;
+}
+function cuentaDias(t, pp){ return Object.keys(diasDe(t, pp)).length; }
+function ultimaJornada(t, key, pp){
+  const marks = pp ? Object.keys(diasDe(t, pp)) : Object.keys(t.jornadas[key]||{}).filter(k=>t.jornadas[key][k]);
   if(!marks.length) return "";
   return marks.sort().slice(-1)[0];
 }
 
 function trackerParticipants(p){
   const t = ensureTracker(p);
-  const list = [], seen = new Set();
-  /* ref = {tarea, i} apunta a la fila de asignaciones. Cuando existe, el estado
-     activo/inactivo se lee y se escribe ahí: es la misma fuente que la ficha, no
-     una copia. El equipo interno (EP/Prod/Coord) y la gente que ya no está
-     asignada no tienen fila, así que para esos manda t.inactivos. */
-  const add = (key, nombre, rol, removido, ref)=>{
-    if(!key || seen.has(key)) return;
-    seen.add(key);
+  const list = [];
+  /* Una persona puede ocupar varios puestos a la vez: ser Productor y además estar
+     asignada a VFX y a Color. Se agrupa por identidad (mail si hay, si no el nombre
+     normalizado) y se guardan TODAS sus fuentes:
+       refs           → filas de asignaciones {tarea,i}; ahí vive su estado, igual que en la ficha
+       clavesInternas → puestos internos (ep/prod/coord), cuyo estado vive en t.inactivos
+       claves         → claves de jornadas, para leer los días como unión
+     Antes un Set de claves cortaba la segunda tarea de la misma persona, así que
+     desactivarla sólo apagaba una de las dos filas. */
+  const porPersona = new Map();
+  const add = (key, nombre, rol, removido, ref, email)=>{
+    if(!key) return;
     const fila = ref ? ((p.asignaciones[ref.tarea]||[])[ref.i]||{}) : null;
-    const inactivo = fila ? fila.estado==="inactivo" : !!t.inactivos[key];
-    list.push({key, nombre, rol, removido:!!removido, inactivo, ref:ref||null, fin:t.finalizados[key]||null});
+    const mail = String((email!==undefined ? email : (fila&&fila.email))||"").trim().toLowerCase();
+    const ident = mail || ("n:"+rosterNorm(nombre));
+    let it = porPersona.get(ident);
+    if(!it){
+      it = {key, claves:[], refs:[], clavesInternas:[], nombre, rol:"", removido:!!removido, fin:null};
+      porPersona.set(ident, it);
+      list.push(it);
+    }
+    if(it.claves.indexOf(key) < 0) it.claves.push(key);
+    if(ref) it.refs.push(ref); else it.clavesInternas.push(key);
+    if(rol && it.rol.split(" · ").indexOf(rol) < 0) it.rol = it.rol ? it.rol+" · "+rol : rol;
+    if(!it.fin && t.finalizados[key]) it.fin = t.finalizados[key];
+    if(!it.nombre) it.nombre = nombre;
     t.nombres[key] = nombre;
   };
-  if(p.ep_nombre) add("ep", p.ep_nombre, "EP");
-  if(p.prod_nombre) add("prod", p.prod_nombre, "Prod");
-  if(p.coord_nombre) add("coord", p.coord_nombre, "Coord");
+  [["ep","EP"],["prod","Prod"],["coord","Coord"]].forEach(([rol,sigla])=>{
+    rolPersonas(p, rol).forEach((x,i)=>{
+      if(!x.nombre) return;
+      add(rol+(i?"_"+i:""), x.nombre, sigla+(i?" 2":""), false, null, x.email);
+    });
+  });
   Object.entries(p.asignaciones||{}).forEach(([tarea, rows])=>{
     (rows||[]).forEach((r,i)=>{
       if(!r || !r.nombre) return;
-      /* los inactivos SÍ van (grisados): antes se caían del cuadro y se perdían
-         de vista las jornadas que ya tenían cargadas */
-      if(r.estado && r.estado!=="confirmado" && r.estado!=="inactivo") return;
+      /* Los inactivos van grisados (si no se perdían de vista sus jornadas), y los
+         candidatos también aparecen pero sin poder cargar días: antes no existían en
+         el cuadro y no había forma de saber por qué. Los rechazados sí quedan afuera. */
+      if(r.estado === "rechazado") return;
       const key = r.email && r.email.trim() ? "e:"+r.email.trim().toLowerCase() : "n:"+tarea+"|"+r.nombre;
-      add(key, r.nombre, tarea, false, {tarea, i});
+      add(key, r.nombre, tarea, false, {tarea, i}, r.email);
     });
   });
   // participantes que ya no están asignados pero tienen jornadas cargadas: se conservan, grisados
+  const yaVistas = new Set();
+  list.forEach(it=>it.claves.forEach(k=>yaVistas.add(k)));
   Object.keys(t.jornadas).forEach(key=>{
-    if(seen.has(key)) return;
+    if(yaVistas.has(key)) return;
     if(!Object.values(t.jornadas[key]||{}).some(Boolean)) return;
     add(key, t.nombres[key]||key, "—", true);
+  });
+
+  /* El estado se resuelve al final, mirando TODAS las fuentes de la persona:
+     está activa si lo está en alguna, e inactiva sólo si lo está en todas. */
+  list.forEach(it=>{
+    const filas = it.refs.map(r=>(p.asignaciones[r.tarea]||[])[r.i]).filter(Boolean);
+    const marcas = filas.map(f=>f.estado==="inactivo")
+      .concat(it.clavesInternas.map(k=>!!t.inactivos[k]));
+    it.inactivo = marcas.length ? marcas.every(Boolean) : false;
+    /* un puesto interno es por definición confirmado: si lo tiene, no está pendiente */
+    it.pendiente = !it.clavesInternas.length && filas.length > 0
+                && filas.every(f=>f.estado === "candidato");
+    it.ref = it.refs[0] || null;   // compatibilidad con lo que ya lo usaba
   });
   return list;
 }
@@ -3036,9 +3597,25 @@ function openTracker(id){
   $("#trkKicker").textContent = trkProject.nombre + (trkProject.cliente ? " · "+trkProject.cliente : "");
   renderTracker();
   openModal("ovTracker");
+  /* el cuadro puede tener meses de filas: arrancar arriba de todo obliga a buscar
+     el día de hoy a mano cada vez */
+  setTimeout(()=>trackerIrAHoy(), 40);
+}
+function trackerIrAHoy(){
+  const wrap = document.querySelector("#trkBody .trk-wrap");
+  if(!wrap) return;
+  const fila = document.getElementById("trkd-"+ymd(new Date()));
+  if(fila){
+    /* un tercio arriba: se ve hoy y también lo que viene, sin quedar pegado al borde */
+    wrap.scrollTop = Math.max(0, fila.offsetTop - Math.round(wrap.clientHeight/3));
+    return;
+  }
+  /* hoy fuera del rango: si el proyecto ya pasó conviene el final, si no el principio */
+  const r = trackerRange(trkProject);
+  if(r && new Date() > r.end) wrap.scrollTop = wrap.scrollHeight;
 }
 
-function toggleJornada(key, dateKey){
+function toggleJornada(key, dateKey, ci){
   const t = ensureTracker(trkProject);
   /* con el trabajo finalizado el conteo queda cerrado: hay que reactivarlo antes
      de volver a tocar jornadas, así nadie suma días sobre algo ya cerrado */
@@ -3046,11 +3623,41 @@ function toggleJornada(key, dateKey){
     toast("El conteo de "+(t.nombres[key]||"esta persona")+" está cerrado. Reactivalo para volver a cargar jornadas.", true);
     return;
   }
+  const ppEstado = trackerParticipants(trkProject).find(x=>x.key===key);
+  if(ppEstado && ppEstado.pendiente){
+    toast((ppEstado.nombre||"Esta persona")+" todavía es candidato. Confirmalo en la ficha para poder cargarle jornadas.", true);
+    return;
+  }
+  /* si la persona quedó unificada desde varios puestos, sus días pueden estar
+     repartidos en varias claves: se escribe en la primaria y se limpia el resto,
+     así el día no queda marcado por duplicado */
+  const pp = trackerParticipants(trkProject).find(x=>x.key===key);
+  const otras = pp ? pp.claves.filter(k=>k!==key) : [];
+  const estaba = (pp ? pp.claves : [key]).some(k=>t.jornadas[k] && t.jornadas[k][dateKey]);
+  otras.forEach(k=>{ if(t.jornadas[k]) delete t.jornadas[k][dateKey]; });
   t.jornadas[key] = t.jornadas[key] || {};
-  if(t.jornadas[key][dateKey]) delete t.jornadas[key][dateKey];
+  if(estaba) delete t.jornadas[key][dateKey];
   else t.jornadas[key][dateKey] = true;
-  renderTracker();
+  /* Se toca solo la celda y se refresca el resumen. Rehacer todo el cuadro
+     destruía el contenedor con scroll y volvía siempre arriba: cargar una semana
+     de jornadas era scrollear otra vez después de cada click. */
+  const celda = (ci===undefined) ? null : document.getElementById("jc-"+ci+"-"+dateKey);
+  if(celda){
+    celda.classList.toggle("on", !estaba);
+    celda.textContent = estaba ? "" : "✕";
+    /* si la persona estaba unificada desde varios puestos, la limpieza de las otras
+       claves puede haber apagado celdas de otras columnas: se refresca la fila */
+    if(otras.length) renderTracker();
+    else trackerResumenSync();
+  } else {
+    renderTracker();
+  }
   saveTracker();
+}
+function trackerResumenSync(){
+  const el = document.querySelector("#trkBody .trk-resumen");
+  if(el) el.outerHTML = trackerResumenHTML(trkProject);
+  else renderTracker();
 }
 
 function setTrackerNota(dateKey, val){
@@ -3062,21 +3669,24 @@ function setTrackerNota(dateKey, val){
 function toggleInactivo(key){
   const p = trkProject, t = ensureTracker(p);
   const pp = trackerParticipants(p).find(x=>x.key===key);
-  const fila = pp && pp.ref ? (p.asignaciones[pp.ref.tarea]||[])[pp.ref.i] : null;
-  if(fila){
-    /* misma fuente que la ficha: acá se cambia el estado de la persona, no una copia */
-    fila.estado = fila.estado==="inactivo" ? "confirmado" : "inactivo";
-    renderTracker();
-    refrescarFicha();
-    toast(fila.estado==="inactivo" ? pp.nombre+" desactivado en el proyecto" : pp.nombre+" vuelve a estar activo");
-    saveTracker(true);
-    return;
-  }
-  if(t.inactivos[key]) delete t.inactivos[key];
-  else t.inactivos[key] = true;
+  if(!pp) return;
+  const apagar = !pp.inactivo;
+  /* se escribe en TODAS sus fuentes: si está en dos tareas, las dos quedan igual.
+     Antes sólo se apagaba la primera y en la ficha seguía activo en la otra. */
+  let tocoFicha = false;
+  pp.refs.forEach(r=>{
+    const fila = (p.asignaciones[r.tarea]||[])[r.i];
+    if(!fila) return;
+    fila.estado = apagar ? "inactivo" : "confirmado";
+    tocoFicha = true;
+  });
+  pp.clavesInternas.forEach(k=>{ if(apagar) t.inactivos[k] = true; else delete t.inactivos[k]; });
   renderTracker();
-  saveTracker();
+  if(tocoFicha) refrescarFicha();
+  toast(apagar ? pp.nombre+" desactivado en el proyecto" : pp.nombre+" vuelve a estar activo");
+  saveTracker(tocoFicha);
 }
+
 /* si la ficha del mismo proyecto está abierta detrás, que se vea el cambio */
 function refrescarFicha(){
   if(detailProject && trkProject && detailProject.id === trkProject.id) renderDetail();
@@ -3094,6 +3704,8 @@ async function saveTracker(conEquipo, extra){
   if(extra) Object.assign(body, extra);
   try{
     await api("/webhook/team23/update",{method:"POST",body:JSON.stringify(body)});
+    /* mismo motivo que en candSet: lo guardado no debe poder revertirse con Descartar */
+    if(conEquipo && detailProject && trkProject && detailProject.id === trkProject.id) snapDetail();
   }catch(e){ toast("No pude guardar el tracker: "+e.message, true); }
 }
 
@@ -3103,17 +3715,18 @@ function finOpen(key){
   const p = trkProject, t = ensureTracker(p);
   const pp = trackerParticipants(p).find(x=>x.key===key); if(!pp) return;
   finKey = key;
-  const ult = ultimaJornada(t, key);
-  const jor = Object.values(t.jornadas[key]||{}).filter(Boolean).length;
+  const ult = ultimaJornada(t, key, pp);
+  const jor = cuentaDias(t, pp);
   const hoy = ymd(new Date());
   $("#finWho").textContent = pp.nombre + " · " + pp.rol;
   $("#finFecha").value = (pp.fin && pp.fin.fecha) || hoy;
   $("#finHint").innerHTML = `Jornadas cargadas: <b>${jor}</b>` +
     (ult ? ` · Última jornada marcada: <b>${fmtShort(ult)}</b> <button class="mini-btn" onclick="finUsarUltima('${ult}')">usar esa fecha</button>` : "") +
     (pp.fin ? `<div style="margin-top:6px">Ya estaba marcado como finalizado el <b>${fmtShort(pp.fin.fecha)}</b>: al confirmar se sobreescribe.</div>` : "");
-  $("#ovFin").classList.add("open");
+  $("#ovFin").classList.add("open"); modalArmar("ovFin");
 }
-function finClose(){ $("#ovFin").classList.remove("open"); finKey = null; }
+function finCerrar(){ modalLimpiar("ovFin"); $("#ovFin").classList.remove("open"); finKey = null; }
+function finClose(){ modalSalir("ovFin", finCerrar); }
 function finUsarUltima(f){ $("#finFecha").value = f; }
 async function finSave(btn){
   if(!finKey) return;
@@ -3132,7 +3745,7 @@ async function finSave(btn){
       jornadas: Object.values(t.jornadas[key]||{}).filter(Boolean).length,
       proyecto: p.nombre||"", proyecto_id: p.id
     }});
-    finClose(); renderTracker();
+    finCerrar(); renderTracker();
     toast("✔ "+(pp?pp.nombre:"La persona")+" finalizó el "+fmtShort(fecha));
   }catch(e){
     if(prev) t.finalizados[key] = prev; else delete t.finalizados[key];
@@ -3145,14 +3758,15 @@ function reactOpen(key){
   const p = trkProject, t = ensureTracker(p);
   const pp = trackerParticipants(p).find(x=>x.key===key); if(!pp || !pp.fin) return;
   reactKey = key;
-  const jor = Object.values(t.jornadas[key]||{}).filter(Boolean).length;
+  const jor = cuentaDias(t, pp);
   $("#reactWho").textContent = pp.nombre + " · " + pp.rol;
   $("#reactHint").innerHTML =
     `Hoy figura como finalizada el <b>${fmtShort(pp.fin.fecha)}</b>, con <b>${jor}</b> jornada${jor===1?"":"s"} cargada${jor===1?"":"s"}.` +
     `<div style="margin-top:6px">Las jornadas ya cargadas no se tocan: solo se vuelve a habilitar la carga.</div>`;
-  $("#ovReact").classList.add("open");
+  $("#ovReact").classList.add("open"); modalArmar("ovReact");
 }
-function reactClose(){ $("#ovReact").classList.remove("open"); reactKey = null; }
+function reactCerrar(){ modalLimpiar("ovReact"); $("#ovReact").classList.remove("open"); reactKey = null; }
+function reactClose(){ modalSalir("ovReact", reactCerrar); }
 async function reactSave(btn){
   if(!reactKey) return;
   const p = trkProject, t = ensureTracker(p);
@@ -3168,7 +3782,7 @@ async function reactSave(btn){
       fechaPrevia: prev?prev.fecha:"", jornadas: Object.values(t.jornadas[key]||{}).filter(Boolean).length,
       proyecto: p.nombre||"", proyecto_id: p.id
     }});
-    reactClose(); renderTracker();
+    reactCerrar(); renderTracker();
     toast("✔ Conteo reactivado para "+(pp?pp.nombre:"la persona"));
   }catch(e){
     if(prev) t.finalizados[key] = prev;
@@ -3195,27 +3809,38 @@ function trackerHTML(p){
   const head = `<tr>
     <th class="trk-day">Día</th><th class="trk-date">Fecha</th>
     ${parts.map(pp=>{
-      const marca = pp.fin ? " · finalizó "+fmtShort(pp.fin.fecha) : pp.inactivo ? " · inactivo" : "";
+      const marca = pp.pendiente ? " · sin confirmar"
+                 : pp.fin ? " · finalizó "+fmtShort(pp.fin.fecha)
+                 : pp.inactivo ? " · inactivo" : "";
       const btnEstado = pp.removido ? "" :
         `<button class="trk-toggle" title="${pp.inactivo?"Reactivar en el proyecto":"Marcar inactivo en el proyecto"}" onclick="toggleInactivo('${pp.key}')">${pp.inactivo?"↺ activar":"○ inactivar"}</button>`;
       const btnFin = pp.fin
         ? `<button class="trk-toggle react" title="Volver a abrir el conteo de jornadas" onclick="reactOpen('${pp.key}')">↺ Reactivar</button>`
         : `<button class="trk-toggle" title="Registrar el último día de trabajo y cerrar el conteo" onclick="finOpen('${pp.key}')">Finalizó</button>`;
-      return `<th class="${(pp.removido||pp.inactivo||pp.fin)?"trk-removido":""}">${esc(pp.nombre)}<div class="trk-rol">${esc(pp.rol)}${marca}</div>${btnEstado}${btnFin}</th>`;
+      /* al candidato no se le ofrece inactivar ni finalizar: primero hay que resolverlo
+         en la ficha. El cuadro solo muestra que está y por qué no se puede cargar. */
+      const acciones = pp.pendiente ? "" : btnEstado + btnFin;
+      return `<th class="${(pp.removido||pp.inactivo||pp.fin||pp.pendiente)?"trk-removido":""}">${esc(pp.nombre)}<div class="trk-rol">${esc(pp.rol)}${marca}</div>${acciones}</th>`;
     }).join("")}
     <th>Notas / hitos</th>
   </tr>`;
 
+  const hoyKey = ymd(new Date());
+  /* un mapa plano para no recalcular la unión por celda */
+  const dias = {};
+  parts.forEach(pp=>{ Object.keys(diasDe(t, pp)).forEach(f=>{ dias[pp.key+"|"+f] = true; }); });
+
   const rows = days.map(d=>{
     const key = ymd(d);
     const isWeekend = [0,6].includes(d.getDay());
-    const cells = parts.map(pp=>{
-      const on = !!(t.jornadas[pp.key] && t.jornadas[pp.key][key]);
-      const cerrado = !!pp.fin;   // conteo cerrado por finalización
-      const tip = cerrado ? ' title="Conteo cerrado: reactivalo para cargar jornadas"' : "";
-      return `<td class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""} ${cerrado?"trk-cerrado":""}"${tip} onclick="toggleJornada('${pp.key}','${key}')">${on?"✕":""}</td>`;
+    const cells = parts.map((pp, ci)=>{
+      const on = !!dias[pp.key + "|" + key];
+      const cerrado = !!pp.fin || pp.pendiente;   // finalizado, o candidato sin confirmar
+      const tip = pp.pendiente ? ' title="Todavía es candidato: confirmalo en la ficha para cargarle jornadas"'
+                : cerrado ? ' title="Conteo cerrado: reactivalo para cargar jornadas"' : "";
+      return `<td id="jc-${ci}-${key}" class="trk-cell ${on?"on":""} ${pp.inactivo?"trk-inact":""} ${cerrado?"trk-cerrado":""}"${tip} onclick="toggleJornada('${pp.key}','${key}',${ci})">${on?"✕":""}</td>`;
     }).join("");
-    return `<tr class="${isWeekend?"trk-weekend":""}">
+    return `<tr id="trkd-${key}" class="${isWeekend?"trk-weekend":""} ${key===hoyKey?"trk-hoy":""}">
       <td class="trk-day">${d.toLocaleDateString("es-AR",{weekday:"short"}).toUpperCase()}</td>
       <td class="trk-date">${fmtShort(key)}</td>
       ${cells}
@@ -3223,13 +3848,23 @@ function trackerHTML(p){
     </tr>`;
   }).join("");
 
-  const totalJor = parts.reduce((s,pp)=>s+Object.values(t.jornadas[pp.key]||{}).filter(Boolean).length,0);
-  const resumen = `<div class="trk-resumen">
+  const resumen = trackerResumenHTML(trkProject);
+
+  return rangeLine + `<div class="trk-wrap"><table class="trk"><thead>${head}</thead><tbody>${rows}</tbody></table></div>` + resumen;
+}
+/* separado del cuadro para poder refrescar solo esto al marcar una jornada, sin
+   rehacer la grilla (que es la que tiene el scroll y volvía siempre arriba) */
+function trackerResumenHTML(p){
+  const t = ensureTracker(p);
+  const parts = trackerParticipants(p);
+  const totalJor = parts.reduce((s,pp)=>s+cuentaDias(t, pp),0);
+  return `<div class="trk-resumen">
     <table><thead><tr><th>Nombre</th><th>Rol</th><th>Jornadas</th><th>Última jornada</th><th>Finalizó</th></tr></thead><tbody>
       ${parts.map(pp=>{
-        const jor = Object.values(t.jornadas[pp.key]||{}).filter(Boolean).length;
-        const ult = ultimaJornada(t, pp.key);
+        const jor = cuentaDias(t, pp);
+        const ult = ultimaJornada(t, pp.key, pp);
         const nota = pp.removido ? ' <small style="color:var(--gray)">(ya no asignado)</small>'
+                   : pp.pendiente ? ' <small style="color:var(--red)">(sin confirmar)</small>'
                    : pp.inactivo ? ' <small style="color:var(--gray)">(inactivo)</small>' : "";
         /* la fecha de finalización es el dato que va a administración */
         const fin = pp.fin ? `<b>${fmtShort(pp.fin.fecha)}</b>` : "—";
@@ -3241,12 +3876,352 @@ function trackerHTML(p){
       <tr style="font-weight:var(--weight-bold);border-top:2px solid var(--ink)"><td>TOTAL</td><td></td><td>${totalJor}</td><td></td><td></td></tr>
     </tbody></table>
   </div>`;
-
-  return rangeLine + `<div class="trk-wrap"><table class="trk"><thead>${head}</thead><tbody>${rows}</tbody></table></div>` + resumen;
 }
 
 function renderTracker(){
+  /* el cuadro vive en un contenedor con scroll propio; reemplazar el innerHTML lo
+     destruye y el nuevo nace arriba de todo. Se guarda y se repone la posición. */
+  const antes = document.querySelector("#trkBody .trk-wrap");
+  const sx = antes ? antes.scrollLeft : 0, sy = antes ? antes.scrollTop : 0;
   $("#trkBody").innerHTML = trackerHTML(trkProject);
+  const ahora = document.querySelector("#trkBody .trk-wrap");
+  if(ahora && (sx || sy)){ ahora.scrollLeft = sx; ahora.scrollTop = sy; }
+}
+
+/* ================================================================
+   LINKS DEL PROYECTO (popup)
+   wf3 crea Drive y Frame cuando los dejás encendidos. Si los apagaste, o si
+   la unidad ya existía de antes, acá se pegan a mano. También sirve para
+   corregir un link mal generado. Guarda `links_json` por wf4, que ya lo tiene
+   en su lista blanca, así que no hay que tocar ningún workflow.
+================================================================ */
+const LINK_CAMPOS = [
+  ["Google Drive", [
+    ["driveRoot","Unidad del proyecto"],["coord","0. COORD"],["supervision","1. SUPERVISION"],
+    ["footage","2. FOOTAGE"],["recursos","3. RECURSOS"],["editables","4. EDITABLES"],["finales","5. FINALES"]
+  ]],
+  ["Documentos", [
+    ["brief","Brief"],["feedback","Feedback"],["notas","Notas"],["desglose","Desglose"]
+  ]],
+  ["Frame.io", [ ["frameio","Proyecto de Frame.io"] ]]
+];
+function linksOpen(){
+  const p = detailProject; if(!p) return;
+  p.links = p.links || {};
+  $("#lkWho").textContent = p.nombre || "Proyecto";
+  $("#lkCampos").innerHTML = LINK_CAMPOS.map(([grupo, campos])=>`
+    <div class="glabel">${esc(grupo)}</div>
+    <div class="lk-grid">${campos.map(([k,label])=>`
+      <div>
+        <label class="f">${esc(label)}</label>
+        <input type="url" id="lk_${k}" value="${esc(p.links[k]||"")}" placeholder="https://…">
+      </div>`).join("")}</div>`).join("");
+  $("#ovLinks").classList.add("open"); modalArmar("ovLinks");
+  setTimeout(()=>{ const el=$("#lk_driveRoot"); if(el) el.focus(); }, 30);
+}
+function linksCerrar(){ modalLimpiar("ovLinks"); $("#ovLinks").classList.remove("open"); }
+function linksClose(){ modalSalir("ovLinks", linksCerrar); }
+async function linksSave(btn){
+  const p = detailProject; if(!p){ linksCerrar(); return; }
+  const antes = Object.assign({}, p.links||{});
+  const nuevos = {};
+  LINK_CAMPOS.forEach(([,campos])=>campos.forEach(([k])=>{
+    const el = $("#lk_"+k); if(!el) return;
+    const v = (el.value||"").trim();
+    if(v) nuevos[k] = v;          /* vacío = no se guarda, así la ficha no muestra links muertos */
+  }));
+  p.links = nuevos;
+  const _lbl = btn ? btn.textContent : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
+  try{
+    if(!DEMO) await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, links_json: JSON.stringify(nuevos) })});
+    linksCerrar(); renderDetail(); onProjectsLoaded();
+    toast("✔ Links actualizados");
+  }catch(e){
+    p.links = antes;
+    toast("No pude guardar los links: "+e.message, true);
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
+}
+
+/* Equipo interno en la ficha: una línea por rol con el ✎ al costado. Antes eran
+   seis inputs abiertos, lo que sugería que se cambia seguido — y no: cambiar de
+   coordinador o de productor a mitad de un proyecto es la excepción. La posibilidad
+   está, pero deja de gritar. */
+function internoHTML(p){
+  const col = (rol)=>{
+    const def = PER_ROLES[rol];
+    const gente = rolPersonas(p, rol).filter((x,i)=> i===0 || x.nombre || x.email);
+    const uno = (x,i)=>`
+      <div style="font-size:var(--fs-body)${x.nombre?"":";color:var(--gray)"}${i?";margin-top:6px":""}">${x.nombre?esc(x.nombre):"—"}${i?` <small style="color:var(--gray);font-weight:var(--weight-regular)">(entró después)</small>`:""}</div>
+      ${x.email?`<div style="font-size:12.5px;color:var(--gray);overflow-wrap:anywhere">${esc(x.email)}</div>`:""}`;
+    return `<div>
+      <label class="f">${def.titulo}</label>
+      ${gente.map(uno).join("")}
+    </div>`;
+  };
+  return `<div class="frow">${["ep","prod","coord"].map(col).join("")}</div>`;
+}
+
+/* ================================================================
+   EDITAR PERSONA (popup)
+   Los datos de contacto de alguien que ya está en el equipo no cambian
+   casi nunca, así que tenerlos como cuatro inputs abiertos era ruido.
+   La fila los muestra en una línea y este popup los edita.
+   Sirve para dos cosas:
+     asig    → una fila de asignaciones (nombre, mail, discord, teléfono)
+     interno → EP / Productor / Coordinador (nombre y mail nada más)
+   Ojo: la ficha marca detailDirty con los eventos input/change de sus
+   propios campos. Editando desde un popup eso no pasa, así que se prende
+   a mano — la misma trampa que con las notas.
+================================================================ */
+let perTarget = null;
+/* Personas de un rol interno. La PRIMERA vive en las columnas planas
+   (`ep_nombre`/`ep_email`) y las adicionales en `equipo_json`, igual que los rangos
+   de fechas: así el portal, wf3 y wf5 siguen leyendo lo de siempre.
+   El segundo puesto existe para los handoffs: entra un productor nuevo y el anterior
+   queda registrado, en vez de pisarlo. */
+function rolPersonas(p, rol){
+  const def = PER_ROLES[rol];
+  const out = [{ nombre:(p[def.nombre]||"").trim(), email:(p[def.mail]||"").trim() }];
+  const extra = ((p.equipo||{})[rol]) || [];
+  extra.forEach(x=> out.push({ nombre:String((x&&x.nombre)||"").trim(), email:String((x&&x.email)||"").trim() }));
+  return out;
+}
+function rolSetPersona(p, rol, i, nombre, email){
+  const def = PER_ROLES[rol];
+  if(i === 0){ p[def.nombre] = nombre; p[def.mail] = email; return; }
+  p.equipo = p.equipo || {};
+  p.equipo[rol] = p.equipo[rol] || [];
+  while(p.equipo[rol].length < i) p.equipo[rol].push({nombre:"",email:""});
+  p.equipo[rol][i-1] = { nombre, email };
+  /* si el segundo queda vacío se borra, para no arrastrar entradas fantasma */
+  p.equipo[rol] = p.equipo[rol].filter(x=>x.nombre || x.email);
+  if(!p.equipo[rol].length) delete p.equipo[rol];
+}
+
+const PER_ROLES = {
+  ep: {
+    titulo:"Productor Ejecutivo", nombre:"ep_nombre", mail:"ep_email",
+    /* El Directorio es el spreadsheet de proveedores: los EP no están ahí y no
+       tiene mucho sentido meterlos. Van fijos acá. Si algún día se los carga al
+       Directorio con la especialidad correspondiente, aparecen por las dos vías
+       y se deduplican por nombre.
+       ↓ Completar los mails: los avisos de calendario salen a esa dirección. */
+    tags: ["productor ejecutivo","ejecutivo","ep"],
+    fijos: [ {nombre:"Narf", email:""}, {nombre:"Mile", email:""}, {nombre:"Teo", email:""} ]
+  },
+  prod: {
+    titulo:"Productor", nombre:"prod_nombre", mail:"prod_email",
+    tags: ["productor","produccion"], excluye: ["ejecutivo"], fijos: []
+  },
+  coord: {
+    titulo:"Coordinador", nombre:"coord_nombre", mail:"coord_email",
+    tags: ["coordinador","coordinacion","coord"], fijos: []
+  }
+};
+/* Sugerencias para el nombre en el popup.
+   interno → lista fija del rol + gente del Directorio etiquetada con ese rol en
+             la columna "especialidad" (son muchas menos personas que el Directorio
+             completo, y filtrar evita tener que buscar entre todos los proveedores).
+   asig    → el Directorio entero, como en el formulario de tareas. */
+function perSugerencias(kind, rol){
+  const salida = [], vistos = new Map();
+  const sumar = (o)=>{
+    const k = rosterNorm(o.nombre);
+    if(!k) return;
+    const ya = vistos.get(k);
+    if(ya){
+      /* mismo nombre por las dos vías (p. ej. un EP que además está en el Directorio):
+         se queda una sola entrada y se completa con los datos que le falten */
+      ["email","discord","tel"].forEach(f=>{ if(!ya[f] && o[f]) ya[f] = o[f]; });
+      return;
+    }
+    vistos.set(k, o); salida.push(o);
+  };
+  const interno = kind === "interno";
+  const def = interno ? PER_ROLES[rol] : null;
+  if(def) (def.fijos||[]).forEach(f=>sumar({ nombre:f.nombre, email:f.email||"", fuente:"equipo interno" }));
+  if(!dirData) return salida;
+  const c = rosterCols();
+  if(c.nombre < 0) return salida;
+  dirData.rows.forEach(r=>{
+    const nombre = String(r.v[c.nombre]||"").trim();
+    if(!nombre) return;
+    const esp = c.especialidad >= 0 ? String(r.v[c.especialidad]||"") : "";
+    if(interno){
+      /* la especialidad es multivalor separada por comas */
+      const etiquetas = esp.split(",").map(s=>rosterNorm(s)).filter(Boolean);
+      const pega = etiquetas.some(e => def.tags.some(tag => e.includes(tag)))
+                && !etiquetas.some(e => (def.excluye||[]).some(x => e.includes(x)));
+      if(!pega) return;
+    }
+    sumar({
+      nombre,
+      email: c.mail >= 0 ? String(r.v[c.mail]||"").trim() : "",
+      discord: c.discord >= 0 ? String(r.v[c.discord]||"").trim() : "",
+      tel: c.tel >= 0 ? String(r.v[c.tel]||"").trim() : "",
+      fuente: esp.trim() || "directorio"
+    });
+  });
+  return salida;
+}
+/* Autocompletado por rol para los campos de equipo interno de los formularios de
+   creación (alta manual y debrief). Mismo panel y mismas teclas; al elegir completa
+   el mail de al lado solo si está vacío. */
+function acOpenRol(input, rol, mailSel){
+  const q = rosterNorm(input.value);
+  const todas = perSugerencias("interno", rol);
+  const items = (q ? todas.filter(o=>rosterNorm(o.nombre).includes(q)) : todas).slice(0, 8);
+  if(!items.length){ acClose(); return; }
+  acState = { input, items, hi:-1, onPick: (o)=>{
+    input.value = o.nombre;
+    const m = $(mailSel);
+    if(m && !m.value.trim() && o.email) m.value = o.email;
+  }};
+  const pn = acPanel();
+  pn.innerHTML = items.map((o,ix)=>
+    `<div class="ac-item" onmousedown="event.preventDefault();acPick(${ix})">${esc(o.nombre)}`+
+    (o.fuente?` <span style="color:var(--gray);font-size:11.5px">${esc(o.fuente)}</span>`:"")+`</div>`).join("");
+  const r = input.getBoundingClientRect();
+  pn.style.display = "block";
+  pn.style.left = r.left + "px";
+  pn.style.top = (r.bottom + 2) + "px";
+  pn.style.width = r.width + "px";
+}
+/* al enfocar puede ser la primera vez: se pide el Directorio y después se abre */
+function acRolFocus(input, rol, mailSel){
+  rosterEnsure().then(()=>{ if(document.activeElement === input) acOpenRol(input, rol, mailSel); }).catch(()=>{});
+}
+
+/* Autocompletado del popup: mismo panel y mismas teclas que el de tareas, pero con
+   la fuente filtrada y llenando los campos del propio popup al elegir. */
+function acOpenPersona(input){
+  const q = rosterNorm(input.value);
+  const todas = perSugerencias(perTarget && perTarget.kind, perTarget && perTarget.rol);
+  const items = (q ? todas.filter(o=>rosterNorm(o.nombre).includes(q)) : todas).slice(0, 8);
+  if(!items.length){ acClose(); return; }
+  acState = { input, items, hi:-1, onPick: personaAutofill };
+  const pn = acPanel();
+  pn.innerHTML = items.map((o,ix)=>
+    `<div class="ac-item" onmousedown="event.preventDefault();acPick(${ix})">${esc(o.nombre)}`+
+    (o.fuente?` <span style="color:var(--gray);font-size:11.5px">${esc(o.fuente)}</span>`:"")+`</div>`).join("");
+  const r = input.getBoundingClientRect();
+  pn.style.display = "block";
+  pn.style.left = r.left + "px";
+  pn.style.top = (r.bottom + 2) + "px";
+  pn.style.width = r.width + "px";
+}
+/* al elegir, completa lo que esté vacío — no pisa lo que ya escribiste */
+function personaAutofill(o){
+  const set = (sel, val)=>{ const el = $(sel); if(el && !el.value.trim() && val) el.value = val; };
+  $("#perNombre").value = o.nombre;
+  set("#perEmail", o.email);
+  if(perTarget && perTarget.kind === "asig"){
+    set("#perDiscord", o.discord);
+    set("#perTelefono", o.tel);
+  }
+}
+/* Los tres roles internos se editan juntos en un solo popup: son pocos campos y
+   normalmente se toca más de uno a la vez. Los nombres autocompletan filtrado por
+   rol, igual que en los formularios de creación. */
+/* segundos puestos visibles en el popup: se revelan si ya hay alguien o al pedirlo */
+let intSegundo = { ep:false, prod:false, coord:false };
+function internoRender(){
+  const p = detailProject; if(!p) return;
+  $("#intCampos").innerHTML = ["ep","prod","coord"].map(rol=>{
+    const def = PER_ROLES[rol];
+    const gente = rolPersonas(p, rol);
+    const hay2 = intSegundo[rol] || !!(gente[1] && (gente[1].nombre || gente[1].email));
+    const fila = (i)=>{
+      const x = gente[i] || {nombre:"",email:""};
+      const sufijo = i ? " 2" : "";
+      return `<div class="frow">
+        <div><label class="f">${def.titulo}${sufijo}${i?` <small style="color:var(--gray);letter-spacing:0;font-weight:var(--weight-regular);text-transform:none">quien tomó el puesto después</small>`:""}</label>
+          <input type="text" id="int_${rol}_${i}_n" value="${esc(x.nombre)}" autocomplete="off" placeholder="Nombre"
+                 oninput="acOpenRol(this,'${rol}','#int_${rol}_${i}_m')" onfocus="acRolFocus(this,'${rol}','#int_${rol}_${i}_m')"
+                 onkeydown="acKey(event)" onblur="setTimeout(acClose,150)"></div>
+        <div><label class="f">Mail${sufijo}</label><input type="email" id="int_${rol}_${i}_m" value="${esc(x.email)}" placeholder="${rol}@team23.online"></div>
+      </div>`;
+    };
+    return fila(0) + (hay2 ? fila(1)
+      : `<button class="addline" onclick="intAddSegundo('${rol}')">+ agregar otro ${def.titulo.toLowerCase()}</button>`);
+  }).join("");
+}
+function intAddSegundo(rol){
+  intSegundo[rol] = true; internoRender();
+  /* revelar el slot vacío no es un cambio: se recalcula la huella para no
+     preguntar al cerrar si después no se escribió nada */
+  modalArmar("ovInterno");
+}
+function internoOpen(){
+  const p = detailProject; if(!p) return;
+  $("#intWho").textContent = p.nombre || "Proyecto";
+  intSegundo = { ep:false, prod:false, coord:false };
+  internoRender();
+  $("#ovInterno").classList.add("open"); modalArmar("ovInterno");
+  setTimeout(()=>{ const el=$("#int_ep_0_n"); if(el) el.focus(); }, 30);
+  rosterEnsure().catch(()=>{});
+}
+function internoCerrar(){ modalLimpiar("ovInterno"); acClose(); $("#ovInterno").classList.remove("open"); }
+function internoClose(){ modalSalir("ovInterno", internoCerrar); }
+function internoSave(){
+  const p = detailProject; if(!p){ internoCerrar(); return; }
+  ["ep","prod","coord"].forEach(rol=>{
+    [0,1].forEach(i=>{
+      const n = $("#int_"+rol+"_"+i+"_n"), m = $("#int_"+rol+"_"+i+"_m");
+      if(!n && !m) return;                       // el slot 2 puede no estar en pantalla
+      rolSetPersona(p, rol, i, ((n&&n.value)||"").trim(), ((m&&m.value)||"").trim());
+    });
+  });
+  detailDirty = true;   // el input/change de la ficha no corre desde un modal
+  internoCerrar(); renderDetail();
+  toast("✔ Equipo interno actualizado");
+}
+
+function personaOpen(kind, a, b){
+  const p = detailProject; if(!p) return;
+  {
+    const r = (p.asignaciones[a]||[])[b]; if(!r) return;
+    perTarget = { kind:"asig", tarea:a, i:b };
+    $("#perTitle").textContent = "Editar persona";
+    $("#perWho").textContent = (r.nombre || r.email || "Sin nombre") + " · " + a;
+    $("#perNombre").value = r.nombre || "";
+    $("#perEmail").value = r.email || "";
+    $("#perDiscord").value = r.discord || "";
+    $("#perTelefono").value = r.telefono || "";
+    $("#perExtra").style.display = "";
+  }
+  $("#perFuente").textContent = "";
+  $("#ovPersona").classList.add("open"); modalArmar("ovPersona");
+  setTimeout(()=>{ const el=$("#perNombre"); if(el) el.focus(); }, 30);
+  /* el directorio se lee una sola vez y queda en memoria; si todavía no está,
+     se pide ahora para que las sugerencias existan */
+  rosterEnsure().then(()=>{
+    if(!perTarget) return;
+    const n = perSugerencias(perTarget.kind, perTarget.rol).length;
+    const el = $("#perFuente"); if(!el) return;
+    el.textContent = n ? "· "+n+" del Directorio" : "";
+  }).catch(()=>{
+    const el = $("#perFuente");
+    if(el) el.textContent = "· no pude leer el Directorio, escribilo a mano";
+  });
+}
+function personaCerrar(){ modalLimpiar("ovPersona"); acClose(); $("#ovPersona").classList.remove("open"); perTarget = null; }
+function personaClose(){ modalSalir("ovPersona", personaCerrar); }
+function personaSave(){
+  if(!perTarget) return;
+  const p = detailProject; if(!p){ personaCerrar(); return; }
+  const nombre = ($("#perNombre").value||"").trim();
+  const email  = ($("#perEmail").value||"").trim();
+  const r = (p.asignaciones[perTarget.tarea]||[])[perTarget.i];
+  if(!r){ personaCerrar(); return; }
+  r.nombre = nombre;
+  r.email = email;
+  r.discord = ($("#perDiscord").value||"").trim();
+  r.telefono = ($("#perTelefono").value||"").trim();
+  detailDirty = true;
+  personaCerrar(); renderDetail();
+  toast("✔ Datos guardados"+(nombre?" de "+nombre:""));
 }
 
 /* ================================================================
@@ -3284,9 +4259,11 @@ function notaBoxHTML(ctx, tarea, readOnly){
   const tq = String(tarea).replace(/'/g,"\\'");
   const editar = readOnly ? "" :
     `<button class="mini-btn" onclick="notaOpen('task','${ctx}','${tq}')">${txt?"✎ editar":"+ agregar"}</button>`;
-  return `<div class="nota-box ${txt?"tiene":""}">
+  /* vacía = una línea; una caja grande para "sin notas" era mucho peso por nada */
+  if(!txt) return `<div class="nota-box vacio"><span class="lbl">Notas</span>${editar}</div>`;
+  return `<div class="nota-box tiene">
     <div class="nota-head"><span class="lbl">Notas</span>${editar}</div>
-    <div class="nota-txt ${txt?"":"vacia"}">${txt?esc(txt):"Sin notas para esta tarea."}</div>
+    <div class="nota-txt">${esc(txt)}</div>
   </div>`;
 }
 function notaSlotSync(ctx, tarea){
@@ -3306,25 +4283,26 @@ function notaOpen(kind, a, b){
              : {kind:"task", ctx:a, tarea:b};
   $("#notaWho").textContent = notaEtiqueta(notaTarget);
   $("#notaTa").value = notaValue(notaTarget);
-  $("#ovNota").classList.add("open");
+  $("#ovNota").classList.add("open"); modalArmar("ovNota");
   setTimeout(()=>{ const ta=$("#notaTa"); if(ta) ta.focus(); }, 30);
 }
-function notaClose(){ $("#ovNota").classList.remove("open"); notaTarget = null; }
+function notaCerrar(){ modalLimpiar("ovNota"); $("#ovNota").classList.remove("open"); notaTarget = null; }
+function notaClose(){ modalSalir("ovNota", notaCerrar); }
 function notaSave(){
   if(!notaTarget) return;
   const tg = notaTarget;
   const val = ($("#notaTa").value||"").trim();
   if(tg.kind==="cal"){
     calSet(tg.idx, "notas", val);          // ya prende calDirty
-    notaClose(); renderDetail();
+    notaCerrar(); renderDetail();
   }else if(tg.kind==="caltask"){
     taskDateSet(tg.tarea, "notas", val);
     detailDirty = true;                    // el input/change de la ficha no corrió
-    notaClose(); renderDetail();
+    notaCerrar(); renderDetail();
   }else{
     setTaskDate(tg.ctx, tg.tarea, "notas", val);   // refresca el calendario del armado
     if(tg.ctx==="dt") detailDirty = true;
-    notaClose();
+    notaCerrar();
     if(tg.ctx!=="dt") notaSlotSync(tg.ctx, tg.tarea);
   }
   toast(val ? "✔ Notas guardadas" : "Notas vacías");
@@ -3395,10 +4373,11 @@ function sxOpen(ctx){
     : (ctx==="np" ? "Nuevo proyecto · alta manual" : "Nuevo proyecto · desde debrief");
   $("#sxTa").value = sxValue(ctx);
   sxLive();
-  $("#ovSintesis").classList.add("open");   // sin tocar el scroll: queda un modal abierto detrás
+  $("#ovSintesis").classList.add("open"); modalArmar("ovSintesis");   // sin tocar el scroll: queda un modal abierto detrás
   setTimeout(()=>{ const ta=$("#sxTa"); if(ta) ta.focus(); }, 30);
 }
-function sxClose(){ $("#ovSintesis").classList.remove("open"); sxCtx = null; }
+function sxCerrar(){ modalLimpiar("ovSintesis"); $("#ovSintesis").classList.remove("open"); sxCtx = null; }
+function sxClose(){ modalSalir("ovSintesis", sxCerrar); }
 function sxLive(){
   const v = ($("#sxTa").value||"").trim();
   $("#sxPrev").innerHTML = v ? sintesisHTML(v) : `<div class="sx-empty">Vacía por ahora.</div>`;
@@ -3410,18 +4389,18 @@ async function sxSave(btn){
   /* en el armado alcanza con dejarlo en el formulario: viaja al crear el proyecto */
   if(ctx!=="dt"){
     sxSetValue(ctx, val);
-    sxClose(); sxRender(ctx);
+    sxCerrar(); sxRender(ctx);
     toast(val ? "✔ Síntesis actualizada" : "Síntesis vacía");
     return;
   }
-  const p = detailProject; if(!p){ sxClose(); return; }
+  const p = detailProject; if(!p){ sxCerrar(); return; }
   const prev = p.sintesis;
   const _lbl = btn ? btn.textContent : "";
   if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
   p.sintesis = val;
   try{
     if(!DEMO) await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({ id:p.id, sintesis: val })});
-    sxClose(); renderDetail();
+    sxCerrar(); renderDetail();
     toast("✔ Síntesis actualizada"+(DEMO?" (demo)":""));
   }catch(e){
     p.sintesis = prev;
@@ -3448,6 +4427,34 @@ async function saveProjectInfo(btn){
 }
 
 /* ---------------- confirm + loader con estética del hub ---------------- */
+/* ================================================================
+   GUARDA DE SALIDA PARA POPUPS
+   Cualquier popup con campos pide confirmación si se tocó algo y se intenta
+   cerrar sin guardar. Antes un click afuera lo cerraba y se perdía lo escrito.
+   Uso:
+     al abrir y llenar los campos → modalArmar("ovX")
+     el cierre del ✕ / Cancelar / click afuera → modalSalir("ovX", xCerrar)
+     al guardar → modalLimpiar("ovX") antes de cerrar, para que no pregunte
+   Un popup sin campos (ovReact) da huella vacía y nunca pregunta.
+================================================================ */
+const modalSnap = {};
+function modalHuella(id){
+  const ov = document.getElementById(id);
+  if(!ov) return "";
+  return [...ov.querySelectorAll("input,textarea,select")]
+    .map(el => (el.type==="checkbox"||el.type==="radio") ? (el.checked?"1":"0") : (el.value||""))
+    .join("\u0001");
+}
+function modalArmar(id){ modalSnap[id] = modalHuella(id); }
+function modalLimpiar(id){ delete modalSnap[id]; }
+function modalSucio(id){ return modalSnap[id] !== undefined && modalHuella(id) !== modalSnap[id]; }
+async function modalSalir(id, cerrar){
+  if(!modalSucio(id)){ modalLimpiar(id); cerrar(); return; }
+  const r = await t23Confirm("Hiciste cambios en esta ventana que todavía no se guardaron.",
+    { titulo:"CERRAR SIN GUARDAR", cancelar:"Seguir editando", ok:"Cerrar sin guardar", peligro:true });
+  if(r === true){ modalLimpiar(id); cerrar(); }
+}
+
 function t23Confirm(msg, opts={}){
   return new Promise(res=>{
     const ov = document.createElement("div");
@@ -3479,7 +4486,7 @@ const FRASES_CARGA = [
   "No apagues el equipo, actualización 3 de 47",
   "Tiempo estimado: 4 minutos… 2 horas… 30 segundos"
 ];
-const FRASES_ACCION = { crear: "Convenciendo a Drive y a Frame de trabajar juntos", borrar: "Haciendo desaparecer el borrador sin dejar rastro" };
+const FRASES_ACCION = { crear: "Convenciendo a Drive y a Frame de trabajar juntos", borrar: "Haciendo desaparecer el borrador sin dejar rastro", cargar: "Trayendo los proyectos, recién salidos del sheet" };
 let t23LoadEl = null, t23LoadTimer = null;
 function t23LoadShow(accion){
   t23LoadHide();
@@ -3530,7 +4537,8 @@ async function saveTeam(btn){
   if(DEMO){ toast("✔ Equipo actualizado (demo)"); onProjectsLoaded(); return; }
   try{
     await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({
-      id:p.id, ep_nombre:p.ep_nombre, ep_email:p.ep_email, prod_nombre:p.prod_nombre, prod_email:p.prod_email,
+      id:p.id, equipo_json: JSON.stringify(p.equipo||{}),
+      ep_nombre:p.ep_nombre, ep_email:p.ep_email, prod_nombre:p.prod_nombre, prod_email:p.prod_email,
       coord_nombre:p.coord_nombre, coord_email:p.coord_email,
       tareas_json: JSON.stringify(p.tareas), asignaciones_json: JSON.stringify(p.asignaciones),
       taskDates_json: JSON.stringify(p.taskDates||{})
@@ -3556,7 +4564,11 @@ function projectRecipients(p){
    por id (1 evento por fase/hito) en lugar de duplicarlos en cada guardado.
    deletedEventIds son los ids de fases/hitos borrados desde el último guardado,
    para que ese mismo workflow borre sus eventos correspondientes en Calendar. */
-async function saveCalendar(isFirst, btn){
+/* `avisar` decide si salen el mail al equipo y el aviso a Discord. Guardar y avisar
+   son dos cosas distintas: se puede acomodar el calendario varias veces y recién
+   avisar cuando quedó. Al cerrar la ficha se guarda SIN avisar, que es lo prudente
+   para un guardado incidental. */
+async function saveCalendar(isFirst, btn, avisar){
   const _lbl = btn ? btn.textContent : "";
   if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
   try{
@@ -3568,16 +4580,16 @@ async function saveCalendar(isFirst, btn){
   }));
   if(!entries.length){ toast("Cargá al menos una fase o un hito", true); return; }
   const deletedEventIds = p._deletedCalIds || [];
-  if(DEMO){ toast("✔ Calendario guardado, mail enviado al equipo (demo)"); p._deletedCalIds=[]; return; }
+  if(DEMO){ toast(avisar ? "✔ Calendario guardado y equipo avisado (demo)" : "✔ Calendario guardado (demo)"); p._deletedCalIds=[]; return; }
   try{
     await api("/webhook/team23/calendar",{method:"POST",body:JSON.stringify({
-      projectId:p.id, projectName:p.nombre, entries, deletedEventIds,
+      projectId:p.id, projectName:p.nombre, entries, deletedEventIds, avisar: !!avisar,
       taskDates_json: JSON.stringify(p.taskDates||{}),
       recipients: projectRecipients(p), isFirst
     })});
     p._deletedCalIds = [];
     detailDirty = false; calDirty = false; snapDetail();
-    toast("✔ Calendario guardado, se avisó por mail al equipo");
+    toast(avisar ? "✔ Calendario guardado, se avisó al equipo" : "✔ Calendario guardado (sin avisar)");
   }catch(e){ toast("Error al guardar el calendario: "+e.message, true); }
   }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
@@ -3608,30 +4620,58 @@ function printCalendar(){
         return s<=d && e>=d;
       }).map(f=>{
         const lk = PHASE_LOOKS[lookMap[f.id]||0];
-        const col = lk.bg==="#FFFFFF"? lk.bd : lk.bg;
-        const start = f.inicio===key ? "▶ " : "";
-        return `<div class="pl"><span style="color:${col}">▪</span> ${start}${esc(f.fase)}</div>`;
+        /* la barra va pintada, igual que en pantalla: con print-color-adjust el
+           navegador ya no descarta el fondo */
+        return `<div class="pbar${f.inicio===key?" ini":""}" style="background:${lk.bg};color:${lk.fg}">${esc(f.fase)}</div>`;
       }).join("");
-      const dayHitos = hitos.filter(h=>h.inicio===key).map(h=>`<div class="ph">● ${esc(h.fase)}</div>`).join("");
-      return `<td><div class="pd ${other?"om":""}">${d.getDate()}</div>${other?"":dayFases+dayHitos}</td>`;
+      const dayHitos = hitos.filter(h=>h.inicio===key).map(h=>`<div class="phito">${esc(h.fase)}</div>`).join("");
+      const wknd = [0,6].includes(d.getDay());
+      return `<td class="${other?"om":wknd?"wknd":""}"><div class="pd ${other?"om":""}">${d.getDate()}</div>${other?"":dayFases+dayHitos}</td>`;
     }).join("") + "</tr>";
   }
 
   const mtitle = calView.toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase();
-  const faseList = entries.filter(r=>r.tipo!=="hito" && r.fase).map(r=>
-    `<tr><td><b>${esc(r.fase)}</b></td><td>${esc(r.inicio||"-")}</td><td>${esc(r.fin||"-")}</td><td>${esc(r.notas||"-")}</td></tr>`).join("");
+  const dm = s => s ? fechaCorta(s) : "—";
+
+  /* leyenda: una entrada por fase, con su color */
+  const vistas = new Set();
+  const leyenda = fases.filter(f=>{ const k = f.src==="task"?"task:"+f.key:f.id;
+      if(vistas.has(k)) return false; vistas.add(k); return true; })
+    .map(f=>{ const lk = PHASE_LOOKS[lookMap[f.id]||0];
+      return `<span><i style="background:${lk.bg}"></i>${esc(f.src==="task"?f.key:f.fase)}</span>`; }).join("");
+
+  const faseList = entries.filter(r=>r.tipo!=="hito" && r.fase).map(r=>{
+    const lk = PHASE_LOOKS[lookMap[r.id]||0];
+    return `<tr><td><span class="sw" style="background:${lk.bg}"></span><b>${esc(r.fase)}</b></td>`+
+           `<td>${dm(r.inicio)} → ${dm(r.fin)}</td><td>${esc(r.notas||"—")}</td></tr>`;
+  }).join("");
   const hitoList = entries.filter(r=>r.tipo==="hito" && r.fase).map(r=>
-    `<tr><td>${esc(r.inicio||"-")}</td><td><b>${esc(r.fase)}</b></td></tr>`).join("");
+    `<tr><td>${dm(r.inicio)}</td><td><b>${esc(r.fase)}</b></td></tr>`).join("");
 
   $("#printArea").innerHTML = `
-    <h1>${esc(p.nombre)}</h1>
-    <div class="pmeta">CALENDARIO · ${esc(p.cliente)} · TEAM 23</div>
-    <div class="pmonth">${mtitle}</div>
+    <div class="phead">
+      <div>
+        <h1>${esc(p.nombre)}</h1>
+        <div class="psub">${esc([p.cliente, p.agencia, p.productora].filter(Boolean).join(" · "))}</div>
+      </div>
+      <div>
+        <div class="pmonth">${mtitle}</div>
+        <div class="pmark">TEAM 23 · Production Hub</div>
+      </div>
+    </div>
+    ${leyenda?`<div class="pleg">${leyenda}</div>`:""}
     <table class="pgrid"><thead><tr>${WDAYS.map(w=>`<th>${w}</th>`).join("")}</tr></thead><tbody>${rowsHTML}</tbody></table>
-    <h3>Fases</h3>
-    <table class="plist"><thead><tr><th>Fase</th><th>Inicio</th><th>Fin</th><th>Notas</th></tr></thead><tbody>${faseList}</tbody></table>
-    ${hitoList?`<h3>Hitos</h3><table class="plist"><thead><tr><th>Fecha</th><th>Hito</th></tr></thead><tbody>${hitoList}</tbody></table>`:""}
-    <div class="pfoot">GENERADO ${new Date().toLocaleDateString("es-AR")} · TEAM 23 PRODUCTION HUB</div>`;
+    <div class="pcols">
+      <div>
+        <h3>Fases</h3>
+        <table class="plist"><thead><tr><th>Fase</th><th>Fechas</th><th>Notas</th></tr></thead><tbody>${faseList||'<tr><td colspan="3">—</td></tr>'}</tbody></table>
+      </div>
+      ${hitoList?`<div style="flex:0 0 30%">
+        <h3>Hitos</h3>
+        <table class="plist"><thead><tr><th>Fecha</th><th>Hito</th></tr></thead><tbody>${hitoList}</tbody></table>
+      </div>`:""}
+    </div>
+    <div class="pfoot"><span>${esc(p.nombre)} · ${esc(mtitle)}</span><span>Generado ${new Date().toLocaleDateString("es-AR")}</span></div>`;
   window.print();
 }
 
@@ -3741,7 +4781,7 @@ function kickOffComplete(){
   }
   // Inicializar el estado del nuevo proyecto
   npSelected = new Set(); npAssignData = {}; npTaskDates = {};
-  npAuto = autoDefaults(); renderAuto("np");
+  npAuto = autoDefaults(); npLinks = {}; renderAuto("np");
   npSintesis = kickOffResumen;
   sxRender("np");
   npStoryboardUrl = kickOffLinks.storyboard || "";
@@ -3782,7 +4822,7 @@ function n2Snapshot(){
     debrief: ($("#n2Debrief")||{}).value||"",
     campos: Object.fromEntries(ids.map(id=>[id, ($("#"+id)||{}).value||""])),
     tareas: [...n2Selected], assign: n2AssignData, fechas: n2TaskDates,
-    auto: { ...n2Auto },
+    auto: { ...n2Auto }, links: { ...n2Links },
     formVisible: $("#n2Form").style.display!=="none"
   };
 }
@@ -3831,6 +4871,7 @@ function openDraft(id){
   n2AssignData = d.assign||{};
   n2TaskDates = d.fechas||{};
   n2Auto = Object.assign(autoDefaults(), d.auto||{});
+  n2Links = Object.assign({}, d.links||{});
   renderAuto("n2");
   sxRender("n2");
   renderN2Tasks();
@@ -3875,7 +4916,7 @@ function openDebrief(){
   n2DraftBase = null;
   if($("#btnDraft")) $("#btnDraft").textContent = "Guardar borrador";
   n2Selected = new Set(); n2AssignData = {}; n2TaskDates = {};
-  n2Auto = autoDefaults(); renderAuto("n2");
+  n2Auto = autoDefaults(); n2Links = {}; renderAuto("n2");
   ["n2Debrief","n2Nombre","n2Productora","n2Director","n2Cliente","n2Agencia","n2Sintesis","n2Storyboard",
    "n2EpNombre","n2EpEmail","n2ProdNombre","n2ProdEmail","n2CoordNombre","n2CoordEmail"]
     .forEach(id=>{ const el=$("#"+id); if(el) el.value=""; });
@@ -3925,12 +4966,46 @@ async function parseDebrief2(){
 /* Un armado nuevo está "sucio" si hay algo cargado. Un borrador que ya existe
    está sucio solo si cambió respecto de cómo se abrió: si no, cerrar no pregunta
    nada. */
+/* ¿Hay algo cargado en el formulario? Mira TODOS los campos, no solo el nombre y el
+   debrief: si cargaste el equipo interno, la productora o una fecha y cerrás, eso se
+   pierde igual y hay que preguntar. */
+function hayAlgoCargado({campos, tareas, assign, fechas, extras}){
+  if(Object.values(campos||{}).some(v=>String(v||"").trim())) return true;
+  if((tareas||[]).length) return true;
+  if(Object.values(assign||{}).some(rows=>(rows||[]).some(r=>r && (String(r.nombre||"").trim() || String(r.email||"").trim())))) return true;
+  if(Object.values(fechas||{}).some(d=>d && (d.notas || taskTieneFechas(d)))) return true;
+  if((extras||[]).some(v=>String(v||"").trim())) return true;
+  return false;
+}
 function n2Dirty(){
+  /* Borrador que ya existe: la pregunta es si cambió algo desde que se abrió, no si
+     hay contenido — si no, abrir y cerrar sin tocar nada preguntaría siempre. */
   if(currentDraftId && n2DraftBase !== null){
     try{ return JSON.stringify(n2Snapshot()) !== n2DraftBase; }catch(e){ return true; }
   }
-  return !!(($("#n2Debrief")&&$("#n2Debrief").value.trim()) || ($("#n2Nombre")&&$("#n2Nombre").value.trim()) || n2Selected.size);
+  const s = n2Snapshot();
+  return hayAlgoCargado({ campos:s.campos, tareas:s.tareas, assign:s.assign, fechas:s.fechas, extras:[s.debrief] });
 }
+/* El alta manual no tenía guarda: la ✕, Cancelar y el click afuera cerraban directo
+   y se perdía todo. No ofrece "guardar borrador" porque el borrador vive en el estado
+   del flujo de debrief, no en este. */
+function npDirty(){
+  const ids = ["npNombre","npCliente","npAgencia","npProductora","npDirector",
+               "npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"];
+  return hayAlgoCargado({
+    campos: Object.fromEntries(ids.map(id=>[id, ($("#"+id)||{}).value||""])),
+    tareas: [...npSelected], assign: npAssignData, fechas: npTaskDates,
+    /* lo que trajo el kick off también cuenta: si cerrás, hay que rehacerlo */
+    extras: [npSintesis, npStoryboardUrl, npTratamientoUrl]
+  });
+}
+async function closeNew(){
+  if(!npDirty()){ closeModal("ovNew"); return; }
+  const r = await t23Confirm("Vas a cerrar el armado sin crear el proyecto. Lo que cargaste se pierde.",
+    { titulo:"CERRAR SIN CREAR", ok:"Cerrar sin guardar", peligro:true });
+  if(r === true) closeModal("ovNew");
+}
+
 async function closeNew2(){
   if(!n2Dirty()){ closeModal("ovNew2"); return; }
   /* borrador existente: la pregunta es si se guardan los cambios. Cerrar sin
@@ -3988,7 +5063,7 @@ async function createProject2(){
   const tDates = {};
   [...n2Selected].forEach(t=>{
     const d = n2TaskDates[t];
-    if(d && (d.inicio||d.fin||d.notas)) tDates[t]=d;
+    if(d && (d.notas || taskTieneFechas(d))) tDates[t]=d;
   });
   /* un mail por candidato con dirección, ya redactado: lo que se ve en el
      editor es lo que sale. Los apagados viajan con enviar:false para que
@@ -4019,7 +5094,8 @@ async function createProject2(){
     storyboard_url: $("#n2Storyboard").value.trim(),
     debrief_raw: $("#n2Debrief").value.trim(),
     mails,
-    auto_drive: n2Auto.drive, auto_frame: n2Auto.frame, auto_discord: n2Auto.discord
+    auto_drive: n2Auto.drive, auto_frame: n2Auto.frame, auto_discord: n2Auto.discord,
+    links: manualLinks(n2Links, n2Auto)
   };
 
   const btn = $("#btnCreate2");
@@ -4030,7 +5106,7 @@ async function createProject2(){
     if(DEMO){
       await new Promise(r=>setTimeout(r,900));
       proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:autoDemoLinks(n2Auto),
+        links:Object.assign(autoDemoLinks(n2Auto), manualLinks(n2Links, n2Auto)),
         calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
@@ -4069,23 +5145,33 @@ async function createProject2(){
 let detailDirty = false, calDirty = false, detailSnapshot = null;
 function snapDetail(){ if(detailProject) detailSnapshot = JSON.parse(JSON.stringify(detailProject)); }
 function requestCloseDetail(){
-  if(detailDirty || calDirty){ openModal("ovConfirm"); return; }
+  if(detailDirty || calDirty){
+    /* el aviso es del calendario: si no cambió, ofrecerlo sería mentir */
+    const bAv = $("#btnSaveAvisar"); if(bAv) bAv.style.display = calDirty ? "" : "none";
+    openModal("ovConfirm"); return;
+  }
   closeModal("ovDetail");
 }
-async function confirmSaveExit(btn){
+async function confirmSaveExit(btn, avisar){
   const _lbl = btn ? btn.textContent : "";
   if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
   try{
     if(detailDirty){ await saveProjectInfo(); await saveTeam(); }
-    if(calDirty){ await saveCalendar(false); }
+    if(calDirty){ await saveCalendar(false, null, !!avisar); }
     detailDirty = false; calDirty = false;
     closeModal("ovConfirm"); closeModal("ovDetail");
   }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 function confirmDiscard(){
   if(detailSnapshot){
-    const i = projects.findIndex(p=>p.id===detailSnapshot.id);
-    if(i>=0) projects[i] = JSON.parse(JSON.stringify(detailSnapshot));
+    const actual = projects.find(p=>p.id===detailSnapshot.id);
+    if(actual){
+      /* Se restaura EN EL MISMO objeto. Reemplazarlo en el array dejaba a
+         detailProject y a trkProject apuntando a uno huérfano: la ficha y el tracker
+         seguían mostrando y guardando datos de un proyecto que ya no estaba en la lista. */
+      Object.keys(actual).forEach(k=>{ delete actual[k]; });
+      Object.assign(actual, JSON.parse(JSON.stringify(detailSnapshot)));
+    }
   }
   detailDirty = false; calDirty = false;
   closeModal("ovConfirm"); closeModal("ovDetail");
@@ -4100,12 +5186,16 @@ if(_ovDet){
    guardar borrador, el editor de mails no toca el scroll porque queda uno abierto atrás) */
 function closeOverlayById(id){
   if(id==="ovDetail"){ requestCloseDetail(); return; }
+  if(id==="ovNew"){ closeNew(); return; }
   if(id==="ovNew2"){ closeNew2(); return; }
   if(id==="ovMail"){ mailClose(); return; }
   if(id==="ovSintesis"){ sxClose(); return; }
   if(id==="ovFin"){ finClose(); return; }
   if(id==="ovReact"){ reactClose(); return; }
   if(id==="ovNota"){ notaClose(); return; }
+  if(id==="ovPersona"){ personaClose(); return; }
+  if(id==="ovInterno"){ internoClose(); return; }
+  if(id==="ovLinks"){ linksClose(); return; }
   closeModal(id);
 }
 document.querySelectorAll(".overlay").forEach(ov=>ov.addEventListener("click",e=>{
@@ -4278,7 +5368,8 @@ function rosterNorm(s){ return String(s||"").normalize("NFD").replace(/[\u0300-\
 function rosterCols(){
   const h = (dirData ? dirData.headers : []).map(rosterNorm);
   const find = (...keys) => h.findIndex(x => keys.some(k => x.includes(k)));
-  return { nombre: find("nombre"), mail: find("mail","correo"), discord: find("discord"), tel: find("tel") };
+  return { nombre: find("nombre"), mail: find("mail","correo"), discord: find("discord"), tel: find("tel"),
+           especialidad: find("especialidad","rol","puesto") };
 }
 function rosterEnsure(){
   if(dirData) return Promise.resolve(dirData);
@@ -4328,9 +5419,12 @@ function acOpen(input, ctx, t, i){
 }
 function acPick(ix){
   if(!acState) return;
-  const { input, ctx, t, i, items } = acState;
-  input.value = items[ix];
-  setAssign(ctx, t, i, "nombre", items[ix]);
+  const { input, ctx, t, i, items, onPick } = acState;
+  const it = items[ix];
+  /* el panel se comparte: tareas manda strings, el popup de persona manda objetos */
+  if(onPick){ onPick(it); acClose(); return; }
+  input.value = it;
+  setAssign(ctx, t, i, "nombre", it);
   asigAutofill(input, ctx, t, i);
   acClose();
 }
@@ -4510,5 +5604,9 @@ async function setUserRole(id, email, role, btn){
 }
 initAuth();
 </script>
+<!-- Capa de accesibilidad: teclado, foco en modales y ARIA.
+     Va después del script inline de arriba a propósito: envuelve funciones
+     que ése define (applyViewUI, dirRender). Ver design-system/RULES.md -->
+<script src="design-system/a11y.js"></script>
 </body>
 </html>
