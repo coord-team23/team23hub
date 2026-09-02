@@ -426,7 +426,7 @@ function render(){
     .map(p=>`<button class="pill-opt ${pilarFilter===p.key?"on":""}" onclick="setPilar('${p.key}')">${esc(p.label)}</button>`).join("");
 
   const pilares = pilarFilter === "all" ? PILARES : PILARES.filter(p=>p.key===pilarFilter);
-  const filtrando = !!q || estado !== "all" || resp !== "all";
+  const filtrando = !!q || estado.size > 0 || resp !== "all";
 
   const html = pilares.map(p => {
     const delPilar = tasks.filter(t => t.pilar === p.key);
