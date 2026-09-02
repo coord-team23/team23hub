@@ -392,6 +392,11 @@ function llenarFiltros(){
 let sb = null;
 async function authLogout(){ if(sb) await sb.auth.signOut(); location.replace("/login"); }
 
+/* acceso restringido: no es "todo interno" como el resto del hub, es solo
+   este puñado de mails. Lista a mano en vez de un subrol en Supabase porque
+   hoy son cinco personas fijas — si esto crece, conviene pasar a subrol=admin. */
+const ADMIN_MAILS = ["narf@team23.online","teo@team23.online","krl@team23.online","milena@team23.online","biz@team23.online"];
+
 async function boot(){
   $("#yr").textContent = new Date().getFullYear();
   if(DEMO) $("#demoBanner").style.display = "block";
@@ -403,8 +408,8 @@ async function boot(){
       const { data:{ session } } = await sb.auth.getSession();
       if(!session){ location.replace("/login"); return; }
       const { data } = await sb.from("profiles").select("role,subrol").eq("id", session.user.id).single();
-      /* la sección es interna: un proveedor no la ve */
-      if(!data || data.role !== "interno"){ location.replace("/proveedores"); return; }
+      const mail = (session.user.email||"").toLowerCase();
+      if(!data || data.role !== "interno" || !ADMIN_MAILS.includes(mail)){ location.replace("/productores"); return; }
       $("#btnLogout").style.display = "inline-flex";
     }catch(e){ /* si el login falla, la página queda visible solo en local */ }
   }
