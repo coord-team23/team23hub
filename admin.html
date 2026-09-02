@@ -176,6 +176,19 @@
   .meta{font-size:var(--fs-caption);color:var(--gray);white-space:nowrap;flex:none}
   .meta.vencida{color:var(--red);font-weight:var(--weight-bold)}
 
+  /* edición inline: mismo look de badge/meta, pero son controles reales */
+  .badge-select{
+    font-family:var(--font-primary);font-size:11px;font-weight:var(--weight-bold);text-transform:uppercase;
+    letter-spacing:.04em;padding:2px 6px;border-radius:var(--radius-full);border:1.5px solid var(--ink);
+    white-space:nowrap;flex:none;cursor:pointer;color:inherit;
+  }
+  .edit-date{
+    font-family:var(--font-primary);font-size:var(--fs-caption);color:var(--gray);border:1px solid transparent;
+    background:transparent;padding:2px 4px;border-radius:var(--radius-sm);cursor:pointer;flex:none;
+  }
+  .edit-date:hover{border-color:var(--hair)}
+  .edit-date.vencida{color:var(--red);font-weight:var(--weight-bold)}
+
   .empty{
     border:2px dashed var(--hair);border-radius:var(--radius-lg);padding:var(--space-7);
     text-align:center;font-size:var(--fs-caption);color:var(--gray);
@@ -251,6 +264,8 @@
 
   <div id="body"></div>
 </main>
+
+<div id="toast" role="status"></div>
 
 <footer>
   <div>
@@ -339,6 +354,33 @@ async function loadTasks(){
   tasks = data.tasks || [];
 }
 
+let toastTimer;
+function toast(msg, err=false){
+  const t = $("#toast");
+  t.textContent = msg; t.className = err?"err show":"show";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 4200);
+}
+
+/* edición inline de estado/fecha: optimista (actualiza y re-renderiza al toque),
+   revierte si falla el guardado. En demo no hay backend — solo cambia en memoria. */
+async function updateTask(id, field, value){
+  const t = tasks.find(x=>String(x.id)===String(id));
+  if(!t) return;
+  const prev = t[field];
+  t[field] = value;
+  render();
+  if(DEMO){ toast("Cambio guardado (modo demo, no persiste)."); return; }
+  try{
+    await api("/webhook/team23/admin-update-task", { method:"POST", body: JSON.stringify({ id, [field]: value }) });
+    toast("Guardado.");
+  }catch(e){
+    t[field] = prev;
+    render();
+    toast("No pude guardar el cambio: "+e.message, true);
+  }
+}
+
 /* ---------- render ---------- */
 function fechaCorta(d){
   if(!d) return "";
@@ -353,13 +395,14 @@ function estaVencida(t){
 }
 
 function badges(t){
-  let out = `<span class="badge ${ESTADO_CLASS[t.estado]||"b-sin"}">${esc(t.estado||"Sin empezar")}</span>`;
+  let out = `<select class="badge-select ${ESTADO_CLASS[t.estado]||"b-sin"}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','estado',this.value)">` +
+    ESTADOS.map(e=>`<option value="${esc(e)}" ${e===t.estado?"selected":""}>${esc(e)}</option>`).join("") +
+    `</select>`;
   if(t.prioridad) out += `<span class="badge ${PRIO_CLASS[t.prioridad]||""}">${esc(t.prioridad)}</span>`;
   return out;
 }
 function metaHTML(t){
-  let out = "";
-  if(t.deadline) out += `<span class="meta ${estaVencida(t)?"vencida":""}">${fechaCorta(t.deadline)}</span>`;
+  let out = `<input type="date" class="edit-date ${estaVencida(t)?"vencida":""}" value="${t.deadline||""}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','deadline',this.value)">`;
   if(t.responsable) out += `<span class="meta">${esc(t.responsable)}</span>`;
   return out;
 }
