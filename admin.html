@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="18" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="46" cy="32" r="14" fill="white" stroke="%230A0A0A" stroke-width="5"/><circle cx="21" cy="36" r="7.5" fill="%230A0A0A"/><circle cx="49" cy="36" r="7.5" fill="%230A0A0A"/></svg>'>
+<title>TEAM 23 — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="design-system/styles.css">
+<style>
+  :root{
+    /* mismos alias del hub principal, sobre los tokens de design-system/tokens/ */
+    --ink:var(--n-600);
+    --paper:var(--n-000);
+    --red:var(--brand-red);
+    --gray:var(--tx-on-light-secondary);
+    --soft:var(--n-100);
+    --hair:var(--n-200);
+
+    --fs-hero:clamp(32px,6vw,var(--text-s1-size));
+    --fs-section:clamp(20px,3vw,var(--text-b3-size));
+    --fs-card-title:clamp(16px,1.6vw,18px);
+    --fs-body:var(--text-b1-size);
+    --fs-caption:var(--text-c2-size);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:var(--font-primary);background:var(--paper);color:var(--ink);
+    font-size:var(--fs-body);line-height:1.3;letter-spacing:var(--tracking-tight);
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  ::selection{background:var(--red);color:#fff}
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:var(--stroke-sm) solid var(--ink);
+    padding:var(--space-4) var(--space-7);
+  }
+  .hrow{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap}
+  .wordmark{display:flex;align-items:center;gap:var(--space-3);color:var(--ink);text-decoration:none}
+  .wordmark .t{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:22px;letter-spacing:var(--tracking-tight)}
+  .eyes{display:inline-flex;gap:3px}
+  .eye{width:18px;height:22px;background:#fff;border:var(--stroke-sm) solid var(--ink);border-radius:50%;position:relative}
+  .pupil{width:7px;height:7px;background:var(--ink);border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+  .hub-label{font-size:var(--fs-caption);letter-spacing:.14em;font-weight:var(--weight-bold);color:var(--gray)}
+  .hacts{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
+
+  .btn{
+    font-family:var(--font-secondary);font-weight:var(--weight-bold);font-size:var(--fs-caption);
+    border:2px solid var(--ink);background:var(--paper);color:var(--ink);
+    border-radius:var(--radius-full);padding:var(--space-4) var(--space-9);cursor:pointer;white-space:nowrap;
+    transition:transform .15s ease, background .15s ease, color .15s ease;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn.small{padding:var(--space-3) var(--space-5);font-size:12px}
+  header .btn.small{
+    font-family:var(--font-primary);text-transform:uppercase;letter-spacing:.08em;
+    font-size:12px;padding:var(--space-2) var(--space-4);
+  }
+
+  /* ---------- hero ---------- */
+  .hero{padding:var(--space-11) var(--space-7) var(--space-7)}
+  .hero h1{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-hero);
+    line-height:.92;letter-spacing:var(--tracking-tight);text-transform:uppercase;
+    -webkit-text-stroke:.6px currentColor;
+  }
+  .kicker{font-size:var(--fs-caption);letter-spacing:.14em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin-top:var(--space-4)}
+
+  .demo-banner{
+    margin:0 var(--space-7) var(--space-4);padding:var(--space-4) var(--space-5);
+    border:var(--stroke-sm) dashed var(--red);border-radius:var(--radius-md);
+    font-size:var(--fs-caption);line-height:1.6;
+  }
+  .demo-banner b{color:var(--red)}
+
+  main{padding:var(--space-5) var(--space-7) var(--space-9);max-width:1400px}
+
+  /* ---------- stats ---------- */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--space-4)}
+  .stat{border:2px solid var(--ink);border-radius:var(--radius-lg);padding:var(--space-5);box-shadow:4px 4px 0 var(--ink)}
+  .stat b{display:block;font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-section);line-height:1}
+  .stat span{display:block;margin-top:var(--space-2);font-size:var(--fs-caption);color:var(--gray);font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.06em}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center;margin-top:var(--space-7)}
+  .toolbar input[type=text],.toolbar select{
+    font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3);
+    border:2px solid var(--ink);border-radius:var(--radius-md);background:#fff;color:var(--ink);
+  }
+  .toolbar input[type=text]{flex:1 1 240px;min-width:0}
+  .toolbar input:focus,.toolbar select:focus{outline:3px solid var(--red);outline-offset:2px}
+  .pill-opt{
+    font-family:var(--font-primary);font-size:12px;font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.06em;
+    border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:var(--radius-full);
+    padding:var(--space-2) var(--space-4);cursor:pointer;
+  }
+  .pill-opt.on{background:var(--ink);color:#fff}
+
+  /* ---------- pilares ---------- */
+  .pilar{margin-top:var(--space-9)}
+  .section-head{
+    display:flex;align-items:baseline;gap:var(--space-4);border-bottom:var(--stroke-sm) solid var(--ink);
+    padding-bottom:var(--space-4);margin-bottom:var(--space-5);
+  }
+  .section-head h2{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-section);
+    text-transform:uppercase;letter-spacing:var(--tracking-tight);
+  }
+  .section-head .count{font-size:var(--fs-caption);font-weight:var(--weight-bold);color:var(--gray)}
+
+  .grupo{border:2px solid var(--ink);border-radius:var(--radius-lg);margin-bottom:var(--space-4);overflow:hidden}
+  .grupo-head{
+    display:flex;align-items:center;gap:var(--space-3);padding:var(--space-4) var(--space-5);
+    background:var(--soft);cursor:pointer;flex-wrap:wrap;
+  }
+  .grupo-head .nom{font-weight:var(--weight-bold);font-size:var(--fs-card-title)}
+  .grupo-head .sub{font-size:var(--fs-caption);color:var(--gray)}
+  .dd-toggle{
+    width:26px;height:26px;border:2px solid var(--ink);border-radius:var(--radius-full);
+    background:var(--paper);color:var(--ink);cursor:pointer;margin-left:auto;flex:none;
+    display:inline-flex;align-items:center;justify-content:center;font-size:11px;
+  }
+  .dd-toggle.closed span{transform:rotate(-90deg)}
+  .dd-toggle span{display:block;transition:transform .15s ease}
+
+  .fila{
+    display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5);
+    border-top:1px solid var(--hair);flex-wrap:wrap;
+  }
+  .fila .nom{flex:1 1 220px;min-width:0}
+  .fila.child .nom{padding-left:var(--space-5);color:var(--gray)}
+
+  .badge{
+    font-size:11px;font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.04em;
+    padding:3px 10px;border-radius:var(--radius-full);border:1.5px solid var(--ink);white-space:nowrap;flex:none;
+  }
+  .b-sin{background:var(--soft)}
+  .b-plan{background:var(--brand-cyan)}
+  .b-curso{background:var(--brand-yellow)}
+  .b-pausa{background:var(--brand-purple)}
+  .b-listo{background:var(--brand-green)}
+  .b-arch{background:var(--hair);color:var(--gray)}
+  .b-alta{background:var(--red);border-color:var(--red);color:#fff}
+  .b-media{background:var(--brand-yellow)}
+  .b-baja{background:var(--paper);color:var(--gray)}
+  .meta{font-size:var(--fs-caption);color:var(--gray);white-space:nowrap;flex:none}
+  .meta.vencida{color:var(--red);font-weight:var(--weight-bold)}
+
+  .empty{
+    border:2px dashed var(--hair);border-radius:var(--radius-lg);padding:var(--space-7);
+    text-align:center;font-size:var(--fs-caption);color:var(--gray);
+  }
+
+  footer{
+    border-top:var(--stroke-sm) solid var(--ink);padding:var(--space-9) var(--space-7) var(--space-7);
+    display:flex;justify-content:space-between;align-items:flex-end;gap:var(--space-5);flex-wrap:wrap;
+  }
+  .foot-mark-img{max-width:280px;height:auto;display:block}
+  .foot-right{text-align:right;font-size:var(--fs-caption);font-weight:var(--weight-bold);line-height:1.8}
+  .foot-scope{color:var(--gray);letter-spacing:.1em}
+
+  @media (max-width:640px){
+    header{padding:var(--space-3) 16px}
+    .hero{padding:24px 16px 10px}
+    main{padding:8px 16px 90px}
+    .demo-banner{margin:0 16px 8px}
+    footer{padding:40px 16px 28px;flex-direction:column;align-items:flex-start}
+    .foot-right{text-align:left}
+    .fila{gap:var(--space-2)}
+  }
+</style>
+<!-- Capa de interacción: press, foco, hit area, motion y contraste.
+     Va DESPUÉS del <style> de arriba a propósito: misma especificidad,
+     gana la última en cargar. Ver design-system/RULES.md -->
+<link rel="stylesheet" href="design-system/interaction.css">
+</head>
+<body>
+
+<header>
+  <div class="hrow">
+    <a class="wordmark" href="/productores">
+      <span class="t">TEAM 23</span>
+      <span class="eyes"><span class="eye"><span class="pupil"></span></span><span class="eye"><span class="pupil"></span></span></span>
+    </a>
+    <span class="hub-label">PRODUCTION HUB · ADMIN</span>
+    <div class="hacts">
+      <a class="btn small" href="/productores">← Hub</a>
+      <button class="btn small" id="btnLogout" style="display:none" onclick="authLogout()" title="Salir" aria-label="Salir"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>Admin</h1>
+  <div class="kicker">Seguimiento interno del estudio · operativa, ejecutiva y crecimiento</div>
+</div>
+
+<div class="demo-banner" id="demoBanner" style="display:none">
+  <b>MODO DEMO</b> — Estás viendo el seguimiento cargado del documento original. Para conectarlo en serio: configurá <code>CONFIG.N8N_BASE</code> y <code>CONFIG.API_KEY</code>, con el workflow <code>13-admin-tasks</code> importado en n8n.
+</div>
+
+<main>
+  <div class="stat-grid" id="stats"></div>
+
+  <div class="toolbar">
+    <input type="text" id="q" placeholder="Buscar por tarea, responsable o grupo…" oninput="render()">
+    <select id="fEstado" onchange="render()">
+      <option value="all">Todos los estados</option>
+    </select>
+    <select id="fResp" onchange="render()">
+      <option value="all">Todos los responsables</option>
+    </select>
+    <span id="pilarTabs" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+  </div>
+
+  <div id="body"></div>
+</main>
+
+<footer>
+  <div>
+    <img class="foot-mark-img" src="assets/footer-mark.png" alt="biz@team23.online — Creative direction, (Post) producción, New media lab">
+  </div>
+  <div class="foot-right">
+    <div class="foot-scope">MX — ARG — WORLDWIDE</div>
+    <div>TEAM 23 © <span id="yr"></span></div>
+  </div>
+</footer>
+
+<script>
+/* ================================================================
+   CONFIG — mismos valores que el resto del hub.
+   N8N_BASE vacío ⇒ modo demo con el seguimiento ya cargado.
+================================================================ */
+const CONFIG = {
+  N8N_BASE: "https://coordteam23.app.n8n.cloud",
+  API_KEY: "coordHUBt23",
+  SUPABASE_URL: "https://muvmrkacjhygfuialpyn.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI"
+};
+const DEMO = !CONFIG.N8N_BASE;
+const AUTH_ON = !!CONFIG.SUPABASE_URL;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const PILARES = [
+  { key:"operativa",   label:"01 · Operativa / Producción" },
+  { key:"ejecutiva",   label:"02 · Ejecutiva" },
+  { key:"crecimiento", label:"03 · Crecimiento" }
+];
+const ESTADOS = ["Sin empezar","Planificación","En curso","En pausa","Listo","Archivadas"];
+const ESTADO_CLASS = {"Sin empezar":"b-sin","Planificación":"b-plan","En curso":"b-curso","En pausa":"b-pausa","Listo":"b-listo","Archivadas":"b-arch"};
+const PRIO_CLASS = {"Alta":"b-alta","Media":"b-media","Baja":"b-baja"};
+
+let tasks = [];
+let pilarFilter = "all";
+/* grupos colapsados: arrancan cerrados salvo los que el usuario abra */
+const abiertos = new Set();
+
+/* ---------- datos ---------- */
+async function api(path, opts={}){
+  const r = await fetch(CONFIG.N8N_BASE.replace(/\/$/,"") + path, {
+    ...opts,
+    headers: { "Content-Type":"application/json", "x-team23-key": CONFIG.API_KEY, ...(opts.headers||{}) }
+  });
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  return r.json();
+}
+
+async function loadTasks(){
+  if(DEMO){ tasks = SEED.slice(); return; }
+  const data = await api("/webhook/team23/admin-tasks");
+  tasks = data.tasks || [];
+}
+
+/* ---------- render ---------- */
+function fechaCorta(d){
+  if(!d) return "";
+  const [y,m,day] = d.split("-");
+  return `${day}/${m}/${String(y).slice(2)}`;
+}
+function estaVencida(t){
+  if(!t.deadline || t.estado === "Listo" || t.estado === "Archivadas") return false;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const [y,m,d] = t.deadline.split("-").map(Number);
+  return new Date(y, m-1, d) < hoy;
+}
+
+function badges(t){
+  let out = `<span class="badge ${ESTADO_CLASS[t.estado]||"b-sin"}">${esc(t.estado||"Sin empezar")}</span>`;
+  if(t.prioridad) out += `<span class="badge ${PRIO_CLASS[t.prioridad]||""}">${esc(t.prioridad)}</span>`;
+  return out;
+}
+function metaHTML(t){
+  let out = "";
+  if(t.deadline) out += `<span class="meta ${estaVencida(t)?"vencida":""}">${fechaCorta(t.deadline)}</span>`;
+  if(t.responsable) out += `<span class="meta">${esc(t.responsable)}</span>`;
+  return out;
+}
+
+function renderStats(list){
+  const c = { total:list.length };
+  ESTADOS.forEach(e => c[e] = list.filter(t=>t.estado===e).length);
+  const vencidas = list.filter(estaVencida).length;
+  $("#stats").innerHTML = [
+    ["Total", c.total],
+    ["En curso", c["En curso"]],
+    ["Planificación", c["Planificación"]],
+    ["Sin empezar", c["Sin empezar"]],
+    ["Listas", c["Listo"]],
+    ["Vencidas", vencidas]
+  ].map(([label,n]) => `<div class="stat"><b>${n}</b><span>${esc(label)}</span></div>`).join("");
+}
+
+function matches(t, q, estado, resp){
+  if(estado !== "all" && t.estado !== estado) return false;
+  if(resp !== "all" && (t.responsable||"") !== resp) return false;
+  if(!q) return true;
+  return [t.nombre, t.responsable, t.grupo].filter(Boolean).join(" ").toLowerCase().includes(q);
+}
+
+function render(){
+  const q = $("#q").value.trim().toLowerCase();
+  const estado = $("#fEstado").value;
+  const resp = $("#fResp").value;
+
+  const visibles = tasks.filter(t => matches(t, q, estado, resp));
+  renderStats(visibles);
+
+  $("#pilarTabs").innerHTML = [{key:"all",label:"Todos"}, ...PILARES]
+    .map(p=>`<button class="pill-opt ${pilarFilter===p.key?"on":""}" onclick="setPilar('${p.key}')">${esc(p.label)}</button>`).join("");
+
+  const pilares = pilarFilter === "all" ? PILARES : PILARES.filter(p=>p.key===pilarFilter);
+  const filtrando = !!q || estado !== "all" || resp !== "all";
+
+  const html = pilares.map(p => {
+    const delPilar = tasks.filter(t => t.pilar === p.key);
+    const raices = delPilar.filter(t => !t.grupo);
+
+    const grupos = raices.map(root => {
+      const hijos = delPilar.filter(t => t.grupo === root.nombre);
+      const rootOk = matches(root, q, estado, resp);
+      const hijosOk = hijos.filter(h => matches(h, q, estado, resp));
+      /* con filtro activo, un grupo se muestra si matchea él o alguno de sus hijos */
+      if(filtrando && !rootOk && !hijosOk.length) return "";
+
+      const mostrar = filtrando ? hijosOk : hijos;
+      const open = abiertos.has(root.id) || (filtrando && hijosOk.length);
+      const filas = mostrar.map(h => `
+        <div class="fila child">
+          <span class="nom">${esc(h.nombre)}</span>
+          ${badges(h)}${metaHTML(h)}
+        </div>`).join("");
+
+      return `<div class="grupo">
+        <div class="grupo-head" onclick="toggleGrupo('${root.id}')">
+          <span class="nom">${esc(root.nombre)}</span>
+          ${hijos.length ? `<span class="sub">${filtrando ? mostrar.length+" de "+hijos.length : hijos.length} ${hijos.length===1?"subtarea":"subtareas"}</span>` : ""}
+          ${badges(root)}${metaHTML(root)}
+          ${hijos.length ? `<button class="dd-toggle${open?"":" closed"}" tabindex="-1" aria-label="Desplegar"><span>▾</span></button>` : ""}
+        </div>
+        ${hijos.length ? `<div style="${open?"":"display:none"}">${filas}</div>` : ""}
+      </div>`;
+    }).join("");
+
+    const n = delPilar.filter(t => matches(t, q, estado, resp)).length;
+    return `<section class="pilar">
+      <div class="section-head"><h2>${esc(p.label)}</h2><span class="count">(${n})</span></div>
+      ${grupos || `<div class="empty">Sin tareas que coincidan con el filtro.</div>`}
+    </section>`;
+  }).join("");
+
+  $("#body").innerHTML = html;
+}
+
+function setPilar(k){ pilarFilter = k; render(); }
+function toggleGrupo(id){ abiertos.has(id) ? abiertos.delete(id) : abiertos.add(id); render(); }
+
+function llenarFiltros(){
+  $("#fEstado").innerHTML = `<option value="all">Todos los estados</option>` +
+    ESTADOS.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join("");
+  const resps = [...new Set(tasks.map(t=>t.responsable).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
+  $("#fResp").innerHTML = `<option value="all">Todos los responsables</option>` +
+    resps.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join("");
+}
+
+/* ---------- auth ---------- */
+let sb = null;
+async function authLogout(){ if(sb) await sb.auth.signOut(); location.replace("/login"); }
+
+async function boot(){
+  $("#yr").textContent = new Date().getFullYear();
+  if(DEMO) $("#demoBanner").style.display = "block";
+
+  if(AUTH_ON){
+    try{
+      const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+      sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+      const { data:{ session } } = await sb.auth.getSession();
+      if(!session){ location.replace("/login"); return; }
+      const { data } = await sb.from("profiles").select("role,subrol").eq("id", session.user.id).single();
+      /* la sección es interna: un proveedor no la ve */
+      if(!data || data.role !== "interno"){ location.replace("/proveedores"); return; }
+      $("#btnLogout").style.display = "inline-flex";
+    }catch(e){ /* si el login falla, la página queda visible solo en local */ }
+  }
+
+  try{ await loadTasks(); }
+  catch(e){ $("#body").innerHTML = `<div class="empty">No pude cargar el seguimiento (${esc(e.message)}).</div>`; return; }
+
+  llenarFiltros();
+  render();
+}
+
+/* ---------- seed: el seguimiento del documento original ---------- */
+const SEED = [{"id":"t1","pilar":"operativa","grupo":"","nombre":"Armar mail de material p equipo","estado":"Listo","prioridad":"Alta","deadline":"2025-01-09","responsable":"Mile - Teo","origen":"Proyectos","depth":0},{"id":"t2","pilar":"operativa","grupo":"","nombre":"Automatizaciones","estado":"En pausa","prioridad":"Baja","deadline":"2025-09-24","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t3","pilar":"operativa","grupo":"","nombre":"Arreglar Dropbox (TEO)","estado":"Listo","prioridad":"Alta","deadline":"2025-05-05","responsable":"Teo","origen":"Proyectos","depth":0},{"id":"t4","pilar":"operativa","grupo":"","nombre":"Ordenar Drive","estado":"Listo","prioridad":"Alta","deadline":"2025-01-10","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t5","pilar":"operativa","grupo":"Ordenar Drive","nombre":"Copiar archivos del equipo en nuestro drive","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t6","pilar":"operativa","grupo":"Ordenar Drive","nombre":"Limpiar documentos random","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t7","pilar":"operativa","grupo":"Ordenar Drive","nombre":"Ordenar proyectos","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t8","pilar":"operativa","grupo":"","nombre":"Revision servicios y tarjeta","estado":"Listo","prioridad":"Alta","deadline":"2025-11-08","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t9","pilar":"operativa","grupo":"Revision servicios y tarjeta","nombre":"Cambiar servicios a cuenta coop","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t10","pilar":"operativa","grupo":"","nombre":"LLC","estado":"Sin empezar","prioridad":"Baja","deadline":"2025-07-04","responsable":"Karla","origen":"Proyectos","depth":0},{"id":"t11","pilar":"operativa","grupo":"","nombre":"Almacenamiento","estado":"En curso","prioridad":"Alta","deadline":"2025-10-01","responsable":"Narf","origen":"Proyectos","depth":0},{"id":"t12","pilar":"operativa","grupo":"","nombre":"Cuenta USD Coop","estado":"Listo","prioridad":"Alta","deadline":"2025-01-25","responsable":"Karla","origen":"Proyectos","depth":0},{"id":"t13","pilar":"operativa","grupo":"","nombre":"Post Portfolio Update","estado":"En curso","prioridad":"Alta","deadline":"2025-10-07","responsable":"Mile Teo","origen":"Proyectos","depth":0},{"id":"t14","pilar":"operativa","grupo":"Post Portfolio Update","nombre":"Diseño Lanzamiento","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t15","pilar":"operativa","grupo":"Post Portfolio Update","nombre":"Video","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t16","pilar":"operativa","grupo":"Post Portfolio Update","nombre":"DG Carteles","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t17","pilar":"operativa","grupo":"Post Portfolio Update","nombre":"Linktree/bento.me","estado":"Sin empezar","prioridad":"Alta","deadline":"2025-10-06","responsable":"Mile","origen":"Proyectos","depth":1},{"id":"t18","pilar":"operativa","grupo":"","nombre":"Desarrollo ETCÉTERA","estado":"En curso","prioridad":"Alta","deadline":"2025-10-25","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t19","pilar":"operativa","grupo":"Desarrollo ETCÉTERA","nombre":"Guiones","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t20","pilar":"operativa","grupo":"Desarrollo ETCÉTERA","nombre":"Bajada pitch","estado":"Listo","prioridad":"Alta","deadline":"2025-09-22","responsable":"Mile","origen":"Proyectos","depth":1},{"id":"t21","pilar":"operativa","grupo":"Desarrollo ETCÉTERA","nombre":"Gestión Artística Trimarchi  - Lineup","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t22","pilar":"operativa","grupo":"Desarrollo ETCÉTERA","nombre":"Legals","estado":"Listo","prioridad":"Alta","deadline":"2025-09-23","responsable":"Mile Juli","origen":"Proyectos","depth":1},{"id":"t23","pilar":"operativa","grupo":"Desarrollo ETCÉTERA","nombre":"Producción Al Paciello","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t24","pilar":"operativa","grupo":"","nombre":"Post Agenda Abierta","estado":"Planificación","prioridad":"Media","deadline":"2025-10-06","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t25","pilar":"operativa","grupo":"","nombre":"Post Avatares (4+ video túnel)","estado":"Listo","prioridad":"Alta","deadline":"2025-09-26","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t26","pilar":"operativa","grupo":"Post Avatares (4+ video túnel)","nombre":"Diseño","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t27","pilar":"operativa","grupo":"","nombre":"Cierre Reel","estado":"Listo","prioridad":"Alta","deadline":"2025-10-06","responsable":"TEAM","origen":"Proyectos","depth":0},{"id":"t28","pilar":"operativa","grupo":"Cierre Reel","nombre":"Sonido","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t29","pilar":"operativa","grupo":"Cierre Reel","nombre":"Adaptaciones","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t30","pilar":"operativa","grupo":"Cierre Reel","nombre":"Graphs","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t31","pilar":"operativa","grupo":"Cierre Reel","nombre":"Masterización","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t32","pilar":"operativa","grupo":"Cierre Reel","nombre":"Redux","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t33","pilar":"operativa","grupo":"","nombre":"Pagar frameio","estado":"Listo","prioridad":"Alta","deadline":"2025-08-25","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t34","pilar":"operativa","grupo":"","nombre":"Cierre créditos IA 47 st","estado":"Listo","prioridad":"Alta","deadline":"2025-08-26","responsable":"Mile Teo","origen":"Proyectos","depth":0},{"id":"t35","pilar":"operativa","grupo":"","nombre":"Reel IA","estado":"Listo","prioridad":"Alta","deadline":"2025-10-01","responsable":"Mile Teo","origen":"Proyectos","depth":0},{"id":"t36","pilar":"operativa","grupo":"","nombre":"Respuesta TENA","estado":"Listo","prioridad":"Alta","deadline":"2025-09-02","responsable":"Narf","origen":"Proyectos","depth":0},{"id":"t37","pilar":"operativa","grupo":"","nombre":"Sync c/ opposite visuals","estado":"Listo","prioridad":"Alta","deadline":"2025-09-05","responsable":"Mile Teo","origen":"Proyectos","depth":0},{"id":"t38","pilar":"operativa","grupo":"","nombre":"Pagar vimeo","estado":"Listo","prioridad":"Alta","deadline":"2025-08-25","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t39","pilar":"operativa","grupo":"","nombre":"Sync c/ Martee","estado":"Listo","prioridad":"Alta","deadline":"2025-08-26","responsable":"Mile Teo","origen":"Proyectos","depth":0},{"id":"t40","pilar":"operativa","grupo":"","nombre":"Probar reel en Luzy","estado":"Listo","prioridad":"Media","deadline":"2025-09-08","responsable":"Narf","origen":"Proyectos","depth":0},{"id":"t41","pilar":"operativa","grupo":"","nombre":"QR Web","estado":"Sin empezar","prioridad":"Alta","deadline":"2025-10-06","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t42","pilar":"operativa","grupo":"","nombre":"Inventario","estado":"En curso","prioridad":"Alta","deadline":"2025-09-19","responsable":"Knd y Krl","origen":"Proyectos","depth":0},{"id":"t43","pilar":"operativa","grupo":"","nombre":"Cartel Post Al Paciello","estado":"Listo","prioridad":"Alta","deadline":"2025-10-03","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t44","pilar":"operativa","grupo":"","nombre":"Pagar a Marketing","estado":"Listo","prioridad":"Alta","deadline":"2025-09-18","responsable":"Karla","origen":"Proyectos","depth":0},{"id":"t45","pilar":"operativa","grupo":"","nombre":"Presupuesto Netflix","estado":"Listo","prioridad":"Alta","deadline":"2025-09-22","responsable":"TEAM","origen":"Proyectos","depth":0},{"id":"t46","pilar":"operativa","grupo":"","nombre":"Firmas Mail","estado":"Listo","prioridad":"Alta","deadline":"2025-10-22","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t47","pilar":"operativa","grupo":"","nombre":"Activar VISA credito","estado":"Listo","prioridad":"Alta","deadline":"2025-09-24","responsable":"Knd Mile","origen":"Proyectos","depth":0},{"id":"t48","pilar":"operativa","grupo":"","nombre":"Footer web Marti","estado":"Listo","prioridad":"Alta","deadline":"2025-10-01","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t49","pilar":"operativa","grupo":"","nombre":"Sync estrategia NT","estado":"Listo","prioridad":"Alta","deadline":"2025-10-07","responsable":"Mile Teo Narf","origen":"Proyectos","depth":0},{"id":"t50","pilar":"operativa","grupo":"","nombre":"Automatizar respuestas de KRLA","estado":"Sin empezar","prioridad":"Alta","deadline":"2025-10-01","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t51","pilar":"operativa","grupo":"","nombre":"Lead: Web kosmic","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t52","pilar":"operativa","grupo":"","nombre":"Enviar portfolio a TRENDO","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t53","pilar":"operativa","grupo":"","nombre":"Lead: Paco y Catriel","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t54","pilar":"operativa","grupo":"","nombre":"Al Paciello","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t55","pilar":"operativa","grupo":"Al Paciello","nombre":"Revisión de Contrato","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t56","pilar":"operativa","grupo":"Al Paciello","nombre":"Plan Al Paciello","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t57","pilar":"operativa","grupo":"","nombre":"TECNICO","estado":"En curso","prioridad":null,"deadline":null,"responsable":"TEAM 23","origen":"Proyectos","depth":0},{"id":"t58","pilar":"operativa","grupo":"TECNICO","nombre":"Buscar edit ONLINE MX","estado":"En curso","prioridad":null,"deadline":"2026-04-13","responsable":"Narf","origen":"Proyectos","depth":1},{"id":"t59","pilar":"operativa","grupo":"TECNICO","nombre":"Buscar coord MX","estado":"En curso","prioridad":null,"deadline":"2026-04-13","responsable":"Teo y Narf","origen":"Proyectos","depth":1},{"id":"t60","pilar":"operativa","grupo":"","nombre":"PRODUCCION","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":"TEAM 23","origen":"Proyectos","depth":0},{"id":"t61","pilar":"operativa","grupo":"PRODUCCION","nombre":"Mejorar seguimiento de presupuestos","estado":"Planificación","prioridad":null,"deadline":null,"responsable":"Mile y Karla","origen":"Proyectos","depth":1},{"id":"t62","pilar":"operativa","grupo":"PRODUCCION","nombre":"Pipeline","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t63","pilar":"operativa","grupo":"PRODUCCION","nombre":"Filtrar oportunidades mejor","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t64","pilar":"operativa","grupo":"PRODUCCION","nombre":"Evitar presupuestos innecesarios sin info","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t65","pilar":"operativa","grupo":"PRODUCCION","nombre":"Cerrar trabajos de Marzo","estado":"En curso","prioridad":null,"deadline":null,"responsable":"Teo y Karla","origen":"Proyectos","depth":1},{"id":"t66","pilar":"operativa","grupo":"PRODUCCION","nombre":"Garnier","estado":"Planificación","prioridad":"Alta","deadline":null,"responsable":"Teo","origen":"Proyectos","depth":2},{"id":"t67","pilar":"operativa","grupo":"PRODUCCION","nombre":"Mail a Prod","estado":"Planificación","prioridad":null,"deadline":null,"responsable":"Teo","origen":"Proyectos","depth":3},{"id":"t68","pilar":"operativa","grupo":"PRODUCCION","nombre":"Cobros","estado":"Planificación","prioridad":null,"deadline":null,"responsable":"Karla","origen":"Proyectos","depth":3},{"id":"t69","pilar":"operativa","grupo":"PRODUCCION","nombre":"ML 4/4","estado":"Planificación","prioridad":"Alta","deadline":"2026-04-06","responsable":"Teo","origen":"Proyectos","depth":2},{"id":"t70","pilar":"operativa","grupo":"","nombre":"PROTOCOLOS","estado":"En curso","prioridad":"Alta","deadline":null,"responsable":"TEAM","origen":"Proyectos","depth":0},{"id":"t71","pilar":"operativa","grupo":"PROTOCOLOS","nombre":"Inicio/cierre y coord de proyecto","estado":"Planificación","prioridad":"Alta","deadline":"2026-04-13","responsable":"TEAM","origen":"Proyectos","depth":1},{"id":"t72","pilar":"operativa","grupo":"PROTOCOLOS","nombre":"canal discord General - aviso a Carla - mensaje pagos","estado":"Planificación","prioridad":null,"deadline":"2026-04-13","responsable":null,"origen":"Proyectos","depth":2},{"id":"t73","pilar":"operativa","grupo":"PROTOCOLOS","nombre":"Llamada coord (v1 con coordinadores)","estado":"Planificación","prioridad":null,"deadline":"2026-04-15","responsable":null,"origen":"Proyectos","depth":2},{"id":"t74","pilar":"operativa","grupo":"PROTOCOLOS","nombre":"Activacion casilla de sus mails","estado":"Planificación","prioridad":null,"deadline":"2026-04-15","responsable":null,"origen":"Proyectos","depth":3},{"id":"t75","pilar":"operativa","grupo":"PROTOCOLOS","nombre":"Llamada protocolos (interna)","estado":"En curso","prioridad":null,"deadline":"2026-04-09","responsable":null,"origen":"Proyectos","depth":2},{"id":"t76","pilar":"operativa","grupo":"PROTOCOLOS","nombre":"Kickoff","estado":"Planificación","prioridad":"Alta","deadline":"2026-04-30","responsable":"TEAM","origen":"Proyectos","depth":1},{"id":"t77","pilar":"operativa","grupo":"PROTOCOLOS","nombre":"Implementar llamada kickoff obligatoria","estado":"Planificación","prioridad":null,"deadline":"2026-04-30","responsable":null,"origen":"Proyectos","depth":2},{"id":"t78","pilar":"operativa","grupo":"PROTOCOLOS","nombre":"Ordenar inicio de proyectos","estado":"Planificación","prioridad":null,"deadline":"2026-04-30","responsable":null,"origen":"Proyectos","depth":2},{"id":"t79","pilar":"operativa","grupo":"PROTOCOLOS","nombre":"Presentación de equipo y condiciones","estado":"Planificación","prioridad":null,"deadline":"2026-04-30","responsable":null,"origen":"Proyectos","depth":2},{"id":"t80","pilar":"operativa","grupo":"PROTOCOLOS","nombre":"Status de presupuestos y pagos","estado":"Planificación","prioridad":"Alta","deadline":"2026-04-13","responsable":"Karla","origen":"Proyectos","depth":1},{"id":"t81","pilar":"operativa","grupo":"","nombre":"Vimeo","estado":"Listo","prioridad":"Media","deadline":"2025-06-19","responsable":"Mile","origen":"Proyectos","depth":0},{"id":"t82","pilar":"operativa","grupo":"Vimeo","nombre":"Crear perfil profesional","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t83","pilar":"operativa","grupo":"Vimeo","nombre":"Mudar a vimeo viejo","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t84","pilar":"operativa","grupo":"Vimeo","nombre":"Ocultar contenido web","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t85","pilar":"operativa","grupo":"Vimeo","nombre":"Subir reel en modo publico","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t86","pilar":"operativa","grupo":"","nombre":"Protocolos","estado":"Sin empezar","prioridad":"Media","deadline":"2025-07-18","responsable":"TEAM","origen":"Proyectos","depth":0},{"id":"t87","pilar":"operativa","grupo":"Protocolos","nombre":"Cierre backup proyectos","estado":"Sin empezar","prioridad":"Alta","deadline":"2025-10-03","responsable":"Narf y Teo","origen":"Proyectos","depth":1},{"id":"t88","pilar":"operativa","grupo":"Protocolos","nombre":"Diseño etiquetas","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t89","pilar":"operativa","grupo":"Protocolos","nombre":"Compra discos","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t90","pilar":"operativa","grupo":"Protocolos","nombre":"Excel de seguimiento","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t91","pilar":"operativa","grupo":"Protocolos","nombre":"Briefs VFX","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t92","pilar":"operativa","grupo":"Protocolos","nombre":"Cierre de proyectos","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t93","pilar":"operativa","grupo":"Protocolos","nombre":"Diseño timings","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t94","pilar":"operativa","grupo":"Protocolos","nombre":"Nuevo colaborador","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t95","pilar":"operativa","grupo":"Protocolos","nombre":"Configurar miembro y categorias Discord","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t96","pilar":"operativa","grupo":"Protocolos","nombre":"Subir material a Web","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t97","pilar":"operativa","grupo":"Protocolos","nombre":"Organizacion Material Interno","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t98","pilar":"operativa","grupo":"Protocolos","nombre":"Repaso Notion","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t99","pilar":"operativa","grupo":"Protocolos","nombre":"Repaso Figma","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t100","pilar":"operativa","grupo":"Protocolos","nombre":"Repaso Drive","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t101","pilar":"ejecutiva","grupo":"","nombre":"FINANZAS","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t102","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Préstamos","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t103","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Formalizar préstamos internos (Teo, Milena)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t104","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Hacer asamblea de cooperativa para inversión.","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t105","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Inversiones","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t106","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Comprar PC","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t107","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Crear proyecto discord","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":3},{"id":"t108","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Definir modalidad prestamo/cuotas","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":3},{"id":"t109","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Realizar asamblea para cuota social","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t110","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Evaluar inversión en USD como cooperativa (por socios)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t111","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Analizar FCI (2M ARS)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t112","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Definir estrategia de inversión","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t113","pilar":"ejecutiva","grupo":"FINANZAS","nombre":"Avanzar en trámite de 1 propuesta de inversión (USD - Balanz)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t114","pilar":"ejecutiva","grupo":"","nombre":"CONTABLE","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t115","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Activar exención de Ganancias (requiere seguimiento activo)","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t116","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Resolver exención de Ingresos Brutos","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t117","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Frenar retenciones incorrectas de IIBB (ej. Landia)","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t118","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Contratar nuevo equipo contable (Verónica o equipo)","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t119","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Cambiar de contadora (salir de Vanessa)","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t120","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Definir estrategia fiscal correcta para socios","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t121","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Revisar si socios deben facturar o no a la cooperativa","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t122","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Registrar todos los movimientos","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t123","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Actualizar correctamente las planillas al cierre de la semana + actualizar notas de acuerdos (productores)","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t124","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Resoluciones Bancarias","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t125","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Actualizar cuentas de excedentes","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t126","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Implementar sistema de pagos mensuales fijos","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t127","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Evaluar posible “amnistía” futura para Mile","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t128","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Actualizar reporte financiero en canal #pagos (martes y viernes)","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t129","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Definir sistema de devolución (ej. % de ingresos)","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t130","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Implementar sistema de reporte de pagos al equipo en cada proyecto.","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t131","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Implementar y sostener cierre semanal de caja","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t132","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Reporte de proyectos en canal #pagos (martes y viernes)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t133","pilar":"ejecutiva","grupo":"CONTABLE","nombre":"Tarea","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":1},{"id":"t134","pilar":"ejecutiva","grupo":"","nombre":"RRHH","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t135","pilar":"ejecutiva","grupo":"RRHH","nombre":"Objetivos mensuales","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t136","pilar":"ejecutiva","grupo":"RRHH","nombre":"Validar ingresos proyectados por persona","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t137","pilar":"ejecutiva","grupo":"RRHH","nombre":"Corregir asignación desigual de proyectos","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t138","pilar":"ejecutiva","grupo":"RRHH","nombre":"Proveedores","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t139","pilar":"ejecutiva","grupo":"RRHH","nombre":"Crear base de datos de proveedores","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t140","pilar":"ejecutiva","grupo":"RRHH","nombre":"Mejorar seguimiento de pagos individuales","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t141","pilar":"ejecutiva","grupo":"RRHH","nombre":"Clasificar proveedores frecuentes","estado":"En pausa","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t142","pilar":"ejecutiva","grupo":"RRHH","nombre":"Sistema de compensación Karla","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t143","pilar":"ejecutiva","grupo":"RRHH","nombre":"Liquidacion al cierre al cuatrimestre","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t144","pilar":"ejecutiva","grupo":"RRHH","nombre":"Ajustar según volumen y complejidad","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t145","pilar":"ejecutiva","grupo":"RRHH","nombre":"Diseñar bono por proyecto para TEAM 23 (Carla)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t146","pilar":"ejecutiva","grupo":"RRHH","nombre":"Definir % sobre fee","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t147","pilar":"ejecutiva","grupo":"","nombre":"ADMIN","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t148","pilar":"ejecutiva","grupo":"ADMIN","nombre":"COMUNICACION","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t149","pilar":"ejecutiva","grupo":"ADMIN","nombre":"Reducir uso de WhatsApp para temas operativos","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t150","pilar":"ejecutiva","grupo":"ADMIN","nombre":"Ordenar correos y accesos","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t151","pilar":"ejecutiva","grupo":"ADMIN","nombre":"Implementar mail de coordinación","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t152","pilar":"ejecutiva","grupo":"ADMIN","nombre":"SERVICIOS","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t153","pilar":"ejecutiva","grupo":"ADMIN","nombre":"Revisar suscripciones (Dropbox, etc.)","estado":"Planificación","prioridad":"Alta","deadline":"2026-04-10","responsable":null,"origen":"Proyectos","depth":2},{"id":"t154","pilar":"ejecutiva","grupo":"ADMIN","nombre":"Transferir cuentas a tarjeta empresa","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t155","pilar":"ejecutiva","grupo":"ADMIN","nombre":"Mejora discord","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t156","pilar":"ejecutiva","grupo":"ADMIN","nombre":"MEXICO","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t157","pilar":"ejecutiva","grupo":"ADMIN","nombre":"Cargar proyectos faltantes (Meli Mundial, Aeroméxico, etc.)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t158","pilar":"crecimiento","grupo":"","nombre":"Optimizar discord-comunidad","estado":"Planificación","prioridad":"Baja","deadline":"2026-02-16","responsable":"TEAM","origen":"Proyectos","depth":0},{"id":"t159","pilar":"crecimiento","grupo":"","nombre":"Propuesta Roster","estado":"En pausa","prioridad":"Baja","deadline":"2025-10-01","responsable":"TEAM","origen":"Proyectos","depth":0},{"id":"t160","pilar":"crecimiento","grupo":"","nombre":"Listado proyectos 2024","estado":"Listo","prioridad":"Alta","deadline":"2025-01-08","responsable":"TEAM","origen":"Proyectos","depth":0},{"id":"t161","pilar":"crecimiento","grupo":"","nombre":"Merch","estado":"En curso","prioridad":"Media","deadline":null,"responsable":"Mile - Kr - Knd","origen":"Proyectos","depth":0},{"id":"t162","pilar":"crecimiento","grupo":"Merch","nombre":"Impresion Media Kit","estado":"Sin empezar","prioridad":"Alta","deadline":"2025-09-26","responsable":"Mile - Kr - Knd","origen":"Proyectos","depth":1},{"id":"t163","pilar":"crecimiento","grupo":"Merch","nombre":"Listado de leads","estado":"Sin empezar","prioridad":"Media","deadline":"2025-09-10","responsable":"TEAM","origen":"Proyectos","depth":1},{"id":"t164","pilar":"crecimiento","grupo":"Merch","nombre":"Remeras","estado":"En curso","prioridad":"Alta","deadline":"2025-10-24","responsable":"Mile Knd","origen":"Proyectos","depth":1},{"id":"t165","pilar":"crecimiento","grupo":"","nombre":"Web","estado":"Listo","prioridad":"Media","deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t166","pilar":"crecimiento","grupo":"Web","nombre":"Optimizar Carga","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t167","pilar":"crecimiento","grupo":"Web","nombre":"Pagina Quienes Somos","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t168","pilar":"crecimiento","grupo":"","nombre":"Linkedin","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t169","pilar":"crecimiento","grupo":"","nombre":"Estrategia Redes","estado":"En curso","prioridad":"Alta","deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t170","pilar":"crecimiento","grupo":"","nombre":"IA R&D","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t171","pilar":"crecimiento","grupo":"","nombre":"MARKETING","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t172","pilar":"crecimiento","grupo":"MARKETING","nombre":"Diseños Media Kit","estado":"En curso","prioridad":"Alta","deadline":"2025-10-10","responsable":"Mile","origen":"Proyectos","depth":1},{"id":"t173","pilar":"crecimiento","grupo":"MARKETING","nombre":"One Pager","estado":"Sin empezar","prioridad":"Alta","deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t174","pilar":"crecimiento","grupo":"MARKETING","nombre":"Musica","estado":"En curso","prioridad":"Alta","deadline":"2025-01-31","responsable":null,"origen":"Tareas","depth":2},{"id":"t175","pilar":"crecimiento","grupo":"MARKETING","nombre":"Cine","estado":"Sin empezar","prioridad":"Baja","deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t176","pilar":"crecimiento","grupo":"MARKETING","nombre":"Dir / Prod Digital","estado":"Sin empezar","prioridad":"Alta","deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t177","pilar":"crecimiento","grupo":"MARKETING","nombre":"Publi","estado":"Sin empezar","prioridad":"Alta","deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t178","pilar":"crecimiento","grupo":"MARKETING","nombre":"Roster","estado":"Sin empezar","prioridad":"Baja","deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t179","pilar":"crecimiento","grupo":"MARKETING","nombre":"Moda","estado":"En curso","prioridad":"Baja","deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t180","pilar":"crecimiento","grupo":"MARKETING","nombre":"Virtual Prod","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t181","pilar":"crecimiento","grupo":"MARKETING","nombre":"Lab","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t182","pilar":"crecimiento","grupo":"MARKETING","nombre":"IA","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t183","pilar":"crecimiento","grupo":"MARKETING","nombre":"Demos","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t184","pilar":"crecimiento","grupo":"MARKETING","nombre":"Framer para landings","estado":"Sin empezar","prioridad":null,"deadline":"2025-09-26","responsable":null,"origen":"Tareas","depth":2},{"id":"t185","pilar":"crecimiento","grupo":"MARKETING","nombre":"Post Producción","estado":"En curso","prioridad":"Alta","deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t186","pilar":"crecimiento","grupo":"MARKETING","nombre":"Creative Prod. PARTNER/ Growth/Innovación","estado":"Sin empezar","prioridad":"Alta","deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t187","pilar":"crecimiento","grupo":"MARKETING","nombre":"Actualizar proyectos Web","estado":"En curso","prioridad":"Alta","deadline":"2025-10-24","responsable":"Mile y Maya","origen":"Proyectos","depth":1},{"id":"t188","pilar":"crecimiento","grupo":"MARKETING","nombre":"Seleccionar nueva tanda","estado":"Listo","prioridad":"Alta","deadline":"2025-04-12","responsable":null,"origen":"Proyectos","depth":2},{"id":"t189","pilar":"crecimiento","grupo":"MARKETING","nombre":"Publicación","estado":"Listo","prioridad":"Alta","deadline":"2025-04-30","responsable":null,"origen":"Proyectos","depth":2},{"id":"t190","pilar":"crecimiento","grupo":"MARKETING","nombre":"Reels","estado":"En curso","prioridad":"Alta","deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t191","pilar":"crecimiento","grupo":"MARKETING","nombre":"CGI","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t192","pilar":"crecimiento","grupo":"MARKETING","nombre":"Packshots / DEMO","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t193","pilar":"crecimiento","grupo":"MARKETING","nombre":"Publicidad","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t194","pilar":"crecimiento","grupo":"MARKETING","nombre":"Deportes","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t195","pilar":"crecimiento","grupo":"MARKETING","nombre":"IA","estado":"Sin empezar","prioridad":"Alta","deadline":"2025-10-22","responsable":"Mile","origen":"Proyectos","depth":2},{"id":"t196","pilar":"crecimiento","grupo":"MARKETING","nombre":"Ads","estado":"En pausa","prioridad":"Media","deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t197","pilar":"crecimiento","grupo":"MARKETING","nombre":"Calendarizar contenido","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t198","pilar":"crecimiento","grupo":"MARKETING","nombre":"Ejecutar estrategia de redes","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t199","pilar":"crecimiento","grupo":"MARKETING","nombre":"Subir trabajos a la web (NO cumplido)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t200","pilar":"crecimiento","grupo":"","nombre":"COMERCIAL","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t201","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Mailing clientes","estado":"En curso","prioridad":"Alta","deadline":"2025-10-27","responsable":"TEAM","origen":"Proyectos","depth":1},{"id":"t202","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Registrar vrevo","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t203","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Armar material categorizado por tipo de cliente/rubro","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t204","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Completar planilla con contactos","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t205","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Seleccionar lote para segunda semana (15)","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t206","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Escribir mensajes","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t207","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Seleccionar lote para primera semana (5-10)","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t208","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Leads","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t209","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Seguimiento a leads existentes (ej. cliente 14 meses)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t210","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Crear base de datos (CRM simple)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t211","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Generar leads de forma sistemática (NO logrado)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t212","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Organizar contactos actuales","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t213","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Actualizar Lista Clientes","estado":"En pausa","prioridad":"Media","deadline":"2025-10-06","responsable":"TEAM","origen":"Proyectos","depth":1},{"id":"t214","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Listado Productoras","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t215","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Listado de leads","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t216","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Listado Mails Luciana Landia","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t217","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Listado Agencias","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t218","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Lista de Agencias Gato","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t219","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Traer la lista a Notion y seguirla","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t220","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Escribirles un msjito","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t221","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Seguir gente clave","estado":"Listo","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t222","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Listado Proovedores","estado":"En pausa","prioridad":"Media","deadline":"2025-10-05","responsable":"Mile y Knd","origen":"Proyectos","depth":1},{"id":"t223","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Completar listado","estado":"En curso","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t224","pilar":"crecimiento","grupo":"COMERCIAL","nombre":"Ordenar listado con toda la info","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Tareas","depth":2},{"id":"t225","pilar":"crecimiento","grupo":"","nombre":"INNOVACION","estado":"Sin empezar","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":0},{"id":"t226","pilar":"crecimiento","grupo":"INNOVACION","nombre":"IA","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":1},{"id":"t227","pilar":"crecimiento","grupo":"INNOVACION","nombre":"Mejorar claridad de briefs","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t228","pilar":"crecimiento","grupo":"INNOVACION","nombre":"Trabajar con NT en modelos híbridos","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t229","pilar":"crecimiento","grupo":"INNOVACION","nombre":"Entender límites reales de IA","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t230","pilar":"crecimiento","grupo":"INNOVACION","nombre":"Consolidar IA como vertical principal","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t231","pilar":"crecimiento","grupo":"INNOVACION","nombre":"Evaluar mejor proyectos IA antes de aceptarlos","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t232","pilar":"crecimiento","grupo":"INNOVACION","nombre":"Integrar IA + producción tradicional","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t233","pilar":"crecimiento","grupo":"INNOVACION","nombre":"Desarrollar oferta clara","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t234","pilar":"crecimiento","grupo":"INNOVACION","nombre":"Desarrollar pricing híbrido con NT","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t235","pilar":"crecimiento","grupo":"INNOVACION","nombre":"Crear guía para directores (pendiente)","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t236","pilar":"crecimiento","grupo":"INNOVACION","nombre":"Definir qué proyectos IA aceptar o no","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2},{"id":"t237","pilar":"crecimiento","grupo":"INNOVACION","nombre":"Definir estrategia de IA del estudio","estado":"Planificación","prioridad":null,"deadline":null,"responsable":null,"origen":"Proyectos","depth":2}];
+
+boot();
+</script>
+<script src="design-system/a11y.js"></script>
+</body>
+</html>
