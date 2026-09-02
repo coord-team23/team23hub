@@ -240,9 +240,12 @@
       </button>
       <div class="multisel-menu" id="fEstadoMenu" hidden></div>
     </div>
-    <select id="fResp" onchange="render()">
-      <option value="all">Todos los responsables</option>
-    </select>
+    <div class="multisel" id="fRespWrap">
+      <button type="button" class="multisel-btn" onclick="toggleRespMenu()">
+        <span id="fRespLabel">Todos los responsables</span> <span class="car">▾</span>
+      </button>
+      <div class="multisel-menu" id="fRespMenu" hidden></div>
+    </div>
     <span id="pilarTabs" style="display:flex;gap:6px;flex-wrap:wrap"></span>
   </div>
 
@@ -317,6 +320,8 @@ let pilarFilter = "all";
 const abiertos = new Set();
 /* filtro de estado: set vacío = "todos". con 1 o más elegidos, filtra por esa selección */
 const estadoFilter = new Set();
+/* filtro de responsables: mismo patrón que estadoFilter */
+const respFilter = new Set();
 
 /* ---------- datos ---------- */
 async function api(path, opts={}){
@@ -373,14 +378,14 @@ function renderStats(list){
   ].map(([label,n]) => `<div class="stat"><b>${n}</b><span>${esc(label)}</span></div>`).join("");
 }
 
-function matches(t, q, estados, resp){
+function matches(t, q, estados, resps){
   if(estados.size && !estados.has(t.estado)) return false;
-  if(resp !== "all" && !parseResponsables(t.responsable).includes(resp)) return false;
+  if(resps.size && !parseResponsables(t.responsable).some(r=>resps.has(r))) return false;
   if(!q) return true;
   return [t.nombre, t.responsable, t.grupo].filter(Boolean).join(" ").toLowerCase().includes(q);
 }
 
-/* ---------- dropdown de estado (multi-selección) ---------- */
+/* ---------- dropdowns multi-selección (estado y responsables) ---------- */
 function toggleEstadoMenu(){
   const menu = $("#fEstadoMenu");
   if(menu.hidden) renderEstadoMenu();
@@ -403,21 +408,55 @@ function clearEstadoFilter(){
   $("#fEstadoMenu").hidden = true;
   render();
 }
-document.addEventListener("click", e => {
-  const wrap = $("#fEstadoWrap");
-  if(wrap && !wrap.contains(e.target)) $("#fEstadoMenu").hidden = true;
-});
 function estadoLabel(){
   if(!estadoFilter.size) return "Todos los estados";
   if(estadoFilter.size === 1) return [...estadoFilter][0];
   return estadoFilter.size + " estados seleccionados";
 }
 
+function toggleRespMenu(){
+  const menu = $("#fRespMenu");
+  if(menu.hidden) renderRespMenu();
+  menu.hidden = !menu.hidden;
+}
+function renderRespMenu(){
+  const presentes = new Set(tasks.flatMap(t=>parseResponsables(t.responsable)));
+  const opciones = RESP_ORDEN.filter(r=>presentes.has(r));
+  $("#fRespMenu").innerHTML = opciones.map(r => `
+    <label>
+      <input type="checkbox" ${respFilter.has(r)?"checked":""} onchange="toggleRespValue('${r}')">
+      ${esc(r)}
+    </label>`).join("") + `<hr><button type="button" class="clear" onclick="clearRespFilter()">Mostrar todos</button>`;
+}
+function toggleRespValue(r){
+  respFilter.has(r) ? respFilter.delete(r) : respFilter.add(r);
+  renderRespMenu();
+  render();
+}
+function clearRespFilter(){
+  respFilter.clear();
+  $("#fRespMenu").hidden = true;
+  render();
+}
+function respLabel(){
+  if(!respFilter.size) return "Todos los responsables";
+  if(respFilter.size === 1) return [...respFilter][0];
+  return respFilter.size + " responsables seleccionados";
+}
+document.addEventListener("click", e => {
+  const wraps = ["fEstadoWrap","fRespWrap"];
+  wraps.forEach(id=>{
+    const wrap = $("#"+id);
+    if(wrap && !wrap.contains(e.target)) $("#"+id.replace("Wrap","Menu")).hidden = true;
+  });
+});
+
 function render(){
   const q = $("#q").value.trim().toLowerCase();
   $("#fEstadoLabel").textContent = estadoLabel();
+  $("#fRespLabel").textContent = respLabel();
   const estado = estadoFilter;
-  const resp = $("#fResp").value;
+  const resp = respFilter;
 
   const visibles = tasks.filter(t => matches(t, q, estado, resp));
   renderStats(visibles);
@@ -426,7 +465,7 @@ function render(){
     .map(p=>`<button class="pill-opt ${pilarFilter===p.key?"on":""}" onclick="setPilar('${p.key}')">${esc(p.label)}</button>`).join("");
 
   const pilares = pilarFilter === "all" ? PILARES : PILARES.filter(p=>p.key===pilarFilter);
-  const filtrando = !!q || estado.size > 0 || resp !== "all";
+  const filtrando = !!q || estado.size > 0 || resp.size > 0;
 
   const html = pilares.map(p => {
     const delPilar = tasks.filter(t => t.pilar === p.key);
@@ -471,12 +510,6 @@ function render(){
 function setPilar(k){ pilarFilter = k; render(); }
 function toggleGrupo(id){ abiertos.has(id) ? abiertos.delete(id) : abiertos.add(id); render(); }
 
-function llenarFiltros(){
-  const presentes = new Set(tasks.flatMap(t=>parseResponsables(t.responsable)));
-  const resps = RESP_ORDEN.filter(r=>presentes.has(r));
-  $("#fResp").innerHTML = `<option value="all">Todos los responsables</option>` +
-    resps.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join("");
-}
 
 /* ---------- auth ---------- */
 let sb = null;
@@ -507,7 +540,6 @@ async function boot(){
   try{ await loadTasks(); }
   catch(e){ $("#body").innerHTML = `<div class="empty">No pude cargar el seguimiento (${esc(e.message)}).</div>`; return; }
 
-  llenarFiltros();
   render();
 }
 
