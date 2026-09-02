@@ -100,6 +100,32 @@
   }
   .pill-opt.on{background:var(--ink);color:#fff}
 
+  /* ---------- filtro de estado, multi-selección ---------- */
+  .multisel{position:relative}
+  .multisel-btn{
+    font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3);
+    border:2px solid var(--ink);border-radius:var(--radius-md);background:#fff;color:var(--ink);
+    cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;
+  }
+  .multisel-btn:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+  .multisel-btn .car{font-size:10px;color:var(--gray)}
+  .multisel-menu{
+    position:absolute;top:calc(100% + 6px);left:0;z-index:20;min-width:220px;
+    background:#fff;border:2px solid var(--ink);border-radius:var(--radius-md);
+    box-shadow:4px 4px 0 var(--ink);padding:var(--space-2);
+  }
+  .multisel-menu label{
+    display:flex;align-items:center;gap:8px;padding:var(--space-2) var(--space-3);
+    font-size:var(--fs-caption);cursor:pointer;border-radius:var(--radius-sm);
+  }
+  .multisel-menu label:hover{background:var(--soft)}
+  .multisel-menu hr{border:none;border-top:1px solid var(--hair);margin:var(--space-2) 0}
+  .multisel-menu .clear{
+    display:block;width:100%;text-align:left;background:none;border:none;font-family:var(--font-primary);
+    font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;font-weight:var(--weight-bold);
+    padding:var(--space-2) var(--space-3);cursor:pointer;
+  }
+
   /* ---------- pilares ---------- */
   .pilar{margin-top:var(--space-9)}
   .section-head{
@@ -208,9 +234,12 @@
 
   <div class="toolbar">
     <input type="text" id="q" placeholder="Buscar por tarea, responsable o grupo…" oninput="render()">
-    <select id="fEstado" onchange="render()">
-      <option value="all">Todos los estados</option>
-    </select>
+    <div class="multisel" id="fEstadoWrap">
+      <button type="button" class="multisel-btn" onclick="toggleEstadoMenu()">
+        <span id="fEstadoLabel">Todos los estados</span> <span class="car">▾</span>
+      </button>
+      <div class="multisel-menu" id="fEstadoMenu" hidden></div>
+    </div>
     <select id="fResp" onchange="render()">
       <option value="all">Todos los responsables</option>
     </select>
@@ -260,6 +289,8 @@ let tasks = [];
 let pilarFilter = "all";
 /* grupos colapsados: arrancan cerrados salvo los que el usuario abra */
 const abiertos = new Set();
+/* filtro de estado: set vacío = "todos". con 1 o más elegidos, filtra por esa selección */
+const estadoFilter = new Set();
 
 /* ---------- datos ---------- */
 async function api(path, opts={}){
@@ -316,16 +347,50 @@ function renderStats(list){
   ].map(([label,n]) => `<div class="stat"><b>${n}</b><span>${esc(label)}</span></div>`).join("");
 }
 
-function matches(t, q, estado, resp){
-  if(estado !== "all" && t.estado !== estado) return false;
+function matches(t, q, estados, resp){
+  if(estados.size && !estados.has(t.estado)) return false;
   if(resp !== "all" && (t.responsable||"") !== resp) return false;
   if(!q) return true;
   return [t.nombre, t.responsable, t.grupo].filter(Boolean).join(" ").toLowerCase().includes(q);
 }
 
+/* ---------- dropdown de estado (multi-selección) ---------- */
+function toggleEstadoMenu(){
+  const menu = $("#fEstadoMenu");
+  if(menu.hidden) renderEstadoMenu();
+  menu.hidden = !menu.hidden;
+}
+function renderEstadoMenu(){
+  $("#fEstadoMenu").innerHTML = ESTADOS.map(e => `
+    <label>
+      <input type="checkbox" ${estadoFilter.has(e)?"checked":""} onchange="toggleEstadoValue('${e}')">
+      ${esc(e)}
+    </label>`).join("") + `<hr><button type="button" class="clear" onclick="clearEstadoFilter()">Mostrar todos</button>`;
+}
+function toggleEstadoValue(e){
+  estadoFilter.has(e) ? estadoFilter.delete(e) : estadoFilter.add(e);
+  renderEstadoMenu();
+  render();
+}
+function clearEstadoFilter(){
+  estadoFilter.clear();
+  $("#fEstadoMenu").hidden = true;
+  render();
+}
+document.addEventListener("click", e => {
+  const wrap = $("#fEstadoWrap");
+  if(wrap && !wrap.contains(e.target)) $("#fEstadoMenu").hidden = true;
+});
+function estadoLabel(){
+  if(!estadoFilter.size) return "Todos los estados";
+  if(estadoFilter.size === 1) return [...estadoFilter][0];
+  return estadoFilter.size + " estados seleccionados";
+}
+
 function render(){
   const q = $("#q").value.trim().toLowerCase();
-  const estado = $("#fEstado").value;
+  $("#fEstadoLabel").textContent = estadoLabel();
+  const estado = estadoFilter;
   const resp = $("#fResp").value;
 
   const visibles = tasks.filter(t => matches(t, q, estado, resp));
@@ -381,8 +446,6 @@ function setPilar(k){ pilarFilter = k; render(); }
 function toggleGrupo(id){ abiertos.has(id) ? abiertos.delete(id) : abiertos.add(id); render(); }
 
 function llenarFiltros(){
-  $("#fEstado").innerHTML = `<option value="all">Todos los estados</option>` +
-    ESTADOS.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join("");
   const resps = [...new Set(tasks.map(t=>t.responsable).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
   $("#fResp").innerHTML = `<option value="all">Todos los responsables</option>` +
     resps.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join("");
