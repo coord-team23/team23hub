@@ -1,0 +1,168 @@
+{
+  "name": "Team23 — 16. Admin Create Task",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "team23/admin-create-task",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "d6000016-0000-0000-0000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Team23 Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "dbSheetId",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d6000016-0000-0000-0000-000000000002",
+      "name": "CONFIG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body || {};\nif (!b.nombre) throw new Error('Falta el nombre de la tarea');\nif (!b.pilar) throw new Error('Falta el pilar');\n/* el id lo manda el front (t + timestamp) para poder revertir en pantalla si\n   esto falla; si no viene, se genera acá */\nconst row = {\n  id: String(b.id || ('t' + Date.now())),\n  pilar: String(b.pilar),\n  grupo: String(b.grupo || ''),\n  nombre: String(b.nombre),\n  estado: String(b.estado || 'Sin empezar'),\n  prioridad: String(b.prioridad || ''),\n  deadline: String(b.deadline || ''),\n  fin: String(b.fin || ''),\n  responsable: String(b.responsable || ''),\n  origen: String(b.origen || 'Admin'),\n  depth: Number(b.depth || (b.grupo ? 1 : 0))\n};\nreturn [{ json: row }];"
+      },
+      "id": "d6000016-0000-0000-0000-000000000003",
+      "name": "Preparar fila",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "AdminTasks"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "d6000016-0000-0000-0000-000000000004",
+      "name": "Agregar en DB",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        600,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, id: $('Preparar fila').first().json.id }) }}",
+        "options": {}
+      },
+      "id": "d6000016-0000-0000-0000-000000000005",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "Preparar fila",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar fila": {
+      "main": [
+        [
+          {
+            "node": "Agregar en DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agregar en DB": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "pinData": {}
+}

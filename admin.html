@@ -182,6 +182,15 @@
     letter-spacing:.04em;padding:2px 6px;border-radius:var(--radius-full);border:1.5px solid var(--ink);
     white-space:nowrap;flex:none;cursor:pointer;color:inherit;
   }
+  /* estado: el color va en el stroke, no en el relleno — así no se confunde
+     con prioridad, que es la única que queda rellena */
+  .estado-select{background:var(--paper);color:var(--ink);border-width:2px}
+  .estado-select.b-sin{border-color:var(--ink)}
+  .estado-select.b-plan{border-color:var(--brand-cyan)}
+  .estado-select.b-curso{border-color:var(--brand-yellow)}
+  .estado-select.b-pausa{border-color:var(--brand-purple)}
+  .estado-select.b-listo{border-color:var(--brand-green)}
+  .estado-select.b-arch{border-color:var(--hair);color:var(--gray)}
   .edit-date{
     font-family:var(--font-primary);font-size:var(--fs-caption);color:var(--gray);border:1px solid transparent;
     background:transparent;padding:2px 4px;border-radius:var(--radius-sm);cursor:pointer;flex:none;
@@ -199,6 +208,39 @@
     padding:4px 6px;flex:none;
   }
   .del-btn:hover{color:var(--red)}
+  .resp-btn{
+    font-family:var(--font-primary);font-size:var(--fs-caption);color:var(--gray);
+    border:1px solid transparent;background:transparent;padding:2px 6px;border-radius:var(--radius-sm);
+    cursor:pointer;flex:none;white-space:nowrap;
+  }
+  .resp-btn:hover{border-color:var(--hair)}
+  .resp-btn.vacio{color:var(--hair)}
+  .mini-btn{
+    font-family:var(--font-primary);font-size:10px;font-weight:var(--weight-bold);text-transform:uppercase;
+    letter-spacing:.05em;color:var(--gray);border:1px solid var(--hair);background:var(--paper);
+    padding:2px 6px;border-radius:var(--radius-full);cursor:pointer;flex:none;
+  }
+  .mini-btn:hover{border-color:var(--ink);color:var(--ink)}
+  .vista-label{
+    font-size:var(--fs-caption);font-weight:var(--weight-bold);text-transform:uppercase;
+    letter-spacing:.08em;color:var(--gray);
+  }
+  /* el bucket que contiene el día de hoy se destaca con el rojo de alerta */
+  .grupo.hoy{border-color:var(--red)}
+  .grupo.hoy .grupo-head{background:#fff5f4}
+  .meta.ctx{color:var(--hair);font-size:11px}
+  .section-head .nueva-btn{margin-left:auto}
+  .grupo.nueva{border-style:dashed}
+  .campo{display:flex;flex-direction:column;gap:4px;flex:none}
+  .campo > span{
+    font-size:10px;font-weight:var(--weight-bold);text-transform:uppercase;
+    letter-spacing:.06em;color:var(--gray);
+  }
+  .campo input,.campo select{
+    font-family:var(--font-primary);font-size:var(--fs-caption);padding:var(--space-2) var(--space-3);
+    border:2px solid var(--ink);border-radius:var(--radius-md);background:#fff;color:var(--ink);
+  }
+  .campo input[type=text]{width:100%}
 
   .empty{
     border:2px dashed var(--hair);border-radius:var(--radius-lg);padding:var(--space-7);
@@ -272,11 +314,16 @@
     </div>
     <span id="pilarTabs" style="display:flex;gap:6px;flex-wrap:wrap"></span>
   </div>
+  <div class="toolbar" style="margin-top:var(--space-3)">
+    <span class="vista-label">Vista</span>
+    <span id="vistaTabs" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+  </div>
 
   <div id="body"></div>
 </main>
 
 <div id="toast" role="status"></div>
+<div class="multisel-menu" id="respEditMenu" style="position:fixed" hidden></div>
 
 <footer>
   <div>
@@ -429,16 +476,20 @@ function fechaCorta(d){
   const [y,m,day] = d.split("-");
   return `${day}/${m}/${String(y).slice(2)}`;
 }
+/* la fecha que vale como vencimiento es el fin del rango si lo hay, y si no
+   el deadline suelto */
+function fechaLimite(t){ return t.fin || t.deadline || ""; }
 function estaVencida(t){
-  if(!t.deadline || t.estado === "Listo" || t.estado === "Archivadas") return false;
+  const ref = fechaLimite(t);
+  if(!ref || t.estado === "Listo" || t.estado === "Archivadas") return false;
   const hoy = new Date(); hoy.setHours(0,0,0,0);
-  const [y,m,d] = t.deadline.split("-").map(Number);
+  const [y,m,d] = ref.split("-").map(Number);
   return new Date(y, m-1, d) < hoy;
 }
 
 const PRIORIDADES = ["Alta","Media","Baja"];
 function badges(t){
-  let out = `<select class="badge-select ${ESTADO_CLASS[t.estado]||"b-sin"}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','estado',this.value)">` +
+  let out = `<select class="badge-select estado-select ${ESTADO_CLASS[t.estado]||"b-sin"}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','estado',this.value)">` +
     ESTADOS.map(e=>`<option value="${esc(e)}" ${e===t.estado?"selected":""}>${esc(e)}</option>`).join("") +
     `</select>`;
   out += `<select class="badge-select ${PRIO_CLASS[t.prioridad]||""}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','prioridad',this.value)">` +
@@ -447,11 +498,67 @@ function badges(t){
     `</select>`;
   return out;
 }
-function metaHTML(t){
+/* rangos abiertos a mano: estado sólo de UI, no se persiste — igual que `abiertos` */
+const rangoAbierto = new Set();
+function fechaHTML(t){
   let out = `<input type="date" class="edit-date ${estaVencida(t)?"vencida":""}" value="${t.deadline||""}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','deadline',this.value)">`;
-  if(t.responsable) out += `<span class="meta">${esc(t.responsable)}</span>`;
+  if(t.fin || rangoAbierto.has(String(t.id))){
+    out += `<span class="meta">→</span>` +
+      `<input type="date" class="edit-date ${estaVencida(t)?"vencida":""}" value="${t.fin||""}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','fin',this.value)">`;
+  } else {
+    out += `<button type="button" class="mini-btn" title="Convertir en rango de días" onclick="event.stopPropagation(); rangoAbierto.add('${t.id}'); render()">+ rango</button>`;
+  }
   return out;
 }
+function metaHTML(t){
+  return fechaHTML(t) + respButton(t);
+}
+/* responsables: un solo popover compartido y reposicionado, en vez de 237
+   menús escondidos en el DOM. Vive fuera de #body para sobrevivir al render. */
+let respEditandoId = null;
+function respButton(t){
+  const lista = parseResponsables(t.responsable);
+  const label = lista.length ? esc(lista.join(", ")) : "Sin asignar";
+  return `<button type="button" class="resp-btn${lista.length?"":" vacio"}" onclick="event.stopPropagation(); abrirRespEditor('${t.id}', this)">${label}</button>`;
+}
+function abrirRespEditor(id, btn){
+  const menu = $("#respEditMenu");
+  if(respEditandoId === String(id) && !menu.hidden){ cerrarRespEditor(); return; }
+  respEditandoId = String(id);
+  renderRespEditor();
+  const r = btn.getBoundingClientRect();
+  menu.style.top = (r.bottom + 6) + "px";
+  menu.style.left = Math.min(r.left, window.innerWidth - 240) + "px";
+  menu.hidden = false;
+}
+function renderRespEditor(){
+  const t = tasks.find(x=>String(x.id)===respEditandoId);
+  if(!t) return;
+  const actuales = new Set(parseResponsables(t.responsable));
+  $("#respEditMenu").innerHTML = RESP_ORDEN.map(r=>`
+    <label>
+      <input type="checkbox" ${actuales.has(r)?"checked":""} onchange="toggleTaskResp('${r}')">
+      ${esc(r)}
+    </label>`).join("");
+}
+function toggleTaskResp(r){
+  const t = tasks.find(x=>String(x.id)===respEditandoId);
+  if(!t) return;
+  const actuales = new Set(parseResponsables(t.responsable));
+  actuales.has(r) ? actuales.delete(r) : actuales.add(r);
+  updateTask(t.id, "responsable", RESP_ORDEN.filter(x=>actuales.has(x)).join(", "));
+  renderRespEditor();
+}
+function cerrarRespEditor(){
+  respEditandoId = null;
+  const menu = $("#respEditMenu");
+  if(menu) menu.hidden = true;
+}
+document.addEventListener("click", e => {
+  const menu = $("#respEditMenu");
+  if(menu && !menu.hidden && !menu.contains(e.target) && !e.target.closest(".resp-btn")) cerrarRespEditor();
+});
+
 function nombreInput(t){
   return `<input type="text" class="nom edit-nombre" value="${esc(t.nombre)}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','nombre',this.value)">`;
 }
@@ -460,11 +567,10 @@ function delBtn(id){
 }
 
 function renderStats(list){
-  const c = { total:list.length };
+  const c = {};
   ESTADOS.forEach(e => c[e] = list.filter(t=>t.estado===e).length);
   const vencidas = list.filter(estaVencida).length;
   $("#stats").innerHTML = [
-    ["Total", c.total],
     ["En curso", c["En curso"]],
     ["Planificación", c["Planificación"]],
     ["Sin empezar", c["Sin empezar"]],
@@ -546,6 +652,88 @@ document.addEventListener("click", e => {
   });
 });
 
+/* ---------- vistas por tiempo ---------- */
+const VISTAS = [
+  { key:"pilar",  label:"Por pilar" },
+  { key:"semana", label:"Esta semana" },
+  { key:"mes",    label:"Este mes" }
+];
+let vista = "pilar";
+function setVista(v){ vista = v; render(); }
+
+const DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+const PILAR_LABEL = Object.fromEntries(PILARES.map(p=>[p.key,p.label]));
+function ymd(d){
+  const m = String(d.getMonth()+1).padStart(2,"0"), dd = String(d.getDate()).padStart(2,"0");
+  return `${d.getFullYear()}-${m}-${dd}`;
+}
+function addDias(d,n){ const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+/* la semana arranca el lunes */
+function inicioSemana(d){
+  const x = new Date(d); x.setHours(0,0,0,0);
+  x.setDate(x.getDate() - ((x.getDay()+6)%7));
+  return x;
+}
+
+function tiempoHTML(lista, modo){
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const conFecha = lista.filter(t => fechaLimite(t));
+
+  const buckets = [];
+  if(modo === "semana"){
+    const ini = inicioSemana(hoy);
+    for(let i=0;i<7;i++){
+      const d = addDias(ini,i);
+      buckets.push({ label:`${DIAS[i]} ${d.getDate()}/${d.getMonth()+1}`, desde:ymd(d), hasta:ymd(d), hoy:ymd(d)===ymd(hoy) });
+    }
+  } else {
+    const ultimo = new Date(hoy.getFullYear(), hoy.getMonth()+1, 0);
+    let cursor = inicioSemana(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+    while(cursor <= ultimo){
+      const fin = addDias(cursor,6);
+      buckets.push({
+        label:`${cursor.getDate()}/${cursor.getMonth()+1} → ${fin.getDate()}/${fin.getMonth()+1}`,
+        desde:ymd(cursor), hasta:ymd(fin),
+        hoy: ymd(hoy) >= ymd(cursor) && ymd(hoy) <= ymd(fin)
+      });
+      cursor = addDias(cursor,7);
+    }
+  }
+
+  const fila = t => `
+    <div class="fila">
+      ${nombreInput(t)}
+      <span class="meta ctx">${esc(PILAR_LABEL[t.pilar]||t.pilar)}${t.grupo?" · "+esc(t.grupo):""}</span>
+      ${badges(t)}${metaHTML(t)}${delBtn(t.id)}
+    </div>`;
+
+  const caja = (label, items, destacado) => !items.length ? "" : `
+    <div class="grupo${destacado?" hoy":""}">
+      <div class="grupo-head" style="cursor:default">
+        <span class="nom">${esc(label)}</span>
+        <span class="sub">${items.length} ${items.length===1?"tarea":"tareas"}</span>
+      </div>
+      <div>${items.map(fila).join("")}</div>
+    </div>`;
+
+  /* lo que venció antes del período y sigue abierto no se puede esconder */
+  const vencidas = conFecha.filter(t =>
+    fechaLimite(t) < buckets[0].desde && t.estado !== "Listo" && t.estado !== "Archivadas");
+
+  const cuerpo = caja("Vencidas", vencidas, false) +
+    buckets.map(b => caja(b.label, conFecha.filter(t => {
+      const f = fechaLimite(t);
+      return f >= b.desde && f <= b.hasta;
+    }), b.hoy)).join("");
+
+  const sinFecha = lista.length - conFecha.length;
+  const nota = sinFecha
+    ? `<div class="empty">${sinFecha} ${sinFecha===1?"tarea sin fecha queda":"tareas sin fecha quedan"} fuera de esta vista — se ven en "Por pilar".</div>`
+    : "";
+
+  return (cuerpo || `<div class="empty">Sin tareas con fecha en este período.</div>`) + nota;
+}
+
 function render(){
   const q = $("#q").value.trim().toLowerCase();
   $("#fEstadoLabel").textContent = estadoLabel();
@@ -558,6 +746,18 @@ function render(){
 
   $("#pilarTabs").innerHTML = [{key:"all",label:"Todos"}, ...PILARES]
     .map(p=>`<button class="pill-opt ${pilarFilter===p.key?"on":""}" onclick="setPilar('${p.key}')">${esc(p.label)}</button>`).join("");
+
+  $("#vistaTabs").innerHTML = VISTAS
+    .map(v=>`<button class="pill-opt ${vista===v.key?"on":""}" onclick="setVista('${v.key}')">${esc(v.label)}</button>`).join("");
+
+  /* vistas por tiempo: se agrupa por día/semana según el vencimiento, no por
+     pilar, y se aplana la jerarquía (una tarea con fecha importa por su fecha,
+     no por dónde cuelga) */
+  if(vista !== "pilar"){
+    const base = pilarFilter === "all" ? visibles : visibles.filter(t=>t.pilar===pilarFilter);
+    $("#body").innerHTML = tiempoHTML(base, vista);
+    return;
+  }
 
   const pilares = pilarFilter === "all" ? PILARES : PILARES.filter(p=>p.key===pilarFilter);
   const filtrando = !!q || estado.size > 0 || resp.size > 0;
@@ -594,7 +794,11 @@ function render(){
 
     const n = delPilar.filter(t => matches(t, q, estado, resp)).length;
     return `<section class="pilar">
-      <div class="section-head"><h2>${esc(p.label)}</h2><span class="count">(${n})</span></div>
+      <div class="section-head">
+        <h2>${esc(p.label)}</h2><span class="count">(${n})</span>
+        <button type="button" class="btn small nueva-btn" onclick="toggleNueva('${p.key}')">${nuevaAbierta.has(p.key)?"Cancelar":"+ Nueva tarea"}</button>
+      </div>
+      ${nuevaAbierta.has(p.key) ? nuevaFormHTML(p.key, raices) : ""}
       ${grupos || `<div class="empty">Sin tareas que coincidan con el filtro.</div>`}
     </section>`;
   }).join("");
@@ -604,6 +808,109 @@ function render(){
 
 function setPilar(k){ pilarFilter = k; render(); }
 function toggleGrupo(id){ abiertos.has(id) ? abiertos.delete(id) : abiertos.add(id); render(); }
+
+/* ---------- alta de tarea ---------- */
+const nuevaAbierta = new Set();
+/* los responsables del alta viven acá hasta que se crea la tarea: todavía no
+   hay id contra el cual guardarlos */
+let nuevaResp = new Set();
+function toggleNueva(pilarKey){
+  nuevaAbierta.has(pilarKey) ? nuevaAbierta.delete(pilarKey) : nuevaAbierta.add(pilarKey);
+  nuevaResp = new Set();
+  render();
+}
+function nuevaFormHTML(pilarKey, raices){
+  const id = s => `nt-${s}-${pilarKey}`;
+  return `<div class="grupo nueva">
+    <div class="fila" style="align-items:flex-end">
+      <label class="campo" style="flex:1 1 240px">
+        <span>Tarea</span>
+        <input type="text" id="${id('nombre')}" placeholder="Qué hay que hacer">
+      </label>
+      <label class="campo">
+        <span>Grupo</span>
+        <select id="${id('grupo')}">
+          <option value="">Sin grupo</option>
+          ${raices.map(r=>`<option value="${esc(r.nombre)}">${esc(r.nombre)}</option>`).join("")}
+        </select>
+      </label>
+      <label class="campo">
+        <span>Estado</span>
+        <select id="${id('estado')}">${ESTADOS.map(e=>`<option ${e==="Sin empezar"?"selected":""}>${esc(e)}</option>`).join("")}</select>
+      </label>
+      <label class="campo">
+        <span>Prioridad</span>
+        <select id="${id('prioridad')}"><option value="">Sin prioridad</option>${PRIORIDADES.map(p=>`<option>${p}</option>`).join("")}</select>
+      </label>
+      <label class="campo">
+        <span>Deadline</span>
+        <input type="date" id="${id('deadline')}">
+      </label>
+      <label class="campo">
+        <span>Fin (opcional)</span>
+        <input type="date" id="${id('fin')}">
+      </label>
+      <label class="campo">
+        <span>Responsables</span>
+        <button type="button" class="multisel-btn" onclick="abrirNuevaResp(this)">
+          <span>${nuevaResp.size ? esc([...nuevaResp].join(", ")) : "Sin asignar"}</span> <span class="car">▾</span>
+        </button>
+      </label>
+      <button type="button" class="btn small primary" onclick="crearTarea('${pilarKey}')">Crear</button>
+    </div>
+  </div>`;
+}
+/* reusa el mismo popover que las filas, pero escribiendo en nuevaResp */
+function abrirNuevaResp(btn){
+  const menu = $("#respEditMenu");
+  if(respEditandoId === "__nueva__" && !menu.hidden){ cerrarRespEditor(); return; }
+  respEditandoId = "__nueva__";
+  menu.innerHTML = RESP_ORDEN.map(r=>`
+    <label>
+      <input type="checkbox" ${nuevaResp.has(r)?"checked":""} onchange="toggleNuevaResp('${r}')">
+      ${esc(r)}
+    </label>`).join("");
+  const r = btn.getBoundingClientRect();
+  menu.style.top = (r.bottom + 6) + "px";
+  menu.style.left = Math.min(r.left, window.innerWidth - 240) + "px";
+  menu.hidden = false;
+}
+function toggleNuevaResp(r){
+  nuevaResp.has(r) ? nuevaResp.delete(r) : nuevaResp.add(r);
+  render();
+}
+async function crearTarea(pilarKey){
+  const val = s => { const el = $(`#nt-${s}-${pilarKey}`); return el ? el.value.trim() : ""; };
+  const nombre = val("nombre");
+  if(!nombre){ toast("Ponele un nombre a la tarea.", true); return; }
+  const grupo = val("grupo");
+  const nueva = {
+    id: "t"+Date.now(),
+    pilar: pilarKey,
+    grupo,
+    nombre,
+    estado: val("estado") || "Sin empezar",
+    prioridad: val("prioridad"),
+    deadline: val("deadline"),
+    fin: val("fin"),
+    responsable: RESP_ORDEN.filter(x=>nuevaResp.has(x)).join(", "),
+    origen: "Admin",
+    depth: grupo ? 1 : 0
+  };
+  tasks.push(nueva);
+  nuevaAbierta.delete(pilarKey);
+  nuevaResp = new Set();
+  render();
+  if(DEMO){ toast("Tarea creada (modo demo, no persiste)."); return; }
+  try{
+    await api("/webhook/team23/admin-create-task", { method:"POST", body: JSON.stringify(nueva) });
+    toast("Tarea creada.");
+  }catch(e){
+    tasks = tasks.filter(t=>t.id !== nueva.id);
+    render();
+    toast("No pude crear la tarea: "+e.message, true);
+  }
+}
 
 
 /* ---------- auth ---------- */
