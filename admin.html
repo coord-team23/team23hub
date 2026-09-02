@@ -188,6 +188,17 @@
   }
   .edit-date:hover{border-color:var(--hair)}
   .edit-date.vencida{color:var(--red);font-weight:var(--weight-bold)}
+  input.edit-nombre{
+    font:inherit;color:inherit;border:1px solid transparent;background:transparent;
+    padding:2px 4px;border-radius:var(--radius-sm);width:100%;
+  }
+  input.edit-nombre:hover{border-color:var(--hair)}
+  input.edit-nombre:focus{border-color:var(--ink);outline:none}
+  .del-btn{
+    border:none;background:none;color:var(--gray);cursor:pointer;font-size:14px;line-height:1;
+    padding:4px 6px;flex:none;
+  }
+  .del-btn:hover{color:var(--red)}
 
   .empty{
     border:2px dashed var(--hair);border-radius:var(--radius-lg);padding:var(--space-7);
@@ -381,6 +392,37 @@ async function updateTask(id, field, value){
   }
 }
 
+/* borrar una raíz se lleva sus subtareas con ella (quedarían huérfanas: un
+   .grupo se arma por nombre de grupo, así que sin la raíz dejarían de verse
+   en cualquier lado, no solo perderían su encabezado) */
+function deleteTask(id){
+  const t = tasks.find(x=>String(x.id)===String(id));
+  if(!t) return;
+  const hijos = t.grupo ? [] : tasks.filter(x=>x.grupo===t.nombre);
+  const msg = hijos.length
+    ? `¿Eliminar "${t.nombre}" y sus ${hijos.length} subtareas? No se puede deshacer.`
+    : `¿Eliminar "${t.nombre}"? No se puede deshacer.`;
+  if(!confirm(msg)) return;
+  doDeleteTask(t, hijos);
+}
+async function doDeleteTask(t, hijos){
+  const idsBorrados = [t.id, ...hijos.map(h=>h.id)];
+  const prevTasks = tasks.slice();
+  tasks = tasks.filter(x=>!idsBorrados.includes(x.id));
+  render();
+  if(DEMO){ toast("Eliminado (modo demo, no persiste)."); return; }
+  try{
+    for(const id of idsBorrados){
+      await api("/webhook/team23/admin-delete-task", { method:"POST", body: JSON.stringify({ id }) });
+    }
+    toast("Eliminado.");
+  }catch(e){
+    tasks = prevTasks;
+    render();
+    toast("No pude eliminar: "+e.message, true);
+  }
+}
+
 /* ---------- render ---------- */
 function fechaCorta(d){
   if(!d) return "";
@@ -394,17 +436,27 @@ function estaVencida(t){
   return new Date(y, m-1, d) < hoy;
 }
 
+const PRIORIDADES = ["Alta","Media","Baja"];
 function badges(t){
   let out = `<select class="badge-select ${ESTADO_CLASS[t.estado]||"b-sin"}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','estado',this.value)">` +
     ESTADOS.map(e=>`<option value="${esc(e)}" ${e===t.estado?"selected":""}>${esc(e)}</option>`).join("") +
     `</select>`;
-  if(t.prioridad) out += `<span class="badge ${PRIO_CLASS[t.prioridad]||""}">${esc(t.prioridad)}</span>`;
+  out += `<select class="badge-select ${PRIO_CLASS[t.prioridad]||""}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','prioridad',this.value)">` +
+    `<option value="" ${!t.prioridad?"selected":""}>Sin prioridad</option>` +
+    PRIORIDADES.map(p=>`<option value="${p}" ${p===t.prioridad?"selected":""}>${p}</option>`).join("") +
+    `</select>`;
   return out;
 }
 function metaHTML(t){
   let out = `<input type="date" class="edit-date ${estaVencida(t)?"vencida":""}" value="${t.deadline||""}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','deadline',this.value)">`;
   if(t.responsable) out += `<span class="meta">${esc(t.responsable)}</span>`;
   return out;
+}
+function nombreInput(t){
+  return `<input type="text" class="nom edit-nombre" value="${esc(t.nombre)}" onclick="event.stopPropagation()" onchange="updateTask('${t.id}','nombre',this.value)">`;
+}
+function delBtn(id){
+  return `<button type="button" class="del-btn" title="Eliminar" aria-label="Eliminar" onclick="event.stopPropagation(); deleteTask('${id}')">✕</button>`;
 }
 
 function renderStats(list){
@@ -525,15 +577,15 @@ function render(){
       const open = abiertos.has(root.id) || (filtrando && hijosOk.length);
       const filas = mostrar.map(h => `
         <div class="fila child">
-          <span class="nom">${esc(h.nombre)}</span>
-          ${badges(h)}${metaHTML(h)}
+          ${nombreInput(h)}
+          ${badges(h)}${metaHTML(h)}${delBtn(h.id)}
         </div>`).join("");
 
       return `<div class="grupo">
         <div class="grupo-head" onclick="toggleGrupo('${root.id}')">
-          <span class="nom">${esc(root.nombre)}</span>
+          ${nombreInput(root)}
           ${hijos.length ? `<span class="sub">${filtrando ? mostrar.length+" de "+hijos.length : hijos.length} ${hijos.length===1?"subtarea":"subtareas"}</span>` : ""}
-          ${badges(root)}${metaHTML(root)}
+          ${badges(root)}${metaHTML(root)}${delBtn(root.id)}
           ${hijos.length ? `<button class="dd-toggle${open?"":" closed"}" tabindex="-1" aria-label="Desplegar"><span>▾</span></button>` : ""}
         </div>
         ${hijos.length ? `<div style="${open?"":"display:none"}">${filas}</div>` : ""}

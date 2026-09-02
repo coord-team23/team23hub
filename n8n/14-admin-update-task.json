@@ -51,7 +51,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const b = $('Webhook').first().json.body;\nif (!b || !b.id) { throw new Error('Falta el id de la tarea'); }\n/* solo estos dos campos se pueden tocar desde acá — el resto de la fila\n   (pilar/grupo/nombre/etc.) se sigue editando a mano en el sheet */\nconst campos = ['estado', 'deadline'];\nconst row = { id: String(b.id) };\ncampos.forEach(f => {\n  if (b[f] !== undefined) row[f] = b[f] === null ? '' : String(b[f]);\n});\nif (Object.keys(row).length === 1) { throw new Error('Nada para actualizar (mandá estado y/o deadline)'); }\nreturn [{ json: row }];"
+        "jsCode": "const b = $('Webhook').first().json.body;\nif (!b || !b.id) { throw new Error('Falta el id de la tarea'); }\n/* solo estos campos se pueden tocar desde acá — pilar/grupo/origen/depth\n   definen la estructura y se siguen editando a mano en el sheet */\nconst campos = ['estado', 'deadline', 'nombre', 'prioridad'];\nconst row = { id: String(b.id) };\ncampos.forEach(f => {\n  if (b[f] !== undefined) row[f] = b[f] === null ? '' : String(b[f]);\n});\nif (Object.keys(row).length === 1) { throw new Error('Nada para actualizar (mandá estado, deadline, nombre y/o prioridad)'); }\nreturn [{ json: row }];"
       },
       "id": "d4000014-0000-0000-0000-000000000003",
       "name": "Preparar fila",
