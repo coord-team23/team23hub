@@ -285,6 +285,32 @@ const ESTADOS = ["Sin empezar","Planificación","En curso","En pausa","Listo","A
 const ESTADO_CLASS = {"Sin empezar":"b-sin","Planificación":"b-plan","En curso":"b-curso","En pausa":"b-pausa","Listo":"b-listo","Archivadas":"b-arch"};
 const PRIO_CLASS = {"Alta":"b-alta","Media":"b-media","Baja":"b-baja"};
 
+/* "responsable" es texto libre y mezcla una o varias personas por fila
+   ("Mile Teo", "Mile - Kr - Knd", "Teo y Narf"...). RESP_ALIAS mapea cada
+   forma en que aparece un nombre a su forma canónica, y parseResponsables()
+   separa el campo en la lista real de personas — así el filtro encuentra a
+   Karla sea que la fila diga "Karla", "Krla", "Krl" o "Kr". */
+const RESP_ALIAS = {
+  "mile":"Mile", "milena":"Mile",
+  "teo":"Teo",
+  "narf":"Narf",
+  "karla":"Karla", "krla":"Karla", "krl":"Karla", "kr":"Karla",
+  "knd":"Knd",
+  "juli":"Juli",
+  "maya":"Maya",
+  "team":"TEAM 23", "team23":"TEAM 23"
+};
+/* orden de prioridad combinado entre pilares (Operativa: Narf, Teo, Mile ·
+   Ejecutiva: Krla, Mile, Knd, Teo, Narf) para ordenar el desplegable */
+const RESP_ORDEN = ["Narf","Teo","Mile","Karla","Knd","Juli","Maya","TEAM 23"];
+function parseResponsables(raw){
+  if(!raw) return [];
+  const tokens = raw.toLowerCase().split(/[\s\-\/,]+|\by\b/).map(t=>t.trim()).filter(Boolean);
+  const out = [];
+  tokens.forEach(t=>{ const c = RESP_ALIAS[t]; if(c && !out.includes(c)) out.push(c); });
+  return out;
+}
+
 let tasks = [];
 let pilarFilter = "all";
 /* grupos colapsados: arrancan cerrados salvo los que el usuario abra */
@@ -349,7 +375,7 @@ function renderStats(list){
 
 function matches(t, q, estados, resp){
   if(estados.size && !estados.has(t.estado)) return false;
-  if(resp !== "all" && (t.responsable||"") !== resp) return false;
+  if(resp !== "all" && !parseResponsables(t.responsable).includes(resp)) return false;
   if(!q) return true;
   return [t.nombre, t.responsable, t.grupo].filter(Boolean).join(" ").toLowerCase().includes(q);
 }
@@ -446,7 +472,8 @@ function setPilar(k){ pilarFilter = k; render(); }
 function toggleGrupo(id){ abiertos.has(id) ? abiertos.delete(id) : abiertos.add(id); render(); }
 
 function llenarFiltros(){
-  const resps = [...new Set(tasks.map(t=>t.responsable).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
+  const presentes = new Set(tasks.flatMap(t=>parseResponsables(t.responsable)));
+  const resps = RESP_ORDEN.filter(r=>presentes.has(r));
   $("#fResp").innerHTML = `<option value="all">Todos los responsables</option>` +
     resps.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join("");
 }
