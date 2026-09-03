@@ -70,13 +70,6 @@
   }
   .kicker{font-size:var(--fs-caption);letter-spacing:.14em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin-top:var(--space-4)}
 
-  .demo-banner{
-    margin:0 var(--space-7) var(--space-4);padding:var(--space-4) var(--space-5);
-    border:var(--stroke-sm) dashed var(--red);border-radius:var(--radius-md);
-    font-size:var(--fs-caption);line-height:1.6;
-  }
-  .demo-banner b{color:var(--red)}
-
   main{padding:var(--space-5) var(--space-7) var(--space-9);max-width:1400px}
 
   /* ---------- stats ---------- */
@@ -259,7 +252,6 @@
     header{padding:var(--space-3) 16px}
     .hero{padding:24px 16px 10px}
     main{padding:8px 16px 90px}
-    .demo-banner{margin:0 16px 8px}
     footer{padding:40px 16px 28px;flex-direction:column;align-items:flex-start}
     .foot-right{text-align:left}
     .fila{gap:var(--space-2)}
@@ -289,10 +281,6 @@
 <div class="hero">
   <h1>Admin</h1>
   <div class="kicker">Seguimiento interno del estudio · operativa, ejecutiva y crecimiento</div>
-</div>
-
-<div class="demo-banner" id="demoBanner" style="display:none">
-  <b>MODO DEMO</b> — Estás viendo el seguimiento cargado del documento original. Para conectarlo en serio: configurá <code>CONFIG.N8N_BASE</code> y <code>CONFIG.API_KEY</code>, con el workflow <code>13-admin-tasks</code> importado en n8n.
 </div>
 
 <main>
@@ -924,7 +912,6 @@ const ADMIN_MAILS = ["narf@team23.online","teo@team23.online","krl@team23.online
 
 async function boot(){
   $("#yr").textContent = new Date().getFullYear();
-  if(DEMO) $("#demoBanner").style.display = "block";
 
   if(AUTH_ON){
     try{
