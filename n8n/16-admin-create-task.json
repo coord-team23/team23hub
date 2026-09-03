@@ -51,7 +51,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const b = $('Webhook').first().json.body || {};\nif (!b.nombre) throw new Error('Falta el nombre de la tarea');\nif (!b.pilar) throw new Error('Falta el pilar');\n/* el id lo manda el front (t + timestamp) para poder revertir en pantalla si\n   esto falla; si no viene, se genera acá */\nconst row = {\n  id: String(b.id || ('t' + Date.now())),\n  pilar: String(b.pilar),\n  grupo: String(b.grupo || ''),\n  nombre: String(b.nombre),\n  estado: String(b.estado || 'Sin empezar'),\n  prioridad: String(b.prioridad || ''),\n  deadline: String(b.deadline || ''),\n  fin: String(b.fin || ''),\n  responsable: String(b.responsable || ''),\n  origen: String(b.origen || 'Admin'),\n  depth: Number(b.depth || (b.grupo ? 1 : 0))\n};\nreturn [{ json: row }];"
+        "jsCode": "const b = $('Webhook').first().json.body || {};\nif (!b.nombre) throw new Error('Falta el nombre de la tarea');\nif (!b.pilar) throw new Error('Falta el pilar');\n/* el id lo manda el front (t + timestamp) para poder revertir en pantalla si\n   esto falla; si no viene, se genera acá */\nconst row = {\n  id: String(b.id || ('t' + Date.now())),\n  pilar: String(b.pilar),\n  sector: String(b.sector || ''),\n  grupo: String(b.grupo || ''),\n  nombre: String(b.nombre),\n  estado: String(b.estado || 'Sin empezar'),\n  prioridad: String(b.prioridad || ''),\n  deadline: String(b.deadline || ''),\n  fin: String(b.fin || ''),\n  responsable: String(b.responsable || ''),\n  origen: String(b.origen || 'Admin'),\n  depth: Number(b.depth || (b.grupo ? 1 : 0))\n};\nreturn [{ json: row }];"
       },
       "id": "d6000016-0000-0000-0000-000000000003",
       "name": "Preparar fila",

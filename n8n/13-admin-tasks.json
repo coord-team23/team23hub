@@ -82,7 +82,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rows = $('Leer AdminTasks').all().map(i => i.json).filter(r => r && r.id);\nconst tasks = rows.map(r => ({\n  id: String(r.id),\n  pilar: r.pilar || '',\n  grupo: r.grupo || '',\n  nombre: r.nombre || '',\n  estado: r.estado || 'Sin empezar',\n  prioridad: r.prioridad || null,\n  deadline: r.deadline || null,\n  fin: r.fin || null,\n  responsable: r.responsable || null,\n  origen: r.origen || '',\n  depth: Number(r.depth || 0)\n}));\nreturn [{ json: { tasks } }];"
+        "jsCode": "const rows = $('Leer AdminTasks').all().map(i => i.json).filter(r => r && r.id);\nconst tasks = rows.map(r => ({\n  id: String(r.id),\n  pilar: r.pilar || '',\n  sector: r.sector || '',\n  grupo: r.grupo || '',\n  nombre: r.nombre || '',\n  estado: r.estado || 'Sin empezar',\n  prioridad: r.prioridad || null,\n  deadline: r.deadline || null,\n  fin: r.fin || null,\n  responsable: r.responsable || null,\n  origen: r.origen || '',\n  depth: Number(r.depth || 0)\n}));\nreturn [{ json: { tasks } }];"
       },
       "id": "d3000013-0000-0000-0000-000000000004",
       "name": "Armar respuesta",
