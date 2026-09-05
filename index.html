@@ -946,6 +946,7 @@
     </nav>
     <div class="tabacts">
       <button class="btn small" id="btnDirectorio" data-view="directorio" style="display:none" onclick="openDirectorio()">Directorio</button>
+      <button class="btn small" id="btnAdmin" style="display:none" onclick="location.href='/admin'">Admin</button>
       <button class="btn small" id="btnUsers" style="display:none" onclick="openUsers()">Usuarios</button>
       <button class="btn small" id="btnNew">+ NUEVO PROYECTO</button>
       <button class="btn small" id="btnLogout" style="display:none" onclick="authLogout()" title="Salir" aria-label="Salir"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/></svg></button>
@@ -5241,13 +5242,21 @@ applyViewUI(currentView);
 let sb = null, authUser = null;
 const AUTH_ON = !!CONFIG.SUPABASE_URL;
 function startApp(){ loadProjects(); }
+/* los mismos 5 mails que gatean /admin dentro de admin.html. Está duplicado a
+   propósito y no importado: son dos archivos estáticos sin build. Si la lista
+   crece o cambia seguido, conviene pasarla a un subrol en Supabase y leerla de
+   ahí en los dos lados. */
+const ADMIN_MAILS = ["narf@team23.online","teo@team23.online","krl@team23.online","milena@team23.online","biz@team23.online"];
 /* sin login (modo demo local) mostramos igual las herramientas de interno,
    para poder recorrer el hub completo; con AUTH_ON las gatea authEnter() */
-function showInternalTools(){
+function showInternalTools(esAdmin){
   ["btnLogout","btnUsers","btnDirectorio"].forEach(id=>{ const el=$("#"+id); if(el) el.style.display=""; });
+  /* el botón de Admin solo para quien puede entrar: mostrárselo a cualquier
+     interno sería mandarlo a una pantalla que lo rebota de vuelta acá */
+  if(esAdmin){ const el = $("#btnAdmin"); if(el) el.style.display=""; }
 }
 async function initAuth(){
-  if(!AUTH_ON){ showInternalTools(); startApp(); return; }
+  if(!AUTH_ON){ showInternalTools(true); startApp(); return; }
   const gate = $("#authGate"); gate.style.display = "flex";
   try{
     const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
@@ -5264,7 +5273,7 @@ async function authEnter(session){
     if(error) throw error;
     if(data.role !== "interno"){ location.replace("/proveedores"); return; }
     $("#authGate").style.display = "none";
-    showInternalTools();
+    showInternalTools(ADMIN_MAILS.includes((authUser.email||"").toLowerCase()));
     rosterEnsure().catch(()=>{});   /* precarga el directorio para el autocompletado de asignaciones */
     startApp();
   }catch(e){
