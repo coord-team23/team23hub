@@ -78,6 +78,25 @@
   .stat b{display:block;font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-section);line-height:1}
   .stat span{display:block;margin-top:var(--space-2);font-size:var(--fs-caption);color:var(--gray);font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.06em}
 
+  /* ---------- Status ---------- */
+  .status-block{margin-top:var(--space-8)}
+  .status-block h3{
+    font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-caption);
+    text-transform:uppercase;letter-spacing:.1em;color:var(--gray);margin-bottom:var(--space-4);
+  }
+  .venc-row{
+    display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);
+    padding:var(--space-3) 0;border-bottom:1px solid var(--hair);
+  }
+  .venc-row:last-child{border-bottom:none}
+  .venc-row .pilar-tag{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.04em}
+  .venc-row .fecha{font-weight:var(--weight-bold);white-space:nowrap;flex:none}
+  .venc-row .fecha.vencida{color:var(--red)}
+  .carga-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--space-2) var(--space-5)}
+  .carga-grid .item{font-size:var(--fs-body)}
+  .carga-grid .item small{color:var(--gray)}
+  .carga-grid .item.busy small{color:var(--red);font-weight:var(--weight-bold)}
+
   /* ---------- toolbar ---------- */
   .toolbar{display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center;margin-top:var(--space-7)}
   .toolbar input[type=text],.toolbar select{
@@ -291,30 +310,48 @@
 </div>
 
 <main>
-  <div class="stat-grid" id="stats"></div>
+  <span id="mainTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-6)"></span>
 
-  <div class="toolbar">
-    <input type="text" id="q" placeholder="Buscar por tarea, responsable o grupo…" oninput="render()">
-    <div class="multisel" id="fEstadoWrap">
-      <button type="button" class="multisel-btn" onclick="toggleEstadoMenu()">
-        <span id="fEstadoLabel">Todos los estados</span> <span class="car">▾</span>
-      </button>
-      <div class="multisel-menu" id="fEstadoMenu" hidden></div>
+  <section id="view-status" hidden>
+    <div class="stat-grid" id="stats"></div>
+    <div class="status-block">
+      <h3>Por pilar</h3>
+      <div class="stat-grid" id="statusPilares"></div>
     </div>
-    <div class="multisel" id="fRespWrap">
-      <button type="button" class="multisel-btn" onclick="toggleRespMenu()">
-        <span id="fRespLabel">Todos los responsables</span> <span class="car">▾</span>
-      </button>
-      <div class="multisel-menu" id="fRespMenu" hidden></div>
+    <div class="status-block">
+      <h3>Próximos vencimientos</h3>
+      <div id="statusVencimientos"></div>
     </div>
-    <span id="pilarTabs" style="display:flex;gap:6px;flex-wrap:wrap"></span>
-  </div>
-  <div class="toolbar" style="margin-top:var(--space-3)">
-    <span class="vista-label">Vista</span>
-    <span id="vistaTabs" style="display:flex;gap:6px;flex-wrap:wrap"></span>
-  </div>
+    <div class="status-block">
+      <h3>Carga de trabajo</h3>
+      <div id="statusCarga"></div>
+    </div>
+  </section>
 
-  <div id="body"></div>
+  <section id="view-tareas" hidden>
+    <div class="toolbar">
+      <input type="text" id="q" placeholder="Buscar por tarea, responsable o grupo…" oninput="render()">
+      <div class="multisel" id="fEstadoWrap">
+        <button type="button" class="multisel-btn" onclick="toggleEstadoMenu()">
+          <span id="fEstadoLabel">Todos los estados</span> <span class="car">▾</span>
+        </button>
+        <div class="multisel-menu" id="fEstadoMenu" hidden></div>
+      </div>
+      <div class="multisel" id="fRespWrap">
+        <button type="button" class="multisel-btn" onclick="toggleRespMenu()">
+          <span id="fRespLabel">Todos los responsables</span> <span class="car">▾</span>
+        </button>
+        <div class="multisel-menu" id="fRespMenu" hidden></div>
+      </div>
+      <span id="pilarTabs" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+    </div>
+    <div class="toolbar" style="margin-top:var(--space-3)">
+      <span class="vista-label">Vista</span>
+      <span id="vistaTabs" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+    </div>
+
+    <div id="body"></div>
+  </section>
 </main>
 
 <div id="toast" role="status"></div>
@@ -655,6 +692,14 @@ document.addEventListener("click", e => {
   });
 });
 
+/* ---------- pestaña principal: Status vs Tareas ---------- */
+const MAIN_VIEWS = [
+  { key:"status", label:"Status" },
+  { key:"tareas", label:"Tareas" }
+];
+let mainView = "status";
+function setMainView(v){ mainView = v; render(); }
+
 /* ---------- vistas por tiempo ---------- */
 const VISTAS = [
   { key:"pilar",  label:"Por pilar" },
@@ -737,7 +782,49 @@ function tiempoHTML(lista, modo){
   return (cuerpo || `<div class="empty">Sin tareas con fecha en este período.</div>`) + nota;
 }
 
+/* Status: panorama sin filtros — cuenta todo, no solo lo que matchea el
+   buscador/filtros de la pestaña Tareas (que ni siquiera están visibles acá) */
+function renderStatusView(){
+  renderStats(tasks);
+
+  $("#statusPilares").innerHTML = PILARES.map(p=>{
+    const n = tasks.filter(t=>t.pilar===p.key).length;
+    return `<div class="stat"><b>${n}</b><span>${esc(p.label)}</span></div>`;
+  }).join("");
+
+  const activas = tasks.filter(t => t.estado!=="Listo" && t.estado!=="Archivadas");
+
+  const conFecha = activas
+    .filter(t => fechaLimite(t))
+    .map(t => { const [y,m,d] = fechaLimite(t).split("-").map(Number); return { t, d: new Date(y,m-1,d) }; })
+    .sort((a,b) => a.d - b.d);
+  $("#statusVencimientos").innerHTML = conFecha.length
+    ? conFecha.slice(0,8).map(({t}) => `
+      <div class="venc-row">
+        <span>${esc(t.nombre)} <span class="pilar-tag">· ${esc(PILAR_LABEL[t.pilar]||t.pilar)}</span></span>
+        <span class="fecha ${estaVencida(t)?"vencida":""}">${fechaCorta(fechaLimite(t))}</span>
+      </div>`).join("")
+    : `<div class="empty">Sin vencimientos próximos.</div>`;
+
+  /* "sobrecargado" es la misma idea que en el hub: más de una manito llena de
+     tareas sin cerrar amerita destacarse en rojo */
+  const carga = RESP_ORDEN
+    .map(r => [r, activas.filter(t => parseResponsables(t.responsable).includes(r)).length])
+    .filter(([,n]) => n>0)
+    .sort((a,b) => b[1]-a[1]);
+  $("#statusCarga").innerHTML = carga.length
+    ? `<div class="carga-grid">${carga.map(([r,n]) => `
+        <div class="item ${n>4?"busy":""}">${esc(r)} <small>(${n} tarea${n>1?"s":""})</small></div>`).join("")}</div>`
+    : `<div class="empty">Nadie tiene tareas activas asignadas.</div>`;
+}
+
 function render(){
+  $("#mainTabs").innerHTML = MAIN_VIEWS
+    .map(v=>`<button class="pill-opt ${mainView===v.key?"on":""}" onclick="setMainView('${v.key}')">${esc(v.label)}</button>`).join("");
+  $("#view-status").hidden = mainView !== "status";
+  $("#view-tareas").hidden = mainView !== "tareas";
+  if(mainView === "status"){ renderStatusView(); return; }
+
   const q = $("#q").value.trim().toLowerCase();
   $("#fEstadoLabel").textContent = estadoLabel();
   $("#fRespLabel").textContent = respLabel();
@@ -745,7 +832,6 @@ function render(){
   const resp = respFilter;
 
   const visibles = tasks.filter(t => matches(t, q, estado, resp));
-  renderStats(visibles);
 
   $("#pilarTabs").innerHTML = [{key:"all",label:"Todos"}, ...PILARES]
     .map(p=>`<button class="pill-opt ${pilarFilter===p.key?"on":""}" onclick="setPilar('${p.key}')">${esc(p.label)}</button>`).join("");
