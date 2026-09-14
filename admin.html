@@ -426,7 +426,7 @@ function render(){
     .map(p=>`<button class="pill-opt ${pilarFilter===p.key?"on":""}" onclick="setPilar('${p.key}')">${esc(p.label)}</button>`).join("");
 
   const pilares = pilarFilter === "all" ? PILARES : PILARES.filter(p=>p.key===pilarFilter);
-  const filtrando = !!q || estado !== "all" || resp !== "all";
+  const filtrando = !!q || estado.size > 0 || resp !== "all";
 
   const html = pilares.map(p => {
     const delPilar = tasks.filter(t => t.pilar === p.key);
@@ -501,7 +501,7 @@ async function boot(){
       const mail = (session.user.email||"").toLowerCase();
       if(!data || data.role !== "interno" || !ADMIN_MAILS.includes(mail)){ location.replace("/productores"); return; }
       $("#btnLogout").style.display = "inline-flex";
-    }catch(e){ /* si el login falla, la página queda visible solo en local */ }
+    }catch(e){ $("#body").innerHTML = `<div class="empty">No pude conectar con el login (${esc(e.message)}). Recargá la página.</div>`; return; }
   }
 
   try{ await loadTasks(); }
