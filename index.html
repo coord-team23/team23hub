@@ -4677,8 +4677,8 @@ function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style
 
 /* kick off wizard */
 const KICKOFF_QUESTIONS = [
-  { q: "¿Creaste la categoría del proyecto en Discord?", mandatory: true, resp: "EP / PROD" },
-  { q: "¿Creaste los canales de prod, coord y general?", mandatory: true, resp: "PROD / COORD" },
+  { q: "¿Está definida la categoría del proyecto en Discord? (si la automatización de Discord queda activa, el hub la crea al dar de alta)", mandatory: true, resp: "EP / PROD" },
+  { q: "¿Están definidos los canales de prod, coord y general? (con la automatización activa, el hub los crea junto con la categoría)", mandatory: true, resp: "PROD / COORD" },
   { q: "¿Tenemos a mano la última versión del timing de CL?", mandatory: true, resp: "EP / PROD" },
   { q: "¿Hay storyboard o tratamiento?\nPegá los links", mandatory: false, links: [{key:"storyboard",label:"Storyboard"},{key:"tratamiento",label:"Tratamiento"}] },
   { q: "¿Hay resumen de entregables?\nPegalo en esta caja de texto", mandatory: false, texto: true, skipForOption: 2 },

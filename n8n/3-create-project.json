@@ -344,7 +344,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -357,7 +358,8 @@
       "position": [
         2600,
         0
-      ]
+      ],
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -393,7 +395,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -601,7 +604,8 @@
       "position": [
         2980,
         0
-      ]
+      ],
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1564,6 +1568,39 @@
         1200,
         -100
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.to || '' }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2e9231ff-5645-4081-ac49-366e581783fd",
+      "name": "¿Hay propuestas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3820,
+        0
+      ]
     }
   ],
   "connections": {
@@ -1757,7 +1794,7 @@
       "main": [
         [
           {
-            "node": "Mail de propuesta",
+            "node": "¿Hay propuestas?",
             "type": "main",
             "index": 0
           }
@@ -2224,6 +2261,18 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "¿Hay propuestas?": {
+      "main": [
+        [
+          {
+            "node": "Mail de propuesta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     }
   },

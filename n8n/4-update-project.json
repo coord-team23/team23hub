@@ -219,7 +219,8 @@
           "id": "REEMPLAZAR",
           "name": "Discord Bot"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
