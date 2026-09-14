@@ -102,6 +102,203 @@
         200,
         0
       ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sb1",
+              "name": "supabaseUrl",
+              "value": "https://muvmrkacjhygfuialpyn.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "sb2",
+              "name": "supabaseAnonKey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "39f9a5be-d591-4e6c-811f-af620c94ac4e",
+      "name": "CONFIG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('CONFIG').first().json.supabaseUrl }}/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('CONFIG').first().json.supabaseAnonKey }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Webhook').first().json.headers.authorization || '' }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "6082a9ea-5d21-4663-aba6-23ec70ba9850",
+      "name": "Validar login",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        -300
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.email || '' }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "969dc9d1-d908-472a-b384-e55e0940a851",
+      "name": "¿Login válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: 'login inválido' }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "a1c074e6-6486-45eb-ac58-9e9955bc9440",
+      "name": "Responder 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('CONFIG').first().json.supabaseUrl }}/rest/v1/profiles?id=eq.{{ $('Validar login').first().json.id }}&select=role",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('CONFIG').first().json.supabaseAnonKey }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Webhook').first().json.headers.authorization || '' }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "dc15c313-6eb5-44b2-b2ec-04c774abd742",
+      "name": "Leer rol",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        -300
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.role || '' }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "interno"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "88ff83e3-db91-4264-acbf-b4e4a1c49337",
+      "name": "¿Es interno?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: 'solo productores' }) }}",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "id": "ebd4c755-686e-4a95-afac-34bc92d1e8eb",
+      "name": "Responder 403",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        -100
+      ]
     }
   ],
   "connections": {
@@ -109,7 +306,7 @@
       "main": [
         [
           {
-            "node": "Guard: debrief presente",
+            "node": "CONFIG",
             "type": "main",
             "index": 0
           }
@@ -143,6 +340,75 @@
         [
           {
             "node": "Claude: extraer datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "Validar login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar login": {
+      "main": [
+        [
+          {
+            "node": "¿Login válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Login válido?": {
+      "main": [
+        [
+          {
+            "node": "Leer rol",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer rol": {
+      "main": [
+        [
+          {
+            "node": "¿Es interno?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es interno?": {
+      "main": [
+        [
+          {
+            "node": "Guard: debrief presente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 403",
             "type": "main",
             "index": 0
           }

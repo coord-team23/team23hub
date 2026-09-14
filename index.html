@@ -965,7 +965,7 @@
 <div class="demo-banner" id="staleBanner" style="display:none"></div>
 
 <div class="demo-banner" id="demoBanner" style="display:none">
-  <b>MODO DEMO</b> — Estás viendo datos de ejemplo. Para conectarlo en serio: configurá <code>CONFIG.N8N_BASE</code> y <code>CONFIG.API_KEY</code> al inicio del archivo, con tus workflows de n8n importados (ver README).
+  <b>MODO DEMO</b> — Estás viendo datos de ejemplo. Para conectarlo en serio: configurá <code>N8N_BASE</code> y <code>API_KEY</code> en <code>design-system/config.js</code>, con tus workflows de n8n importados (ver README).
 </div>
 
 <main id="main">
@@ -1431,18 +1431,8 @@
 <div id="toast" role="status"></div>
 <div id="printArea"></div>
 
+<script src="design-system/config.js"></script>
 <script>
-/* ================================================================
-   CONFIG — completá esto para salir del modo demo.
-   N8N_BASE: la URL de tu instancia, p.ej. "https://n8n.rawmarketing.co"
-   API_KEY : el valor que definiste en la credencial "Team23 Key" (header x-team23-key)
-================================================================ */
-const CONFIG = {
-  N8N_BASE: "https://coordteam23.app.n8n.cloud",
-  API_KEY: "coordHUBt23",
-  SUPABASE_URL: "https://muvmrkacjhygfuialpyn.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI"
-};
 
 /* id estable por entrada de calendario — necesario para poder sincronizar cada
    fase/hito con un evento de Google Calendar (crear una vez, actualizar/borrar después
@@ -1510,10 +1500,16 @@ const demoProjects = [
 ];
 
 /* ---------------- api ---------------- */
+/* el JWT de Supabase viaja en cada llamada a n8n: el workflow lo valida contra
+   /auth/v1/user y lee el rol en profiles antes de tocar el Sheet. Sin sesión, sin header. */
+async function authHeader(){
+  try{ const { data:{ session } } = await sb.auth.getSession(); return session ? { "Authorization": "Bearer "+session.access_token } : {}; }
+  catch(e){ return {}; }
+}
 async function api(path, opts={}){
   const res = await fetch(CONFIG.N8N_BASE + path, {
     ...opts,
-    headers:{ "Content-Type":"application/json", "x-team23-key": CONFIG.API_KEY, ...(opts.headers||{}) }
+    headers:{ "Content-Type":"application/json", "x-team23-key": CONFIG.API_KEY, ...(await authHeader()), ...(opts.headers||{}) }
   });
   if(!res.ok) throw new Error("HTTP "+res.status);
   return res.json().catch(()=>({}));

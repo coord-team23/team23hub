@@ -259,17 +259,8 @@
   </div>
 </footer>
 
+<script src="design-system/config.js"></script>
 <script>
-/* ================================================================
-   CONFIG — mismos valores que el resto del hub.
-   N8N_BASE vacío ⇒ modo demo con el seguimiento ya cargado.
-================================================================ */
-const CONFIG = {
-  N8N_BASE: "https://coordteam23.app.n8n.cloud",
-  API_KEY: "coordHUBt23",
-  SUPABASE_URL: "https://muvmrkacjhygfuialpyn.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI"
-};
 const DEMO = !CONFIG.N8N_BASE;
 const AUTH_ON = !!CONFIG.SUPABASE_URL;
 
@@ -319,10 +310,16 @@ const abiertos = new Set();
 const estadoFilter = new Set();
 
 /* ---------- datos ---------- */
+/* el JWT de Supabase viaja en cada llamada a n8n: el workflow lo valida contra
+   /auth/v1/user y lee el rol en profiles antes de tocar el Sheet. Sin sesión, sin header. */
+async function authHeader(){
+  try{ const { data:{ session } } = await sb.auth.getSession(); return session ? { "Authorization": "Bearer "+session.access_token } : {}; }
+  catch(e){ return {}; }
+}
 async function api(path, opts={}){
   const r = await fetch(CONFIG.N8N_BASE.replace(/\/$/,"") + path, {
     ...opts,
-    headers: { "Content-Type":"application/json", "x-team23-key": CONFIG.API_KEY, ...(opts.headers||{}) }
+    headers: { "Content-Type":"application/json", "x-team23-key": CONFIG.API_KEY, ...(await authHeader()), ...(opts.headers||{}) }
   });
   if(!r.ok) throw new Error("HTTP "+r.status);
   return r.json();

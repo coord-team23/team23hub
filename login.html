@@ -83,11 +83,8 @@
   </div>
 </div>
 <div class="lg-toast" id="lgToast" role="status" aria-live="polite"></div>
+<script src="design-system/config.js"></script>
 <script>
-const CONFIG = {
-  SUPABASE_URL: "https://muvmrkacjhygfuialpyn.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI"
-};
 const $ = s=>document.querySelector(s);
 let sb = null, routed = false;
 function toast(m, err){ const t=$("#lgToast"); t.textContent=m; t.className="lg-toast"+(err?" err":""); t.style.display="block"; setTimeout(()=>t.style.display="none", 4000); }
