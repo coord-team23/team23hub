@@ -1,0 +1,1047 @@
+{
+  "id": "irzXFXc7A8gDDQUe",
+  "name": "Team23 — 5. Guardar Calendario + Avisar",
+  "description": null,
+  "active": true,
+  "activeVersionId": "230bd73e-e93d-4cd6-9dc5-addc289f02e5",
+  "createdAt": "2026-07-17T16:11:31.370Z",
+  "updatedAt": "2026-08-03T03:37:56.136Z",
+  "isArchived": false,
+  "versionId": "230bd73e-e93d-4cd6-9dc5-addc289f02e5",
+  "versionCounter": 24,
+  "sourceWorkflowId": null,
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "team23/calendar",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "eb6de986-2fd9-41cc-9566-b4e5835d4c42",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -3072,
+        2432
+      ],
+      "webhookId": "0713e76a-4e68-4d42-ab4b-44bdb5b7dd21",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "U3mhsefbSNp5Ly1w",
+          "name": "Team23 Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "dbSheetId",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "095ecfd3-8cbc-4e94-a494-43271600843d",
+      "name": "CONFIG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2880,
+        2432
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Calendar"
+        },
+        "options": {}
+      },
+      "id": "53d68a43-3585-4c3f-8b3f-73e173312fda",
+      "name": "Leer Calendario",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -2672,
+        2432
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook').first().json.body;\nif (!body || !body.projectId) { throw new Error('Falta projectId'); }\nconst now = new Date().toISOString();\nconst existentes = $('Leer Calendario').all().map(i => i.json).filter(r => r && r.project_id && String(r.project_id) !== String(body.projectId));\nconst nuevos = (body.entries || []).map(e => ({\n  project_id: String(body.projectId),\n  fase: e.fase || '',\n  inicio: e.inicio || '',\n  fin: e.fin || '',\n  notas: e.notas || '',\n  tipo: e.tipo === 'hito' ? 'hito' : 'fase',\n  updated_at: now\n}));\nconst rows = existentes.concat(nuevos);\nconst recipients = [...new Set((body.recipients || []).filter(Boolean).map(x => String(x).trim()))].join(',');\nconst fmt = d => d ? d : '-';\nconst cell = 'padding:8px 12px;border-bottom:1px solid #ddd;';\nconst th = 'text-align:left;padding:8px 12px;border-bottom:2px solid #0A0A0A;font-size:11px;letter-spacing:1px;';\nconst fases = nuevos.filter(e => e.tipo !== 'hito');\nconst hitos = nuevos.filter(e => e.tipo === 'hito');\nconst trsF = fases.map(e => '<tr><td style=\"' + cell + '\"><b>' + e.fase + '</b></td><td style=\"' + cell + '\">' + fmt(e.inicio) + '</td><td style=\"' + cell + '\">' + fmt(e.fin) + '</td><td style=\"' + cell + '\">' + (e.notas || '-') + '</td></tr>').join('');\nconst trsH = hitos.map(e => '<tr><td style=\"' + cell + '\">' + fmt(e.inicio) + '</td><td style=\"' + cell + '\"><b>' + e.fase + '</b></td></tr>').join('');\nlet html = '<div style=\"font-family:Helvetica,Arial,sans-serif;color:#0A0A0A;max-width:640px;\">' +\n  '<h2 style=\"margin:0 0 4px;font-size:24px;\">' + (body.projectName || 'Proyecto') + '</h2>' +\n  '<p style=\"margin:0 0 18px;color:#FF2B1E;font-weight:bold;letter-spacing:2px;font-size:11px;\">' + (body.isFirst ? 'CALENDARIO DEFINIDO' : 'CALENDARIO ACTUALIZADO') + ' · TEAM23</p>' +\n  '<table style=\"border-collapse:collapse;width:100%;font-size:14px;\"><thead><tr>' +\n  '<th style=\"' + th + '\">FASE</th><th style=\"' + th + '\">INICIO</th><th style=\"' + th + '\">FIN</th><th style=\"' + th + '\">NOTAS</th>' +\n  '</tr></thead><tbody>' + trsF + '</tbody></table>';\nif (hitos.length) {\n  html += '<p style=\"margin:22px 0 6px;font-weight:bold;font-size:12px;letter-spacing:2px;\">HITOS</p>' +\n    '<table style=\"border-collapse:collapse;width:100%;font-size:14px;\"><thead><tr>' +\n    '<th style=\"' + th + '\">FECHA</th><th style=\"' + th + '\">HITO</th>' +\n    '</tr></thead><tbody>' + trsH + '</tbody></table>';\n}\nhtml += '<p style=\"margin-top:24px;font-size:10px;color:#8A8A8A;letter-spacing:2px;\">TEAM23 PRODUCTION HUB</p></div>';\nreturn [{ json: { rows, recipients, html, projectName: body.projectName || 'Proyecto', isFirst: !!body.isFirst } }];"
+      },
+      "id": "d7845db2-268a-4dd3-9af2-c6dd21e90667",
+      "name": "Reconstruir",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2480,
+        2432
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('CONFIG').first().json.dbSheetId }}/values/Calendar!A2:G100000:clear",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "e48f7f14-193c-4258-aaf7-1479eb0bb646",
+      "name": "Limpiar Calendario",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2272,
+        2432
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('Reconstruir').first().json.rows || [];\nreturn rows.map(r => ({ json: r }));"
+      },
+      "id": "869b1368-87ba-42df-af07-e73c219d667e",
+      "name": "Filas a items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2080,
+        2320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Calendar"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f5879f96-380a-4134-babe-112bbcac5c0b",
+      "name": "Guardar Calendario",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1872,
+        2320
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Reconstruir').first().json.recipients }}",
+        "subject": "=📅 {{ $('Reconstruir').first().json.isFirst ? 'Calendario definido' : 'Calendario actualizado' }} — {{ $('Reconstruir').first().json.projectName }}",
+        "message": "={{ $('Reconstruir').first().json.html }}",
+        "options": {}
+      },
+      "id": "961c22f0-aa05-4cc3-9149-83593bcf3c3b",
+      "name": "Avisar equipo",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -2080,
+        2560
+      ],
+      "webhookId": "bd6b44c4-b130-4c5f-bd0a-a993696b0cfc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "vVxsPvAtLqnekUV0",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true }) }}",
+        "options": {}
+      },
+      "id": "84102864-0475-4d19-abaf-9e11510f08b2",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1872,
+        2560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "e6032873-7bf3-4ab9-9133-0944e71333b6",
+      "name": "Guardar taskDates",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1664,
+        2320
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const w = $('Webhook').first().json.body;\nreturn [{ json: { id: w.id, taskDates_json: JSON.stringify(w.taskDates || {}) } }];"
+      },
+      "id": "4d44b5de-d12e-4c0d-8ce0-825b9eb9f0a3",
+      "name": "Fila taskDates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1824,
+        2192
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "options": {}
+      },
+      "id": "122c0995-95f9-41b0-b8e5-69a9657f6283",
+      "name": "Leer Projects",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1440,
+        2320
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook').first().json.body || {};\n/* mismo criterio que el mail: sin pedido explícito no se avisa */\nif (body.avisar !== true) return [];\nconst filas = $('Leer Projects').all().map(i => i.json);\nconst p = filas.find(r => String(r.id) === String(body.projectId));\nconst canal = p ? String(p.discord_avisos_id || '').replace(/^'+/, '') : '';\nif (!canal) return [];\nconst rec = $('Reconstruir').first().json;\nconst entradas = body.entries || [];\nconst fases = entradas.filter(e => e.tipo !== 'hito');\nconst hitos = entradas.filter(e => e.tipo === 'hito');\nconst fmt = d => d || 'sin fecha';\nconst lineas = ['\\ud83d\\udcc5 **' + (rec.projectName || p.nombre || 'Proyecto') + '**: ' + (rec.isFirst ? 'calendario definido' : 'calendario actualizado')];\nfases.slice(0, 12).forEach(e => lineas.push('\\u2022 ' + (e.fase || 'Fase') + ': ' + fmt(e.inicio) + ' a ' + fmt(e.fin)));\nhitos.slice(0, 8).forEach(e => lineas.push('\\u25c6 ' + (e.fase || 'Hito') + ': ' + fmt(e.inicio)));\nconst resto = Math.max(0, fases.length - 12) + Math.max(0, hitos.length - 8);\nif (resto > 0) lineas.push('y ' + resto + ' m\\u00e1s en el hub');\nlet content = lineas.join('\\n');\nif (content.length > 1900) content = content.slice(0, 1900) + '\\u2026';\nreturn [{ json: { channelId: canal, content } }];"
+      },
+      "id": "998651a3-2ee3-4141-83eb-171dfe1286a7",
+      "name": "Aviso de calendario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1216,
+        2320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+        "options": {}
+      },
+      "id": "4c289f55-b8ba-4f88-8e4b-fc0858ae8ce7",
+      "name": "Discord: avisar calendario",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -992,
+        2320
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "y28T7xXq9ZiuQWcM",
+          "name": "Discord Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook').first().json.body || {};\n/* El mail sale solo si se pidió avisar. Guardar y avisar son dos acciones distintas:\n   el calendario se acomoda varias veces y el equipo tiene que enterarse una. */\nif (body.avisar !== true) return [];\nreturn $input.all();"
+      },
+      "id": "e2518b9d-217c-4af1-9665-5ddee2c11c4f",
+      "name": "¿Avisar por mail?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2256,
+        2560
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "Leer Calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Calendario": {
+      "main": [
+        [
+          {
+            "node": "Reconstruir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reconstruir": {
+      "main": [
+        [
+          {
+            "node": "Limpiar Calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar Calendario": {
+      "main": [
+        [
+          {
+            "node": "Filas a items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Avisar por mail?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filas a items": {
+      "main": [
+        [
+          {
+            "node": "Guardar Calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Calendario": {
+      "main": [
+        [
+          {
+            "node": "Fila taskDates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fila taskDates": {
+      "main": [
+        [
+          {
+            "node": "Guardar taskDates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar taskDates": {
+      "main": [
+        [
+          {
+            "node": "Leer Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Projects": {
+      "main": [
+        [
+          {
+            "node": "Aviso de calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso de calendario": {
+      "main": [
+        [
+          {
+            "node": "Discord: avisar calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Avisar por mail?": {
+      "main": [
+        [
+          {
+            "node": "Avisar equipo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "irzXFXc7A8gDDQUe",
+      "projectId": "mrWw4NVqRFGmGI6m",
+      "project": {
+        "id": "mrWw4NVqRFGmGI6m",
+        "name": "TEAM23   <coord@team23.online>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "8e82d0ec-0f07-46c6-8b67-c8561f375f06",
+        "createdAt": "2026-07-13T16:56:27.033Z",
+        "updatedAt": "2026-07-13T16:56:35.986Z"
+      },
+      "createdAt": "2026-07-17T16:11:31.372Z",
+      "updatedAt": "2026-07-17T16:11:31.372Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "230bd73e-e93d-4cd6-9dc5-addc289f02e5",
+    "workflowId": "irzXFXc7A8gDDQUe",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "team23/calendar",
+          "authentication": "headerAuth",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "eb6de986-2fd9-41cc-9566-b4e5835d4c42",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          -3072,
+          2432
+        ],
+        "webhookId": "0713e76a-4e68-4d42-ab4b-44bdb5b7dd21",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "U3mhsefbSNp5Ly1w",
+            "name": "Team23 Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c1",
+                "name": "dbSheetId",
+                "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "id": "095ecfd3-8cbc-4e94-a494-43271600843d",
+        "name": "CONFIG",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -2880,
+          2432
+        ]
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Calendar"
+          },
+          "options": {}
+        },
+        "id": "53d68a43-3585-4c3f-8b3f-73e173312fda",
+        "name": "Leer Calendario",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -2672,
+          2432
+        ],
+        "alwaysOutputData": true,
+        "executeOnce": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $('Webhook').first().json.body;\nif (!body || !body.projectId) { throw new Error('Falta projectId'); }\nconst now = new Date().toISOString();\nconst existentes = $('Leer Calendario').all().map(i => i.json).filter(r => r && r.project_id && String(r.project_id) !== String(body.projectId));\nconst nuevos = (body.entries || []).map(e => ({\n  project_id: String(body.projectId),\n  fase: e.fase || '',\n  inicio: e.inicio || '',\n  fin: e.fin || '',\n  notas: e.notas || '',\n  tipo: e.tipo === 'hito' ? 'hito' : 'fase',\n  updated_at: now\n}));\nconst rows = existentes.concat(nuevos);\nconst recipients = [...new Set((body.recipients || []).filter(Boolean).map(x => String(x).trim()))].join(',');\nconst fmt = d => d ? d : '-';\nconst cell = 'padding:8px 12px;border-bottom:1px solid #ddd;';\nconst th = 'text-align:left;padding:8px 12px;border-bottom:2px solid #0A0A0A;font-size:11px;letter-spacing:1px;';\nconst fases = nuevos.filter(e => e.tipo !== 'hito');\nconst hitos = nuevos.filter(e => e.tipo === 'hito');\nconst trsF = fases.map(e => '<tr><td style=\"' + cell + '\"><b>' + e.fase + '</b></td><td style=\"' + cell + '\">' + fmt(e.inicio) + '</td><td style=\"' + cell + '\">' + fmt(e.fin) + '</td><td style=\"' + cell + '\">' + (e.notas || '-') + '</td></tr>').join('');\nconst trsH = hitos.map(e => '<tr><td style=\"' + cell + '\">' + fmt(e.inicio) + '</td><td style=\"' + cell + '\"><b>' + e.fase + '</b></td></tr>').join('');\nlet html = '<div style=\"font-family:Helvetica,Arial,sans-serif;color:#0A0A0A;max-width:640px;\">' +\n  '<h2 style=\"margin:0 0 4px;font-size:24px;\">' + (body.projectName || 'Proyecto') + '</h2>' +\n  '<p style=\"margin:0 0 18px;color:#FF2B1E;font-weight:bold;letter-spacing:2px;font-size:11px;\">' + (body.isFirst ? 'CALENDARIO DEFINIDO' : 'CALENDARIO ACTUALIZADO') + ' · TEAM23</p>' +\n  '<table style=\"border-collapse:collapse;width:100%;font-size:14px;\"><thead><tr>' +\n  '<th style=\"' + th + '\">FASE</th><th style=\"' + th + '\">INICIO</th><th style=\"' + th + '\">FIN</th><th style=\"' + th + '\">NOTAS</th>' +\n  '</tr></thead><tbody>' + trsF + '</tbody></table>';\nif (hitos.length) {\n  html += '<p style=\"margin:22px 0 6px;font-weight:bold;font-size:12px;letter-spacing:2px;\">HITOS</p>' +\n    '<table style=\"border-collapse:collapse;width:100%;font-size:14px;\"><thead><tr>' +\n    '<th style=\"' + th + '\">FECHA</th><th style=\"' + th + '\">HITO</th>' +\n    '</tr></thead><tbody>' + trsH + '</tbody></table>';\n}\nhtml += '<p style=\"margin-top:24px;font-size:10px;color:#8A8A8A;letter-spacing:2px;\">TEAM23 PRODUCTION HUB</p></div>';\nreturn [{ json: { rows, recipients, html, projectName: body.projectName || 'Proyecto', isFirst: !!body.isFirst } }];"
+        },
+        "id": "d7845db2-268a-4dd3-9af2-c6dd21e90667",
+        "name": "Reconstruir",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2480,
+          2432
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('CONFIG').first().json.dbSheetId }}/values/Calendar!A2:G100000:clear",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleSheetsOAuth2Api",
+          "options": {}
+        },
+        "id": "e48f7f14-193c-4258-aaf7-1479eb0bb646",
+        "name": "Limpiar Calendario",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -2272,
+          2432
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const rows = $('Reconstruir').first().json.rows || [];\nreturn rows.map(r => ({ json: r }));"
+        },
+        "id": "869b1368-87ba-42df-af07-e73c219d667e",
+        "name": "Filas a items",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2080,
+          2320
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Calendar"
+          },
+          "columns": {
+            "mappingMode": "autoMapInputData",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "f5879f96-380a-4134-babe-112bbcac5c0b",
+        "name": "Guardar Calendario",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -1872,
+          2320
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $('Reconstruir').first().json.recipients }}",
+          "subject": "=📅 {{ $('Reconstruir').first().json.isFirst ? 'Calendario definido' : 'Calendario actualizado' }} — {{ $('Reconstruir').first().json.projectName }}",
+          "message": "={{ $('Reconstruir').first().json.html }}",
+          "options": {}
+        },
+        "id": "961c22f0-aa05-4cc3-9149-83593bcf3c3b",
+        "name": "Avisar equipo",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          -2080,
+          2560
+        ],
+        "webhookId": "bd6b44c4-b130-4c5f-bd0a-a993696b0cfc",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "vVxsPvAtLqnekUV0",
+            "name": "Gmail account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ ok: true }) }}",
+          "options": {}
+        },
+        "id": "84102864-0475-4d19-abaf-9e11510f08b2",
+        "name": "Responder",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          -1872,
+          2560
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Projects"
+          },
+          "columns": {
+            "mappingMode": "autoMapInputData",
+            "value": {},
+            "matchingColumns": [
+              "id"
+            ],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "e6032873-7bf3-4ab9-9133-0944e71333b6",
+        "name": "Guardar taskDates",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -1664,
+          2320
+        ],
+        "executeOnce": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const w = $('Webhook').first().json.body;\nreturn [{ json: { id: w.id, taskDates_json: JSON.stringify(w.taskDates || {}) } }];"
+        },
+        "id": "4d44b5de-d12e-4c0d-8ce0-825b9eb9f0a3",
+        "name": "Fila taskDates",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1824,
+          2192
+        ],
+        "executeOnce": true
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Projects"
+          },
+          "options": {}
+        },
+        "id": "122c0995-95f9-41b0-b8e5-69a9657f6283",
+        "name": "Leer Projects",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -1440,
+          2320
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $('Webhook').first().json.body || {};\n/* mismo criterio que el mail: sin pedido explícito no se avisa */\nif (body.avisar !== true) return [];\nconst filas = $('Leer Projects').all().map(i => i.json);\nconst p = filas.find(r => String(r.id) === String(body.projectId));\nconst canal = p ? String(p.discord_avisos_id || '').replace(/^'+/, '') : '';\nif (!canal) return [];\nconst rec = $('Reconstruir').first().json;\nconst entradas = body.entries || [];\nconst fases = entradas.filter(e => e.tipo !== 'hito');\nconst hitos = entradas.filter(e => e.tipo === 'hito');\nconst fmt = d => d || 'sin fecha';\nconst lineas = ['\\ud83d\\udcc5 **' + (rec.projectName || p.nombre || 'Proyecto') + '**: ' + (rec.isFirst ? 'calendario definido' : 'calendario actualizado')];\nfases.slice(0, 12).forEach(e => lineas.push('\\u2022 ' + (e.fase || 'Fase') + ': ' + fmt(e.inicio) + ' a ' + fmt(e.fin)));\nhitos.slice(0, 8).forEach(e => lineas.push('\\u25c6 ' + (e.fase || 'Hito') + ': ' + fmt(e.inicio)));\nconst resto = Math.max(0, fases.length - 12) + Math.max(0, hitos.length - 8);\nif (resto > 0) lineas.push('y ' + resto + ' m\\u00e1s en el hub');\nlet content = lineas.join('\\n');\nif (content.length > 1900) content = content.slice(0, 1900) + '\\u2026';\nreturn [{ json: { channelId: canal, content } }];"
+        },
+        "id": "998651a3-2ee3-4141-83eb-171dfe1286a7",
+        "name": "Aviso de calendario",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1216,
+          2320
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+          "options": {}
+        },
+        "id": "4c289f55-b8ba-4f88-8e4b-fc0858ae8ce7",
+        "name": "Discord: avisar calendario",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -992,
+          2320
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "y28T7xXq9ZiuQWcM",
+            "name": "Discord Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $('Webhook').first().json.body || {};\n/* El mail sale solo si se pidió avisar. Guardar y avisar son dos acciones distintas:\n   el calendario se acomoda varias veces y el equipo tiene que enterarse una. */\nif (body.avisar !== true) return [];\nreturn $input.all();"
+        },
+        "id": "e2518b9d-217c-4af1-9665-5ddee2c11c4f",
+        "name": "¿Avisar por mail?",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2256,
+          2560
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "CONFIG",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CONFIG": {
+        "main": [
+          [
+            {
+              "node": "Leer Calendario",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer Calendario": {
+        "main": [
+          [
+            {
+              "node": "Reconstruir",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reconstruir": {
+        "main": [
+          [
+            {
+              "node": "Limpiar Calendario",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limpiar Calendario": {
+        "main": [
+          [
+            {
+              "node": "Filas a items",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "¿Avisar por mail?",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Responder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filas a items": {
+        "main": [
+          [
+            {
+              "node": "Guardar Calendario",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Guardar Calendario": {
+        "main": [
+          [
+            {
+              "node": "Fila taskDates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fila taskDates": {
+        "main": [
+          [
+            {
+              "node": "Guardar taskDates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Guardar taskDates": {
+        "main": [
+          [
+            {
+              "node": "Leer Projects",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer Projects": {
+        "main": [
+          [
+            {
+              "node": "Aviso de calendario",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aviso de calendario": {
+        "main": [
+          [
+            {
+              "node": "Discord: avisar calendario",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "¿Avisar por mail?": {
+        "main": [
+          [
+            {
+              "node": "Avisar equipo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "TEAM23  ",
+    "name": "Version 230bd73e",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-08-03T03:37:56.137Z",
+    "updatedAt": "2026-08-03T03:38:00.000Z",
+    "workflowPublishHistory": [
+      {
+        "id": 102,
+        "workflowId": "irzXFXc7A8gDDQUe",
+        "versionId": "230bd73e-e93d-4cd6-9dc5-addc289f02e5",
+        "event": "activated",
+        "userId": "8e82d0ec-0f07-46c6-8b67-c8561f375f06",
+        "createdAt": "2026-08-03T03:37:59.972Z"
+      }
+    ]
+  }
+}

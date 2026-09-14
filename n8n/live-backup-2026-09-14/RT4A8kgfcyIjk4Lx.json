@@ -1,0 +1,367 @@
+{
+  "id": "RT4A8kgfcyIjk4Lx",
+  "name": "Team23 — 6. Parsear Debrief (IA, Opción 2)",
+  "description": null,
+  "active": true,
+  "activeVersionId": "9caa5ea5-08e8-47dc-94b3-8eb51b260d30",
+  "createdAt": "2026-07-17T16:11:53.191Z",
+  "updatedAt": "2026-07-23T13:31:21.151Z",
+  "isArchived": false,
+  "versionId": "9caa5ea5-08e8-47dc-94b3-8eb51b260d30",
+  "versionCounter": 22,
+  "sourceWorkflowId": null,
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "team23/parse",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "f32368ef-2dbc-4b3a-bf75-5c087b5b685e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2096,
+        816
+      ],
+      "webhookId": "0c097a5b-4339-4d22-88b0-dce4a471781c",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "U3mhsefbSNp5Ly1w",
+          "name": "Team23 Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1800, system: 'Sos un asistente de una productora de post-producción (TEAM23). Recibís un debrief de proyecto y devolvés SOLO un JSON válido, sin markdown, sin backticks, sin texto extra. Formato exacto: {\"nombre\": string, \"cliente\": string, \"agencia\": string, \"productora\": string, \"director\": string (nombre del director o directores), \"sintesis\": string (3 a 5 líneas resumiendo de qué se trata el proyecto y qué hay que hacer), \"tareas\": array con un subconjunto de [\"VFX\",\"Color\",\"DG\",\"Motion Graphics\",\"IA\",\"3D/CGI\",\"Retoque\",\"SFX/Mezcla\",\"Online\"], \"timeline\": array de {\"fase\": string, \"inicio\": \"YYYY-MM-DD\" o \"\", \"fin\": \"YYYY-MM-DD\" o \"\", \"notas\": string}, \"storyboard_url\": string (si aparece un link a storyboard/guion/referencias, sino \"\")}. Si un dato no está en el debrief, dejalo como string vacío o array vacío. No inventes fechas. Reglas del timeline: cuando el cronograma incluya trabajo que corresponda a una de las tareas listadas, usa EXACTAMENTE el nombre de la tarea como \"fase\" y una sola entrada por tarea, consolidando su ventana completa (inicio = primer dia en que esa tarea trabaja, fin = ultimo dia). Fechas siempre completas YYYY-MM-DD con el año que indique el documento. En \"notas\" de cada entrada resumi en una linea lo importante a tener en cuenta para esa tarea segun el debrief: riesgos, ventanas cortas, fines de semana, dependencias y entregas parciales con sus fechas. Formato de la \"sintesis\" (texto plano con saltos de linea \\n, sin markdown): primero un parrafo de 2 a 4 lineas resumiendo que es el proyecto y que hace TEAM 23; despues una linea vacia; despues la linea \"Puntos clave:\"; y despues 3 a 5 lineas que empiecen con \"• \" con lo critico a tener en cuenta (entregas y fechas, ventanas cortas, riesgos, dependencias).', messages: [ { role: 'user', content: 'DEBRIEF:\\n\\n' + $('Guard: debrief presente').first().json.texto } ] }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "ab67bdb2-fa18-4590-bbfc-d4907472090f",
+      "name": "Claude: extraer datos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2544,
+        816
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "zsP65o9cf1DIND3y",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = ($json.content || []).filter(b => b.type === 'text').map(b => b.text).join('\\n');\nconst clean = content.replace(/```json|```/g, '').trim();\nlet parsed;\ntry { parsed = JSON.parse(clean); }\ncatch (e) { throw new Error('La IA no devolvió JSON válido: ' + clean.slice(0, 300)); }\nconst TAREAS = ['VFX','Color','DG','Motion Graphics','IA','3D/CGI','Retoque','SFX/Mezcla','Online'];\nparsed.tareas = (parsed.tareas || []).filter(t => TAREAS.includes(t));\nparsed.timeline = (parsed.timeline || []).map(t => ({ fase: t.fase || '', inicio: t.inicio || '', fin: t.fin || '', notas: t.notas || '' }));\nparsed.nombre = parsed.nombre || '';\nparsed.cliente = parsed.cliente || '';\nparsed.agencia = parsed.agencia || '';\nparsed.productora = parsed.productora || '';\nparsed.director = parsed.director || '';\nparsed.sintesis = parsed.sintesis || '';\nparsed.storyboard_url = parsed.storyboard_url || '';\nreturn [{ json: parsed }];"
+      },
+      "id": "97ac5903-7dff-4ab4-ac21-5c652462352d",
+      "name": "Limpiar JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2768,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "70a2c1a2-560a-40d6-8dfb-051df23e66c8",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2992,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const w = $('Webhook').first().json;\nconst b = w.body;\nlet texto = '';\nif (b && typeof b === 'object') texto = b.debrief_text || b.texto || '';\nelse if (typeof b === 'string') { try { texto = JSON.parse(b).debrief_text || ''; } catch(e) { texto = b; } }\ntexto = String(texto || '').trim();\nif (!texto) throw new Error('El debrief llegó vacío al workflow. Body recibido: ' + JSON.stringify(b).slice(0, 200));\nreturn [{ json: { texto } }];"
+      },
+      "id": "02f870e4-df2a-495e-a73e-0793323af78f",
+      "name": "Guard: debrief presente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2320,
+        816
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Guard: debrief presente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude: extraer datos": {
+      "main": [
+        [
+          {
+            "node": "Limpiar JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar JSON": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard: debrief presente": {
+      "main": [
+        [
+          {
+            "node": "Claude: extraer datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "RT4A8kgfcyIjk4Lx",
+      "projectId": "mrWw4NVqRFGmGI6m",
+      "project": {
+        "id": "mrWw4NVqRFGmGI6m",
+        "name": "TEAM23   <coord@team23.online>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "8e82d0ec-0f07-46c6-8b67-c8561f375f06",
+        "createdAt": "2026-07-13T16:56:27.033Z",
+        "updatedAt": "2026-07-13T16:56:35.986Z"
+      },
+      "createdAt": "2026-07-17T16:11:53.192Z",
+      "updatedAt": "2026-07-17T16:11:53.192Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "9caa5ea5-08e8-47dc-94b3-8eb51b260d30",
+    "workflowId": "RT4A8kgfcyIjk4Lx",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "team23/parse",
+          "authentication": "headerAuth",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "f32368ef-2dbc-4b3a-bf75-5c087b5b685e",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          2096,
+          816
+        ],
+        "webhookId": "0c097a5b-4339-4d22-88b0-dce4a471781c",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "U3mhsefbSNp5Ly1w",
+            "name": "Team23 Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1800, system: 'Sos un asistente de una productora de post-producción (TEAM23). Recibís un debrief de proyecto y devolvés SOLO un JSON válido, sin markdown, sin backticks, sin texto extra. Formato exacto: {\"nombre\": string, \"cliente\": string, \"agencia\": string, \"productora\": string, \"director\": string (nombre del director o directores), \"sintesis\": string (3 a 5 líneas resumiendo de qué se trata el proyecto y qué hay que hacer), \"tareas\": array con un subconjunto de [\"VFX\",\"Color\",\"DG\",\"Motion Graphics\",\"IA\",\"3D/CGI\",\"Retoque\",\"SFX/Mezcla\",\"Online\"], \"timeline\": array de {\"fase\": string, \"inicio\": \"YYYY-MM-DD\" o \"\", \"fin\": \"YYYY-MM-DD\" o \"\", \"notas\": string}, \"storyboard_url\": string (si aparece un link a storyboard/guion/referencias, sino \"\")}. Si un dato no está en el debrief, dejalo como string vacío o array vacío. No inventes fechas. Reglas del timeline: cuando el cronograma incluya trabajo que corresponda a una de las tareas listadas, usa EXACTAMENTE el nombre de la tarea como \"fase\" y una sola entrada por tarea, consolidando su ventana completa (inicio = primer dia en que esa tarea trabaja, fin = ultimo dia). Fechas siempre completas YYYY-MM-DD con el año que indique el documento. En \"notas\" de cada entrada resumi en una linea lo importante a tener en cuenta para esa tarea segun el debrief: riesgos, ventanas cortas, fines de semana, dependencias y entregas parciales con sus fechas. Formato de la \"sintesis\" (texto plano con saltos de linea \\n, sin markdown): primero un parrafo de 2 a 4 lineas resumiendo que es el proyecto y que hace TEAM 23; despues una linea vacia; despues la linea \"Puntos clave:\"; y despues 3 a 5 lineas que empiecen con \"• \" con lo critico a tener en cuenta (entregas y fechas, ventanas cortas, riesgos, dependencias).', messages: [ { role: 'user', content: 'DEBRIEF:\\n\\n' + $('Guard: debrief presente').first().json.texto } ] }) }}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "id": "ab67bdb2-fa18-4590-bbfc-d4907472090f",
+        "name": "Claude: extraer datos",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2544,
+          816
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "zsP65o9cf1DIND3y",
+            "name": "Anthropic API Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const content = ($json.content || []).filter(b => b.type === 'text').map(b => b.text).join('\\n');\nconst clean = content.replace(/```json|```/g, '').trim();\nlet parsed;\ntry { parsed = JSON.parse(clean); }\ncatch (e) { throw new Error('La IA no devolvió JSON válido: ' + clean.slice(0, 300)); }\nconst TAREAS = ['VFX','Color','DG','Motion Graphics','IA','3D/CGI','Retoque','SFX/Mezcla','Online'];\nparsed.tareas = (parsed.tareas || []).filter(t => TAREAS.includes(t));\nparsed.timeline = (parsed.timeline || []).map(t => ({ fase: t.fase || '', inicio: t.inicio || '', fin: t.fin || '', notas: t.notas || '' }));\nparsed.nombre = parsed.nombre || '';\nparsed.cliente = parsed.cliente || '';\nparsed.agencia = parsed.agencia || '';\nparsed.productora = parsed.productora || '';\nparsed.director = parsed.director || '';\nparsed.sintesis = parsed.sintesis || '';\nparsed.storyboard_url = parsed.storyboard_url || '';\nreturn [{ json: parsed }];"
+        },
+        "id": "97ac5903-7dff-4ab4-ac21-5c652462352d",
+        "name": "Limpiar JSON",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2768,
+          816
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "70a2c1a2-560a-40d6-8dfb-051df23e66c8",
+        "name": "Responder",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          2992,
+          816
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const w = $('Webhook').first().json;\nconst b = w.body;\nlet texto = '';\nif (b && typeof b === 'object') texto = b.debrief_text || b.texto || '';\nelse if (typeof b === 'string') { try { texto = JSON.parse(b).debrief_text || ''; } catch(e) { texto = b; } }\ntexto = String(texto || '').trim();\nif (!texto) throw new Error('El debrief llegó vacío al workflow. Body recibido: ' + JSON.stringify(b).slice(0, 200));\nreturn [{ json: { texto } }];"
+        },
+        "id": "02f870e4-df2a-495e-a73e-0793323af78f",
+        "name": "Guard: debrief presente",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2320,
+          816
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Guard: debrief presente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Claude: extraer datos": {
+        "main": [
+          [
+            {
+              "node": "Limpiar JSON",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limpiar JSON": {
+        "main": [
+          [
+            {
+              "node": "Responder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Guard: debrief presente": {
+        "main": [
+          [
+            {
+              "node": "Claude: extraer datos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "TEAM23  ",
+    "name": "Version 9caa5ea5",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-07-23T13:31:21.152Z",
+    "updatedAt": "2026-07-23T13:32:50.000Z",
+    "workflowPublishHistory": [
+      {
+        "id": 50,
+        "workflowId": "RT4A8kgfcyIjk4Lx",
+        "versionId": "9caa5ea5-08e8-47dc-94b3-8eb51b260d30",
+        "event": "activated",
+        "userId": "8e82d0ec-0f07-46c6-8b67-c8561f375f06",
+        "createdAt": "2026-07-23T13:32:50.330Z"
+      }
+    ]
+  }
+}

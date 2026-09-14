@@ -1,0 +1,1621 @@
+{
+  "id": "drwE6TxGqngsWKTo",
+  "name": "Team23 — 4. Actualizar Proyecto",
+  "description": null,
+  "active": true,
+  "activeVersionId": "59886298-b786-46ba-ab42-7af35adb3b03",
+  "createdAt": "2026-07-17T16:11:15.246Z",
+  "updatedAt": "2026-08-03T03:09:25.736Z",
+  "isArchived": false,
+  "versionId": "59886298-b786-46ba-ab42-7af35adb3b03",
+  "versionCounter": 88,
+  "sourceWorkflowId": null,
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "team23/update",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "eef9bc68-2d1f-4c8f-881e-337bc8c3c87a",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        4320,
+        3824
+      ],
+      "webhookId": "1203e89d-a51d-4c68-964b-5f2eb6124a7d",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "U3mhsefbSNp5Ly1w",
+          "name": "Team23 Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "dbSheetId",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "discordGeneralId",
+              "value": "1473387046788923527",
+              "type": "string"
+            },
+            {
+              "id": "c3",
+              "name": "rosterSheetId",
+              "value": "1jMs5xUhFKrp5z_LHMOdkJia7vKJsrtKdSB20g9KHsp0",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "8469c352-268a-421b-96be-dad961c324b7",
+      "name": "CONFIG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4528,
+        3824
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body;\nif (!b || !b.id) { throw new Error('Falta el id del proyecto'); }\nconst row = { id: String(b.id) };\nconst campos = ['nombre','cliente','agencia','productora','director','ep_nombre','ep_email','prod_nombre','prod_email','coord_nombre','coord_email','status','year','month','tareas_json','asignaciones_json','links_json','taskDates_json','sintesis','storyboard_url','tratamiento_url','checklist_json','tracker_json', 'equipo_json'];\ncampos.forEach(f => {\n  if (b[f] !== undefined && b[f] !== null) {\n    row[f] = typeof b[f] === 'string' ? b[f] : JSON.stringify(b[f]);\n  }\n});\nif (b.tareas !== undefined && b.tareas_json === undefined) row.tareas_json = JSON.stringify(b.tareas);\nif (b.asignaciones !== undefined && b.asignaciones_json === undefined) row.asignaciones_json = JSON.stringify(b.asignaciones);\nif (b.links !== undefined && b.links_json === undefined) row.links_json = JSON.stringify(b.links);\nif (b.taskDates !== undefined && b.taskDates_json === undefined) row.taskDates_json = JSON.stringify(b.taskDates);\nreturn [{ json: row }];"
+      },
+      "id": "2cb3e132-e12f-4b3e-936c-eab1b73008c9",
+      "name": "Preparar fila",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4720,
+        3824
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "213c1794-6835-42dc-bce4-7fdf4449b57e",
+      "name": "Actualizar en DB",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        4928,
+        3824
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, id: $('Preparar fila').first().json.id }) }}",
+        "options": {}
+      },
+      "id": "0604652d-b900-4411-ac01-2820faa2a89d",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        5120,
+        3824
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body || {};\nif (!b.status || !b.id) return [];\nreturn [{ json: { id: String(b.id), status: String(b.status) } }];"
+      },
+      "id": "6213c700-3630-4d59-a92a-cb1b793160cd",
+      "name": "¿Cambió la etapa?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5344,
+        3824
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "options": {}
+      },
+      "id": "2d7f6485-7353-45fe-b3d4-ae2210a7880b",
+      "name": "Leer Projects",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        5568,
+        3824
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cambio = $('\\u00bfCambi\\u00f3 la etapa?').first().json;\nconst filas = $('Leer Projects').all().map(i => i.json);\nconst p = filas.find(r => String(r.id) === cambio.id);\nif (!p) return [];\nconst LABELS = { por_activarse: 'Pre-producci\\u00f3n', activo: 'Ejecutando', entregando: 'Entregando', cierre: 'Listo para cierre', completado: 'Completado' };\nconst EMOJI = { activo: '\\ud83d\\udfe2', entregando: '\\ud83d\\udce6', cierre: '\\ud83d\\udd34', completado: '\\ud83c\\udfc1' };\nconst label = LABELS[cambio.status] || cambio.status;\nconst emoji = EMOJI[cambio.status] || '\\ud83d\\udd01';\nconst out = [];\n\n/* 1. Aviso en el canal -avisos del proyecto (igual que antes) */\nconst canal = String(p.discord_avisos_id || '').replace(/^'+/, '');\nif (canal) out.push({ json: { channelId: canal, content: emoji + ' **' + (p.nombre || 'Proyecto') + '** pas\\u00f3 a **' + label + '**' } });\n\n/* 2. Hito en el canal general, solo etapas principales, con m\\u00ednima info de fechas */\nconst HITOS_GENERAL = ['activo', 'entregando', 'cierre', 'completado'];\nconst general = String($('CONFIG').first().json.discordGeneralId || '').trim();\nif (general && general !== 'PEGAR_ID_DEL_CANAL_GENERAL' && HITOS_GENERAL.includes(cambio.status)) {\n  const cal = $('Leer Calendario').all().map(i => i.json).filter(r => r && String(r.project_id) === cambio.id);\n  const fases = cal.filter(r => (r.tipo || 'fase') !== 'hito');\n  const hitos = cal.filter(r => r.tipo === 'hito');\n  const dmy = s => { const t = String(s || '').slice(0, 10).split('-'); return t.length === 3 ? t[2] + '/' + t[1] : String(s || ''); };\n  const inicios = fases.map(r => r.inicio).filter(Boolean).sort();\n  const fines = fases.map(r => r.fin || r.inicio).filter(Boolean).sort();\n  const partes = [];\n  if (inicios.length && fines.length) partes.push('\\ud83d\\udcc5 ' + dmy(inicios[0]) + ' al ' + dmy(fines[fines.length - 1]));\n  if (cambio.status !== 'completado') {\n    const hoy = new Date().toISOString().slice(0, 10);\n    const prox = hitos.filter(h => (h.inicio || '') >= hoy).sort((a, b) => String(a.inicio).localeCompare(String(b.inicio)))[0];\n    if (prox) partes.push('Pr\\u00f3ximo hito: ' + (prox.fase || 'Hito') + ' ' + dmy(prox.inicio));\n  }\n  const lineas = [emoji + ' **' + (p.nombre || 'Proyecto') + '** \\u2192 ' + label];\n  if (partes.length) lineas.push(partes.join(' \\u00b7 '));\n  out.push({ json: { channelId: general, content: lineas.join('\\n') } });\n}\nreturn out;"
+      },
+      "id": "b8b13fd9-bbf4-4b7f-9887-32f23ddbaf69",
+      "name": "Aviso de etapa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5792,
+        3824
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+        "options": {}
+      },
+      "id": "d99ae194-09c0-4b4a-b69c-bb6f440153a3",
+      "name": "Discord: avisar etapa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6000,
+        3824
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "y28T7xXq9ZiuQWcM",
+          "name": "Discord Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Calendar"
+        },
+        "options": {}
+      },
+      "id": "bed8a112-2e7d-490a-a07c-5adc9c0c2263",
+      "name": "Leer Calendario",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        5760,
+        3616
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body || {};\nconst esActivacion = b.status === 'activo';\nconst esEquipo = b.asignaciones_json !== undefined && b.status === undefined;\nif ((!esActivacion && !esEquipo) || !b.id) return [];\nreturn [{ json: { id: String(b.id), motivo: esActivacion ? 'activacion' : 'equipo' } }];"
+      },
+      "id": "538cb299-5b76-4544-b48c-1d1db17e9415",
+      "name": "¿Dar accesos?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4720,
+        4224
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "options": {}
+      },
+      "id": "f3dde31a-da34-4754-88ba-c656cc4b9337",
+      "name": "Projects (accesos)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        4928,
+        4224
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('CONFIG').first().json.rosterSheetId }}?fields=sheets(properties(sheetId,title))",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "9b97e074-29d6-4b62-8b56-20f999f795c4",
+      "name": "Roster: metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5120,
+        4224
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const meta = $('Roster: metadata').first().json || {};\nconst hojas = meta.sheets || [];\nconst hoja = hojas.find(s => s.properties && s.properties.sheetId === 0) || hojas[0];\nif (!hoja) return [{ json: { urlLeer: '' } }];   /* sin roster el flujo sigue, solo pierde el fallback */\nconst base = 'https://sheets.googleapis.com/v4/spreadsheets/' + $('CONFIG').first().json.rosterSheetId + '/values/';\nreturn [{ json: { urlLeer: base + encodeURIComponent(hoja.properties.title + '!A1:Z2000') } }];"
+      },
+      "id": "eb54ed73-5aa4-44d9-9a81-0653f85c87fd",
+      "name": "Roster: pestaña",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5328,
+        4224
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.urlLeer || 'https://sheets.googleapis.com/v4/spreadsheets/invalido' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "b76494f2-9e19-415c-97cd-3fd92c1a57b1",
+      "name": "Roster: leer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5520,
+        4224
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/channels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "76c8a1b2-5cb6-44ed-9f44-0d79b3d272e7",
+      "name": "Discord: canales del guild",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5728,
+        4224
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "y28T7xXq9ZiuQWcM",
+          "name": "Discord Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/members?limit=1000",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "62e29490-0097-4b9e-9936-11c0db4302df",
+      "name": "Discord: miembros",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5920,
+        4224
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "y28T7xXq9ZiuQWcM",
+          "name": "Discord Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const gate = $('\\u00bfDar accesos?').first().json;\nconst filas = $('Projects (accesos)').all().map(i => i.json).filter(r => r && r.id);\nconst p = filas.find(r => String(r.id) === gate.id);\nif (!p) return [];\nconst status = String(p.status || '');\nif (gate.motivo === 'equipo' && !['activo','entregando','cierre'].includes(status)) return [];\nconst catId = String(p.discord_category_id || '').replace(/^'+/, '');\nconst generalId = String(p.discord_avisos_id || '').replace(/^'+/, '');\nif (!catId && !generalId) return [];\nlet asigs = {}; try { asigs = JSON.parse(p.asignaciones_json || '{}'); } catch (e) {}\nconst norm = s => String(s || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim().toLowerCase();\nconst normTag = s => String(s || '').toLowerCase().replace(/^@+/, '').replace(/[^a-z0-9._]/g, '');\n/* fallback: tag de discord desde el roster, por nombre */\nconst rosterTag = new Map();\ntry {\n  const vals = ($('Roster: leer').first().json || {}).values || [];\n  if (vals.length) {\n    const heads = vals[0].map(norm);\n    const iN = heads.findIndex(h => h.includes('nombre'));\n    const iD = heads.findIndex(h => h.includes('discord'));\n    if (iN >= 0 && iD >= 0) vals.slice(1).forEach(v => {\n      const n = norm((v || [])[iN]); const d = normTag((v || [])[iD]);\n      if (n && d) rosterTag.set(n, d);\n    });\n  }\n} catch (e) {}\n/* canales del proyecto */\nconst canales = $('Discord: canales del guild').all().map(i => i.json).filter(c => c && c.id && String(c.parent_id || '') === catId);\nconst canalPor = suf => { const c = canales.find(x => String(x.name || '').endsWith('-' + suf)); return c ? String(c.id) : ''; };\nconst MAPA = { 'Online': 'online', 'VFX': 'vfx', 'Color': 'color' };   /* espejo del workflow 3 */\n/* miembros del servidor: username normalizado -> id */\nconst porUser = new Map();\n$('Discord: miembros').all().map(i => i.json).filter(m => m && m.user).forEach(m => {\n  porUser.set(normTag(m.user.username), String(m.user.id));\n  if (m.user.global_name && !porUser.has(normTag(m.user.global_name))) porUser.set(normTag(m.user.global_name), String(m.user.id));\n});\nconst grants = new Map(), conAcceso = new Set(), sinMatch = new Set(), sinTag = new Set();\nObject.entries(asigs).forEach(([tarea, rows]) => {\n  (rows || []).forEach(r => {\n    if (!r || (r.estado && r.estado !== 'confirmado')) return;   /* solo confirmados (sin estado = agregado directo) */\n    const nombre = String(r.nombre || '').trim();\n    if (!nombre) return;\n    const tag = normTag(r.discord) || rosterTag.get(norm(nombre)) || '';\n    if (!tag) { sinTag.add(nombre); return; }\n    const uid = porUser.get(tag);\n    if (!uid) { sinMatch.add(nombre + ' (' + tag + ')'); return; }\n    conAcceso.add(nombre);\n    const chs = [];\n    if (generalId) chs.push({ ch: generalId, allow: '3072' });   /* ver + escribir */\n    if (catId) chs.push({ ch: catId, allow: '1024' });           /* ver la categoria para que quede agrupado */\n    const suf = MAPA[tarea];\n    const tCh = suf ? canalPor(suf) : '';\n    if (tCh) chs.push({ ch: tCh, allow: '3072' });\n    chs.forEach(x => grants.set(x.ch + '|' + uid, { channelId: x.ch, userId: uid, allow: x.allow }));\n  });\n});\nreturn [{ json: { motivo: gate.motivo, nombreProyecto: p.nombre || 'Proyecto', generalId,\n  grants: [...grants.values()], conAcceso: [...conAcceso], sinMatch: [...sinMatch], sinTag: [...sinTag] } }];"
+      },
+      "id": "75364a3a-362b-4248-9617-e436dbfa29c1",
+      "name": "Armar accesos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6128,
+        4224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const g = $('Armar accesos').first().json.grants || [];\nreturn g.map(x => ({ json: x }));"
+      },
+      "id": "ad65704e-d349-48f7-bf77-6185bedcf72a",
+      "name": "Grants a items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6320,
+        4224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/permissions/{{ $json.userId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 1, allow: $json.allow, deny: '0' }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "id": "c4859e6a-ec0c-412a-83b1-bf79c2c39ddc",
+      "name": "Discord: dar acceso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6528,
+        4224
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "y28T7xXq9ZiuQWcM",
+          "name": "Discord Bot"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const a = $('Armar accesos').first().json;\nif (a.motivo !== 'activacion' || !a.generalId) return [];\nif (!a.conAcceso.length && !a.sinMatch.length && !a.sinTag.length) return [];\nconst lineas = ['\\ud83d\\udd13 **' + a.nombreProyecto + '**: accesos del equipo confirmado'];\nif (a.conAcceso.length) lineas.push('Con acceso: ' + a.conAcceso.join(', '));\nif (a.sinMatch.length) lineas.push('\\u26a0 No est\\u00e1n en el servidor o el tag no coincide: ' + a.sinMatch.join(', '));\nif (a.sinTag.length) lineas.push('\\u26a0 Sin tag de Discord cargado: ' + a.sinTag.join(', '));\nreturn [{ json: { channelId: a.generalId, content: lineas.join('\\n').slice(0, 1900) } }];"
+      },
+      "id": "cbbfa386-3456-4022-825e-f3742ad74a66",
+      "name": "Aviso de accesos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6320,
+        4432
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+        "options": {}
+      },
+      "id": "c4c48cf8-dcc8-431a-b324-6bb85186a123",
+      "name": "Discord: avisar accesos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6528,
+        4432
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "y28T7xXq9ZiuQWcM",
+          "name": "Discord Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body || {};\n/* El hub manda body.mails cuando se suma gente al proyecto ya creado y se le\n   quiere mandar la propuesta. Mismo formato que en wf3: rol, to, nombre,\n   enviar, subject, html. Sin esa clave esta rama no hace nada, así que los\n   updates normales (etapa, equipo, calendario) no disparan ningún mail. */\nif (!Array.isArray(b.mails)) return [];\nreturn b.mails\n  .filter(m => m && m.to && m.html && m.enviar !== false)\n  .map(m => ({ json: {\n    to: String(m.to).trim(),\n    subject: m.subject || ('Propuesta TEAM23 \\u2014 ' + (b.nombre || '')),\n    html: m.html\n  } }));\n"
+      },
+      "id": "f41de1c5-009d-4cd4-a39b-c477b8d362c2",
+      "name": "¿Mandar propuestas?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4880,
+        3504
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "6756caf7-0741-47f3-933d-6c1bf31803d8",
+      "name": "Mail de propuesta",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        5120,
+        3504
+      ],
+      "webhookId": "c1f9e241-970e-4d4b-9d3c-08a5bc77f592",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "vVxsPvAtLqnekUV0",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "Preparar fila",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar fila": {
+      "main": [
+        [
+          {
+            "node": "Actualizar en DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar en DB": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder": {
+      "main": [
+        [
+          {
+            "node": "¿Cambió la etapa?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Dar accesos?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Mandar propuestas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Cambió la etapa?": {
+      "main": [
+        [
+          {
+            "node": "Leer Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Projects": {
+      "main": [
+        [
+          {
+            "node": "Leer Calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso de etapa": {
+      "main": [
+        [
+          {
+            "node": "Discord: avisar etapa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Calendario": {
+      "main": [
+        [
+          {
+            "node": "Aviso de etapa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Dar accesos?": {
+      "main": [
+        [
+          {
+            "node": "Projects (accesos)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Projects (accesos)": {
+      "main": [
+        [
+          {
+            "node": "Roster: metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: metadata": {
+      "main": [
+        [
+          {
+            "node": "Roster: pestaña",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: pestaña": {
+      "main": [
+        [
+          {
+            "node": "Roster: leer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: leer": {
+      "main": [
+        [
+          {
+            "node": "Discord: canales del guild",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: canales del guild": {
+      "main": [
+        [
+          {
+            "node": "Discord: miembros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: miembros": {
+      "main": [
+        [
+          {
+            "node": "Armar accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grants a items": {
+      "main": [
+        [
+          {
+            "node": "Discord: dar acceso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso de accesos": {
+      "main": [
+        [
+          {
+            "node": "Discord: avisar accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar accesos": {
+      "main": [
+        [
+          {
+            "node": "Grants a items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aviso de accesos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Mandar propuestas?": {
+      "main": [
+        [
+          {
+            "node": "Mail de propuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "drwE6TxGqngsWKTo",
+      "projectId": "mrWw4NVqRFGmGI6m",
+      "project": {
+        "id": "mrWw4NVqRFGmGI6m",
+        "name": "TEAM23   <coord@team23.online>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "8e82d0ec-0f07-46c6-8b67-c8561f375f06",
+        "createdAt": "2026-07-13T16:56:27.033Z",
+        "updatedAt": "2026-07-13T16:56:35.986Z"
+      },
+      "createdAt": "2026-07-17T16:11:15.248Z",
+      "updatedAt": "2026-07-17T16:11:15.248Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "59886298-b786-46ba-ab42-7af35adb3b03",
+    "workflowId": "drwE6TxGqngsWKTo",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "team23/update",
+          "authentication": "headerAuth",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "eef9bc68-2d1f-4c8f-881e-337bc8c3c87a",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          4320,
+          3824
+        ],
+        "webhookId": "1203e89d-a51d-4c68-964b-5f2eb6124a7d",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "U3mhsefbSNp5Ly1w",
+            "name": "Team23 Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c1",
+                "name": "dbSheetId",
+                "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
+                "type": "string"
+              },
+              {
+                "id": "c2",
+                "name": "discordGeneralId",
+                "value": "1473387046788923527",
+                "type": "string"
+              },
+              {
+                "id": "c3",
+                "name": "rosterSheetId",
+                "value": "1jMs5xUhFKrp5z_LHMOdkJia7vKJsrtKdSB20g9KHsp0",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "id": "8469c352-268a-421b-96be-dad961c324b7",
+        "name": "CONFIG",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          4528,
+          3824
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const b = $('Webhook').first().json.body;\nif (!b || !b.id) { throw new Error('Falta el id del proyecto'); }\nconst row = { id: String(b.id) };\nconst campos = ['nombre','cliente','agencia','productora','director','ep_nombre','ep_email','prod_nombre','prod_email','coord_nombre','coord_email','status','year','month','tareas_json','asignaciones_json','links_json','taskDates_json','sintesis','storyboard_url','tratamiento_url','checklist_json','tracker_json', 'equipo_json'];\ncampos.forEach(f => {\n  if (b[f] !== undefined && b[f] !== null) {\n    row[f] = typeof b[f] === 'string' ? b[f] : JSON.stringify(b[f]);\n  }\n});\nif (b.tareas !== undefined && b.tareas_json === undefined) row.tareas_json = JSON.stringify(b.tareas);\nif (b.asignaciones !== undefined && b.asignaciones_json === undefined) row.asignaciones_json = JSON.stringify(b.asignaciones);\nif (b.links !== undefined && b.links_json === undefined) row.links_json = JSON.stringify(b.links);\nif (b.taskDates !== undefined && b.taskDates_json === undefined) row.taskDates_json = JSON.stringify(b.taskDates);\nreturn [{ json: row }];"
+        },
+        "id": "2cb3e132-e12f-4b3e-936c-eab1b73008c9",
+        "name": "Preparar fila",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4720,
+          3824
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Projects"
+          },
+          "columns": {
+            "mappingMode": "autoMapInputData",
+            "value": {},
+            "matchingColumns": [
+              "id"
+            ],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "213c1794-6835-42dc-bce4-7fdf4449b57e",
+        "name": "Actualizar en DB",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          4928,
+          3824
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ ok: true, id: $('Preparar fila').first().json.id }) }}",
+          "options": {}
+        },
+        "id": "0604652d-b900-4411-ac01-2820faa2a89d",
+        "name": "Responder",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          5120,
+          3824
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const b = $('Webhook').first().json.body || {};\nif (!b.status || !b.id) return [];\nreturn [{ json: { id: String(b.id), status: String(b.status) } }];"
+        },
+        "id": "6213c700-3630-4d59-a92a-cb1b793160cd",
+        "name": "¿Cambió la etapa?",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5344,
+          3824
+        ]
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Projects"
+          },
+          "options": {}
+        },
+        "id": "2d7f6485-7353-45fe-b3d4-ae2210a7880b",
+        "name": "Leer Projects",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          5568,
+          3824
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const cambio = $('\\u00bfCambi\\u00f3 la etapa?').first().json;\nconst filas = $('Leer Projects').all().map(i => i.json);\nconst p = filas.find(r => String(r.id) === cambio.id);\nif (!p) return [];\nconst LABELS = { por_activarse: 'Pre-producci\\u00f3n', activo: 'Ejecutando', entregando: 'Entregando', cierre: 'Listo para cierre', completado: 'Completado' };\nconst EMOJI = { activo: '\\ud83d\\udfe2', entregando: '\\ud83d\\udce6', cierre: '\\ud83d\\udd34', completado: '\\ud83c\\udfc1' };\nconst label = LABELS[cambio.status] || cambio.status;\nconst emoji = EMOJI[cambio.status] || '\\ud83d\\udd01';\nconst out = [];\n\n/* 1. Aviso en el canal -avisos del proyecto (igual que antes) */\nconst canal = String(p.discord_avisos_id || '').replace(/^'+/, '');\nif (canal) out.push({ json: { channelId: canal, content: emoji + ' **' + (p.nombre || 'Proyecto') + '** pas\\u00f3 a **' + label + '**' } });\n\n/* 2. Hito en el canal general, solo etapas principales, con m\\u00ednima info de fechas */\nconst HITOS_GENERAL = ['activo', 'entregando', 'cierre', 'completado'];\nconst general = String($('CONFIG').first().json.discordGeneralId || '').trim();\nif (general && general !== 'PEGAR_ID_DEL_CANAL_GENERAL' && HITOS_GENERAL.includes(cambio.status)) {\n  const cal = $('Leer Calendario').all().map(i => i.json).filter(r => r && String(r.project_id) === cambio.id);\n  const fases = cal.filter(r => (r.tipo || 'fase') !== 'hito');\n  const hitos = cal.filter(r => r.tipo === 'hito');\n  const dmy = s => { const t = String(s || '').slice(0, 10).split('-'); return t.length === 3 ? t[2] + '/' + t[1] : String(s || ''); };\n  const inicios = fases.map(r => r.inicio).filter(Boolean).sort();\n  const fines = fases.map(r => r.fin || r.inicio).filter(Boolean).sort();\n  const partes = [];\n  if (inicios.length && fines.length) partes.push('\\ud83d\\udcc5 ' + dmy(inicios[0]) + ' al ' + dmy(fines[fines.length - 1]));\n  if (cambio.status !== 'completado') {\n    const hoy = new Date().toISOString().slice(0, 10);\n    const prox = hitos.filter(h => (h.inicio || '') >= hoy).sort((a, b) => String(a.inicio).localeCompare(String(b.inicio)))[0];\n    if (prox) partes.push('Pr\\u00f3ximo hito: ' + (prox.fase || 'Hito') + ' ' + dmy(prox.inicio));\n  }\n  const lineas = [emoji + ' **' + (p.nombre || 'Proyecto') + '** \\u2192 ' + label];\n  if (partes.length) lineas.push(partes.join(' \\u00b7 '));\n  out.push({ json: { channelId: general, content: lineas.join('\\n') } });\n}\nreturn out;"
+        },
+        "id": "b8b13fd9-bbf4-4b7f-9887-32f23ddbaf69",
+        "name": "Aviso de etapa",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5792,
+          3824
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+          "options": {}
+        },
+        "id": "d99ae194-09c0-4b4a-b69c-bb6f440153a3",
+        "name": "Discord: avisar etapa",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          6000,
+          3824
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "y28T7xXq9ZiuQWcM",
+            "name": "Discord Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Calendar"
+          },
+          "options": {}
+        },
+        "id": "bed8a112-2e7d-490a-a07c-5adc9c0c2263",
+        "name": "Leer Calendario",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          5760,
+          3616
+        ],
+        "alwaysOutputData": true,
+        "executeOnce": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const b = $('Webhook').first().json.body || {};\nconst esActivacion = b.status === 'activo';\nconst esEquipo = b.asignaciones_json !== undefined && b.status === undefined;\nif ((!esActivacion && !esEquipo) || !b.id) return [];\nreturn [{ json: { id: String(b.id), motivo: esActivacion ? 'activacion' : 'equipo' } }];"
+        },
+        "id": "538cb299-5b76-4544-b48c-1d1db17e9415",
+        "name": "¿Dar accesos?",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4720,
+          4224
+        ]
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Projects"
+          },
+          "options": {}
+        },
+        "id": "f3dde31a-da34-4754-88ba-c656cc4b9337",
+        "name": "Projects (accesos)",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          4928,
+          4224
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('CONFIG').first().json.rosterSheetId }}?fields=sheets(properties(sheetId,title))",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleSheetsOAuth2Api",
+          "options": {}
+        },
+        "id": "9b97e074-29d6-4b62-8b56-20f999f795c4",
+        "name": "Roster: metadata",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          5120,
+          4224
+        ],
+        "alwaysOutputData": true,
+        "executeOnce": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const meta = $('Roster: metadata').first().json || {};\nconst hojas = meta.sheets || [];\nconst hoja = hojas.find(s => s.properties && s.properties.sheetId === 0) || hojas[0];\nif (!hoja) return [{ json: { urlLeer: '' } }];   /* sin roster el flujo sigue, solo pierde el fallback */\nconst base = 'https://sheets.googleapis.com/v4/spreadsheets/' + $('CONFIG').first().json.rosterSheetId + '/values/';\nreturn [{ json: { urlLeer: base + encodeURIComponent(hoja.properties.title + '!A1:Z2000') } }];"
+        },
+        "id": "eb54ed73-5aa4-44d9-9a81-0653f85c87fd",
+        "name": "Roster: pestaña",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5328,
+          4224
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.urlLeer || 'https://sheets.googleapis.com/v4/spreadsheets/invalido' }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleSheetsOAuth2Api",
+          "options": {}
+        },
+        "id": "b76494f2-9e19-415c-97cd-3fd92c1a57b1",
+        "name": "Roster: leer",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          5520,
+          4224
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/channels",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "id": "76c8a1b2-5cb6-44ed-9f44-0d79b3d272e7",
+        "name": "Discord: canales del guild",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          5728,
+          4224
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "y28T7xXq9ZiuQWcM",
+            "name": "Discord Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/members?limit=1000",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "id": "62e29490-0097-4b9e-9936-11c0db4302df",
+        "name": "Discord: miembros",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          5920,
+          4224
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "executeOnce": true,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "y28T7xXq9ZiuQWcM",
+            "name": "Discord Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const gate = $('\\u00bfDar accesos?').first().json;\nconst filas = $('Projects (accesos)').all().map(i => i.json).filter(r => r && r.id);\nconst p = filas.find(r => String(r.id) === gate.id);\nif (!p) return [];\nconst status = String(p.status || '');\nif (gate.motivo === 'equipo' && !['activo','entregando','cierre'].includes(status)) return [];\nconst catId = String(p.discord_category_id || '').replace(/^'+/, '');\nconst generalId = String(p.discord_avisos_id || '').replace(/^'+/, '');\nif (!catId && !generalId) return [];\nlet asigs = {}; try { asigs = JSON.parse(p.asignaciones_json || '{}'); } catch (e) {}\nconst norm = s => String(s || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim().toLowerCase();\nconst normTag = s => String(s || '').toLowerCase().replace(/^@+/, '').replace(/[^a-z0-9._]/g, '');\n/* fallback: tag de discord desde el roster, por nombre */\nconst rosterTag = new Map();\ntry {\n  const vals = ($('Roster: leer').first().json || {}).values || [];\n  if (vals.length) {\n    const heads = vals[0].map(norm);\n    const iN = heads.findIndex(h => h.includes('nombre'));\n    const iD = heads.findIndex(h => h.includes('discord'));\n    if (iN >= 0 && iD >= 0) vals.slice(1).forEach(v => {\n      const n = norm((v || [])[iN]); const d = normTag((v || [])[iD]);\n      if (n && d) rosterTag.set(n, d);\n    });\n  }\n} catch (e) {}\n/* canales del proyecto */\nconst canales = $('Discord: canales del guild').all().map(i => i.json).filter(c => c && c.id && String(c.parent_id || '') === catId);\nconst canalPor = suf => { const c = canales.find(x => String(x.name || '').endsWith('-' + suf)); return c ? String(c.id) : ''; };\nconst MAPA = { 'Online': 'online', 'VFX': 'vfx', 'Color': 'color' };   /* espejo del workflow 3 */\n/* miembros del servidor: username normalizado -> id */\nconst porUser = new Map();\n$('Discord: miembros').all().map(i => i.json).filter(m => m && m.user).forEach(m => {\n  porUser.set(normTag(m.user.username), String(m.user.id));\n  if (m.user.global_name && !porUser.has(normTag(m.user.global_name))) porUser.set(normTag(m.user.global_name), String(m.user.id));\n});\nconst grants = new Map(), conAcceso = new Set(), sinMatch = new Set(), sinTag = new Set();\nObject.entries(asigs).forEach(([tarea, rows]) => {\n  (rows || []).forEach(r => {\n    if (!r || (r.estado && r.estado !== 'confirmado')) return;   /* solo confirmados (sin estado = agregado directo) */\n    const nombre = String(r.nombre || '').trim();\n    if (!nombre) return;\n    const tag = normTag(r.discord) || rosterTag.get(norm(nombre)) || '';\n    if (!tag) { sinTag.add(nombre); return; }\n    const uid = porUser.get(tag);\n    if (!uid) { sinMatch.add(nombre + ' (' + tag + ')'); return; }\n    conAcceso.add(nombre);\n    const chs = [];\n    if (generalId) chs.push({ ch: generalId, allow: '3072' });   /* ver + escribir */\n    if (catId) chs.push({ ch: catId, allow: '1024' });           /* ver la categoria para que quede agrupado */\n    const suf = MAPA[tarea];\n    const tCh = suf ? canalPor(suf) : '';\n    if (tCh) chs.push({ ch: tCh, allow: '3072' });\n    chs.forEach(x => grants.set(x.ch + '|' + uid, { channelId: x.ch, userId: uid, allow: x.allow }));\n  });\n});\nreturn [{ json: { motivo: gate.motivo, nombreProyecto: p.nombre || 'Proyecto', generalId,\n  grants: [...grants.values()], conAcceso: [...conAcceso], sinMatch: [...sinMatch], sinTag: [...sinTag] } }];"
+        },
+        "id": "75364a3a-362b-4248-9617-e436dbfa29c1",
+        "name": "Armar accesos",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6128,
+          4224
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const g = $('Armar accesos').first().json.grants || [];\nreturn g.map(x => ({ json: x }));"
+        },
+        "id": "ad65704e-d349-48f7-bf77-6185bedcf72a",
+        "name": "Grants a items",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6320,
+          4224
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/permissions/{{ $json.userId }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ type: 1, allow: $json.allow, deny: '0' }) }}",
+          "options": {
+            "batching": {
+              "batch": {
+                "batchSize": 1
+              }
+            }
+          }
+        },
+        "id": "c4859e6a-ec0c-412a-83b1-bf79c2c39ddc",
+        "name": "Discord: dar acceso",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          6528,
+          4224
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "y28T7xXq9ZiuQWcM",
+            "name": "Discord Bot"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const a = $('Armar accesos').first().json;\nif (a.motivo !== 'activacion' || !a.generalId) return [];\nif (!a.conAcceso.length && !a.sinMatch.length && !a.sinTag.length) return [];\nconst lineas = ['\\ud83d\\udd13 **' + a.nombreProyecto + '**: accesos del equipo confirmado'];\nif (a.conAcceso.length) lineas.push('Con acceso: ' + a.conAcceso.join(', '));\nif (a.sinMatch.length) lineas.push('\\u26a0 No est\\u00e1n en el servidor o el tag no coincide: ' + a.sinMatch.join(', '));\nif (a.sinTag.length) lineas.push('\\u26a0 Sin tag de Discord cargado: ' + a.sinTag.join(', '));\nreturn [{ json: { channelId: a.generalId, content: lineas.join('\\n').slice(0, 1900) } }];"
+        },
+        "id": "cbbfa386-3456-4022-825e-f3742ad74a66",
+        "name": "Aviso de accesos",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6320,
+          4432
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+          "options": {}
+        },
+        "id": "c4c48cf8-dcc8-431a-b324-6bb85186a123",
+        "name": "Discord: avisar accesos",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          6528,
+          4432
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "y28T7xXq9ZiuQWcM",
+            "name": "Discord Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const b = $('Webhook').first().json.body || {};\n/* El hub manda body.mails cuando se suma gente al proyecto ya creado y se le\n   quiere mandar la propuesta. Mismo formato que en wf3: rol, to, nombre,\n   enviar, subject, html. Sin esa clave esta rama no hace nada, así que los\n   updates normales (etapa, equipo, calendario) no disparan ningún mail. */\nif (!Array.isArray(b.mails)) return [];\nreturn b.mails\n  .filter(m => m && m.to && m.html && m.enviar !== false)\n  .map(m => ({ json: {\n    to: String(m.to).trim(),\n    subject: m.subject || ('Propuesta TEAM23 \\u2014 ' + (b.nombre || '')),\n    html: m.html\n  } }));\n"
+        },
+        "id": "f41de1c5-009d-4cd4-a39b-c477b8d362c2",
+        "name": "¿Mandar propuestas?",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4880,
+          3504
+        ]
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $json.to }}",
+          "subject": "={{ $json.subject }}",
+          "message": "={{ $json.html }}",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "id": "6756caf7-0741-47f3-933d-6c1bf31803d8",
+        "name": "Mail de propuesta",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          5120,
+          3504
+        ],
+        "webhookId": "c1f9e241-970e-4d4b-9d3c-08a5bc77f592",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "vVxsPvAtLqnekUV0",
+            "name": "Gmail account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "CONFIG",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CONFIG": {
+        "main": [
+          [
+            {
+              "node": "Preparar fila",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Preparar fila": {
+        "main": [
+          [
+            {
+              "node": "Actualizar en DB",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Actualizar en DB": {
+        "main": [
+          [
+            {
+              "node": "Responder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Responder": {
+        "main": [
+          [
+            {
+              "node": "¿Cambió la etapa?",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "¿Dar accesos?",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "¿Mandar propuestas?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "¿Cambió la etapa?": {
+        "main": [
+          [
+            {
+              "node": "Leer Projects",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer Projects": {
+        "main": [
+          [
+            {
+              "node": "Leer Calendario",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aviso de etapa": {
+        "main": [
+          [
+            {
+              "node": "Discord: avisar etapa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer Calendario": {
+        "main": [
+          [
+            {
+              "node": "Aviso de etapa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "¿Dar accesos?": {
+        "main": [
+          [
+            {
+              "node": "Projects (accesos)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Projects (accesos)": {
+        "main": [
+          [
+            {
+              "node": "Roster: metadata",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Roster: metadata": {
+        "main": [
+          [
+            {
+              "node": "Roster: pestaña",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Roster: pestaña": {
+        "main": [
+          [
+            {
+              "node": "Roster: leer",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Roster: leer": {
+        "main": [
+          [
+            {
+              "node": "Discord: canales del guild",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Discord: canales del guild": {
+        "main": [
+          [
+            {
+              "node": "Discord: miembros",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Discord: miembros": {
+        "main": [
+          [
+            {
+              "node": "Armar accesos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grants a items": {
+        "main": [
+          [
+            {
+              "node": "Discord: dar acceso",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aviso de accesos": {
+        "main": [
+          [
+            {
+              "node": "Discord: avisar accesos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Armar accesos": {
+        "main": [
+          [
+            {
+              "node": "Grants a items",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Aviso de accesos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "¿Mandar propuestas?": {
+        "main": [
+          [
+            {
+              "node": "Mail de propuesta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "TEAM23  ",
+    "name": "Version 59886298",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-08-03T03:09:25.737Z",
+    "updatedAt": "2026-08-03T03:09:28.000Z",
+    "workflowPublishHistory": [
+      {
+        "id": 98,
+        "workflowId": "drwE6TxGqngsWKTo",
+        "versionId": "59886298-b786-46ba-ab42-7af35adb3b03",
+        "event": "activated",
+        "userId": "8e82d0ec-0f07-46c6-8b67-c8561f375f06",
+        "createdAt": "2026-08-03T03:09:28.269Z"
+      }
+    ]
+  }
+}

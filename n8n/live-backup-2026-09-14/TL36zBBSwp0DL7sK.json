@@ -1,0 +1,923 @@
+{
+  "id": "TL36zBBSwp0DL7sK",
+  "name": "Team23 — 9. Eliminar Proyecto",
+  "description": null,
+  "active": true,
+  "activeVersionId": "d55a161c-9a59-4644-9d15-4d2eda8e7ef5",
+  "createdAt": "2026-07-22T16:06:05.852Z",
+  "updatedAt": "2026-07-23T14:58:57.123Z",
+  "isArchived": false,
+  "versionId": "d55a161c-9a59-4644-9d15-4d2eda8e7ef5",
+  "versionCounter": 7,
+  "sourceWorkflowId": null,
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "team23/delete",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "2c3f402e-c061-4d66-90dc-41aee7fdc77e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "5f5cfd79-2e71-458d-836a-b866f3c1aac2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "U3mhsefbSNp5Ly1w",
+          "name": "Team23 Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "dbSheetId",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "discordGuildId",
+              "value": "1137462471767097534",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "7426936b-f9a3-440f-9663-2d821a36ca34",
+      "name": "CONFIG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "options": {}
+      },
+      "id": "bd81cf7e-ff96-44a5-a5a1-07e89999d329",
+      "name": "Leer Projects",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        400,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $('Webhook').first().json.body || {};\nif (!b.id) throw new Error('Falta el id del proyecto');\nconst filas = $('Leer Projects').all().map(i => i.json).filter(r => r && r.id);\nconst p = filas.find(r => String(r.id) === String(b.id));\nif (!p) throw new Error('Proyecto no encontrado en la base');\nif (!p.row_number) throw new Error('No tengo el n\\u00famero de fila del proyecto');\nreturn [{ json: {\n  id: String(p.id),\n  nombre: p.nombre || '',\n  row_number: Number(p.row_number),\n  discord_category_id: String(p.discord_category_id || '').replace(/^'+/, '')\n} }];"
+      },
+      "id": "75aa05ca-7fec-4700-9cbb-73c7f2621f93",
+      "name": "Buscar proyecto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Calendar"
+        },
+        "options": {}
+      },
+      "id": "dbdd349e-6122-411e-b010-8bccbb804726",
+      "name": "Leer Calendario",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('CONFIG').first().json.dbSheetId }}?fields=sheets(properties(sheetId,title))",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "ea61d2a5-9c9f-4fae-b788-97aea11c0a5c",
+      "name": "Sheets: metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1008,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const meta = $('Sheets: metadata').first().json;\nconst gid = t => {\n  const s = (meta.sheets || []).find(x => x.properties && x.properties.title === t);\n  if (!s) throw new Error('No encuentro la pesta\\u00f1a ' + t);\n  return s.properties.sheetId;\n};\nconst gProjects = gid('Projects');\nconst gCalendar = gid('Calendar');\nconst p = $('Buscar proyecto').first().json;\nconst requests = [];\n/* Filas del calendario del proyecto, de abajo hacia arriba para que no se corran los indices */\nconst cal = $('Leer Calendario').all().map(i => i.json)\n  .filter(r => r && String(r.project_id || '') === p.id && r.row_number);\ncal.map(r => Number(r.row_number)).sort((a, b) => b - a).forEach(rn => {\n  requests.push({ deleteDimension: { range: { sheetId: gCalendar, dimension: 'ROWS', startIndex: rn - 1, endIndex: rn } } });\n});\n/* La fila del proyecto */\nrequests.push({ deleteDimension: { range: { sheetId: gProjects, dimension: 'ROWS', startIndex: p.row_number - 1, endIndex: p.row_number } } });\nreturn [{ json: { requests } }];"
+      },
+      "id": "6ed4f4fb-bf8b-4765-a38a-3d8a84e69c33",
+      "name": "Armar borrado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('CONFIG').first().json.dbSheetId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ requests: $json.requests }) }}",
+        "options": {}
+      },
+      "id": "7c6bf6bc-0ed0-4ecb-8326-e96d59c1c991",
+      "name": "Sheets: borrar filas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, id: $('Buscar proyecto').first().json.id }) }}",
+        "options": {}
+      },
+      "id": "b189cf7f-7adf-44e9-a616-7e6b390ef150",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $('Buscar proyecto').first().json;\nconst catId = String(p.discord_category_id || '').replace(/^'+/, '').trim();\nif (!catId) return [];\nreturn [{ json: { categoryId: catId } }];"
+      },
+      "id": "745f1746-84bc-4dc2-8218-5efb515b4193",
+      "name": "¿Tiene Discord?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/channels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "955e0311-6d08-40de-bbf2-cdb52950797a",
+      "name": "Discord: listar canales",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "y28T7xXq9ZiuQWcM",
+          "name": "Discord Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const catId = $('\\u00bfTiene Discord?').first().json.categoryId;\nconst lista = $('Discord: listar canales').all().map(i => i.json).filter(c => c && c.id);\nconst out = lista.filter(c => String(c.parent_id || '') === catId)\n  .map(c => ({ json: { channelId: String(c.id), nombre: c.name || '' } }));\n/* La categoria se borra al final, cuando ya no tiene hijos */\nout.push({ json: { channelId: catId, nombre: 'categoria' } });\nreturn out;"
+      },
+      "id": "21ccd1e1-45e9-443f-a6c9-95a5b2a38bd9",
+      "name": "Canales a borrar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "id": "a405ca0f-09f3-47e5-98d4-3415c6626e9a",
+      "name": "Discord: borrar canales",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "y28T7xXq9ZiuQWcM",
+          "name": "Discord Bot"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "Leer Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Projects": {
+      "main": [
+        [
+          {
+            "node": "Buscar proyecto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar proyecto": {
+      "main": [
+        [
+          {
+            "node": "Leer Calendario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Calendario": {
+      "main": [
+        [
+          {
+            "node": "Sheets: metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets: metadata": {
+      "main": [
+        [
+          {
+            "node": "Armar borrado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar borrado": {
+      "main": [
+        [
+          {
+            "node": "Sheets: borrar filas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets: borrar filas": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder": {
+      "main": [
+        [
+          {
+            "node": "¿Tiene Discord?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Tiene Discord?": {
+      "main": [
+        [
+          {
+            "node": "Discord: listar canales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: listar canales": {
+      "main": [
+        [
+          {
+            "node": "Canales a borrar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Canales a borrar": {
+      "main": [
+        [
+          {
+            "node": "Discord: borrar canales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "TL36zBBSwp0DL7sK",
+      "projectId": "mrWw4NVqRFGmGI6m",
+      "project": {
+        "id": "mrWw4NVqRFGmGI6m",
+        "name": "TEAM23   <coord@team23.online>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "8e82d0ec-0f07-46c6-8b67-c8561f375f06",
+        "createdAt": "2026-07-13T16:56:27.033Z",
+        "updatedAt": "2026-07-13T16:56:35.986Z"
+      },
+      "createdAt": "2026-07-22T16:06:05.854Z",
+      "updatedAt": "2026-07-22T16:06:05.854Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "d55a161c-9a59-4644-9d15-4d2eda8e7ef5",
+    "workflowId": "TL36zBBSwp0DL7sK",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "team23/delete",
+          "authentication": "headerAuth",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "2c3f402e-c061-4d66-90dc-41aee7fdc77e",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "5f5cfd79-2e71-458d-836a-b866f3c1aac2",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "U3mhsefbSNp5Ly1w",
+            "name": "Team23 Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c1",
+                "name": "dbSheetId",
+                "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
+                "type": "string"
+              },
+              {
+                "id": "c2",
+                "name": "discordGuildId",
+                "value": "1137462471767097534",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "id": "7426936b-f9a3-440f-9663-2d821a36ca34",
+        "name": "CONFIG",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          208,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Projects"
+          },
+          "options": {}
+        },
+        "id": "bd81cf7e-ff96-44a5-a5a1-07e89999d329",
+        "name": "Leer Projects",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          400,
+          0
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const b = $('Webhook').first().json.body || {};\nif (!b.id) throw new Error('Falta el id del proyecto');\nconst filas = $('Leer Projects').all().map(i => i.json).filter(r => r && r.id);\nconst p = filas.find(r => String(r.id) === String(b.id));\nif (!p) throw new Error('Proyecto no encontrado en la base');\nif (!p.row_number) throw new Error('No tengo el n\\u00famero de fila del proyecto');\nreturn [{ json: {\n  id: String(p.id),\n  nombre: p.nombre || '',\n  row_number: Number(p.row_number),\n  discord_category_id: String(p.discord_category_id || '').replace(/^'+/, '')\n} }];"
+        },
+        "id": "75aa05ca-7fec-4700-9cbb-73c7f2621f93",
+        "name": "Buscar proyecto",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          608,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Calendar"
+          },
+          "options": {}
+        },
+        "id": "dbdd349e-6122-411e-b010-8bccbb804726",
+        "name": "Leer Calendario",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          800,
+          0
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('CONFIG').first().json.dbSheetId }}?fields=sheets(properties(sheetId,title))",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleSheetsOAuth2Api",
+          "options": {}
+        },
+        "id": "ea61d2a5-9c9f-4fae-b788-97aea11c0a5c",
+        "name": "Sheets: metadata",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1008,
+          0
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const meta = $('Sheets: metadata').first().json;\nconst gid = t => {\n  const s = (meta.sheets || []).find(x => x.properties && x.properties.title === t);\n  if (!s) throw new Error('No encuentro la pesta\\u00f1a ' + t);\n  return s.properties.sheetId;\n};\nconst gProjects = gid('Projects');\nconst gCalendar = gid('Calendar');\nconst p = $('Buscar proyecto').first().json;\nconst requests = [];\n/* Filas del calendario del proyecto, de abajo hacia arriba para que no se corran los indices */\nconst cal = $('Leer Calendario').all().map(i => i.json)\n  .filter(r => r && String(r.project_id || '') === p.id && r.row_number);\ncal.map(r => Number(r.row_number)).sort((a, b) => b - a).forEach(rn => {\n  requests.push({ deleteDimension: { range: { sheetId: gCalendar, dimension: 'ROWS', startIndex: rn - 1, endIndex: rn } } });\n});\n/* La fila del proyecto */\nrequests.push({ deleteDimension: { range: { sheetId: gProjects, dimension: 'ROWS', startIndex: p.row_number - 1, endIndex: p.row_number } } });\nreturn [{ json: { requests } }];"
+        },
+        "id": "6ed4f4fb-bf8b-4765-a38a-3d8a84e69c33",
+        "name": "Armar borrado",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1200,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('CONFIG').first().json.dbSheetId }}:batchUpdate",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleSheetsOAuth2Api",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ requests: $json.requests }) }}",
+          "options": {}
+        },
+        "id": "7c6bf6bc-0ed0-4ecb-8326-e96d59c1c991",
+        "name": "Sheets: borrar filas",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1408,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ ok: true, id: $('Buscar proyecto').first().json.id }) }}",
+          "options": {}
+        },
+        "id": "b189cf7f-7adf-44e9-a616-7e6b390ef150",
+        "name": "Responder",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          1600,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const p = $('Buscar proyecto').first().json;\nconst catId = String(p.discord_category_id || '').replace(/^'+/, '').trim();\nif (!catId) return [];\nreturn [{ json: { categoryId: catId } }];"
+        },
+        "id": "745f1746-84bc-4dc2-8218-5efb515b4193",
+        "name": "¿Tiene Discord?",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1808,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/channels",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "id": "955e0311-6d08-40de-bbf2-cdb52950797a",
+        "name": "Discord: listar canales",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2000,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "y28T7xXq9ZiuQWcM",
+            "name": "Discord Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const catId = $('\\u00bfTiene Discord?').first().json.categoryId;\nconst lista = $('Discord: listar canales').all().map(i => i.json).filter(c => c && c.id);\nconst out = lista.filter(c => String(c.parent_id || '') === catId)\n  .map(c => ({ json: { channelId: String(c.id), nombre: c.name || '' } }));\n/* La categoria se borra al final, cuando ya no tiene hijos */\nout.push({ json: { channelId: catId, nombre: 'categoria' } });\nreturn out;"
+        },
+        "id": "21ccd1e1-45e9-443f-a6c9-95a5b2a38bd9",
+        "name": "Canales a borrar",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2208,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "DELETE",
+          "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {
+            "batching": {
+              "batch": {
+                "batchSize": 1
+              }
+            }
+          }
+        },
+        "id": "a405ca0f-09f3-47e5-98d4-3415c6626e9a",
+        "name": "Discord: borrar canales",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2400,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "y28T7xXq9ZiuQWcM",
+            "name": "Discord Bot"
+          }
+        },
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "CONFIG",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CONFIG": {
+        "main": [
+          [
+            {
+              "node": "Leer Projects",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer Projects": {
+        "main": [
+          [
+            {
+              "node": "Buscar proyecto",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar proyecto": {
+        "main": [
+          [
+            {
+              "node": "Leer Calendario",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer Calendario": {
+        "main": [
+          [
+            {
+              "node": "Sheets: metadata",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sheets: metadata": {
+        "main": [
+          [
+            {
+              "node": "Armar borrado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Armar borrado": {
+        "main": [
+          [
+            {
+              "node": "Sheets: borrar filas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sheets: borrar filas": {
+        "main": [
+          [
+            {
+              "node": "Responder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Responder": {
+        "main": [
+          [
+            {
+              "node": "¿Tiene Discord?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "¿Tiene Discord?": {
+        "main": [
+          [
+            {
+              "node": "Discord: listar canales",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Discord: listar canales": {
+        "main": [
+          [
+            {
+              "node": "Canales a borrar",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Canales a borrar": {
+        "main": [
+          [
+            {
+              "node": "Discord: borrar canales",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "TEAM23  ",
+    "name": "Version d55a161c",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-07-23T14:58:57.124Z",
+    "updatedAt": "2026-07-23T14:59:00.000Z",
+    "workflowPublishHistory": [
+      {
+        "id": 72,
+        "workflowId": "TL36zBBSwp0DL7sK",
+        "versionId": "d55a161c-9a59-4644-9d15-4d2eda8e7ef5",
+        "event": "activated",
+        "userId": "8e82d0ec-0f07-46c6-8b67-c8561f375f06",
+        "createdAt": "2026-07-23T14:59:00.760Z"
+      }
+    ]
+  }
+}
