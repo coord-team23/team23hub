@@ -5,10 +5,10 @@ Página web que centraliza tus proyectos de post: Drive, Frame.io, calendario y 
 **Cómo funciona la arquitectura:**
 
 ```
-Página web (Cloudflare Pages)
-        │  fetch con header x-team23-key
+Página web (Netlify · hub.team23.online)
+        │  fetch con header x-team23-key + Authorization: Bearer <JWT de Supabase>
         ▼
-n8n (n8n.rawmarketing.co) — 5 workflows con webhooks
+n8n (coordteam23.app.n8n.cloud) — 13 workflows, 9 con webhook
         ▼
 Google Drive · Google Docs · Google Sheets · Frame.io · Gmail
 ```
@@ -27,7 +27,7 @@ La "base de datos" es un Google Sheet (`TEAM23_DB`) que se crea solo con el work
 | 4 | Actualizar Proyecto | `POST /webhook/team23/update` | Edita nombre/cliente/agencia/productora/**director**, equipo, tareas, asignaciones (incluye `estado` de candidatos), **`taskDates_json`**, `checklist_json` y estado (según qué campos vengan en el body) |
 | 5 | Guardar Calendario | `POST /webhook/team23/calendar` | Guarda el calendario y manda mail a todos los involucrados |
 | 6 | Parse Debrief (IA) | `POST /webhook/team23/parse` | Analiza el texto de un debrief con Claude y devuelve nombre/cliente/agencia/productora/síntesis/tareas/timeline sugeridos, para precargar el alta de proyecto (Opción 2) |
-| 7 | Avisar en Discord | `POST /webhook/team23/notify` | Cada vez que se tilda o destilda un ítem de cualquiera de los tres checklists (gate, Delivery, Cierre), manda un mensaje a un canal de Discord (vía Incoming Webhook) |
+| 7 | Avisar en Discord | `POST /webhook/team23/notify` · **no publicado ni cableado** (nadie lo llama; falta la URL del Incoming Webhook en su CONFIG) | Cada vez que se tilda o destilda un ítem de cualquiera de los tres checklists (gate, Delivery, Cierre), manda un mensaje a un canal de Discord (vía Incoming Webhook) |
 | 8 | Portal de Proveedores | `POST` (login Supabase) | Devuelve, a un proveedor logueado, solo sus proyectos confirmados — filtrado del lado del servidor. Requiere Supabase configurado (ver sección "Portal de proveedores" más abajo) |
 
 **Eliminar proyecto** (`POST /webhook/team23/delete`, recibe `{id}`) todavía no tiene un workflow armado en esta carpeta — hay que crearlo a mano en n8n (borra la fila del Sheet por `id`; no borra la carpeta de Drive ni el proyecto en Frame.io, eso se hace aparte si corresponde).
@@ -128,7 +128,7 @@ Los tres nodos de Frame del workflow 3 (Crear proyecto, Crear carpetas, Crear su
 
 **En n8n:**
 1. **Credentials → Add credential → OAuth2 API**, nombre `Frame.io OAuth2`.
-2. Copiá el **OAuth Redirect URL** que muestra n8n (tipo `https://n8n.rawmarketing.co/rest/oauth2-credential/callback`) y pegalo como Redirect URI en Adobe (paso 2 de arriba).
+2. Copiá el **OAuth Redirect URL** que muestra n8n (tipo `https://coordteam23.app.n8n.cloud/rest/oauth2-credential/callback`) y pegalo como Redirect URI en Adobe (paso 2 de arriba).
 3. Completá:
    - **Grant Type**: `Authorization Code`
    - **Authorization URL**: `https://ims-na1.adobelogin.com/ims/authorize/v2`
@@ -159,14 +159,15 @@ Los workflows ahora guardan más campos en la pestaña **Projects**: `director`,
 
 ### Paso 6 — Deployar la página
 
-1. Abrí `index.html` y completá al inicio del `<script>`:
+1. Completá `design-system/config.js` (un solo archivo para todas las páginas):
    ```js
    const CONFIG = {
-     N8N_BASE: "https://n8n.rawmarketing.co",
-     API_KEY: "la-clave-que-inventaste-en-Team23-Key"
+     N8N_BASE: "https://coordteam23.app.n8n.cloud",
+     API_KEY: "la-clave-que-inventaste-en-Team23-Key",
+     SUPABASE_URL: "...", SUPABASE_ANON_KEY: "..."
    };
    ```
-2. Andá a **Cloudflare Pages** → Create project → **Direct Upload** → arrastrá la carpeta con el `index.html`. En 1 minuto tenés una URL tipo `team23-hub.pages.dev` (podés colgarle un dominio propio después).
+2. La página vive en **Netlify** (`hub.team23.online`). Las rutas limpias (`/login`, `/productores`, `/admin`, ...) salen de `_redirects`; si agregás una página, agregá su línea ahí.
 
 Listo. Entrás, creás un proyecto, y en ~15 segundos tenés Drive + Frame.io + documentos armados con los links en la card.
 
@@ -201,10 +202,10 @@ Listo. Entrás, creás un proyecto, y en ~15 segundos tenés Drive + Frame.io + 
 
 ## Seguridad y límites (honesto)
 
-- La página es estática y la protege la clave `x-team23-key`. Es seguridad de herramienta interna: suficiente para el equipo, no para exponer públicamente con data sensible. Si querés login real, en Cloudflare activás **Cloudflare Access** sobre el dominio (SSO con Google) en 5 minutos, sin tocar código.
-- La pestaña **Equipo** no es un permiso real: solo oculta los controles de edición en el navegador. Cualquiera con el link puede tocar la pestaña **Proyectos** y editar. Si necesitás que eso sea un límite de verdad (no solo de interfaz), es un tema de Cloudflare Access / login, no de esta página.
+- La clave `x-team23-key` viaja en el HTML público, así que **no es un secreto**: solo frena tráfico casual. El acceso real es el login de Supabase: cada llamada a n8n lleva el JWT del usuario en `Authorization: Bearer` y el workflow lo valida contra `/auth/v1/user` y exige `role = interno` en `profiles` antes de leer o escribir el Sheet (workflows 2, 3, 4, 5, 6, 9, 10 y 13; el 8 valida el rol proveedor). Sin sesión válida, n8n responde 401/403 aunque la clave sea correcta.
+- La pestaña **Equipo** no es un permiso real: solo oculta los controles de edición en el navegador. Cualquiera con el link puede tocar la pestaña **Proyectos** y editar. Si necesitás que eso sea un límite de verdad (no solo de interfaz), es un tema de login + validación del rol en n8n (ver arriba), no de esta página.
 - El mail de calendario sale **cada vez** que guardás el calendario (incluida la primera vez, con asunto "Calendario definido").
-- Los destinatarios son los mails cargados en el proyecto (EP, Productor, Coordinador y asignados). El EP con mail es obligatorio al crear, así nunca se guarda un calendario sin destinatario.
+- Los destinatarios son los mails cargados en el proyecto (EP, Productor, Coordinador y asignados). El EP con mail es obligatorio al crear, así nunca se guarda un calendario sin destinatario. Para **activar** (pasar de Pre-producción a Ejecutando) el hub exige además Productora, Productor y Coordinador con sus mails: nueve campos en total (`REQUIRED_FOR_ACTIVATION` en `index.html`).
 - Si n8n actualiza mucho de versión y algún nodo de Sheets pide re-elegir la hoja, es re-seleccionar "Projects"/"Calendar" en el dropdown y listo.
 - El calendario vive en la web y en el tab Calendar del Sheet; el Sheet es el respaldo. El tab Calendar tiene una columna `tipo` que distingue `fase` (rango con barra) de `hito` (detalle de un día). Si corriste el Setup con una versión anterior de estos workflows, agregá a mano la columna `tipo` entre `notas` y `updated_at`.
 
@@ -236,3 +237,13 @@ Si el workflow no está importado o no está activo, no pasa nada: el hub intent
 ## Modificaciones
 
 Pedime lo que necesites: campos nuevos en el form, otra estructura de carpetas, roles distintos, recordatorios automáticos X días antes de una fase, vista semanal del calendario, etc.
+
+---
+
+## Admin (seguimiento interno) — workflow 13
+
+`/admin` (`admin.html`) muestra el seguimiento interno del estudio por pilar. Lee la pestaña **Admin** del Sheet `TEAM23_DB` vía `n8n/13-admin-tasks.json` (`GET /webhook/team23/admin-tasks`).
+
+- Columnas de la pestaña: `id, pilar, grupo, nombre, estado, prioridad, deadline, responsable`. `pilar` es `operativa | ejecutiva | crecimiento`; `deadline` en formato `YYYY-MM-DD` (texto plano, no celda de fecha).
+- `n8n/seed-admin.csv` tiene las 237 filas del seguimiento original: importalo en la pestaña Admin la primera vez (Archivo → Importar → reemplazar hoja).
+- Además del login, el workflow exige que el mail esté en la lista `adminMails` del nodo CONFIG (misma lista que `ADMIN_MAILS` en `admin.html`). Si cambiás una, cambiá la otra.

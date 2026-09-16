@@ -2,6 +2,34 @@
 
 Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
 
+## 2026-09-14 — Auditoría: login validado en n8n, config compartida, admin arreglado
+
+### Seguridad: n8n valida la sesión de Supabase en cada webhook
+
+Hasta hoy los webhooks de proyectos (`projects`, `create`, `update`, `calendar`, `parse`, `delete`) solo pedían el header `x-team23-key`, que está en el HTML público: cualquiera que viera el código fuente podía listar, editar o borrar proyectos sin loguearse. Ahora `index.html` y `admin.html` mandan `Authorization: Bearer <JWT>` en cada llamada (`authHeader()` en `api()`), y los workflows 2, 3, 4, 5, 6 y 9 tienen la misma cadena que ya usaba el 10 (roster): `Validar login` → `¿Login válido?` (401) → `Leer rol` → `¿Es interno?` (403). El token se lee del header, no del body. **Hay que reimportar esos seis workflows en n8n** para que aplique.
+
+### `/admin` funcional: workflow 13 + pestaña Admin
+
+`admin.html` llamaba a `/webhook/team23/admin-tasks`, que no existía en n8n. Nuevo `n8n/13-admin-tasks.json` (lee la pestaña **Admin** del Sheet, valida login + lista de mails admin) y `n8n/seed-admin.csv` con las 237 filas del seguimiento original para poblar la pestaña. Ver README → "Admin".
+
+### Bugs en `admin.html`
+
+- El filtro de estado comparaba un `Set` con `"all"`: todos los grupos quedaban abiertos y el toggle no cerraba.
+- Si fallaba la conexión con Supabase la página se mostraba igual. Ahora bloquea con el mismo aviso que `index.html`.
+
+### Config compartida
+
+`design-system/config.js` reemplaza los cuatro bloques `CONFIG` copiados en `index`, `admin`, `login` y `proveedores`. Cambiar host, clave o proyecto de Supabase es un solo archivo.
+
+### Docs y pendientes viejos
+
+- README: la página vive en Netlify (`hub.team23.online`), no en Cloudflare; n8n es `coordteam23.app.n8n.cloud`; sección nueva para Admin; párrafo de seguridad reescrito.
+- `privacidad.html`: `font-weight:900` / `letter-spacing:-0.5px` pasados a tokens (pendiente desde el 08-07).
+
+## 2026-09-02 — Sección ADMIN
+
+Nueva `admin.html` en `/admin` (ruta agregada en `_redirects`): seguimiento interno del estudio por pilar (Operativa / Ejecutiva / Crecimiento), grupos colapsables, filtro de estado multi-selección, filtro por responsable con alias por persona (`RESP_ALIAS`: "Kr", "Krl", "Krla" → Karla). Acceso restringido a una lista fija de mails (`ADMIN_MAILS`), no a todo rol interno.
+
 ## 2026-08-07 — Colores fijos por tarea, tabla de Fases colapsable, y tipografía del wordmark
 
 ### Pills de tareas: color fijo por tarea, no más rojo genérico

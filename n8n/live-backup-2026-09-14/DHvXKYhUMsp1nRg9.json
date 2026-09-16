@@ -1,0 +1,457 @@
+{
+  "id": "DHvXKYhUMsp1nRg9",
+  "name": "Team23 — 2. Get Projects",
+  "description": null,
+  "active": true,
+  "activeVersionId": "da628a99-f578-48ac-8b50-f12ee2f80355",
+  "createdAt": "2026-07-17T16:08:27.220Z",
+  "updatedAt": "2026-08-03T03:10:05.930Z",
+  "isArchived": false,
+  "versionId": "da628a99-f578-48ac-8b50-f12ee2f80355",
+  "versionCounter": 17,
+  "sourceWorkflowId": null,
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "team23/projects",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "0272fd5a-b027-48ff-80ea-1d629efc50d4",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2256,
+        672
+      ],
+      "webhookId": "0dea5842-f14f-4d4b-8b8c-f6bfc3a8a4ad",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "U3mhsefbSNp5Ly1w",
+          "name": "Team23 Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "dbSheetId",
+              "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "495fc2e8-59ef-44fd-ad76-0fe78a2eb7e1",
+      "name": "CONFIG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Projects"
+        },
+        "options": {}
+      },
+      "id": "e53ef065-26da-4023-bf68-f41bd71fd7b4",
+      "name": "Leer Projects",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2656,
+        672
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Calendar"
+        },
+        "options": {}
+      },
+      "id": "3a36d717-815b-4269-8f10-fb79a3340f2c",
+      "name": "Leer Calendar",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2864,
+        672
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "02AGloVq038YuKvk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function safe(v, fb){ try { return v ? JSON.parse(v) : fb; } catch(e){ return fb; } }\nconst projRows = $('Leer Projects').all().map(i => i.json).filter(r => r && r.id);\nconst calRows = $('Leer Calendar').all().map(i => i.json).filter(r => r && r.project_id);\nconst projects = projRows.map(p => ({\n  id: String(p.id),\n  draft_json: p.draft_json || '',\n  nombre: p.nombre || '',\n  cliente: p.cliente || '',\n  agencia: p.agencia || '',\n  productora: p.productora || '',\n  director: p.director || '',\n  ep_nombre: p.ep_nombre || '', ep_email: p.ep_email || '',\n  prod_nombre: p.prod_nombre || '', prod_email: p.prod_email || '',\n  coord_nombre: p.coord_nombre || '', coord_email: p.coord_email || '',\n  /* segundos puestos internos (handoffs). El primero de cada rol sigue en las\n     columnas planas de arriba; acá vienen los adicionales. */\n  equipo: safe(p.equipo_json, {}),\n  tareas: safe(p.tareas_json, []),\n  asignaciones: safe(p.asignaciones_json, {}),\n  taskDates: safe(p.taskDates_json, {}),\n  sintesis: p.sintesis || '',\n  checklist: safe(p.checklist_json, {}),\n  tracker: safe(p.tracker_json, {}),\n  storyboard_url: p.storyboard_url || '',\n  tratamiento_url: p.tratamiento_url || '',\n  status: p.status || 'por_activarse',\n  year: String(p.year || ''),\n  month: String(p.month || ''),\n  links: safe(p.links_json, {}),\n  calendario: calRows.filter(c => String(c.project_id) === String(p.id)).map(c => ({ fase: c.fase, inicio: c.inicio, fin: c.fin, notas: c.notas || '', tipo: c.tipo === 'hito' ? 'hito' : 'fase' }))\n}));\n/* Si la columna no existe en la hoja, el nodo de Sheets no la devuelve — y al\n   escribir tampoco la guarda, en silencio. Se avisa para que no se pierdan datos\n   sin que nadie se entere. */\nconst faltan = ['equipo_json'].filter(col => projRows.length && !projRows.some(r => col in r));\nreturn [{ json: { projects, columnasFaltantes: faltan } }];"
+      },
+      "id": "78ff2514-a3da-41cd-9b8d-4acb076ff1d7",
+      "name": "Armar respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3056,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "52e02119-3786-45dc-80d8-bc87b263154f",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3264,
+        672
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "Leer Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Projects": {
+      "main": [
+        [
+          {
+            "node": "Leer Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Calendar": {
+      "main": [
+        [
+          {
+            "node": "Armar respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar respuesta": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "DHvXKYhUMsp1nRg9",
+      "projectId": "mrWw4NVqRFGmGI6m",
+      "project": {
+        "id": "mrWw4NVqRFGmGI6m",
+        "name": "TEAM23   <coord@team23.online>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "8e82d0ec-0f07-46c6-8b67-c8561f375f06",
+        "createdAt": "2026-07-13T16:56:27.033Z",
+        "updatedAt": "2026-07-13T16:56:35.986Z"
+      },
+      "createdAt": "2026-07-17T16:08:27.222Z",
+      "updatedAt": "2026-07-17T16:08:27.222Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "da628a99-f578-48ac-8b50-f12ee2f80355",
+    "workflowId": "DHvXKYhUMsp1nRg9",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "team23/projects",
+          "authentication": "headerAuth",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "0272fd5a-b027-48ff-80ea-1d629efc50d4",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          2256,
+          672
+        ],
+        "webhookId": "0dea5842-f14f-4d4b-8b8c-f6bfc3a8a4ad",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "U3mhsefbSNp5Ly1w",
+            "name": "Team23 Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c1",
+                "name": "dbSheetId",
+                "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "495fc2e8-59ef-44fd-ad76-0fe78a2eb7e1",
+        "name": "CONFIG",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2464,
+          672
+        ]
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Projects"
+          },
+          "options": {}
+        },
+        "id": "e53ef065-26da-4023-bf68-f41bd71fd7b4",
+        "name": "Leer Projects",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          2656,
+          672
+        ],
+        "alwaysOutputData": true,
+        "executeOnce": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('CONFIG').first().json.dbSheetId }}"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Calendar"
+          },
+          "options": {}
+        },
+        "id": "3a36d717-815b-4269-8f10-fb79a3340f2c",
+        "name": "Leer Calendar",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          2864,
+          672
+        ],
+        "alwaysOutputData": true,
+        "executeOnce": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "02AGloVq038YuKvk",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "function safe(v, fb){ try { return v ? JSON.parse(v) : fb; } catch(e){ return fb; } }\nconst projRows = $('Leer Projects').all().map(i => i.json).filter(r => r && r.id);\nconst calRows = $('Leer Calendar').all().map(i => i.json).filter(r => r && r.project_id);\nconst projects = projRows.map(p => ({\n  id: String(p.id),\n  draft_json: p.draft_json || '',\n  nombre: p.nombre || '',\n  cliente: p.cliente || '',\n  agencia: p.agencia || '',\n  productora: p.productora || '',\n  director: p.director || '',\n  ep_nombre: p.ep_nombre || '', ep_email: p.ep_email || '',\n  prod_nombre: p.prod_nombre || '', prod_email: p.prod_email || '',\n  coord_nombre: p.coord_nombre || '', coord_email: p.coord_email || '',\n  /* segundos puestos internos (handoffs). El primero de cada rol sigue en las\n     columnas planas de arriba; acá vienen los adicionales. */\n  equipo: safe(p.equipo_json, {}),\n  tareas: safe(p.tareas_json, []),\n  asignaciones: safe(p.asignaciones_json, {}),\n  taskDates: safe(p.taskDates_json, {}),\n  sintesis: p.sintesis || '',\n  checklist: safe(p.checklist_json, {}),\n  tracker: safe(p.tracker_json, {}),\n  storyboard_url: p.storyboard_url || '',\n  tratamiento_url: p.tratamiento_url || '',\n  status: p.status || 'por_activarse',\n  year: String(p.year || ''),\n  month: String(p.month || ''),\n  links: safe(p.links_json, {}),\n  calendario: calRows.filter(c => String(c.project_id) === String(p.id)).map(c => ({ fase: c.fase, inicio: c.inicio, fin: c.fin, notas: c.notas || '', tipo: c.tipo === 'hito' ? 'hito' : 'fase' }))\n}));\n/* Si la columna no existe en la hoja, el nodo de Sheets no la devuelve — y al\n   escribir tampoco la guarda, en silencio. Se avisa para que no se pierdan datos\n   sin que nadie se entere. */\nconst faltan = ['equipo_json'].filter(col => projRows.length && !projRows.some(r => col in r));\nreturn [{ json: { projects, columnasFaltantes: faltan } }];"
+        },
+        "id": "78ff2514-a3da-41cd-9b8d-4acb076ff1d7",
+        "name": "Armar respuesta",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3056,
+          672
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "52e02119-3786-45dc-80d8-bc87b263154f",
+        "name": "Responder",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          3264,
+          672
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "CONFIG",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CONFIG": {
+        "main": [
+          [
+            {
+              "node": "Leer Projects",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer Projects": {
+        "main": [
+          [
+            {
+              "node": "Leer Calendar",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer Calendar": {
+        "main": [
+          [
+            {
+              "node": "Armar respuesta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Armar respuesta": {
+        "main": [
+          [
+            {
+              "node": "Responder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "TEAM23  ",
+    "name": "Version da628a99",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-08-03T03:10:05.935Z",
+    "updatedAt": "2026-08-03T03:10:08.000Z",
+    "workflowPublishHistory": [
+      {
+        "id": 100,
+        "workflowId": "DHvXKYhUMsp1nRg9",
+        "versionId": "da628a99-f578-48ac-8b50-f12ee2f80355",
+        "event": "activated",
+        "userId": "8e82d0ec-0f07-46c6-8b67-c8561f375f06",
+        "createdAt": "2026-08-03T03:10:08.540Z"
+      }
+    ]
+  }
+}

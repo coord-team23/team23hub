@@ -35,6 +35,18 @@
               "name": "dbSheetId",
               "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
               "type": "string"
+            },
+            {
+              "id": "sb1",
+              "name": "supabaseUrl",
+              "value": "https://muvmrkacjhygfuialpyn.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "sb2",
+              "name": "supabaseAnonKey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI",
+              "type": "string"
             }
           ]
         },
@@ -290,7 +302,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $('Webhook').first().json.body || {};\n/* mismo criterio que el mail: sin pedido explícito no se avisa */\nif (body.avisar !== true) return [];\nconst filas = $('Leer Projects').all().map(i => i.json);\nconst p = filas.find(r => String(r.id) === String(body.projectId));\nconst canal = p ? String(p.discord_avisos_id || '').replace(/^'+/, '') : '';\nif (!canal) return [];\nconst rec = $('Reconstruir').first().json;\nconst entradas = body.entries || [];\nconst fases = entradas.filter(e => e.tipo !== 'hito');\nconst hitos = entradas.filter(e => e.tipo === 'hito');\nconst fmt = d => d || 'sin fecha';\nconst lineas = ['\\ud83d\\udcc5 **' + (rec.projectName || p.nombre || 'Proyecto') + '**: ' + (rec.isFirst ? 'calendario definido' : 'calendario actualizado')];\nfases.slice(0, 12).forEach(e => lineas.push('\\u2022 ' + (e.fase || 'Fase') + ': ' + fmt(e.inicio) + ' a ' + fmt(e.fin)));\nhitos.slice(0, 8).forEach(e => lineas.push('\\u25c6 ' + (e.fase || 'Hito') + ': ' + fmt(e.inicio)));\nconst resto = Math.max(0, fases.length - 12) + Math.max(0, hitos.length - 8);\nif (resto > 0) lineas.push('y ' + resto + ' m\\u00e1s en el hub');\nlet content = lineas.join('\\n');\nif (content.length > 1900) content = content.slice(0, 1900) + '\\u2026';\nreturn [{ json: { channelId: canal, content } }];"
+        "jsCode": "const body = $('Webhook').first().json.body || {};\n/* mismo criterio que el mail: sin pedido explícito no se avisa */\nif (body.avisar !== true) return [];\nconst filas = $('Leer Projects').all().map(i => i.json);\nconst p = filas.find(r => String(r.id) === String(body.projectId));\nconst canal = p ? String(p.discord_avisos_id || '').replace(/^'+/, '') : '';\nif (!canal) return [];\nconst rec = $('Reconstruir').first().json;\nconst entradas = body.entries || [];\nconst fases = entradas.filter(e => e.tipo !== 'hito' && (e.inicio || e.fin));\nconst hitos = entradas.filter(e => e.tipo === 'hito');\nconst fmt = d => d || 'sin fecha';\nconst lineas = ['\\ud83d\\udcc5 **' + (rec.projectName || p.nombre || 'Proyecto') + '**: ' + (rec.isFirst ? 'calendario definido' : 'calendario actualizado')];\nfases.slice(0, 12).forEach(e => lineas.push('\\u2022 ' + (e.fase || 'Fase') + ': ' + fmt(e.inicio) + ' a ' + fmt(e.fin)));\nhitos.slice(0, 8).forEach(e => lineas.push('\\u25c6 ' + (e.fase || 'Hito') + ': ' + fmt(e.inicio)));\nconst resto = Math.max(0, fases.length - 12) + Math.max(0, hitos.length - 8);\nif (resto > 0) lineas.push('y ' + resto + ' m\\u00e1s en el hub');\nlet content = lineas.join('\\n');\nif (content.length > 1900) content = content.slice(0, 1900) + '\\u2026';\nreturn [{ json: { channelId: canal, content } }];"
       },
       "id": "d5d00002-0000-0000-0000-00000000b002",
       "name": "Aviso de calendario",
@@ -339,6 +351,173 @@
         820,
         120
       ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('CONFIG').first().json.supabaseUrl }}/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('CONFIG').first().json.supabaseAnonKey }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Webhook').first().json.headers.authorization || '' }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "cc1c1afd-3250-4adf-b94e-5ae689675242",
+      "name": "Validar login",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        -300
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.email || '' }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1ffd2729-f9ee-4504-bd77-a452e523ed6e",
+      "name": "¿Login válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: 'login inválido' }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "88c3bf96-c200-44ae-8154-59ec7c68b8aa",
+      "name": "Responder 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('CONFIG').first().json.supabaseUrl }}/rest/v1/profiles?id=eq.{{ $('Validar login').first().json.id }}&select=role",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('CONFIG').first().json.supabaseAnonKey }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Webhook').first().json.headers.authorization || '' }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c3cabace-658e-43dc-96de-467d136685aa",
+      "name": "Leer rol",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        -300
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.role || '' }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "interno"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a63c80cc-0835-4c08-9fc2-77a9e61a301b",
+      "name": "¿Es interno?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: 'solo productores' }) }}",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "id": "cd2d4146-4161-4768-94ce-65abc7581039",
+      "name": "Responder 403",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        -100
+      ]
     }
   ],
   "connections": {
@@ -357,7 +536,7 @@
       "main": [
         [
           {
-            "node": "Leer Calendario",
+            "node": "Validar login",
             "type": "main",
             "index": 0
           }
@@ -478,6 +657,64 @@
         [
           {
             "node": "Avisar equipo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar login": {
+      "main": [
+        [
+          {
+            "node": "¿Login válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Login válido?": {
+      "main": [
+        [
+          {
+            "node": "Leer rol",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer rol": {
+      "main": [
+        [
+          {
+            "node": "¿Es interno?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es interno?": {
+      "main": [
+        [
+          {
+            "node": "Leer Calendario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 403",
             "type": "main",
             "index": 0
           }

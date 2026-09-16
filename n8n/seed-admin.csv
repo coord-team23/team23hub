@@ -1,0 +1,238 @@
+id,pilar,grupo,nombre,estado,prioridad,deadline,responsable
+t1,operativa,,Armar mail de material p equipo,Listo,Alta,2025-01-09,Mile - Teo
+t2,operativa,,Automatizaciones,En pausa,Baja,2025-09-24,Mile
+t3,operativa,,Arreglar Dropbox (TEO),Listo,Alta,2025-05-05,Teo
+t4,operativa,,Ordenar Drive,Listo,Alta,2025-01-10,Mile
+t5,operativa,Ordenar Drive,Copiar archivos del equipo en nuestro drive,En curso,,,
+t6,operativa,Ordenar Drive,Limpiar documentos random,En curso,,,
+t7,operativa,Ordenar Drive,Ordenar proyectos,Listo,,,
+t8,operativa,,Revision servicios y tarjeta,Listo,Alta,2025-11-08,Mile
+t9,operativa,Revision servicios y tarjeta,Cambiar servicios a cuenta coop,Listo,,,
+t10,operativa,,LLC,Sin empezar,Baja,2025-07-04,Karla
+t11,operativa,,Almacenamiento,En curso,Alta,2025-10-01,Narf
+t12,operativa,,Cuenta USD Coop,Listo,Alta,2025-01-25,Karla
+t13,operativa,,Post Portfolio Update,En curso,Alta,2025-10-07,Mile Teo
+t14,operativa,Post Portfolio Update,Diseño Lanzamiento,En curso,,,
+t15,operativa,Post Portfolio Update,Video,En curso,,,
+t16,operativa,Post Portfolio Update,DG Carteles,Sin empezar,,,
+t17,operativa,Post Portfolio Update,Linktree/bento.me,Sin empezar,Alta,2025-10-06,Mile
+t18,operativa,,Desarrollo ETCÉTERA,En curso,Alta,2025-10-25,Mile
+t19,operativa,Desarrollo ETCÉTERA,Guiones,En curso,,,
+t20,operativa,Desarrollo ETCÉTERA,Bajada pitch,Listo,Alta,2025-09-22,Mile
+t21,operativa,Desarrollo ETCÉTERA,Gestión Artística Trimarchi  - Lineup,Listo,,,
+t22,operativa,Desarrollo ETCÉTERA,Legals,Listo,Alta,2025-09-23,Mile Juli
+t23,operativa,Desarrollo ETCÉTERA,Producción Al Paciello,Sin empezar,,,
+t24,operativa,,Post Agenda Abierta,Planificación,Media,2025-10-06,Mile
+t25,operativa,,Post Avatares (4+ video túnel),Listo,Alta,2025-09-26,Mile
+t26,operativa,Post Avatares (4+ video túnel),Diseño,Listo,,,
+t27,operativa,,Cierre Reel,Listo,Alta,2025-10-06,TEAM
+t28,operativa,Cierre Reel,Sonido,Listo,,,
+t29,operativa,Cierre Reel,Adaptaciones,Listo,,,
+t30,operativa,Cierre Reel,Graphs,Listo,,,
+t31,operativa,Cierre Reel,Masterización,Listo,,,
+t32,operativa,Cierre Reel,Redux,Listo,,,
+t33,operativa,,Pagar frameio,Listo,Alta,2025-08-25,Mile
+t34,operativa,,Cierre créditos IA 47 st,Listo,Alta,2025-08-26,Mile Teo
+t35,operativa,,Reel IA,Listo,Alta,2025-10-01,Mile Teo
+t36,operativa,,Respuesta TENA,Listo,Alta,2025-09-02,Narf
+t37,operativa,,Sync c/ opposite visuals,Listo,Alta,2025-09-05,Mile Teo
+t38,operativa,,Pagar vimeo,Listo,Alta,2025-08-25,Mile
+t39,operativa,,Sync c/ Martee,Listo,Alta,2025-08-26,Mile Teo
+t40,operativa,,Probar reel en Luzy,Listo,Media,2025-09-08,Narf
+t41,operativa,,QR Web,Sin empezar,Alta,2025-10-06,Mile
+t42,operativa,,Inventario,En curso,Alta,2025-09-19,Knd y Krl
+t43,operativa,,Cartel Post Al Paciello,Listo,Alta,2025-10-03,Mile
+t44,operativa,,Pagar a Marketing,Listo,Alta,2025-09-18,Karla
+t45,operativa,,Presupuesto Netflix,Listo,Alta,2025-09-22,TEAM
+t46,operativa,,Firmas Mail,Listo,Alta,2025-10-22,Mile
+t47,operativa,,Activar VISA credito,Listo,Alta,2025-09-24,Knd Mile
+t48,operativa,,Footer web Marti,Listo,Alta,2025-10-01,Mile
+t49,operativa,,Sync estrategia NT,Listo,Alta,2025-10-07,Mile Teo Narf
+t50,operativa,,Automatizar respuestas de KRLA,Sin empezar,Alta,2025-10-01,Mile
+t51,operativa,,Lead: Web kosmic,En curso,,,
+t52,operativa,,Enviar portfolio a TRENDO,Sin empezar,,,
+t53,operativa,,Lead: Paco y Catriel,En curso,,,
+t54,operativa,,Al Paciello,En curso,,,
+t55,operativa,Al Paciello,Revisión de Contrato,Listo,,,
+t56,operativa,Al Paciello,Plan Al Paciello,En curso,,,
+t57,operativa,,TECNICO,En curso,,,TEAM 23
+t58,operativa,TECNICO,Buscar edit ONLINE MX,En curso,,2026-04-13,Narf
+t59,operativa,TECNICO,Buscar coord MX,En curso,,2026-04-13,Teo y Narf
+t60,operativa,,PRODUCCION,Sin empezar,,,TEAM 23
+t61,operativa,PRODUCCION,Mejorar seguimiento de presupuestos,Planificación,,,Mile y Karla
+t62,operativa,PRODUCCION,Pipeline,Planificación,,,
+t63,operativa,PRODUCCION,Filtrar oportunidades mejor,Planificación,,,
+t64,operativa,PRODUCCION,Evitar presupuestos innecesarios sin info,Planificación,,,
+t65,operativa,PRODUCCION,Cerrar trabajos de Marzo,En curso,,,Teo y Karla
+t66,operativa,PRODUCCION,Garnier,Planificación,Alta,,Teo
+t67,operativa,PRODUCCION,Mail a Prod,Planificación,,,Teo
+t68,operativa,PRODUCCION,Cobros,Planificación,,,Karla
+t69,operativa,PRODUCCION,ML 4/4,Planificación,Alta,2026-04-06,Teo
+t70,operativa,,PROTOCOLOS,En curso,Alta,,TEAM
+t71,operativa,PROTOCOLOS,Inicio/cierre y coord de proyecto,Planificación,Alta,2026-04-13,TEAM
+t72,operativa,PROTOCOLOS,canal discord General - aviso a Carla - mensaje pagos,Planificación,,2026-04-13,
+t73,operativa,PROTOCOLOS,Llamada coord (v1 con coordinadores),Planificación,,2026-04-15,
+t74,operativa,PROTOCOLOS,Activacion casilla de sus mails,Planificación,,2026-04-15,
+t75,operativa,PROTOCOLOS,Llamada protocolos (interna),En curso,,2026-04-09,
+t76,operativa,PROTOCOLOS,Kickoff,Planificación,Alta,2026-04-30,TEAM
+t77,operativa,PROTOCOLOS,Implementar llamada kickoff obligatoria,Planificación,,2026-04-30,
+t78,operativa,PROTOCOLOS,Ordenar inicio de proyectos,Planificación,,2026-04-30,
+t79,operativa,PROTOCOLOS,Presentación de equipo y condiciones,Planificación,,2026-04-30,
+t80,operativa,PROTOCOLOS,Status de presupuestos y pagos,Planificación,Alta,2026-04-13,Karla
+t81,operativa,,Vimeo,Listo,Media,2025-06-19,Mile
+t82,operativa,Vimeo,Crear perfil profesional,En curso,,,
+t83,operativa,Vimeo,Mudar a vimeo viejo,Sin empezar,,,
+t84,operativa,Vimeo,Ocultar contenido web,Sin empezar,,,
+t85,operativa,Vimeo,Subir reel en modo publico,En curso,,,
+t86,operativa,,Protocolos,Sin empezar,Media,2025-07-18,TEAM
+t87,operativa,Protocolos,Cierre backup proyectos,Sin empezar,Alta,2025-10-03,Narf y Teo
+t88,operativa,Protocolos,Diseño etiquetas,Sin empezar,,,
+t89,operativa,Protocolos,Compra discos,En curso,,,
+t90,operativa,Protocolos,Excel de seguimiento,Sin empezar,,,
+t91,operativa,Protocolos,Briefs VFX,Sin empezar,,,
+t92,operativa,Protocolos,Cierre de proyectos,Listo,,,
+t93,operativa,Protocolos,Diseño timings,Sin empezar,,,
+t94,operativa,Protocolos,Nuevo colaborador,Sin empezar,,,
+t95,operativa,Protocolos,Configurar miembro y categorias Discord,Sin empezar,,,
+t96,operativa,Protocolos,Subir material a Web,Listo,,,
+t97,operativa,Protocolos,Organizacion Material Interno,Sin empezar,,,
+t98,operativa,Protocolos,Repaso Notion,Sin empezar,,,
+t99,operativa,Protocolos,Repaso Figma,Sin empezar,,,
+t100,operativa,Protocolos,Repaso Drive,Sin empezar,,,
+t101,ejecutiva,,FINANZAS,Sin empezar,,,
+t102,ejecutiva,FINANZAS,Préstamos,Planificación,,,
+t103,ejecutiva,FINANZAS,"Formalizar préstamos internos (Teo, Milena)",Planificación,,,
+t104,ejecutiva,FINANZAS,Hacer asamblea de cooperativa para inversión.,Planificación,,,
+t105,ejecutiva,FINANZAS,Inversiones,Planificación,,,
+t106,ejecutiva,FINANZAS,Comprar PC,Planificación,,,
+t107,ejecutiva,FINANZAS,Crear proyecto discord,Planificación,,,
+t108,ejecutiva,FINANZAS,Definir modalidad prestamo/cuotas,Planificación,,,
+t109,ejecutiva,FINANZAS,Realizar asamblea para cuota social,Planificación,,,
+t110,ejecutiva,FINANZAS,Evaluar inversión en USD como cooperativa (por socios),Planificación,,,
+t111,ejecutiva,FINANZAS,Analizar FCI (2M ARS),Planificación,,,
+t112,ejecutiva,FINANZAS,Definir estrategia de inversión,Planificación,,,
+t113,ejecutiva,FINANZAS,Avanzar en trámite de 1 propuesta de inversión (USD - Balanz),Planificación,,,
+t114,ejecutiva,,CONTABLE,Sin empezar,,,
+t115,ejecutiva,CONTABLE,Activar exención de Ganancias (requiere seguimiento activo),En curso,,,
+t116,ejecutiva,CONTABLE,Resolver exención de Ingresos Brutos,En curso,,,
+t117,ejecutiva,CONTABLE,Frenar retenciones incorrectas de IIBB (ej. Landia),En curso,,,
+t118,ejecutiva,CONTABLE,Contratar nuevo equipo contable (Verónica o equipo),En curso,,,
+t119,ejecutiva,CONTABLE,Cambiar de contadora (salir de Vanessa),En curso,,,
+t120,ejecutiva,CONTABLE,Definir estrategia fiscal correcta para socios,En curso,,,
+t121,ejecutiva,CONTABLE,Revisar si socios deben facturar o no a la cooperativa,En curso,,,
+t122,ejecutiva,CONTABLE,Registrar todos los movimientos,Planificación,,,
+t123,ejecutiva,CONTABLE,Actualizar correctamente las planillas al cierre de la semana + actualizar notas de acuerdos (productores),Sin empezar,,,
+t124,ejecutiva,CONTABLE,Resoluciones Bancarias,Planificación,,,
+t125,ejecutiva,CONTABLE,Actualizar cuentas de excedentes,Planificación,,,
+t126,ejecutiva,CONTABLE,Implementar sistema de pagos mensuales fijos,Sin empezar,,,
+t127,ejecutiva,CONTABLE,Evaluar posible “amnistía” futura para Mile,Sin empezar,,,
+t128,ejecutiva,CONTABLE,Actualizar reporte financiero en canal #pagos (martes y viernes),Sin empezar,,,
+t129,ejecutiva,CONTABLE,Definir sistema de devolución (ej. % de ingresos),Sin empezar,,,
+t130,ejecutiva,CONTABLE,Implementar sistema de reporte de pagos al equipo en cada proyecto.,Sin empezar,,,
+t131,ejecutiva,CONTABLE,Implementar y sostener cierre semanal de caja,Planificación,,,
+t132,ejecutiva,CONTABLE,Reporte de proyectos en canal #pagos (martes y viernes),Planificación,,,
+t133,ejecutiva,CONTABLE,Tarea,Sin empezar,,,
+t134,ejecutiva,,RRHH,Sin empezar,,,
+t135,ejecutiva,RRHH,Objetivos mensuales,Planificación,,,
+t136,ejecutiva,RRHH,Validar ingresos proyectados por persona,Planificación,,,
+t137,ejecutiva,RRHH,Corregir asignación desigual de proyectos,Planificación,,,
+t138,ejecutiva,RRHH,Proveedores,Planificación,,,
+t139,ejecutiva,RRHH,Crear base de datos de proveedores,En curso,,,
+t140,ejecutiva,RRHH,Mejorar seguimiento de pagos individuales,Sin empezar,,,
+t141,ejecutiva,RRHH,Clasificar proveedores frecuentes,En pausa,,,
+t142,ejecutiva,RRHH,Sistema de compensación Karla,Planificación,,,
+t143,ejecutiva,RRHH,Liquidacion al cierre al cuatrimestre,Planificación,,,
+t144,ejecutiva,RRHH,Ajustar según volumen y complejidad,Planificación,,,
+t145,ejecutiva,RRHH,Diseñar bono por proyecto para TEAM 23 (Carla),Planificación,,,
+t146,ejecutiva,RRHH,Definir % sobre fee,Planificación,,,
+t147,ejecutiva,,ADMIN,Sin empezar,,,
+t148,ejecutiva,ADMIN,COMUNICACION,Planificación,,,
+t149,ejecutiva,ADMIN,Reducir uso de WhatsApp para temas operativos,Planificación,,,
+t150,ejecutiva,ADMIN,Ordenar correos y accesos,Planificación,,,
+t151,ejecutiva,ADMIN,Implementar mail de coordinación,Planificación,,,
+t152,ejecutiva,ADMIN,SERVICIOS,Planificación,,,
+t153,ejecutiva,ADMIN,"Revisar suscripciones (Dropbox, etc.)",Planificación,Alta,2026-04-10,
+t154,ejecutiva,ADMIN,Transferir cuentas a tarjeta empresa,Planificación,,,
+t155,ejecutiva,ADMIN,Mejora discord,Planificación,,,
+t156,ejecutiva,ADMIN,MEXICO,Planificación,,,
+t157,ejecutiva,ADMIN,"Cargar proyectos faltantes (Meli Mundial, Aeroméxico, etc.)",Planificación,,,
+t158,crecimiento,,Optimizar discord-comunidad,Planificación,Baja,2026-02-16,TEAM
+t159,crecimiento,,Propuesta Roster,En pausa,Baja,2025-10-01,TEAM
+t160,crecimiento,,Listado proyectos 2024,Listo,Alta,2025-01-08,TEAM
+t161,crecimiento,,Merch,En curso,Media,,Mile - Kr - Knd
+t162,crecimiento,Merch,Impresion Media Kit,Sin empezar,Alta,2025-09-26,Mile - Kr - Knd
+t163,crecimiento,Merch,Listado de leads,Sin empezar,Media,2025-09-10,TEAM
+t164,crecimiento,Merch,Remeras,En curso,Alta,2025-10-24,Mile Knd
+t165,crecimiento,,Web,Listo,Media,,
+t166,crecimiento,Web,Optimizar Carga,Listo,,,
+t167,crecimiento,Web,Pagina Quienes Somos,Listo,,,
+t168,crecimiento,,Linkedin,Listo,,,
+t169,crecimiento,,Estrategia Redes,En curso,Alta,,
+t170,crecimiento,,IA R&D,Planificación,,,
+t171,crecimiento,,MARKETING,Sin empezar,,,
+t172,crecimiento,MARKETING,Diseños Media Kit,En curso,Alta,2025-10-10,Mile
+t173,crecimiento,MARKETING,One Pager,Sin empezar,Alta,,
+t174,crecimiento,MARKETING,Musica,En curso,Alta,2025-01-31,
+t175,crecimiento,MARKETING,Cine,Sin empezar,Baja,,
+t176,crecimiento,MARKETING,Dir / Prod Digital,Sin empezar,Alta,,
+t177,crecimiento,MARKETING,Publi,Sin empezar,Alta,,
+t178,crecimiento,MARKETING,Roster,Sin empezar,Baja,,
+t179,crecimiento,MARKETING,Moda,En curso,Baja,,
+t180,crecimiento,MARKETING,Virtual Prod,Sin empezar,,,
+t181,crecimiento,MARKETING,Lab,Sin empezar,,,
+t182,crecimiento,MARKETING,IA,Sin empezar,,,
+t183,crecimiento,MARKETING,Demos,Sin empezar,,,
+t184,crecimiento,MARKETING,Framer para landings,Sin empezar,,2025-09-26,
+t185,crecimiento,MARKETING,Post Producción,En curso,Alta,,
+t186,crecimiento,MARKETING,Creative Prod. PARTNER/ Growth/Innovación,Sin empezar,Alta,,
+t187,crecimiento,MARKETING,Actualizar proyectos Web,En curso,Alta,2025-10-24,Mile y Maya
+t188,crecimiento,MARKETING,Seleccionar nueva tanda,Listo,Alta,2025-04-12,
+t189,crecimiento,MARKETING,Publicación,Listo,Alta,2025-04-30,
+t190,crecimiento,MARKETING,Reels,En curso,Alta,,
+t191,crecimiento,MARKETING,CGI,Sin empezar,,,
+t192,crecimiento,MARKETING,Packshots / DEMO,Sin empezar,,,
+t193,crecimiento,MARKETING,Publicidad,Sin empezar,,,
+t194,crecimiento,MARKETING,Deportes,Sin empezar,,,
+t195,crecimiento,MARKETING,IA,Sin empezar,Alta,2025-10-22,Mile
+t196,crecimiento,MARKETING,Ads,En pausa,Media,,
+t197,crecimiento,MARKETING,Calendarizar contenido,Planificación,,,
+t198,crecimiento,MARKETING,Ejecutar estrategia de redes,Planificación,,,
+t199,crecimiento,MARKETING,Subir trabajos a la web (NO cumplido),Planificación,,,
+t200,crecimiento,,COMERCIAL,Sin empezar,,,
+t201,crecimiento,COMERCIAL,Mailing clientes,En curso,Alta,2025-10-27,TEAM
+t202,crecimiento,COMERCIAL,Registrar vrevo,Listo,,,
+t203,crecimiento,COMERCIAL,Armar material categorizado por tipo de cliente/rubro,Sin empezar,,,
+t204,crecimiento,COMERCIAL,Completar planilla con contactos,Listo,,,
+t205,crecimiento,COMERCIAL,Seleccionar lote para segunda semana (15),Sin empezar,,,
+t206,crecimiento,COMERCIAL,Escribir mensajes,En curso,,,
+t207,crecimiento,COMERCIAL,Seleccionar lote para primera semana (5-10),Listo,,,
+t208,crecimiento,COMERCIAL,Leads,Planificación,,,
+t209,crecimiento,COMERCIAL,Seguimiento a leads existentes (ej. cliente 14 meses),Planificación,,,
+t210,crecimiento,COMERCIAL,Crear base de datos (CRM simple),Planificación,,,
+t211,crecimiento,COMERCIAL,Generar leads de forma sistemática (NO logrado),Planificación,,,
+t212,crecimiento,COMERCIAL,Organizar contactos actuales,Planificación,,,
+t213,crecimiento,COMERCIAL,Actualizar Lista Clientes,En pausa,Media,2025-10-06,TEAM
+t214,crecimiento,COMERCIAL,Listado Productoras,Planificación,,,
+t215,crecimiento,COMERCIAL,Listado de leads,Planificación,,,
+t216,crecimiento,COMERCIAL,Listado Mails Luciana Landia,Planificación,,,
+t217,crecimiento,COMERCIAL,Listado Agencias,Planificación,,,
+t218,crecimiento,COMERCIAL,Lista de Agencias Gato,Planificación,,,
+t219,crecimiento,COMERCIAL,Traer la lista a Notion y seguirla,Sin empezar,,,
+t220,crecimiento,COMERCIAL,Escribirles un msjito,Listo,,,
+t221,crecimiento,COMERCIAL,Seguir gente clave,Listo,,,
+t222,crecimiento,COMERCIAL,Listado Proovedores,En pausa,Media,2025-10-05,Mile y Knd
+t223,crecimiento,COMERCIAL,Completar listado,En curso,,,
+t224,crecimiento,COMERCIAL,Ordenar listado con toda la info,Sin empezar,,,
+t225,crecimiento,,INNOVACION,Sin empezar,,,
+t226,crecimiento,INNOVACION,IA,Planificación,,,
+t227,crecimiento,INNOVACION,Mejorar claridad de briefs,Planificación,,,
+t228,crecimiento,INNOVACION,Trabajar con NT en modelos híbridos,Planificación,,,
+t229,crecimiento,INNOVACION,Entender límites reales de IA,Planificación,,,
+t230,crecimiento,INNOVACION,Consolidar IA como vertical principal,Planificación,,,
+t231,crecimiento,INNOVACION,Evaluar mejor proyectos IA antes de aceptarlos,Planificación,,,
+t232,crecimiento,INNOVACION,Integrar IA + producción tradicional,Planificación,,,
+t233,crecimiento,INNOVACION,Desarrollar oferta clara,Planificación,,,
+t234,crecimiento,INNOVACION,Desarrollar pricing híbrido con NT,Planificación,,,
+t235,crecimiento,INNOVACION,Crear guía para directores (pendiente),Planificación,,,
+t236,crecimiento,INNOVACION,Definir qué proyectos IA aceptar o no,Planificación,,,
+t237,crecimiento,INNOVACION,Definir estrategia de IA del estudio,Planificación,,,

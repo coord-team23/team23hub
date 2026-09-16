@@ -299,16 +299,12 @@
 
 <div id="toast" role="status"></div>
 
+<script src="design-system/config.js"></script>
 <script>
 /* ================================================================
    CONFIG — solo Supabase. Esta página NO tiene claves de n8n:
    los proveedores solo leen sus proyectos (lo garantiza la base).
 ================================================================ */
-const CONFIG = {
-  SUPABASE_URL: "https://muvmrkacjhygfuialpyn.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI",
-  N8N_BASE: "https://coordteam23.app.n8n.cloud"
-};
 
 const ETAPAS = ["por_activarse","activo","entregando","cierre","completado"];
 const ETIQ = {por_activarse:"Pre-producción",activo:"Ejecutando",entregando:"Entregando",cierre:"Listo para cierre",completado:"Completado"};
