@@ -443,10 +443,21 @@ async function api(path, opts={}){
   return r.json();
 }
 
+/* La planilla puede no tener todavía la columna "sector" (la carga inicial se
+   hizo sin ella). Para que esas tareas no queden fuera de todos los sectores y
+   desaparezcan de pantalla, se completa con la clasificación que ya hicimos,
+   cruzando por id. Lo que no matchea cae en "Sin sector" y se ve igual. */
+let _sectorPorId = null;   /* se arma al vuelo: SEED se declara más abajo en este mismo script */
+function completarSector(t){
+  if(!_sectorPorId) _sectorPorId = Object.fromEntries(SEED.filter(s=>s.sector).map(s=>[s.id, s.sector]));
+  if(!t.sector) t.sector = _sectorPorId[t.id] || "";
+  return t;
+}
+
 async function loadTasks(){
   if(DEMO){ tasks = SEED.slice(); return; }
   const data = await api("/webhook/team23/admin-tasks");
-  tasks = data.tasks || [];
+  tasks = (data.tasks || []).map(completarSector);
 }
 
 let toastTimer;
@@ -881,8 +892,12 @@ function render(){
     /* dentro de cada pilar, las raíces se agrupan por sector (el área real del
        organigrama del estudio) y esos sectores se muestran en un orden fijo,
        no alfabético ni por como vinieron en la planilla */
-    const sectoresHTML = SECTORES[p.key].map(sectorName => {
-      const raicesSector = raices.filter(r => r.sector === sectorName);
+    /* lo que no cae en ninguno de los sectores oficiales (una tarea nueva, o una
+       fila de la planilla sin sector cargado) va al final en vez de perderse */
+    const sectoresPilar = SECTORES[p.key];
+    const sinSector = raices.filter(r => !sectoresPilar.includes(r.sector));
+    const sectoresHTML = [...sectoresPilar, ...(sinSector.length ? ["Sin sector"] : [])].map(sectorName => {
+      const raicesSector = sectorName === "Sin sector" ? sinSector : raices.filter(r => r.sector === sectorName);
       const grupos = raicesSector.map(grupoHTML).filter(Boolean).join("");
       if(filtrando && !grupos) return "";
       return `<div class="sector">

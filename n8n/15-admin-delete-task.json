@@ -59,7 +59,7 @@
         "sheetName": {
           "__rl": true,
           "mode": "name",
-          "value": "AdminTasks"
+          "value": "Admin"
         },
         "options": {}
       },
@@ -116,7 +116,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const meta = $('Sheets: metadata').first().json;\nconst s = (meta.sheets || []).find(x => x.properties && x.properties.title === 'AdminTasks');\nif (!s) throw new Error('No encuentro la pestaña AdminTasks');\nconst gid = s.properties.sheetId;\nconst rn = $('Buscar tarea').first().json.row_number;\nreturn [{ json: { requests: [{ deleteDimension: { range: { sheetId: gid, dimension: 'ROWS', startIndex: rn - 1, endIndex: rn } } }] } }];"
+        "jsCode": "const meta = $('Sheets: metadata').first().json;\nconst s = (meta.sheets || []).find(x => x.properties && x.properties.title === 'Admin');\nif (!s) throw new Error('No encuentro la pestaña Admin');\nconst gid = s.properties.sheetId;\nconst rn = $('Buscar tarea').first().json.row_number;\nreturn [{ json: { requests: [{ deleteDimension: { range: { sheetId: gid, dimension: 'ROWS', startIndex: rn - 1, endIndex: rn } } }] } }];"
       },
       "id": "d5000015-0000-0000-0000-000000000006",
       "name": "Armar borrado",
