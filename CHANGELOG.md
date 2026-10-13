@@ -2,6 +2,24 @@
 
 Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
 
+## 2026-10-13 — Un solo camino de alta, barra de candidato y pie de tarea alineado
+
+### Alta de proyecto: se va la Opción 1 (kick off manual)
+
+`+ NUEVO PROYECTO` abre directo el formulario desde debrief (IA). Se eliminaron el selector de opciones (`#ovChooser`), el wizard de planificación (`#ovKickOff`, `KICKOFF_QUESTIONS`) y el formulario manual (`#ovNew`, `createProject()` y todo el estado `np*`). `assignStore`, `taskDatesStore`, `autoStore` y `linksStore` ya no tienen rama `np`. Son ~330 líneas menos en `index.html`.
+
+### Bloque de tarea (ficha y armado)
+
+- **Una barra por candidato** (`.person-bar`): a la izquierda el estado y la decisión (Candidato · ✓ Confirmar · ✕ Rechazar), a la derecha la propuesta por mail, separadas por una raya. Antes eran dos filas de pastillas de 24px pegadas entre sí.
+- **Enviar la propuesta ya no parece un toggle**: en la ficha es `PROPUESTA · [✉ Enviar por mail]` (negro = acción) + `✎ Editar mail`; enviada, muestra `Propuesta enviada <fecha>` y un `↺ Reenviar` que antes existía en `mailSend()` pero no tenía botón. En el armado, donde sí es un sí/no, es un **switch** (`.sw`) con el destinatario al lado.
+- **Fechas y notas en dos columnas alineadas**: `.ab-foot` es una grilla con etiqueta arriba (INICIO · FIN · NOTAS). Sin nota, un botón punteado `+ agregar nota` de la misma altura que los inputs de fecha; con nota, la caja con ✎.
+- Escala única para controles chicos: `.mini-btn` 30px (34 en mobile), `.chipst` 26px, `.mini-btn.ico` para ✎ / ↺.
+- `.modal:focus{outline:none}`: el anillo de foco del navegador alrededor del modal entero (a11y.js enfoca el contenedor al abrirlo).
+
+### Creación: sin `id` no se agrega
+
+Si `/webhook/team23/create` responde sin `id` (wf3 cortado a mitad, p. ej. Frame.io con credencial vencida), el hub avisa en vez de agregar un proyecto fantasma que después devolvía HTTP 500 en cada edición. wf3 además saltea Frame si falla (`¿Frame creado?` / `¿Carpeta POST?`) y devuelve `avisos` que el hub muestra en el toast.
+
 ## 2026-09-14 — Auditoría: login validado en n8n, config compartida, admin arreglado
 
 ### Seguridad: n8n valida la sesión de Supabase en cada webhook

@@ -178,6 +178,10 @@
     width:min(920px,100%);padding:var(--space-9) var(--space-7) var(--space-5);position:relative;
     box-shadow:10px 10px 0 var(--ink);
   }
+  /* a11y.js enfoca el contenedor del diálogo al abrirlo: el anillo de foco del
+     navegador alrededor de todo el modal no aporta nada (el modal ya ES lo que
+     está en foco) y rompe el borde negro */
+  .modal:focus{outline:none}
   /* ficha de proyecto: modal más ancho + contenido escalado al 90% */
   #ovDetail .modal{width:min(1080px,100%)}
   #detailBody{zoom:0.9}
@@ -194,11 +198,8 @@
   }
   .modal .kicker{font-size:var(--fs-caption);letter-spacing:.16em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin-bottom:var(--space-5)}
 
-  /* ---------- wizard kick off ---------- */
-  #ovKickOff .modal{padding-bottom:120px}
-  /* el chooser (elegir opción 1/2) se queda grande; kick off y formularios van a la escala de la ficha de detalle */
-  #ovChooser .modal{zoom:1.4}
-  #ovKickOff .modal,#ovNew .modal,#ovNew2 .modal{zoom:0.9}
+  /* el formulario de alta va a la misma escala que la ficha de detalle */
+  #ovNew2 .modal{zoom:0.9}
   main{max-width:none}
   .usr-table{width:100%;border-collapse:collapse;font-size:13.5px}
   .usr-table th{text-align:left;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);padding:6px 8px;border-bottom:2px solid var(--ink)}
@@ -206,23 +207,6 @@
   .usr-badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.08em;padding:3px 10px;border-radius:999px;border:1.5px solid var(--ink)}
   .usr-badge.in{background:var(--ink);color:#fff}
   .usr-badge.out{background:#fff;color:var(--ink)}
-  .kickoff-q{
-    font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .727);color:var(--gray);
-    text-transform:uppercase;letter-spacing:var(--tracking-tight);line-height:1.05;margin-bottom:var(--space-7);
-    white-space:pre-line;
-  }
-  .kickoff-check{
-    display:flex;align-items:center;gap:var(--space-4);cursor:pointer;
-    font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .727);color:var(--gray);
-    text-transform:uppercase;letter-spacing:var(--tracking-tight);
-  }
-  .kickoff-check input[type=checkbox],.kickoff-check input[type=radio]{width:30px;height:30px;cursor:pointer;flex:none}
-  .kickoff-sinos{display:flex;gap:var(--space-9);flex-wrap:wrap}
-  .kickoff-actions{
-    position:absolute;left:var(--space-7);right:var(--space-7);bottom:var(--space-7);
-    display:flex;align-items:center;justify-content:space-between;
-  }
-
   .fgroup{margin-bottom:var(--space-7)}
   .glabel{
     font-size:var(--fs-caption);letter-spacing:.12em;font-weight:var(--weight-bold);text-transform:uppercase;
@@ -314,7 +298,10 @@
   .finales-btn.on:hover{background:#d40000;border-color:#d40000}
 
   /* ---------- candidatos (equipo propuesto por tarea) ---------- */
-  .chipst{font-size:9.5px;font-weight:var(--weight-bold);letter-spacing:.08em;text-transform:uppercase;border-radius:var(--radius-full);padding:3px 9px;border:1.5px solid var(--ink)}
+  /* Chips, botones chicos y switch comparten una sola escala de alto (26 / 30px):
+     una fila de controles tiene que leerse como una fila, no como pastillas sueltas
+     de tamaños distintos. */
+  .chipst{display:inline-flex;align-items:center;min-height:26px;font-size:10px;font-weight:var(--weight-bold);letter-spacing:.1em;text-transform:uppercase;border-radius:var(--radius-full);padding:0 10px;border:1.5px solid var(--ink);line-height:1;white-space:nowrap}
   .chipst.cand{border-color:var(--gray);color:var(--gray)}
   .chipst.conf{background:var(--ink);color:#fff}
   .chipst.rech{border-color:var(--red);color:var(--red);text-decoration:line-through}
@@ -324,12 +311,40 @@
   .assign-min .nm{font-size:12.5px;color:var(--gray);text-decoration:line-through;flex:1;min-width:120px}
   /* hueco de la cruz de borrar: en la ficha no se borra a nadie, se cambia de estado */
   .icon-slot{display:block;width:34px;height:38px}
-  .mini-btn{font-family:var(--font-primary);font-size:11px;font-weight:var(--weight-bold);border:2px solid var(--ink);border-radius:var(--radius-full);padding:4px 10px;background:#fff;cursor:pointer;color:var(--ink)}
+  .mini-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:30px;font-family:var(--font-primary);font-size:11.5px;font-weight:var(--weight-bold);letter-spacing:.02em;line-height:1;border:2px solid var(--ink);border-radius:var(--radius-full);padding:0 12px;background:#fff;cursor:pointer;color:var(--ink);white-space:nowrap}
   .mini-btn:hover{background:var(--ink);color:#fff}
   .mini-btn.no{border-color:var(--red);color:var(--red)}
   .mini-btn.no:hover{background:var(--red);color:#fff}
-  .mini-btn.on{background:var(--ink);color:#fff}
-  .cand-state{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-2px 0 10px 2px}
+  /* negro = acción principal de la fila (misma lógica que .btn.primary); .on queda por compatibilidad */
+  .mini-btn.on,.mini-btn.primary{background:var(--ink);color:#fff}
+  .mini-btn.primary:hover{background:#2b2b2b;border-color:#2b2b2b}
+  /* sólo ícono (✎ ↺): círculo del mismo alto que el resto */
+  .mini-btn.ico{width:30px;padding:0;font-size:13px}
+
+  /* Debajo de cada candidato va UNA barra: a la izquierda su estado y la decisión
+     (confirmar / rechazar), a la derecha la propuesta por mail. Antes eran dos filas
+     sueltas de pastillas de 24px pegadas entre sí, y no se entendía qué era estado,
+     qué era acción y qué era un sí/no. */
+  .person-bar{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;margin:6px 0 14px}
+  .person-bar:not(:has(.pb-state:not(:empty),.pb-mail:not(:empty))){display:none}
+  .pb-state,.pb-mail{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pb-state:empty,.pb-mail:empty{display:none}
+  .pb-state:not(:empty) + .pb-mail:not(:empty){padding-left:18px;border-left:2px solid var(--hair)}
+  .pb-lbl{font-size:10.5px;font-weight:var(--weight-bold);letter-spacing:.12em;text-transform:uppercase;color:var(--gray);white-space:nowrap}
+  .pb-sent{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--gray);white-space:nowrap}
+  .pb-sent b{color:var(--ink)}
+
+  /* Switch: en el armado la propuesta se manda al crear el proyecto, así que es un
+     sí/no y se ve como un sí/no — no como un botón negro que parecía "apretado". */
+  .sw{display:inline-flex;align-items:center;gap:9px;position:relative;cursor:pointer;user-select:none;font-size:12px;font-weight:var(--weight-bold);color:var(--ink)}
+  .sw input{position:absolute;opacity:0;width:0;height:0;margin:0}
+  .sw-track{position:relative;flex:none;width:38px;height:22px;border:2px solid var(--ink);border-radius:var(--radius-full);background:#fff;transition:background-color var(--dur-fast) var(--ease-out)}
+  .sw-knob{position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--ink);transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) var(--ease-out)}
+  .sw.on .sw-track{background:var(--ink)}
+  .sw.on .sw-knob{background:#fff;transform:translateX(16px)}
+  .sw:not(.on) .sw-lbl{color:var(--gray)}
+  .sw input:focus-visible + .sw-track{outline:3px solid var(--red);outline-offset:2px}
+  .sw-to{font-size:12px;color:var(--gray)}
   .pill.warn{border-color:var(--red);color:var(--red)}
 
   /* ---------- gate de activación ---------- */
@@ -406,19 +421,18 @@
   .team-line.off .nm{color:var(--gray);text-decoration:line-through}
   .team-line.off .meta{color:var(--gray)}
 
-  /* pie: fechas acotadas y notas en una línea cuando están vacías */
-  .ab-foot{display:flex;gap:var(--space-5);flex-wrap:wrap;align-items:flex-end;margin-top:var(--space-4)}
-  .ab-dates{display:flex;flex-direction:column;gap:var(--space-2);flex:none}
+  /* pie: fechas y notas como dos columnas que arrancan a la misma altura, con la
+     misma etiqueta arriba (INICIO · FIN · NOTAS). Antes la caja de notas colgaba
+     del fondo de la fila y quedaba desalineada con los inputs de fecha. */
+  .ab-foot{display:grid;grid-template-columns:auto minmax(220px,1fr);gap:var(--space-5) var(--space-7);align-items:start;margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--rule-functional,var(--hair))}
+  .ab-lbl{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:var(--weight-bold);color:var(--gray);margin-bottom:6px}
+  .ab-dates{display:flex;flex-direction:column;gap:var(--space-2);min-width:0}
   .ab-dates .rango{display:flex;gap:var(--space-3);align-items:flex-end}
-  .ab-dates .addline{padding:2px 0;font-size:12px}
-  .ab-dates label{display:block;font-size:var(--fs-caption);letter-spacing:.08em;text-transform:uppercase;color:var(--gray);margin-bottom:4px}
+  .ab-dates .addline{padding:2px 0;font-size:12px;align-self:flex-start}
   .ab-dates input{width:158px}
-  .ab-notes{flex:1;min-width:200px}
+  .ab-notes{min-width:0}
 
   /* ---------- mails de propuesta a candidatos ---------- */
-  .mail-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-2px 0 10px 2px}
-  .mail-row .who{font-size:11px;font-weight:var(--weight-bold);letter-spacing:.04em;color:var(--gray)}
-  .mail-row .who.off{text-decoration:line-through}
   #ovMail .modal{width:min(860px,100%)}
   .mail-prev{width:100%;height:340px;border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);background:#fff;display:block}
   .mail-adv{margin-bottom:var(--space-7)}
@@ -427,15 +441,6 @@
   .mail-adv textarea{min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.5}
   .mail-warn{font-size:12.5px;color:var(--red);font-weight:var(--weight-bold);margin:8px 0 6px;line-height:1.45}
 
-  /* ---------- selector de flujo de creación (kick off vs. debrief IA) ---------- */
-  .opt-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
-  @media(min-width:640px){.opt-grid{grid-template-columns:1fr 1fr}}
-  .opt-card{border:2px solid var(--ink);border-radius:var(--radius-lg);padding:20px;cursor:pointer;background:#fff;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:8px;text-align:left}
-  .opt-card:hover{transform:translateY(-3px);box-shadow:6px 6px 0 var(--ink)}
-  .opt-card .opt-num{font-size:10px;letter-spacing:.2em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--red)}
-  .opt-card h3{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:19px;text-transform:uppercase;letter-spacing:var(--tracking-tight);line-height:1.05}
-  .opt-card p{font-size:12.5px;color:var(--gray);line-height:1.45;flex:1;margin:0}
-  .opt-card .opt-cta{font-size:12px;font-weight:var(--weight-bold)}
   .frame-cta{
     display:flex;align-items:center;justify-content:center;text-align:center;
     border:2px solid var(--ink);border-radius:var(--radius-sm);background:var(--ink);color:#fff !important;
@@ -698,7 +703,8 @@
     .icon-slot{width:44px;height:42px}
 
     /* objetivos táctiles: 4px de alto no se acierta con el dedo */
-    .mini-btn{min-height:34px;padding:6px 12px;font-size:12px}
+    .mini-btn{min-height:34px;padding:0 14px;font-size:12px}
+    .mini-btn.ico{width:34px;padding:0}
     .trk-toggle{min-height:26px;padding:4px 8px;font-size:10px}
 
     /* popups: bajar los altos fijos para no obligar a scrollear tanto */
@@ -709,10 +715,13 @@
     .mail-adv textarea{min-height:120px}
 
     /* controles de fila: que no queden apretados contra el borde */
-    .mail-row,.cand-state,.assign-min{gap:8px}
+    .person-bar,.assign-min{gap:8px 12px}
+    /* sin lugar para dos grupos en una fila: la propuesta baja a su propio renglón, sin la raya */
+    .pb-state:not(:empty) + .pb-mail:not(:empty){padding-left:0;border-left:none;flex-basis:100%}
 
     /* mails y URLs largos empujaban el layout en lugar de cortarse */
-    .mail-row .who,.assign-min .nm,.modal .kicker,.chk-item .txt,.sx-body{overflow-wrap:anywhere}
+    .sw-to,.pb-sent,.assign-min .nm,.modal .kicker,.chk-item .txt,.sx-body{overflow-wrap:anywhere}
+    .pb-sent{white-space:normal}
     .assign-min .nm{min-width:0}
 
     /* tabs: un poco más de alto para el dedo */
@@ -742,11 +751,9 @@
     .team-line .meta{grid-area:2 / 1 / 3 / 3}
     .ab-head{padding:9px var(--space-4)}
     .ab-body{padding:var(--space-2) var(--space-4) var(--space-4)}
-    .ab-foot{gap:var(--space-4)}
-    .ab-dates{flex:1 1 100%}
-    .ab-dates>div{flex:1}
+    .ab-foot{grid-template-columns:1fr;gap:var(--space-4)}
+    .ab-dates .rango>div{flex:1}
     .ab-dates input{width:100%}
-    .ab-notes{flex:1 1 100%;min-width:0}
     .ab-when{margin-left:0;flex-basis:100%}
 
     /* Tabla de fases: a 540px las columnas quedaban tan angostas que los inputs de
@@ -886,14 +893,15 @@
   .sx-empty{font-size:13px;color:var(--gray)}
 
   /* ---------- notas de tarea / fase: se leen enteras, se editan en popup ---------- */
-  .nota-box{border:1.5px solid var(--hair);border-radius:var(--radius-sm);padding:8px 10px;margin-top:var(--space-3)}
-  .nota-box.vacio{display:flex;align-items:center;gap:8px;margin-top:0}
-  .nota-box.tiene{margin-top:0}
-  .nota-box.tiene{border-color:var(--ink)}
-  .nota-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-  .nota-head .lbl{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--gray);flex:1}
-  .nota-txt{font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
-  .nota-txt.vacia{color:var(--gray);font-style:italic}
+  /* vacía: un botón punteado de la misma altura que los inputs de fecha (46px), así
+     la columna de notas arranca alineada con INICIO / FIN en vez de colgar abajo */
+  .nota-add{display:flex;align-items:center;width:100%;min-height:46px;border:2px dashed var(--rule-functional,var(--hair));border-radius:var(--radius-md);background:#fff;padding:0 14px;font-family:var(--font-secondary);font-size:12px;font-weight:var(--weight-bold);color:var(--gray);cursor:pointer;text-align:left}
+  .nota-add:hover{border-color:var(--ink);border-style:solid;color:var(--ink)}
+  .nota-box{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--ink);border-radius:var(--radius-md);padding:10px 12px}
+  .nota-box.vacio{min-height:46px;align-items:center;border-style:dashed;border-color:var(--rule-functional,var(--hair))}
+  .nota-box .mini-btn{flex:none}
+  .nota-txt{flex:1;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;padding-top:5px}
+  .nota-txt.vacia{color:var(--gray);font-style:italic;padding-top:0}
   .cal-nota{cursor:pointer;text-align:left}
   .cal-nota .txt{font-size:12.5px;line-height:1.4;max-height:2.8em;overflow:hidden;display:block}
   .cal-nota .txt.vacia{color:var(--gray)}
@@ -1021,59 +1029,6 @@
   </div>
 </footer>
 
-<!-- ============ MODAL: NUEVO PROYECTO ============ -->
-<div class="overlay" id="ovNew">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newTitle">
-    <button class="close" onclick="closeNew()" aria-label="Cerrar">✕</button>
-    <h2 id="newTitle">Nuevo proyecto</h2>
-    <div class="kicker">Al crearlo se genera Drive + Frame.io + documentos, automáticamente</div>
-
-    <div class="fgroup">
-      <div class="glabel">Datos externos</div>
-      <div class="frow">
-        <div><label class="f">Nombre de la campaña *</label><input type="text" id="npNombre" placeholder="BRAHMA - Te la mereSED"></div>
-        <div><label class="f">Productora</label><input type="text" id="npProductora" placeholder="LANDIA / TMMT"></div>
-        <div><label class="f">Director</label><input type="text" id="npDirector" placeholder=""></div>
-        <div><label class="f">Cliente *</label><input type="text" id="npCliente" placeholder="Brahma"></div>
-        <div><label class="f">Agencia</label><input type="text" id="npAgencia" placeholder=""></div>
-      </div>
-      <div id="sx-np"></div>
-    </div>
-
-    <div class="fgroup">
-      <div class="glabel">Equipo interno <small>nombre + mail (para los avisos de calendario)</small></div>
-      <div class="frow">
-        <div><label class="f">Productor Ejecutivo *</label><input type="text" id="npEpNombre" autocomplete="off" oninput="acOpenRol(this,'ep','#npEpEmail')" onfocus="acRolFocus(this,'ep','#npEpEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
-        <div><label class="f">Mail EP *</label><input type="email" id="npEpEmail" placeholder="ep@team23.online"></div>
-      </div>
-      <div class="frow">
-        <div><label class="f">Productor</label><input type="text" id="npProdNombre" autocomplete="off" oninput="acOpenRol(this,'prod','#npProdEmail')" onfocus="acRolFocus(this,'prod','#npProdEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
-        <div><label class="f">Mail Productor</label><input type="email" id="npProdEmail" placeholder="prod@team23.online"></div>
-      </div>
-      <div class="frow">
-        <div><label class="f">Coordinador</label><input type="text" id="npCoordNombre" autocomplete="off" oninput="acOpenRol(this,'coord','#npCoordEmail')" onfocus="acRolFocus(this,'coord','#npCoordEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
-        <div><label class="f">Mail Coordinador</label><input type="email" id="npCoordEmail" placeholder="coord@team23.online"></div>
-      </div>
-    </div>
-
-    <div class="fgroup">
-      <div class="glabel">Tareas TEAM 23 <small>elegí las que aplican</small></div>
-      <div class="task-pills" id="npTasks"></div>
-      <div id="npAssigns"></div>
-      <div id="npCalPrev"></div>
-    </div>
-
-    <div class="fgroup">
-      <div class="glabel">Automatizaciones <small>vienen todas activadas; desactivá solo si hace falta</small></div>
-      <div id="npAuto"></div>
-    </div>
-
-    <div class="actions">
-      <button class="btn" onclick="closeNew()">Cancelar</button>
-      <button class="btn primary" id="btnCreate" onclick="createProject()">Crear proyecto</button>
-    </div>
-  </div>
-</div>
 
 <!-- ============ MODAL: DETALLE ============ -->
 <div class="overlay" id="ovDetail">
@@ -1083,21 +1038,6 @@
   </div>
 </div>
 
-<!-- ============ MODAL: WIZARD PLANIFICACIÓN KICK OFF ============ -->
-<div class="overlay" id="ovKickOff">
-  <div class="modal" role="dialog" aria-modal="true">
-    <button class="close" onclick="closeModal('ovKickOff')" aria-label="Cerrar">✕</button>
-    <h2>Planificación Kick Off</h2>
-    <div class="kicker" id="kickOffHeader">Paso 1 de 6</div>
-
-    <div id="kickOffContent" style="margin:var(--space-9) 0 0"></div>
-
-    <div class="kickoff-actions">
-      <button class="btn" id="kickOffBtnBack" onclick="kickOffBack()" style="display:none">Atrás</button>
-      <button class="btn primary" id="kickOffBtnNext" onclick="kickOffNext()" disabled style="margin-left:auto">Siguiente</button>
-    </div>
-  </div>
-</div>
 
 <!-- ============ MODAL: GATE DE ACTIVACIÓN ============ -->
 <div class="overlay" id="ovGate">
@@ -1150,34 +1090,13 @@
   </div>
 </div>
 
-<div class="overlay" id="ovChooser">
-  <div class="modal" role="dialog" aria-modal="true" style="width:min(720px,100%)">
-    <button class="close" onclick="closeModal('ovChooser')" aria-label="Cerrar">✕</button>
-    <h2>Nuevo proyecto</h2>
-    <div class="kicker">¿Cómo lo querés crear?</div>
-    <div class="opt-grid">
-      <div class="opt-card" onclick="chooseOption(1)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseOption(1)}">
-        <div class="opt-num">Opción 1</div>
-        <h3>Kick off manual</h3>
-        <p>El checklist de planificación paso a paso (Discord, timing, storyboard, Notion, adelanto) y después el formulario de siempre.</p>
-        <span class="opt-cta">Empezar →</span>
-      </div>
-      <div class="opt-card" onclick="chooseOption(2)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseOption(2)}">
-        <div class="opt-num">Opción 2</div>
-        <h3>Desde debrief (IA)</h3>
-        <p>Mismo checklist de planificación primero. Después pegás el debrief y la IA precarga nombre, cliente, síntesis, tareas y timeline. Revisás, cargás candidatos y creás.</p>
-        <span class="opt-cta">Empezar →</span>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- ============ MODAL: NUEVO PROYECTO (OPCIÓN 2 · DEBRIEF IA) ============ -->
+<!-- ============ MODAL: NUEVO PROYECTO (DEBRIEF IA) ============ -->
 <div class="overlay" id="ovNew2">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="closeNew2()" aria-label="Cerrar">✕</button>
     <h2>Nuevo proyecto</h2>
-    <div class="kicker">Opción 2 · Desde debrief — la IA arma el borrador, vos lo revisás</div>
+    <div class="kicker">Desde el debrief — la IA arma el borrador, vos lo revisás</div>
 
     <div class="fgroup" id="n2DebriefStep">
       <div class="glabel">1 · Debrief <small>pegá el documento completo</small></div>
@@ -1723,11 +1642,6 @@ const VIEW_TITLES = {proyectos:"Proyectos", calendario:"Calendario", equipo:"Equ
 let currentView = "dashboard";
 
 /* ---------------- kick off wizard ---------------- */
-let kickOffStep = 1;
-let kickOffChecks = {};
-let kickOffResumen = "";
-let kickOffLinks = {};
-
 function onProjectsLoaded(){ renderAll(); renderCurrentView(); }
 
 function renderCurrentView(){
@@ -1786,13 +1700,12 @@ const AUTO_DEFS = [
   ["discord", "Crear canales de Discord",  "Categoría privada, canales del proyecto y aviso inicial al equipo"]
 ];
 const autoDefaults = () => ({ drive:true, frame:true, discord:true });
-let npAuto = autoDefaults();
 let n2Auto = autoDefaults();
-function autoStore(ctx){ return ctx==="n2" ? n2Auto : npAuto; }
+function autoStore(ctx){ return n2Auto; }   /* queda un solo formulario de alta (n2) */
 /* Links pegados a mano cuando se elige no crear Drive o Frame automáticamente.
    Viajan en el body y wf3 los usa para lo que no generó. */
-let npLinks = {}, n2Links = {};
-function linksStore(ctx){ return ctx==="n2" ? n2Links : npLinks; }
+let n2Links = {};
+function linksStore(ctx){ return n2Links; }
 function setManualLink(ctx, k, v){ linksStore(ctx)[k] = String(v||"").trim(); }
 const AUTO_LINK = { drive:["driveRoot","Link de la unidad de Drive","https://drive.google.com/drive/folders/..."],
                     frame:["frameio","Link del proyecto de Frame.io","https://next.frame.io/project/..."] };
@@ -1947,25 +1860,26 @@ function mailRowInner(r, tarea, i, ctx){
   const tq = String(tarea).replace(/'/g,"\\'");
   const editado = mailIsEdited(r) ? '<span class="chipst conf">Editado</span>' : "";
   const editar = `<button class="mini-btn" onclick="mailOpen('${tq}',${i},'${ctx}')">✎ Editar mail</button>`;
+  /* Lo que devuelve va adentro de .pb-mail (la mitad derecha de la barra de la persona). */
   if(ctx==="dt"){
-    /* La propuesta es para invitar a alguien que todavía no dijo que sí. Si ya se
-       la mandaste, o si la persona ya está confirmada / activa / inactiva en el
-       proyecto, el bloque no tiene nada que hacer ahí. La fecha del envío no se
-       pierde: pasa al chip de estado. */
-    if(r.mailSentAt || r.estado !== "candidato") return "";
-    /* sin la etiqueta "Propuesta" al lado, y en blanco: en negro parecía un estado
-       encendido y no un botón */
-    return `<div class="mail-row">
-      <button class="mini-btn" onclick="mailSend('${tq}',${i})">✉ Enviar propuesta por email</button>
-      ${editar}${editado}
-    </div>`;
+    /* La propuesta es para invitar a alguien que todavía no dijo que sí: si la
+       persona ya está confirmada / activa / inactiva, acá no hay nada que hacer. */
+    if(r.estado !== "candidato") return "";
+    /* ya enviada: la fecha queda a la vista, y se puede reenviar */
+    if(r.mailSentAt) return `<span class="pb-sent">✉ Propuesta enviada <b>${esc(mailFechaCorta(r.mailSentAt))}</b></span>
+      <button class="mini-btn" onclick="mailSend('${tq}',${i})" title="Volver a enviar la propuesta">↺ Reenviar</button>${editar}${editado}`;
+    /* sin enviar: la etiqueta dice qué es y el botón negro dice qué hace */
+    return `<span class="pb-lbl">Propuesta</span>
+      <button class="mini-btn primary" onclick="mailSend('${tq}',${i})">✉ Enviar por mail</button>${editar}${editado}`;
   }
+  /* armado: se manda sola al crear el proyecto, así que acá es un sí/no */
   const on = r.mailOn !== false;
-  return `<div class="mail-row">
-    <span class="who ${on?"":"off"}">✉ Propuesta a ${esc(r.email)}</span>
-    <button class="mini-btn ${on?"on":"no"}" onclick="mailToggle('${tq}',${i})" aria-pressed="${on}">${on?"Envío activado":"Envío apagado"}</button>
-    ${editar}${editado}
-  </div>`;
+  return `<label class="sw${on?" on":""}">
+      <input type="checkbox"${on?" checked":""} onchange="mailToggle('${tq}',${i})">
+      <span class="sw-track"><span class="sw-knob"></span></span>
+      <span class="sw-lbl">${on?"Mandar propuesta al crear":"No se le manda propuesta"}</span>
+    </label>
+    <span class="sw-to">→ ${esc(r.email)}</span>${editar}${editado}`;
 }
 /* el mail aparece cuando se carga la dirección: refresco solo esta fila para no perder el foco */
 function mailSlotSync(ctx, tarea, i){
@@ -2087,31 +2001,6 @@ function mailSave(){
 }
 
 /* ---------------- nuevo proyecto ---------------- */
-let npSelected = new Set();
-function renderNPTasks(){
-  $("#npTasks").innerHTML = TAREAS.map(t=>
-    `<span class="task-pill ${npSelected.has(t)?"on":""}" ${npSelected.has(t)?`style="background:${taskColor(t).bg};border-color:${taskColor(t).bd};color:${taskColor(t).fg}"`:""} onclick="toggleTask('${t}')">${t}</span>`).join("");
-  renderNPAssigns();
-}
-function toggleTask(t){
-  npSelected.has(t)? npSelected.delete(t) : npSelected.add(t);
-  renderNPTasks();
-}
-let npAssignData = {};
-let npTaskDates = {};
-let npSintesis = "";
-let npStoryboardUrl = "";
-let npTratamientoUrl = "";
-function renderNPAssigns(){
-  Object.keys(npAssignData).forEach(k=>{ if(!npSelected.has(k)) delete npAssignData[k]; });
-  Object.keys(npTaskDates).forEach(k=>{ if(!npSelected.has(k)) delete npTaskDates[k]; });
-  npSelected.forEach(t=>{
-    if(!npAssignData[t]) npAssignData[t]=[{nombre:"",email:"",discord:"",telefono:""}];
-    if(!npTaskDates[t]) npTaskDates[t]={inicio:"",fin:"",notas:""};
-  });
-  $("#npAssigns").innerHTML = [...npSelected].map(t=>assignBlockHTML(t, npAssignData[t], "np")).join("");
-  renderCreationCal("np");
-}
 function assignBlockHTML(tarea, rows, ctx){
   const td = taskDatesStore(ctx)[tarea] || {};
   const tq = String(tarea).replace(/'/g,"\\'");
@@ -2135,9 +2024,7 @@ function assignBlockHTML(tarea, rows, ctx){
   const stateInner = (r,i)=>{
     if(!dt || vacia(r)) return "";
     const b = (estado, txt, clase="") => `<button class="mini-btn ${clase}" onclick="candSet('${tq}',${i},'${estado}')">${txt}</button>`;
-    /* si se le mandó la propuesta y todavía no contestó, la fecha queda a la vista */
-    const enviado = (dt && r.estado==="candidato" && r.mailSentAt)
-      ? `<span class="who" style="margin-left:2px">✉ enviada ${esc(mailFechaCorta(r.mailSentAt))}</span>` : "";
+    /* la fecha de envío de la propuesta vive en la mitad de mail de la barra (mailRowInner) */
     if(!enCurso){
       /* pre-producción: se resuelve el candidato */
       if(!r.estado) return "";
@@ -2145,20 +2032,19 @@ function assignBlockHTML(tarea, rows, ctx){
       const c = r.estado==="confirmado" ? chip("conf","Confirmado") : chip("cand","Candidato");
       const acts = r.estado==="candidato"
         ? b("confirmado","✓ Confirmar") + b("rechazado","✕ Rechazar","no")
-        : `<button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
-      return c+acts+enviado;
+        : `<button class="mini-btn ico" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
+      return c+acts;
     }
     /* en curso: activo / inactivo. Sin estado (alta manual) cuenta como activo.
        Excepción: un candidato sigue siendo candidato — es gente que se sumó con
        el proyecto en marcha y todavía tiene que decir que sí. Si se rechaza,
        sale del cuadro igual que los rechazados de pre-producción. */
     if(r.estado==="candidato")
-      return chip("cand","Candidato")+b("confirmado","✓ Confirmar")+b("rechazado","✕ Rechazar","no")+enviado;
+      return chip("cand","Candidato")+b("confirmado","✓ Confirmar")+b("rechazado","✕ Rechazar","no");
     if(r.estado==="inactivo") return chip("inact","Inactivo")+b("confirmado","↺ Reactivar");
     return chip("conf","Activo")+b("inactivo","Desactivar","no");
   };
 
-  const stateRow = (r,i)=>{ const s = stateInner(r,i); return s ? `<div class="cand-state">${s}</div>` : ""; };
 
   const visibles = rows.map((r,i)=>({r,i})).filter(({r})=> !(enCurso && r.estado==="rechazado"));
   /* Fila compacta: quien ya está en el equipo (confirmado, sin estado, o inactivo)
@@ -2175,9 +2061,9 @@ function assignBlockHTML(tarea, rows, ctx){
         <span class="nm">${esc(r.nombre || r.email || "Sin nombre")}</span>
         ${meta.length?`<span class="meta">${esc(meta.join(" · "))}</span>`:`<span class="meta falta">sin contacto cargado</span>`}
         <span class="acts">${lockTareasCtx ? "" :
-          stateInner(r,i) + `<button class="mini-btn" onclick="personaOpen('asig','${tq}',${i})" title="Editar datos de contacto">✎</button>`}</span>
+          stateInner(r,i) + `<button class="mini-btn ico" onclick="personaOpen('asig','${tq}',${i})" title="Editar datos de contacto">✎</button>`}</span>
       </div>
-      <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>`;
+      <div class="pb-mail" id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>`;
   };
 
   const filaHTML = ({r,i})=>{
@@ -2187,7 +2073,7 @@ function assignBlockHTML(tarea, rows, ctx){
       <div class="assign-min">
         <span class="nm">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}</span>
         ${chip("rech","Rechazado")}
-        <button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>
+        <button class="mini-btn ico" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>
       </div>`;
     const quitar = (!dt || vacia(r))
       ? `<button class="icon-btn" onclick="delAssign('${ctx}','${tq}',${i})" title="Quitar">✕</button>`
@@ -2200,7 +2086,7 @@ function assignBlockHTML(tarea, rows, ctx){
         <input type="text" placeholder="Discord" value="${esc(r.discord||'')}" oninput="setAssign('${ctx}','${tq}',${i},'discord',this.value)">
         <input type="tel" placeholder="Teléfono" value="${esc(r.telefono||'')}" oninput="setAssign('${ctx}','${tq}',${i},'telefono',this.value)">
       </div>
-      <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>${stateRow(r,i)}`;
+      <div class="person-bar"><div class="pb-state">${stateInner(r,i)}</div><div class="pb-mail" id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div></div>`;
   };
   /* el rango va en el encabezado: se entiende la tarea sin leer los inputs */
   const conFechas = taskRangos(td).filter(r=>r.inicio || r.fin);
@@ -2226,8 +2112,8 @@ function assignBlockHTML(tarea, rows, ctx){
       <div class="ab-dates">
         ${taskRangos(td).map((r,ri)=>`
           <div class="rango">
-            <div><label>${ri?"Inicio "+(ri+1):"Inicio"}</label><input type="date" value="${esc(r.inicio)}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value,${ri})"></div>
-            <div><label>${ri?"Fin "+(ri+1):"Fin"}</label><input type="date" value="${esc(r.fin)}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value,${ri})"></div>
+            <div><label class="ab-lbl">${ri?"Inicio "+(ri+1):"Inicio"}</label><input type="date" value="${esc(r.inicio)}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value,${ri})"></div>
+            <div><label class="ab-lbl">${ri?"Fin "+(ri+1):"Fin"}</label><input type="date" value="${esc(r.fin)}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value,${ri})"></div>
             ${ri?`<button class="icon-btn" onclick="delRango('${ctx}','${tarea}',${ri})" title="Quitar este rango">✕</button>`:`<span class="icon-slot"></span>`}
           </div>`).join("")}
         <button class="addline" onclick="addRango('${ctx}','${tarea}')">+ agregar rango de fechas</button>
@@ -2266,7 +2152,7 @@ async function candSet(tarea, i, estado){
     toast(msg);
   }catch(e){ row.estado = prev; renderDetail(); toast("No pude guardar el cambio: "+e.message, true); }
 }
-function taskDatesStore(ctx){ return ctx==="np" ? npTaskDates : ctx==="n2" ? n2TaskDates : (detailProject.taskDates = detailProject.taskDates||{}); }
+function taskDatesStore(ctx){ return ctx==="n2" ? n2TaskDates : (detailProject.taskDates = detailProject.taskDates||{}); }
 function setTaskDate(ctx,t,field,val,ri){
   const s = taskDatesStore(ctx);
   const d = s[t] = s[t]||{inicio:"",fin:"",notas:""};
@@ -2287,7 +2173,7 @@ function addRango(ctx,t){
   d.rangos = d.rangos || [];
   d.rangos.push({inicio:"",fin:""});
   if(ctx==="dt") detailDirty = true;
-  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), renderN2Assigns());
 }
 function delRango(ctx,t,ri){
   const s = taskDatesStore(ctx);
@@ -2295,9 +2181,9 @@ function delRango(ctx,t,ri){
   d.rangos.splice(ri-1,1);
   if(!d.rangos.length) delete d.rangos;
   if(ctx==="dt") detailDirty = true;
-  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), renderN2Assigns());
 }
-function assignStore(ctx){ return ctx==="np" ? npAssignData : ctx==="n2" ? n2AssignData : detailProject.asignaciones; }
+function assignStore(ctx){ return ctx==="n2" ? n2AssignData : detailProject.asignaciones; }
 function setAssign(ctx,t,i,k,v){ assignStore(ctx)[t][i][k]=v; }
 function addAssign(ctx,t){
   /* en la ficha, alguien que se suma al proyecto arranca como candidato: es lo que
@@ -2305,73 +2191,9 @@ function addAssign(ctx,t){
   const fila = {nombre:"",email:"",discord:"",telefono:""};
   if(ctx==="dt") fila.estado = "candidato";
   assignStore(ctx)[t].push(fila);
-  ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail();
+  ctx==="n2"?renderN2Assigns():renderDetail();
 }
-function delAssign(ctx,t,i){ assignStore(ctx)[t].splice(i,1); if(!assignStore(ctx)[t].length) assignStore(ctx)[t]=[{nombre:"",email:"",discord:"",telefono:""}]; ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
-
-async function createProject(){
-  const nombre = $("#npNombre").value.trim();
-  const cliente = $("#npCliente").value.trim();
-  const epN = $("#npEpNombre").value.trim(), epE = $("#npEpEmail").value.trim();
-  if(!nombre || !cliente){ toast("Falta el nombre o el cliente", true); return; }
-  if(!epN || !epE){ toast("Cargá el Productor Ejecutivo y su mail", true); return; }
-
-  const asigs = {};
-  Object.entries(npAssignData).forEach(([t,rows])=>{
-    const clean = rows.filter(r=>r.nombre||r.email);
-    if(clean.length) asigs[t]=clean;
-  });
-  const tDates = {};
-  [...npSelected].forEach(t=>{
-    const d = npTaskDates[t];
-    if(d && (d.notas || taskTieneFechas(d))) tDates[t]=d;
-  });
-
-  const body = {
-    nombre, cliente,
-    agencia: $("#npAgencia").value.trim(),
-    productora: $("#npProductora").value.trim(),
-    director: $("#npDirector").value.trim(),
-    ep_nombre: epN, ep_email: epE,
-    prod_nombre: $("#npProdNombre").value.trim(), prod_email: $("#npProdEmail").value.trim(),
-    coord_nombre: $("#npCoordNombre").value.trim(), coord_email: $("#npCoordEmail").value.trim(),
-    tareas: [...npSelected], asignaciones: asigs, taskDates: tDates, sintesis: npSintesis,
-    storyboard_url: npStoryboardUrl, tratamiento_url: npTratamientoUrl,
-    auto_drive: npAuto.drive, auto_frame: npAuto.frame, auto_discord: npAuto.discord,
-    links: manualLinks(npLinks, npAuto)
-  };
-
-  const btn = $("#btnCreate");
-  btn.disabled = true; btn.textContent = autoBusyLabel(npAuto);
-  t23LoadShow("crear");
-
-  try{
-    let proj;
-    if(DEMO){
-      await new Promise(r=>setTimeout(r,900));
-      proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:Object.assign(autoDemoLinks(npAuto), manualLinks(npLinks, npAuto)), calendario:[] };
-    } else {
-      proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
-      proj.tareas = proj.tareas||body.tareas; proj.asignaciones = proj.asignaciones||body.asignaciones;
-      proj.taskDates = proj.taskDates||body.taskDates||{};
-      proj.calendario = proj.calendario||[];
-    }
-    projects.push(proj);
-    onProjectsLoaded();
-    closeModal("ovNew");
-    if(currentView!=="proyectos") switchView("proyectos");
-    openDetail(proj.id);
-    const nOn = autoNames(npAuto);
-    toast(nOn.length ? "✔ Proyecto creado, "+nOn.join(" + ")+" listo" : "✔ Proyecto creado, sin automatizaciones");
-    rosterSyncFromAsigs(asigs);
-  }catch(e){
-    toast("Error al crear: "+e.message, true);
-  }finally{
-    t23LoadHide();
-    btn.disabled = false; btn.textContent = "Crear proyecto";
-  }
-}
+function delAssign(ctx,t,i){ assignStore(ctx)[t].splice(i,1); if(!assignStore(ctx)[t].length) assignStore(ctx)[t]=[{nombre:"",email:"",discord:"",telefono:""}]; ctx==="n2"?renderN2Assigns():renderDetail(); }
 
 /* ---------------- detalle ---------------- */
 let detailProject = null;
@@ -2379,7 +2201,7 @@ let detailReadOnly = false; // true cuando se abre desde la vista Equipo: oculta
 let calView = null;   // Date del mes visible
 let weekView = null;  // Date dentro de la semana visible (vista semanal de cierre)
 let selDay = null;    // 'YYYY-MM-DD' del día seleccionado
-let calCtx = "dt";    // dónde vive el calendario visible: dt (ficha) / np (alta manual) / n2 (debrief IA)
+let calCtx = "dt";    // dónde vive el calendario visible: dt (ficha) / n2 (debrief IA)
 let calAuto = true;   // saltar automáticamente al mes de la primera fecha en el armado
 let tareasOpen = false; // colapsa/expande la sección "Tareas TEAM 23" en la ficha
 function toggleTareasOpen(){ tareasOpen = !tareasOpen; renderDetail(); }
@@ -2553,7 +2375,7 @@ function faseColorElegido(p, tarea){
    Sirve para pintar el cuadradito del encabezado en los tres contextos. */
 function faseColorDe(ctx, tarea){
   const p = ctx==="dt" ? detailProject
-          : { tareas: [...(ctx==="n2" ? n2Selected : npSelected)], taskDates: taskDatesStore(ctx), calendario: [] };
+          : { tareas: [...n2Selected], taskDates: taskDatesStore(ctx), calendario: [] };
   if(!p) return 0;
   const i = faseLookMap(p)["task:"+tarea];
   return (typeof i === "number" && PHASE_LOOKS[i]) ? i : 0;
@@ -2564,7 +2386,7 @@ function faseColorSet(ctx, tarea, idx){
   if(idx === null) delete d.color; else d.color = idx;
   if(ctx==="dt") detailDirty = true;
   colorCerrar();
-  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), renderN2Assigns());
 }
 function faseLookMap(p){
   const map = {};
@@ -2849,10 +2671,10 @@ function navMonth(delta){
 function selectDay(key){ selDay = key; calCtx==="dt" ? renderDetail() : renderCreationCal(calCtx); }
 function closeDayPanel(){ selDay = null; calCtx==="dt" ? renderDetail() : renderCreationCal(calCtx); }
 
-/* vista previa del calendario durante el armado (np = alta manual, n2 = debrief IA) */
+/* vista previa del calendario durante el armado (n2 = debrief IA) */
 function renderCreationCal(ctx){
-  const el = $(ctx==="n2" ? "#n2CalPrev" : "#npCalPrev"); if(!el) return;
-  const sel = ctx==="n2" ? n2Selected : npSelected;
+  const el = $("#n2CalPrev"); if(!el) return;
+  const sel = n2Selected;
   const store = taskDatesStore(ctx);
   const p = { tareas:[...sel], taskDates: store, calendario: [] };
   const dated = [...sel].map(t=>(store[t]&&store[t].inicio)||"").filter(Boolean).sort();
@@ -4254,13 +4076,14 @@ function notaSlotId(ctx, tarea){ return "notabox-"+ctx+"-"+String(tarea).replace
 function notaBoxHTML(ctx, tarea, readOnly){
   const txt = ((taskDatesStore(ctx)||{})[tarea]||{}).notas || "";
   const tq = String(tarea).replace(/'/g,"\\'");
-  const editar = readOnly ? "" :
-    `<button class="mini-btn" onclick="notaOpen('task','${ctx}','${tq}')">${txt?"✎ editar":"+ agregar"}</button>`;
-  /* vacía = una línea; una caja grande para "sin notas" era mucho peso por nada */
-  if(!txt) return `<div class="nota-box vacio"><span class="lbl">Notas</span>${editar}</div>`;
-  return `<div class="nota-box tiene">
-    <div class="nota-head"><span class="lbl">Notas</span>${editar}</div>
+  /* la etiqueta va acá y no en el bloque, porque notaSlotSync reemplaza todo el slot */
+  const lbl = `<span class="ab-lbl">Notas</span>`;
+  if(!txt) return lbl + (readOnly
+    ? `<div class="nota-box vacio"><span class="nota-txt vacia">Sin notas</span></div>`
+    : `<button type="button" class="nota-add" onclick="notaOpen('task','${ctx}','${tq}')">+ agregar nota</button>`);
+  return lbl + `<div class="nota-box tiene">
     <div class="nota-txt">${esc(txt)}</div>
+    ${readOnly ? "" : `<button class="mini-btn ico" onclick="notaOpen('task','${ctx}','${tq}')" title="Editar la nota">✎</button>`}
   </div>`;
 }
 function notaSlotSync(ctx, tarea){
@@ -4307,20 +4130,18 @@ function notaSave(){
 
 /* ================================================================
    SÍNTESIS: caja colapsable + popup de edición
-   Vive en tres lugares (ficha, alta manual, debrief) con el mismo
+   Vive en dos lugares (ficha y debrief) con el mismo
    componente. El portal de proveedores tiene su propia copia y no se
    toca. El texto no se edita nunca en línea: siempre en el popup, que
    tiene lugar de sobra y muestra cómo va a quedar formateado.
 ================================================================ */
-const sxAbierta = { dt:false, np:false, n2:false };   // arranca colapsada; la preferencia dura la sesión, por contexto
+const sxAbierta = { dt:false, n2:false };   // arranca colapsada; la preferencia dura la sesión, por contexto
 function sxValue(ctx){
   if(ctx==="dt") return (detailProject && detailProject.sintesis) || "";
-  if(ctx==="np") return npSintesis || "";
   return (($("#n2Sintesis")||{}).value) || "";
 }
 function sxSetValue(ctx, v){
   if(ctx==="dt"){ if(detailProject) detailProject.sintesis = v; return; }
-  if(ctx==="np"){ npSintesis = v; return; }
   if($("#n2Sintesis")) $("#n2Sintesis").value = v;
 }
 /* lo que se muestra al lado del título cuando está colapsada */
@@ -4367,7 +4188,7 @@ function sxOpen(ctx){
   sxCtx = ctx;
   $("#sxWho").textContent = ctx==="dt"
     ? ((detailProject&&detailProject.nombre)||"Proyecto")
-    : (ctx==="np" ? "Nuevo proyecto · alta manual" : "Nuevo proyecto · desde debrief");
+    : "Nuevo proyecto · desde debrief";
   $("#sxTa").value = sxValue(ctx);
   sxLive();
   $("#ovSintesis").classList.add("open"); modalArmar("ovSintesis");   // sin tocar el scroll: queda un modal abierto detrás
@@ -4676,136 +4497,7 @@ function printCalendar(){
 function openModal(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; }
 function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; acClose(); }
 
-/* kick off wizard */
-const KICKOFF_QUESTIONS = [
-  { q: "¿Está definida la categoría del proyecto en Discord? (si la automatización de Discord queda activa, el hub la crea al dar de alta)", mandatory: true, resp: "EP / PROD" },
-  { q: "¿Están definidos los canales de prod, coord y general? (con la automatización activa, el hub los crea junto con la categoría)", mandatory: true, resp: "PROD / COORD" },
-  { q: "¿Tenemos a mano la última versión del timing de CL?", mandatory: true, resp: "EP / PROD" },
-  { q: "¿Hay storyboard o tratamiento?\nPegá los links", mandatory: false, links: [{key:"storyboard",label:"Storyboard"},{key:"tratamiento",label:"Tratamiento"}] },
-  { q: "¿Hay resumen de entregables?\nPegalo en esta caja de texto", mandatory: false, texto: true, skipForOption: 2 },
-  { q: "¿Creaste el proyecto en Notion?\n(con fecha inicio/fin + link a presupuesto)", mandatory: true, resp: "EP" },
-  { q: "¿Avisaste a Krla que puede ir pidiendo el adelanto?", mandatory: true, resp: "EP" }
-];
-
-let kickOffQuestions = KICKOFF_QUESTIONS;
-
-function openKickOff(){
-  kickOffQuestions = KICKOFF_QUESTIONS.filter(q=>!q.skipForOption || q.skipForOption!==kickOffTargetOption);
-  kickOffStep = 1;
-  kickOffChecks = {};
-  kickOffResumen = "";
-  kickOffLinks = {};
-  renderKickOffStep();
-  openModal("ovKickOff");
-}
-
-function renderKickOffStep(){
-  const q = kickOffQuestions[kickOffStep-1];
-  const isSinos = q.sinos;
-  const isLast = kickOffStep === kickOffQuestions.length;
-
-  $("#kickOffHeader").textContent = `Paso ${kickOffStep} de ${kickOffQuestions.length}`;
-
-  let html = `<div class="kickoff-q">${esc(q.q)}${q.resp?` <span style="display:inline-block;vertical-align:middle;font-size:14px;font-weight:800;letter-spacing:.1em;border:1.5px solid var(--ink);border-radius:var(--radius-full);padding:2px 10px;color:var(--ink)">${esc(q.resp)}</span>`:""}</div>`;
-
-  if(q.links){
-    html += q.links.map(f=>`
-      <label class="f" style="display:block;margin-top:var(--space-4)">${esc(f.label)}</label>
-      <input type="text" value="${esc(kickOffLinks[f.key]||"")}" placeholder="https://…" style="width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3);border:2px solid var(--ink);border-radius:var(--radius-md)" oninput="kickOffLinks['${f.key}']=this.value">
-    `).join("");
-  } else if(q.texto){
-    html += `<textarea rows="5" style="width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3);border:2px solid var(--ink);border-radius:var(--radius-md);resize:vertical" placeholder="Pegá el resumen de entregables…" oninput="kickOffResumen=this.value">${esc(kickOffResumen)}</textarea>`;
-  } else if(isSinos){
-    html += `<div class="kickoff-sinos">
-      <label class="kickoff-check">
-        <input type="radio" name="sinos" value="si" onchange="kickOffChecks[${kickOffStep-1}]='si';updateKickOffBtn()">
-        Sí
-      </label>
-      <label class="kickoff-check">
-        <input type="radio" name="sinos" value="no" onchange="kickOffChecks[${kickOffStep-1}]='no';updateKickOffBtn()">
-        No
-      </label>
-    </div>`;
-  } else {
-    html += `<label class="kickoff-check">
-      <input type="checkbox" id="kickOffCheckbox" onchange="kickOffChecks[${kickOffStep-1}]=this.checked;updateKickOffBtn()">
-      Completé este paso
-    </label>`;
-  }
-
-  $("#kickOffContent").innerHTML = html;
-
-  $("#kickOffBtnBack").style.display = kickOffStep === 1 ? "none" : "";
-  const nextBtn = $("#kickOffBtnNext");
-  nextBtn.textContent = isLast ? "Comenzar creación" : "Siguiente";
-  updateKickOffBtn();
-}
-
-function updateKickOffBtn(){
-  const q = kickOffQuestions[kickOffStep-1];
-  const isChecked = kickOffChecks[kickOffStep-1];
-
-  // Links y texto: siempre válido (opcional). Sí/no: cualquier selección. Checkbox simple: solo marcado
-  const isValid = (q.links || q.texto) ? true : (q.sinos ? isChecked : isChecked === true);
-
-  $("#kickOffBtnNext").disabled = !isValid;
-}
-
-function kickOffBack(){
-  if(kickOffStep > 1){
-    kickOffStep--;
-    renderKickOffStep();
-  }
-}
-
-function kickOffNext(){
-  if(kickOffStep < kickOffQuestions.length){
-    kickOffStep++;
-    renderKickOffStep();
-  } else {
-    kickOffComplete();
-  }
-}
-
-function kickOffComplete(){
-  closeModal("ovKickOff");
-  kickOffStep = 1;
-  kickOffChecks = {};
-  if(kickOffTargetOption===2){
-    openDebrief();
-    if(kickOffLinks.tratamiento || kickOffLinks.storyboard) $("#n2Storyboard").value = kickOffLinks.tratamiento || kickOffLinks.storyboard;
-    return;
-  }
-  // Inicializar el estado del nuevo proyecto
-  npSelected = new Set(); npAssignData = {}; npTaskDates = {};
-  npAuto = autoDefaults(); npLinks = {}; renderAuto("np");
-  npSintesis = kickOffResumen;
-  sxRender("np");
-  npStoryboardUrl = kickOffLinks.storyboard || "";
-  npTratamientoUrl = kickOffLinks.tratamiento || "";
-  ["npNombre","npCliente","npAgencia","npProductora","npDirector","npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"]
-    .forEach(id=>$("#"+id).value="");
-  calCtx = "np"; calAuto = true;
-  renderNPTasks();
-  openModal("ovNew");
-}
-
-/* ================================================================
-   NUEVO PROYECTO — chooser de flujo
-   Ambas opciones pasan primero por el wizard de kick off:
-   Opción 1: wizard → formulario manual ovNew
-   Opción 2: wizard → pegar debrief → IA precarga → formulario ovNew2
-================================================================ */
-let kickOffTargetOption = 1;
-function openChooser(){ openModal("ovChooser"); }
-function chooseOption(n){
-  closeModal("ovChooser");
-  if(n===2){ openDebrief(); return; }   /* Opción 2: directo al debrief IA, sin kickoff previo */
-  kickOffTargetOption = n;
-  openKickOff();
-}
-
-/* ---------------- Opción 2: crear desde debrief (IA) ---------------- */
+/* ---------------- crear desde debrief (IA) — el único camino de alta ---------------- */
 let n2Selected = new Set(), n2AssignData = {}, n2TaskDates = {};
 
 /* ---------------- borradores compartidos (viven en el sheet, los ve todo el equipo) ---------------- */
@@ -4983,25 +4675,6 @@ function n2Dirty(){
   const s = n2Snapshot();
   return hayAlgoCargado({ campos:s.campos, tareas:s.tareas, assign:s.assign, fechas:s.fechas, extras:[s.debrief] });
 }
-/* El alta manual no tenía guarda: la ✕, Cancelar y el click afuera cerraban directo
-   y se perdía todo. No ofrece "guardar borrador" porque el borrador vive en el estado
-   del flujo de debrief, no en este. */
-function npDirty(){
-  const ids = ["npNombre","npCliente","npAgencia","npProductora","npDirector",
-               "npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"];
-  return hayAlgoCargado({
-    campos: Object.fromEntries(ids.map(id=>[id, ($("#"+id)||{}).value||""])),
-    tareas: [...npSelected], assign: npAssignData, fechas: npTaskDates,
-    /* lo que trajo el kick off también cuenta: si cerrás, hay que rehacerlo */
-    extras: [npSintesis, npStoryboardUrl, npTratamientoUrl]
-  });
-}
-async function closeNew(){
-  if(!npDirty()){ closeModal("ovNew"); return; }
-  const r = await t23Confirm("Vas a cerrar el armado sin crear el proyecto. Lo que cargaste se pierde.",
-    { titulo:"CERRAR SIN CREAR", ok:"Cerrar sin guardar", peligro:true });
-  if(r === true) closeModal("ovNew");
-}
 
 async function closeNew2(){
   if(!n2Dirty()){ closeModal("ovNew2"); return; }
@@ -5107,6 +4780,7 @@ async function createProject2(){
         calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
+      if(!proj || !proj.id) throw new Error("el servidor no guardó el proyecto (ver Executions en n8n)");
       proj.tareas = proj.tareas||body.tareas;
       proj.asignaciones = proj.asignaciones||body.asignaciones;
       proj.taskDates = proj.taskDates||body.taskDates||{};
@@ -5121,9 +4795,10 @@ async function createProject2(){
     openDetail(proj.id);
     const nCand = mails.filter(m=>m.enviar).length;
     const nOn2 = autoNames(n2Auto);
-    toast(nCand ? "✔ Proyecto creado, propuestas enviadas a "+nCand+" candidato"+(nCand>1?"s":"")
+    toast((proj.avisos||[]).length ? "Proyecto creado, pero: "+proj.avisos.join(" · ")
+        : nCand ? "✔ Proyecto creado, propuestas enviadas a "+nCand+" candidato"+(nCand>1?"s":"")
         : nOn2.length ? "✔ Proyecto creado, "+nOn2.join(" + ")+" listo"
-        : "✔ Proyecto creado, sin automatizaciones");
+        : "✔ Proyecto creado, sin automatizaciones", !!(proj.avisos||[]).length);
     if(currentDraftId){
       const viejoDraft = currentDraftId; currentDraftId = null; n2DraftBase = null;
       projects = projects.filter(x=>x.id!==viejoDraft);
@@ -5183,7 +4858,6 @@ if(_ovDet){
    guardar borrador, el editor de mails no toca el scroll porque queda uno abierto atrás) */
 function closeOverlayById(id){
   if(id==="ovDetail"){ requestCloseDetail(); return; }
-  if(id==="ovNew"){ closeNew(); return; }
   if(id==="ovNew2"){ closeNew2(); return; }
   if(id==="ovMail"){ mailClose(); return; }
   if(id==="ovSintesis"){ sxClose(); return; }
@@ -5229,7 +4903,8 @@ document.addEventListener("mousemove",e=>{
 });
 
 /* init */
-$("#btnNew").addEventListener("click",()=>{ openChooser(); });
+/* un solo camino de alta: pegar el debrief y que la IA arme el borrador */
+$("#btnNew").addEventListener("click",()=>{ openDebrief(); });
 $("#yr").textContent = new Date().getFullYear();
 if(DEMO) $("#demoBanner").style.display="block";
 currentView = VIEW_TITLES[location.hash.slice(1)] ? location.hash.slice(1) : "dashboard";
