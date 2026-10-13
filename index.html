@@ -330,7 +330,6 @@
   .pb-state,.pb-mail{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .pb-state:empty,.pb-mail:empty{display:none}
   .pb-state:not(:empty) + .pb-mail:not(:empty){padding-left:18px;border-left:2px solid var(--hair)}
-  .pb-lbl{font-size:10.5px;font-weight:var(--weight-bold);letter-spacing:.12em;text-transform:uppercase;color:var(--gray);white-space:nowrap}
   .pb-sent{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--gray);white-space:nowrap}
   .pb-sent b{color:var(--ink)}
 
@@ -1868,14 +1867,20 @@ function mailRowInner(r, tarea, i, ctx){
     /* ya enviada: la fecha queda a la vista, y se puede reenviar */
     if(r.mailSentAt) return `<span class="pb-sent">✉ Propuesta enviada <b>${esc(mailFechaCorta(r.mailSentAt))}</b></span>
       <button class="mini-btn" onclick="mailSend('${tq}',${i})" title="Volver a enviar la propuesta">↺ Reenviar</button>${editar}${editado}`;
-    /* sin enviar: la etiqueta dice qué es y el botón negro dice qué hace */
-    return `<span class="pb-lbl">Propuesta</span>
-      <button class="mini-btn primary" onclick="mailSend('${tq}',${i})">✉ Enviar por mail</button>${editar}${editado}`;
+    /* sin enviar: el mismo switch que en el armado. Arranca apagado — en la ficha se
+       guarda seguido y nadie quiere mandar una propuesta por tocar una fecha. Prendido,
+       "Guardar cambios de equipo" manda el mail (y pregunta antes). */
+    const onDt = mailOnFor(r, "dt");
+    return `<label class="sw${onDt?" on":""}">
+      <input type="checkbox"${onDt?" checked":""} onchange="mailToggle('${tq}',${i},'dt')">
+      <span class="sw-track"><span class="sw-knob"></span></span>
+      <span class="sw-lbl">${onDt?"Mandar propuesta al guardar":"Mandar propuesta por mail"}</span>
+    </label>${editar}${editado}`;
   }
-  /* armado: se manda sola al crear el proyecto, así que acá es un sí/no */
-  const on = r.mailOn !== false;
+  /* armado: se manda sola al crear el proyecto, así que acá también es un sí/no (arranca prendido) */
+  const on = mailOnFor(r, "n2");
   return `<label class="sw${on?" on":""}">
-      <input type="checkbox"${on?" checked":""} onchange="mailToggle('${tq}',${i})">
+      <input type="checkbox"${on?" checked":""} onchange="mailToggle('${tq}',${i},'n2')">
       <span class="sw-track"><span class="sw-knob"></span></span>
       <span class="sw-lbl">${on?"Mandar propuesta al crear":"No se le manda propuesta"}</span>
     </label>
@@ -1887,11 +1892,20 @@ function mailSlotSync(ctx, tarea, i){
   const el = $("#"+mailSlotId(ctx,tarea,i));
   if(el) el.innerHTML = mailRowInner((assignStore(ctx)[tarea]||[])[i], tarea, i, ctx);
 }
-function mailToggle(tarea, i){
-  const r = (n2AssignData[tarea]||[])[i]; if(!r) return;
-  r.mailOn = r.mailOn === false;
-  mailSlotSync("n2", tarea, i);
-  toast(r.mailOn ? "Se le manda la propuesta a "+(r.nombre||r.email) : "No se le manda mail a "+(r.nombre||r.email));
+/* En el armado el switch arranca prendido (mailOn === false lo apaga); en la ficha
+   arranca apagado (mailOn === true lo prende) y nunca se persiste: saveTeam lo
+   consume y lo borra antes de guardar. */
+function mailOnFor(r, ctx){ return ctx==="dt" ? r.mailOn===true : r.mailOn!==false; }
+function mailToggle(tarea, i, ctx="n2"){
+  const r = (assignStore(ctx)[tarea]||[])[i]; if(!r) return;
+  const on = !mailOnFor(r, ctx);
+  if(ctx==="dt"){ if(on) r.mailOn = true; else delete r.mailOn; }
+  else r.mailOn = on;
+  mailSlotSync(ctx, tarea, i);
+  const quien = r.nombre||r.email;
+  toast(!on ? "No se le manda mail a "+quien
+      : ctx==="dt" ? "Se le manda la propuesta a "+quien+" al guardar el equipo"
+      : "Se le manda la propuesta a "+quien);
 }
 
 /* ---------- enviar la propuesta desde la ficha (proyecto ya creado) ---------- */
@@ -4352,20 +4366,48 @@ async function saveTeam(btn){
   if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
   try{
   const p = detailProject;
-  if(DEMO){ toast("✔ Equipo actualizado (demo)"); onProjectsLoaded(); return; }
+  /* Propuestas con el switch prendido: salen en esta misma llamada (wf4 solo toca
+     Gmail si viene `mails` en el body). Se pregunta antes, con nombres: mandar un
+     mail es lo único de este guardado que no se puede deshacer. */
+  const pendientes = [];
+  Object.entries(p.asignaciones||{}).forEach(([t,rows])=>(rows||[]).forEach(r=>{
+    if(r && r.mailOn===true && (r.email||"").trim() && r.estado==="candidato" && !r.mailSentAt) pendientes.push({t,r});
+  }));
+  if(pendientes.length){
+    const quien = pendientes.map(x=>x.r.nombre||x.r.email).join(", ");
+    const ok = await t23Confirm("Al guardar se le manda la propuesta a "+quien+", con el timeline del proyecto y su rol marcado. Podés revisarla antes con “Editar mail”.",
+      { titulo:"GUARDAR Y ENVIAR PROPUESTA"+(pendientes.length>1?"S":""), ok:"Guardar y enviar", cancelar:"Cancelar" });
+    if(ok !== true) return;
+  }
+  const mails = pendientes.map(({t,r})=>({ rol:t, to:r.email.trim(), nombre:r.nombre||"", enviar:true,
+    subject: mailFinalSubject(r, t, "dt"), html: mailFinalHTML(r, t, "dt") }));
+  const ahora = new Date().toISOString();
+  pendientes.forEach(({r})=>{ r.mailSentAt = ahora; });
+  /* el switch es de esta sesión: no viaja al sheet */
+  Object.values(p.asignaciones||{}).forEach(rows=>(rows||[]).forEach(r=>{ if(r) delete r.mailOn; }));
+  const okMsg = mails.length ? "✔ Equipo actualizado, propuesta enviada a "+mails.length+" candidato"+(mails.length>1?"s":"") : "✔ Equipo actualizado";
+  if(DEMO){ toast(okMsg+" (demo)"); renderDetail(); onProjectsLoaded(); return; }
   try{
-    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({
+    const body = {
       id:p.id, equipo_json: JSON.stringify(p.equipo||{}),
       ep_nombre:p.ep_nombre, ep_email:p.ep_email, prod_nombre:p.prod_nombre, prod_email:p.prod_email,
       coord_nombre:p.coord_nombre, coord_email:p.coord_email,
       tareas_json: JSON.stringify(p.tareas), asignaciones_json: JSON.stringify(p.asignaciones),
       taskDates_json: JSON.stringify(p.taskDates||{})
-    })});
+    };
+    if(mails.length) body.mails = mails;
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify(body)});
     detailDirty = false; snapDetail();
-    toast("✔ Equipo actualizado");
+    toast(okMsg);
+    renderDetail();
     rosterSyncFromAsigs(p.asignaciones);
     onProjectsLoaded();
-  }catch(e){ toast("Error al guardar: "+e.message,true); }
+  }catch(e){
+    /* no salió nada: los switches vuelven a prendidos para reintentar */
+    pendientes.forEach(({r})=>{ delete r.mailSentAt; r.mailOn = true; });
+    renderDetail();
+    toast("Error al guardar: "+e.message,true);
+  }
   }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 

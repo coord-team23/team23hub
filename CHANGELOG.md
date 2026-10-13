@@ -11,7 +11,7 @@ Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + 
 ### Bloque de tarea (ficha y armado)
 
 - **Una barra por candidato** (`.person-bar`): a la izquierda el estado y la decisión (Candidato · ✓ Confirmar · ✕ Rechazar), a la derecha la propuesta por mail, separadas por una raya. Antes eran dos filas de pastillas de 24px pegadas entre sí.
-- **Enviar la propuesta ya no parece un toggle**: en la ficha es `PROPUESTA · [✉ Enviar por mail]` (negro = acción) + `✎ Editar mail`; enviada, muestra `Propuesta enviada <fecha>` y un `↺ Reenviar` que antes existía en `mailSend()` pero no tenía botón. En el armado, donde sí es un sí/no, es un **switch** (`.sw`) con el destinatario al lado.
+- **La propuesta por mail es un switch** (`.sw`) en los dos lados. En el armado arranca prendido y sale al crear. En la ficha arranca apagado y, prendido, sale con **Guardar cambios de equipo**: `saveTeam()` pregunta con nombres y manda `mails` en el mismo update (antes era un botón que mandaba al toque). Enviada, muestra `Propuesta enviada <fecha>` y un `↺ Reenviar` que existía en `mailSend()` pero no tenía botón.
 - **Fechas y notas en dos columnas alineadas**: `.ab-foot` es una grilla con etiqueta arriba (INICIO · FIN · NOTAS). Sin nota, un botón punteado `+ agregar nota` de la misma altura que los inputs de fecha; con nota, la caja con ✎.
 - Escala única para controles chicos: `.mini-btn` 30px (34 en mobile), `.chipst` 26px, `.mini-btn.ico` para ✎ / ↺.
 - `.modal:focus{outline:none}`: el anillo de foco del navegador alrededor del modal entero (a11y.js enfoca el contenedor al abrirlo).
