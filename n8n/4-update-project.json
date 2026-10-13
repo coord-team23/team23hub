@@ -39,7 +39,13 @@
             {
               "id": "c2",
               "name": "discordGeneralId",
-              "value": "PEGAR_ID_DEL_CANAL_GENERAL",
+              "value": "1473387046788923527",
+              "type": "string"
+            },
+            {
+              "id": "dsc-guild",
+              "name": "discordGuildId",
+              "value": "1137462471767097534",
               "type": "string"
             },
             {
