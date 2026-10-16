@@ -936,27 +936,38 @@
     transition:transform 1.6s var(--ease-standard),opacity var(--dur-slow) var(--ease-out)}
   .peep.in{opacity:1}
   .peep.out{opacity:0}
-  .peep-body{position:absolute;bottom:0;left:-22px;width:44px;height:40px}
+  /* El personaje son los dos ojos de la marca, sin cuerpo ni patas: caminan con
+     los propios ojos — uno se levanta e inclina mientras el otro apoya, en
+     contrafase, y las pupilas miran hacia donde van. Quieto respira, parpadea y
+     mira para los costados; dormido se aplasta a dos líneas. */
+  .peep-body{position:absolute;bottom:4px;left:-23px;width:46px;height:30px}
   .peep.flip .peep-body{transform:scaleX(-1)}
-  .peep .eyes{position:absolute;left:0;top:0;display:flex;gap:3px}
-  .peep .eye{width:20px;height:25px;border-width:2.5px}
-  .peep .pupil{width:8px;height:8px;transform:translate(-50%,-30%);transition:height var(--dur-fast) var(--ease-out),width var(--dur-fast) var(--ease-out)}
-  .peep .legs{position:absolute;left:12px;bottom:0;display:flex;gap:9px}
-  .peep .legs i{display:block;width:3px;height:14px;background:var(--ink);border-radius:2px;transform-origin:top center}
-  .peep.walk .legs i:first-child{animation:peepStep .36s ease-in-out infinite alternate}
-  .peep.walk .legs i:last-child{animation:peepStep .36s ease-in-out infinite alternate-reverse}
-  @keyframes peepStep{from{transform:rotate(-24deg)}to{transform:rotate(24deg)}}
+  .peep-shadow{position:absolute;left:3px;bottom:-4px;width:40px;height:6px;border-radius:50%;background:rgba(0,0,0,.14)}
+  .peep .eyes{position:absolute;left:0;bottom:0;display:flex;gap:4px;align-items:flex-end;transform-origin:50% 100%;animation:peepBreath 3.2s ease-in-out infinite}
+  .peep .eye{width:21px;height:26px;border-width:2.5px;transform-origin:50% 100%;animation:peepBlink 5.4s ease-in-out infinite;animation-delay:var(--blink,0s)}
+  .peep .pupil{width:8px;height:8px;top:auto;bottom:4px;left:50%;transform:translateX(-50%);animation:peepLook 7s ease-in-out infinite;animation-delay:var(--look,0s)}
+  @keyframes peepBreath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.035)}}
+  @keyframes peepBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+  @keyframes peepLook{0%,35%,100%{translate:0 0}45%,60%{translate:4px 0}70%,85%{translate:-3px 0}}
+  /* caminando: paso por turno, con aplastadita al apoyar */
+  .peep.walk .eyes{animation:none}
+  .peep.walk .eye{animation:peepStep .72s ease-in-out infinite}
+  .peep.walk .eye:last-child{animation-delay:-.36s}
+  .peep.walk .pupil{animation:none;translate:4px 0}
+  @keyframes peepStep{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-8px) rotate(14deg)}55%{transform:translateY(0) rotate(0) scale(1.06,.94)}70%{transform:scale(1,1)}}
   /* cambió de actividad: saltito */
   .peep.hop .peep-body{animation:peepHop .5s var(--ease-overshoot)}
   @keyframes peepHop{0%,100%{translate:0 0}40%{translate:0 -12px}}
   /* ausente / sin actividad: ojos cerrados */
-  .peep.idle .pupil{width:10px;height:2.5px;border-radius:2px}
+  .peep.idle .eyes{animation:none}
+  .peep.idle .eye{animation:none;transform:scaleY(.12)}
+  .peep.idle .pupil{display:none}
   .peep.idle .peep-bubble{color:var(--gray)}
-  .peep-bubble{position:absolute;bottom:50px;left:0;transform:translateX(-50%);white-space:nowrap;max-width:max(96px,min(320px,calc(var(--slot,320px) - 12px)));overflow:hidden;text-overflow:ellipsis;
+  .peep-bubble{position:absolute;bottom:44px;left:0;transform:translateX(-50%);white-space:nowrap;max-width:max(96px,min(320px,calc(var(--slot,320px) - 12px)));overflow:hidden;text-overflow:ellipsis;
     background:#fff;border:2px solid var(--ink);border-radius:10px;padding:4px 9px;box-shadow:3px 3px 0 var(--ink);
     font-family:var(--font-secondary);font-size:11.5px;font-weight:var(--weight-bold);letter-spacing:0;line-height:1.25;color:var(--ink)}
   .peep-bubble b{font-family:var(--font-primary);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-right:4px}
-  .peep-tail{position:absolute;bottom:46px;left:0;width:8px;height:8px;background:#fff;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:translateX(-50%) rotate(45deg)}
+  .peep-tail{position:absolute;bottom:40px;left:0;width:8px;height:8px;background:#fff;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:translateX(-50%) rotate(45deg)}
   /* dos personas en la misma ficha: el otro queda en rojo (el último que guarda pisa al otro) */
   .peep.juntos .peep-bubble{border-color:var(--red);box-shadow:3px 3px 0 var(--red)}
   .peep.juntos .peep-tail{border-color:var(--red)}
@@ -4989,7 +5000,9 @@ function toast(msg, err=false){
 
 /* ojitos que siguen el cursor */
 document.addEventListener("mousemove",e=>{
-  document.querySelectorAll(".eye").forEach(eye=>{
+  /* solo los ojos del header: los del piso de presencia tienen su propia mirada
+     y sumarlos acá sería un getBoundingClientRect más por persona en cada mousemove */
+  document.querySelectorAll("header .eye").forEach(eye=>{
     const r = eye.getBoundingClientRect();
     const cx = r.left+r.width/2, cy = r.top+r.height/2;
     const a = Math.atan2(e.clientY-cy, e.clientX-cx);
@@ -5122,8 +5135,11 @@ function presRender(state){
       el = document.createElement("div");
       el.className = "peep"+(x.me?" me":"");
       el.innerHTML = `<div class="peep-bubble"></div><span class="peep-tail"></span>
-        <div class="peep-body"><span class="eyes"><span class="eye"><span class="pupil"></span></span><span class="eye"><span class="pupil"></span></span></span><span class="legs"><i></i><i></i></span></div>`;
+        <div class="peep-body"><span class="peep-shadow"></span><span class="eyes"><span class="eye"><span class="pupil"></span></span><span class="eye"><span class="pupil"></span></span></span></div>`;
       el.style.setProperty("--x", home+"px"); el._home = home;
+      /* parpadeo y mirada desfasados por persona: si todos parpadean juntos parece un GIF */
+      el.style.setProperty("--blink", (Math.random()*5).toFixed(2)+"s");
+      el.style.setProperty("--look", (Math.random()*7).toFixed(2)+"s");
       stage.appendChild(el); presEls.set(x.id, el);
       el._wander = setInterval(()=>presWander(el), 7000 + Math.random()*6000);
       requestAnimationFrame(()=>el.classList.add("in"));
