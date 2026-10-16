@@ -914,6 +914,53 @@
   #ovSintesis .modal{width:min(820px,100%)}
   #sxTa{min-height:300px;font-size:15px;line-height:1.6}
   .sx-prevbox{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);background:#fff;max-height:240px;overflow:auto}
+
+  /* ---------- piso de presencia: quién está en el hub y en qué anda ----------
+     Una franja fija abajo con los ojitos de la marca caminando: una pareja de ojos
+     por persona conectada, con un globo que dice dónde está. Va DEBAJO de los
+     overlays (z 40 < 80): con un modal abierto se ve apagado detrás del scrim. */
+  #piso{position:fixed;left:0;right:0;bottom:0;z-index:40;height:84px;background:var(--paper);border-top:var(--stroke-sm) solid var(--ink)}
+  #piso[hidden]{display:none}
+  body.piso-on{padding-bottom:84px}
+  body.piso-on.piso-min{padding-bottom:0}
+  .piso-stage{position:absolute;left:0;right:0;bottom:0;height:84px;overflow:hidden}
+  .piso-bar{position:absolute;right:var(--space-5);top:-15px;display:flex;align-items:center;gap:6px;z-index:1}
+  .piso-count{font-size:10.5px;font-weight:var(--weight-bold);letter-spacing:.12em;text-transform:uppercase;background:var(--paper);border:2px solid var(--ink);border-radius:var(--radius-full);padding:5px 11px;line-height:1}
+  .piso-min{width:26px;height:26px;border:2px solid var(--ink);border-radius:50%;background:var(--paper);cursor:pointer;font-size:12px;line-height:1;color:var(--ink);padding:0;transition:transform var(--dur-base) var(--ease-out)}
+  .piso-min:hover{background:var(--ink);color:#fff}
+  #piso.min{height:0;border-top-width:2px}
+  #piso.min .piso-bar{top:-32px}   /* achicado, la pastilla queda entera arriba de la raya */
+  #piso.min .piso-stage{display:none}
+  #piso.min .piso-min{transform:rotate(180deg)}
+  .peep{position:absolute;bottom:6px;left:0;width:0;transform:translateX(var(--x));opacity:0;
+    transition:transform 1.6s var(--ease-standard),opacity var(--dur-slow) var(--ease-out)}
+  .peep.in{opacity:1}
+  .peep.out{opacity:0}
+  .peep-body{position:absolute;bottom:0;left:-22px;width:44px;height:40px}
+  .peep.flip .peep-body{transform:scaleX(-1)}
+  .peep .eyes{position:absolute;left:0;top:0;display:flex;gap:3px}
+  .peep .eye{width:20px;height:25px;border-width:2.5px}
+  .peep .pupil{width:8px;height:8px;transform:translate(-50%,-30%);transition:height var(--dur-fast) var(--ease-out),width var(--dur-fast) var(--ease-out)}
+  .peep .legs{position:absolute;left:12px;bottom:0;display:flex;gap:9px}
+  .peep .legs i{display:block;width:3px;height:14px;background:var(--ink);border-radius:2px;transform-origin:top center}
+  .peep.walk .legs i:first-child{animation:peepStep .36s ease-in-out infinite alternate}
+  .peep.walk .legs i:last-child{animation:peepStep .36s ease-in-out infinite alternate-reverse}
+  @keyframes peepStep{from{transform:rotate(-24deg)}to{transform:rotate(24deg)}}
+  /* cambió de actividad: saltito */
+  .peep.hop .peep-body{animation:peepHop .5s var(--ease-overshoot)}
+  @keyframes peepHop{0%,100%{translate:0 0}40%{translate:0 -12px}}
+  /* ausente / sin actividad: ojos cerrados */
+  .peep.idle .pupil{width:10px;height:2.5px;border-radius:2px}
+  .peep.idle .peep-bubble{color:var(--gray)}
+  .peep-bubble{position:absolute;bottom:50px;left:0;transform:translateX(-50%);white-space:nowrap;max-width:max(96px,min(320px,calc(var(--slot,320px) - 12px)));overflow:hidden;text-overflow:ellipsis;
+    background:#fff;border:2px solid var(--ink);border-radius:10px;padding:4px 9px;box-shadow:3px 3px 0 var(--ink);
+    font-family:var(--font-secondary);font-size:11.5px;font-weight:var(--weight-bold);letter-spacing:0;line-height:1.25;color:var(--ink)}
+  .peep-bubble b{font-family:var(--font-primary);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-right:4px}
+  .peep-tail{position:absolute;bottom:46px;left:0;width:8px;height:8px;background:#fff;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:translateX(-50%) rotate(45deg)}
+  /* dos personas en la misma ficha: el otro queda en rojo (el último que guarda pisa al otro) */
+  .peep.juntos .peep-bubble{border-color:var(--red);box-shadow:3px 3px 0 var(--red)}
+  .peep.juntos .peep-tail{border-color:var(--red)}
+  @media(max-width:640px){ #piso{display:none} body.piso-on{padding-bottom:0} }
 </style>
 <!-- Capa de interacción: press, foco, hit area, motion y contraste.
      Va DESPUÉS del <style> de arriba a propósito: misma especificidad,
@@ -1089,6 +1136,12 @@
   </div>
 </div>
 
+
+<!-- piso de presencia: quién está en el hub (Supabase Realtime Presence, ver supabase/presence-migration.sql) -->
+<div id="piso" hidden aria-label="Quién está en el hub">
+  <div class="piso-stage" aria-live="polite"></div>
+  <div class="piso-bar"><span class="piso-count"></span><button type="button" class="piso-min" onclick="presToggle()" title="Achicar / agrandar el piso" aria-label="Achicar o agrandar el piso">▾</button></div>
+</div>
 
 <!-- ============ MODAL: NUEVO PROYECTO (DEBRIEF IA) ============ -->
 <div class="overlay" id="ovNew2">
@@ -1661,6 +1714,7 @@ function switchView(name){
   if(location.hash.slice(1)!==name) location.hash = name;
   applyViewUI(name);
   renderCurrentView();
+  presSync();
 }
 
 window.addEventListener("hashchange", ()=>{
@@ -2218,9 +2272,9 @@ let selDay = null;    // 'YYYY-MM-DD' del día seleccionado
 let calCtx = "dt";    // dónde vive el calendario visible: dt (ficha) / n2 (debrief IA)
 let calAuto = true;   // saltar automáticamente al mes de la primera fecha en el armado
 let tareasOpen = false; // colapsa/expande la sección "Tareas TEAM 23" en la ficha
-function toggleTareasOpen(){ tareasOpen = !tareasOpen; renderDetail(); }
+function toggleTareasOpen(){ tareasOpen = !tareasOpen; renderDetail(); presSync(); }
 let calSectionOpen = false; // colapsa/expande la sección "Calendario" en la ficha
-function toggleCalSectionOpen(){ calSectionOpen = !calSectionOpen; renderDetail(); }
+function toggleCalSectionOpen(){ calSectionOpen = !calSectionOpen; renderDetail(); presSync(); }
 let calTableOpen = false; // colapsa/expande la tabla de Fase/Inicio/Fin/Notas (proyectos grandes tienen muchas filas)
 function toggleCalTableOpen(){ calTableOpen = !calTableOpen; renderDetail(); }
 
@@ -4536,8 +4590,8 @@ function printCalendar(){
 }
 
 /* ---------------- helpers UI ---------------- */
-function openModal(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; }
-function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; acClose(); }
+function openModal(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; presSync(); }
+function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; acClose(); presSync(); }
 
 /* ---------------- crear desde debrief (IA) — el único camino de alta ---------------- */
 let n2Selected = new Set(), n2AssignData = {}, n2TaskDates = {};
@@ -4944,6 +4998,191 @@ document.addEventListener("mousemove",e=>{
   });
 });
 
+/* ================================================================
+   PRESENCIA — quién está en el hub y en qué anda
+   Supabase Realtime Presence sobre el canal privado "hub-presence": cada
+   pestaña publica {n, v, p, s, idle, away, t} y todas reciben la lista.
+   Sin servidor ni workflow: las dos policies de supabase/presence-migration.sql
+   son lo único que hay que correr. Si faltan, el canal rechaza la suscripción,
+   el piso no aparece y no rompe nada más.
+   El piso: una pareja de ojitos (la marca) por persona, caminando sobre una
+   raya al pie de la página, con un globo que dice dónde está.
+   ================================================================ */
+let presCh = null, presMe = null, presLast = "", presLastState = null;
+let presIdle = false, presAway = false, presLastInput = Date.now();
+const presEls = new Map();        // userId → nodo .peep (se reusa para que las transiciones corran)
+const presAvisados = new Set();   // "userId|proyecto" ya avisado por toast
+const PRES_IDLE_MS = 3*60*1000;
+const PRES_TXT = { ficha:"viendo", tareas:"en las tareas", cal:"en el calendario", sx:"editando la síntesis", nota:"editando una nota",
+                   mail:"editando un mail", trk:"en el tracker", gate:"activando", new:"creando un proyecto", users:"en usuarios" };
+
+function presNombre(){
+  if(presMe && presMe.n) return presMe.n;
+  const e = ((authUser && authUser.email) || "").split("@")[0];
+  return e.replace(/[._-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase()) || "Alguien";
+}
+/* el estado se lee del DOM y de las variables de la app, no se lleva aparte:
+   así no hay que acordarse de avisar en cada lugar que abre o cierra algo */
+function presState(){
+  const open = id => { const el = $("#"+id); return !!(el && el.classList.contains("open")); };
+  const p = (open("ovDetail") && detailProject) ? detailProject.nombre : "";
+  let s = "";
+  if(open("ovMail")) s = "mail";
+  else if(open("ovSintesis")) s = "sx";
+  else if(open("ovNota")) s = "nota";
+  else if(open("ovTracker")) s = "trk";
+  else if(open("ovGate")) s = "gate";
+  else if(open("ovNew2")) s = "new";
+  else if(open("ovUsers")) s = "users";
+  else if(p) s = calSectionOpen ? "cal" : tareasOpen ? "tareas" : "ficha";
+  return { n: presNombre(), v: currentView, p, s, idle: presIdle, away: presAway, t: Date.now() };
+}
+function presTexto(x){
+  if(x.away) return "en otra pestaña";
+  if(x.idle) return "zzz";
+  const s = PRES_TXT[x.s] || "";
+  if(x.p) return (s || "viendo")+" · "+x.p;
+  return s || ("en "+(VIEW_TITLES[x.v] || x.v || "el hub"));
+}
+/* publica el estado si cambió; con 250ms de gracia para agrupar abrir+render */
+function presSync(force){
+  if(!presCh && !DEMO) return;
+  clearTimeout(presSync._t);
+  presSync._t = setTimeout(async ()=>{
+    const st = presState();
+    const k = JSON.stringify([st.n, st.v, st.p, st.s, st.idle, st.away]);
+    if(!force && k===presLast) return;
+    presLast = k;
+    if(DEMO){ presDemoMe = { ...st, id:"me" }; presRender(presDemoState()); return; }
+    try{ await presCh.track(st); }catch(e){ /* sin red: el próximo cambio lo reintenta */ }
+  }, 250);
+}
+async function presStart(nombre){
+  if(!sb || !authUser) return;
+  presMe = { id: authUser.id, n: String(nombre||"").trim() || presNombre() };
+  try{ const { data:{ session } } = await sb.auth.getSession(); if(session) await sb.realtime.setAuth(session.access_token); }catch(e){}
+  presCh = sb.channel("hub-presence", { config: { presence: { key: authUser.id }, private: true } });
+  presCh.on("presence", { event:"sync" }, ()=> presRender(presCh.presenceState()))
+    .subscribe(status=>{
+      if(status==="SUBSCRIBED"){ presMount(); presLast = ""; presSync(true); }
+      else if(status==="CHANNEL_ERROR" || status==="TIMED_OUT"){
+        presUnmount();
+        console.warn("[presencia] el canal hub-presence rechazó la suscripción: falta correr supabase/presence-migration.sql");
+      }
+    });
+  presWatchInput();
+}
+function presWatchInput(){
+  if(presWatchInput._on) return; presWatchInput._on = true;
+  const touch = ()=>{ presLastInput = Date.now(); if(presIdle){ presIdle = false; presSync(); } };
+  ["pointerdown","pointermove","keydown","scroll","touchstart"].forEach(ev=>document.addEventListener(ev, touch, { passive:true }));
+  setInterval(()=>{ const idle = Date.now()-presLastInput > PRES_IDLE_MS; if(idle!==presIdle){ presIdle = idle; presSync(); } }, 30000);
+  document.addEventListener("visibilitychange", ()=>{ presAway = document.hidden; presSync(); });
+  window.addEventListener("resize", ()=>{ if(presLastState) presRender(presLastState); });
+}
+function presMount(){
+  const el = $("#piso"); if(!el) return;
+  el.hidden = false; document.body.classList.add("piso-on");
+  try{ if(localStorage.getItem("t23_piso")==="min"){ el.classList.add("min"); document.body.classList.add("piso-min"); } }catch(e){}
+}
+function presUnmount(){ const el = $("#piso"); if(el) el.hidden = true; document.body.classList.remove("piso-on","piso-min"); }
+function presToggle(){
+  const el = $("#piso"); if(!el) return;
+  const min = el.classList.toggle("min"); document.body.classList.toggle("piso-min", min);
+  try{ localStorage.setItem("t23_piso", min ? "min" : "full"); }catch(e){}
+}
+/* presenceState() → [{id, n, v, p, s, idle, away, t, me}], una entrada por persona
+   (con varias pestañas abiertas gana la más reciente) */
+function presLista(state){
+  const out = [];
+  Object.entries(state||{}).forEach(([id, arr])=>{
+    const st = (arr||[]).slice().sort((a,b)=>(b.t||0)-(a.t||0))[0]; if(!st) return;
+    out.push({ id, ...st, me: !!(presMe && id===presMe.id) });
+  });
+  return out.sort((a,b)=> a.id<b.id ? -1 : 1);
+}
+function presRender(state){
+  presLastState = state;
+  const piso = $("#piso"); if(!piso) return;
+  const stage = piso.querySelector(".piso-stage");
+  const lista = presLista(state);
+  const W = stage.clientWidth || document.documentElement.clientWidth || 800;
+  /* ancho del lugar de cada uno: acota el globo para que no se pisen entre vecinos */
+  const slot = W/(lista.length+1);
+  stage.style.setProperty("--slot", Math.round(slot)+"px");
+  const miP = presState().p;
+  const vivos = new Set(lista.map(x=>x.id));
+  presEls.forEach((el,id)=>{ if(!vivos.has(id)){ clearInterval(el._wander); el.classList.add("out"); setTimeout(()=>el.remove(),400); presEls.delete(id); } });
+  lista.forEach((x,i)=>{
+    /* cada uno tiene su lugar fijo (repartidos parejo) y pasea alrededor: así
+       no se pisan entre sí ni hay que resolver choques */
+    const home = Math.round(W*(i+1)/(lista.length+1));
+    let el = presEls.get(x.id);
+    if(!el){
+      el = document.createElement("div");
+      el.className = "peep"+(x.me?" me":"");
+      el.innerHTML = `<div class="peep-bubble"></div><span class="peep-tail"></span>
+        <div class="peep-body"><span class="eyes"><span class="eye"><span class="pupil"></span></span><span class="eye"><span class="pupil"></span></span></span><span class="legs"><i></i><i></i></span></div>`;
+      el.style.setProperty("--x", home+"px"); el._home = home;
+      stage.appendChild(el); presEls.set(x.id, el);
+      el._wander = setInterval(()=>presWander(el), 7000 + Math.random()*6000);
+      requestAnimationFrame(()=>el.classList.add("in"));
+    } else if(el._home!==home){ el._home = home; presMover(el, home); }
+    el._amp = Math.max(0, Math.min(45, slot/2 - 70));   /* cuánto puede pasear sin tocar al vecino */
+    const juntos = !x.me && !!x.p && x.p===miP && !x.idle && !x.away;
+    const txt = presTexto(x) + (juntos ? " · también acá" : "");
+    const b = el.querySelector(".peep-bubble");
+    if(el._txt!==txt){
+      b.innerHTML = `<b>${esc(x.me ? x.n+" (vos)" : x.n)}</b>${esc(txt)}`;
+      b.title = x.n+" · "+txt;   /* el globo se recorta si hay mucha gente; el texto entero queda en el tooltip */
+      if(el._txt!==undefined){ el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
+      el._txt = txt;
+    }
+    el.classList.toggle("idle", !!(x.idle||x.away));
+    el.classList.toggle("juntos", juntos);
+  });
+  piso.querySelector(".piso-count").textContent = lista.length<=1 ? "nadie más en el hub" : lista.length+" en el hub";
+  presAvisar(lista, miP);
+}
+function presMover(el, x){
+  const cur = parseFloat(el.style.getPropertyValue("--x")) || 0;
+  if(Math.abs(cur-x) < 4) return;
+  el.classList.toggle("flip", x < cur);
+  el.classList.add("walk");
+  el.style.setProperty("--x", x+"px");
+  clearTimeout(el._walkT); el._walkT = setTimeout(()=>el.classList.remove("walk"), 1700);
+}
+function presWander(el){
+  if(el.classList.contains("idle")) return;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if(!el._amp) return;
+  presMover(el, el._home + Math.round((Math.random()-.5)*2*el._amp));
+}
+/* el valor real del piso: el sheet es "el último que guarda pisa al otro" */
+function presAvisar(lista, miP){
+  if(!miP) return;
+  lista.forEach(x=>{
+    if(x.me || x.p!==miP || x.idle || x.away) return;
+    const k = x.id+"|"+miP; if(presAvisados.has(k)) return; presAvisados.add(k);
+    toast("👀 "+x.n+" también está en "+miP+": el último que guarda pisa al otro");
+  });
+}
+/* modo demo: tres personas de mentira que cambian de lugar, para ver el piso vivo */
+let presDemoMe = null;
+const PRES_DEMO = [ { id:"d1", n:"Teo", v:"proyectos", p:"SPOTIFY - CDMX", s:"tareas", t:1 },
+                    { id:"d2", n:"Milena", v:"calendario", p:"", s:"", t:1 },
+                    { id:"d3", n:"Narf", v:"dashboard", p:"", s:"", idle:true, t:1 } ];
+function presDemoState(){ const st = {}; PRES_DEMO.forEach(x=>st[x.id]=[x]); if(presDemoMe) st.me = [presDemoMe]; return st; }
+function presDemo(){
+  presMe = { id:"me", n:"Eyal" }; presMount(); presWatchInput(); presSync(true);
+  const opts = [["proyectos","SPOTIFY - CDMX","ficha"],["calendario","",""],["proyectos","PROYECTO X - TVC","cal"],["dashboard","",""],["proyectos","","new"],["proyectos","SPOTIFY - CDMX","sx"]];
+  setInterval(()=>{
+    const x = PRES_DEMO[Math.floor(Math.random()*PRES_DEMO.length)]; const o = opts[Math.floor(Math.random()*opts.length)];
+    x.v = o[0]; x.p = o[1]; x.s = o[2]; x.idle = false; x.t = Date.now();
+    presRender(presDemoState());
+  }, 9000);
+}
+
 /* init */
 /* un solo camino de alta: pegar el debrief y que la IA arme el borrador */
 $("#btnNew").addEventListener("click",()=>{ openDebrief(); });
@@ -4969,7 +5208,7 @@ function showInternalTools(esAdmin){
   if(esAdmin){ const el = $("#btnAdmin"); if(el) el.style.display=""; }
 }
 async function initAuth(){
-  if(!AUTH_ON){ showInternalTools(true); startApp(); return; }
+  if(!AUTH_ON){ showInternalTools(true); startApp(); presDemo(); return; }
   const gate = $("#authGate"); gate.style.display = "flex";
   try{
     const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
@@ -4982,13 +5221,14 @@ async function initAuth(){
 async function authEnter(session){
   authUser = session.user;
   try{
-    const { data, error } = await sb.from("profiles").select("role,subrol").eq("id", authUser.id).single();
+    const { data, error } = await sb.from("profiles").select("role,subrol,nombre").eq("id", authUser.id).single();
     if(error) throw error;
     if(data.role !== "interno"){ location.replace("/proveedores"); return; }
     $("#authGate").style.display = "none";
     showInternalTools(ADMIN_MAILS.includes((authUser.email||"").toLowerCase()));
     rosterEnsure().catch(()=>{});   /* precarga el directorio para el autocompletado de asignaciones */
     startApp();
+    presStart(data.nombre);          /* piso de presencia: quién más está en el hub */
   }catch(e){
     $("#agMsg").textContent = "No pude verificar tu cuenta ("+e.message+"). Probá recargar.";
   }
