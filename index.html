@@ -942,9 +942,25 @@
      cambios de estado se transicionan en vez de saltar. */
   .peep-body{position:absolute;bottom:4px;left:-23px;width:46px;height:30px;transition:transform .35s var(--ease-standard)}
   .peep.flip .peep-body{transform:scaleX(-1)}   /* darse vuelta: se aplasta y se espeja, no salta */
-  .peep-shadow{position:absolute;left:3px;bottom:-4px;width:40px;height:6px;border-radius:50%;background:rgba(0,0,0,.14)}
+  /* la sombra queda en el piso aunque lo levanten: se achica y se aclara con la altura */
+  .peep-shadow{position:absolute;left:-20px;bottom:0;width:40px;height:6px;border-radius:50%;background:rgba(0,0,0,.14);
+    transform:translateY(var(--lifty,0px)) scale(calc(1 - var(--lift,0)*.55));opacity:calc(1 - var(--lift,0)*.6)}
+  /* agarrar y soltar: el cuerpo es lo único del piso que recibe el puntero */
+  .peep-body{pointer-events:auto;cursor:grab;touch-action:none}
+  .peep-body::after{content:"";position:absolute;inset:-8px}
+  .peep:not(.walk):not(.held) .peep-body:hover .eye{transform:scale(1.06)}
+  .peep.held{transition:opacity var(--dur-slow) var(--ease-out);z-index:3}
+  .peep.held .peep-body{transform:rotate(var(--swing,0deg));transition:none}
+  .peep.held .eye{transform:scale(1.12)}
+  .peep.held .pupil{animation:none;transform:translate(-50%,-6px)}   /* miran para arriba, a quien lo tiene */
+  .peep.land .eye{animation:peepLand .45s var(--ease-out)}
+  @keyframes peepLand{0%{transform:scale(1.28,.66)}55%{transform:scale(.93,1.08)}100%{transform:none}}
+  .peep.dizzy .pupil{animation:peepDizzy .8s ease-in-out}
+  @keyframes peepDizzy{0%,100%{translate:0 0}20%{translate:-4px -2px}40%{translate:4px 1px}60%{translate:-3px 2px}80%{translate:3px -1px}}
+  #piso.carrying{z-index:60}   /* mientras vuela pasa por encima del header (50), no de los modales (80+) */
+  body.peep-grabbing,body.peep-grabbing *{cursor:grabbing !important;user-select:none !important}
   .peep .eyes{position:absolute;left:0;bottom:0;display:flex;gap:4px;align-items:flex-end;transform-origin:50% 100%;animation:peepBreath 3.2s ease-in-out infinite}
-  .peep .eye{width:21px;height:26px;border-width:2.5px;overflow:hidden;transform-origin:50% 100%}
+  .peep .eye{width:21px;height:26px;border-width:2.5px;overflow:hidden;transform-origin:50% 100%;transition:transform .2s var(--ease-out)}
   /* párpado: una tapa blanca con el borde de abajo en tinta que baja desde arriba.
      Parpadea sin deformar el ojo; dormido queda bajo (con transición, no de golpe). */
   .peep .eye::before{content:"";position:absolute;left:-4px;right:-4px;top:-4px;height:118%;z-index:1;background:#fff;border-bottom:2.5px solid var(--ink);
@@ -5097,6 +5113,7 @@ async function presStart(nombre){
   try{ const { data:{ session } } = await sb.auth.getSession(); if(session) await sb.realtime.setAuth(session.access_token); }catch(e){}
   presCh = sb.channel("hub-presence", { config: { presence: { key: presMe.id }, private: true } });
   presCh.on("presence", { event:"sync" }, ()=> presRender(presCh.presenceState()))
+    .on("broadcast", { event:"grab" }, ({ payload })=> presRemoto(payload))
     .subscribe(status=>{
       if(status==="SUBSCRIBED"){ presMount(); presLast = ""; presSync(true); }
       else if(status==="CHANNEL_ERROR" || status==="TIMED_OUT"){
@@ -5133,16 +5150,17 @@ function presRender(state){
   const lista = presLista(state);
   const miP = presState().p;
   const vivos = new Set(lista.map(x=>x.id));
-  presEls.forEach((el,id)=>{ if(!vivos.has(id)){ clearTimeout(el._wander); el.classList.add("out"); setTimeout(()=>el.remove(),400); presEls.delete(id); } });
-  /* si la ventana se achicó, nadie queda afuera */
-  presEls.forEach(el=>{ const [lo,hi] = presLimites(); const x = presX(el); if(x<lo || x>hi) presMover(el, Math.min(hi, Math.max(lo, x))); });
+  presEls.forEach((el,id)=>{ if(!vivos.has(id)){ clearTimeout(el._wander); presFis.delete(el); el.classList.add("out"); setTimeout(()=>el.remove(),400); presEls.delete(id); } });
+  /* si la ventana se achicó, nadie queda afuera (el que está en el aire lo resuelve la física) */
+  presEls.forEach(el=>{ if(presFis.has(el)) return; const [lo,hi] = presLimites(); const x = presX(el); if(x<lo || x>hi) presMover(el, Math.min(hi, Math.max(lo, x))); });
   lista.forEach(x=>{
     let el = presEls.get(x.id);
     if(!el){
       el = document.createElement("div");
       el.className = "peep"+(x.me?" me":"");
-      el.innerHTML = `<div class="peep-bubble"></div><span class="peep-tail"></span>
-        <div class="peep-body"><span class="peep-shadow"></span><span class="eyes"><span class="eye"><span class="pupil"></span></span><span class="eye"><span class="pupil"></span></span></span></div>`;
+      el._id = x.id;
+      el.innerHTML = `<div class="peep-bubble"></div><span class="peep-tail"></span><span class="peep-shadow"></span>
+        <div class="peep-body" title="Agarralo"><span class="eyes"><span class="eye"><span class="pupil"></span></span><span class="eye"><span class="pupil"></span></span></span></div>`;
       el.style.setProperty("--x", presLugarLibre(null)+"px");
       /* parpadeo y mirada desfasados por persona: si todos parpadean juntos parece un GIF */
       el.style.setProperty("--blink", (Math.random()*5).toFixed(2)+"s");
@@ -5159,11 +5177,13 @@ function presRender(state){
       requestAnimationFrame(()=>el.classList.add("in"));
     }
     const juntos = !x.me && !!x.p && x.p===miP && !x.idle && !x.away;
-    const txt = presTexto(x) + (juntos ? " · también acá" : "");
+    const txt = el._grabBy
+      ? (el._grabByMe ? "¡en tus manos!" : x.me ? "¡te agarró "+el._grabBy+"!" : "¡lo agarró "+el._grabBy+"!")
+      : presTexto(x) + (juntos ? " · también acá" : "");
     const b = el.querySelector(".peep-bubble");
     if(el._txt!==txt){
       b.innerHTML = `<b>${esc(x.me ? x.n+" (vos)" : x.n)}</b>${esc(txt)}`;
-      if(el._txt!==undefined){ el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
+      if(el._txt!==undefined && !presFis.has(el)){ el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
       el._txt = txt;
     }
     el.classList.toggle("idle", !!(x.idle||x.away));
@@ -5216,12 +5236,148 @@ function presMover(el, x){
 function presAgendar(el, ms){
   clearTimeout(el._wander);
   el._wander = setTimeout(()=>{
+    if(presFis.has(el)) return presAgendar(el, 3000);   /* en el aire: después */
     const quieto = el.classList.contains("idle") || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if(!quieto) presMover(el, presLugarLibre(el, presX(el)));
     const dur = parseFloat(el.style.getPropertyValue("--walk-dur")) || 0;
     presAgendar(el, (quieto ? 0 : dur*1000) + 5000 + Math.random()*9000);
   }, ms);
 }
+/* ---------- agarrar y soltar (lo ven todos) ----------
+   Lo que se arrastra va con física en JS, no con transition (RULES.md §4): sigue
+   al puntero, cuelga del punto donde lo agarraste como un péndulo que hereda la
+   velocidad de la mano, y al soltarlo cae con gravedad, rebota un poco, se
+   aplasta, patina y se marea. Al final vuelve al modo CSS en el mismo lugar.
+   A los demás les llega por broadcast: "grab" (lo levantan y queda colgando con
+   el globo "¡lo agarró Eyal!") y "drop" (cae con la velocidad del tiro). Son dos
+   mensajes por agarrada. Las posiciones son de cada pantalla, así que no se
+   sincroniza el x: cada uno lo ve levantarse y caer donde estaba. */
+const PRES_G = 2600;
+const presFis = new Map();   // el → estado físico mientras está en el aire
+let presRaf = 0, presRafT = 0;
+function presFisLoop(t){
+  const dt = Math.min(.034, presRafT ? (t-presRafT)/1000 : .016); presRafT = t;
+  presFis.forEach((s, el)=>presFisPaso(el, s, dt, t));
+  if(presFis.size) presRaf = requestAnimationFrame(presFisLoop);
+  else { presRaf = 0; presRafT = 0; const p = $("#piso"); if(p) p.classList.remove("carrying"); }
+}
+function presFisStart(el, mode){
+  let s = presFis.get(el);
+  if(!s){
+    /* desde la posición presentada: si venía caminando, lo agarrás donde está */
+    s = { x: presX(el), y: 0, vx: 0, vy: 0, a: 0, va: 0 };
+    clearTimeout(el._wander); clearTimeout(el._walkT);
+    el.classList.remove("walk","walk-end","hop","land","dizzy");
+    el.style.setProperty("--walk-dur","0s");
+    el.style.transform = `translate(${s.x}px, 0px)`;
+    el.classList.add("held");
+    presFis.set(el, s);
+  }
+  s.mode = mode; s.t0 = performance.now(); s.suelo = false;
+  const p = $("#piso"); if(p) p.classList.add("carrying");
+  if(!presRaf){ presRafT = 0; presRaf = requestAnimationFrame(presFisLoop); }
+  return s;
+}
+function presFisPaso(el, s, dt, t){
+  const [lo,hi] = presLimites();
+  if(s.mode==="held"){
+    const nx = s.px - s.offX, ny = Math.max(0, (innerHeight-6) - s.py - s.offY);
+    const k = Math.min(1, dt*14);
+    s.vx += ((nx - s.x)/dt - s.vx)*k; s.vy += ((ny - s.y)/dt - s.vy)*k;
+    s.x = nx; s.y = ny;
+  } else if(s.mode==="remote"){
+    /* lo tiene otro: sube y queda colgando con un vaivén suave */
+    s.y += (64 - s.y)*Math.min(1, dt*7);
+    s.vx = Math.sin((t - s.t0)/1000*2.1)*140;
+  } else {
+    s.vy -= PRES_G*dt; s.y += s.vy*dt; s.x += s.vx*dt;
+    if(s.x<lo){ s.x = lo; s.vx = -s.vx*.45; } else if(s.x>hi){ s.x = hi; s.vx = -s.vx*.45; }
+    if(s.y<=0){
+      s.y = 0;
+      if(s.vy < -520 && !s.suelo){ s.vy = -s.vy*.28; presAnim(el, "land"); }   // rebotito
+      else { if(!s.suelo){ s.suelo = true; presAnim(el, "land"); } s.vy = 0; }
+    }
+    if(s.suelo){ s.vx *= Math.exp(-5*dt); if(Math.abs(s.vx) < 12 && Math.abs(s.a) < 3) return presFisEnd(el, s); }
+  }
+  /* péndulo: en el aire se inclina contra el movimiento; apoyado se endereza */
+  const aT = s.suelo ? 0 : Math.max(-40, Math.min(40, s.vx*.035));
+  s.va += (120*(aT - s.a) - 9*s.va)*dt; s.a += s.va*dt;
+  el.style.transform = `translate(${s.x.toFixed(1)}px, ${(-s.y).toFixed(1)}px)`;
+  el.style.setProperty("--swing", s.a.toFixed(2)+"deg");
+  el.style.setProperty("--lift", Math.min(1, s.y/140).toFixed(3));
+  el.style.setProperty("--lifty", s.y.toFixed(1)+"px");
+}
+function presFisEnd(el, s){
+  presFis.delete(el);
+  /* vuelve a translateX(var(--x)) en el mismo punto: sin transición, sin salto */
+  el.style.setProperty("--x", Math.round(s.x)+"px");
+  el.style.removeProperty("transform");
+  ["--swing","--lift","--lifty"].forEach(v=>el.style.removeProperty(v));
+  el.querySelector(".peep-body").style.removeProperty("transform-origin");
+  el.classList.remove("held");
+  el._grabBy = null; el._grabByMe = false;
+  if(presLastState) presRender(presLastState);
+  presAnim(el, "dizzy");
+  presAgendar(el, 2500 + Math.random()*2500);
+}
+function presAnim(el, cls){
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  clearTimeout(el["_t_"+cls]); el["_t_"+cls] = setTimeout(()=>el.classList.remove(cls), 900);
+}
+function presSend(payload){
+  if(!presCh) return;
+  try{ presCh.send({ type:"broadcast", event:"grab", payload:{ ...payload, by: presMe.n, byId: presMe.id } }); }catch(e){}
+}
+function presGrab(e, body){
+  if(e.button > 0) return;
+  const el = body.closest(".peep"); if(!el || presFis.has(el) && presFis.get(el).mode==="held") return;
+  e.preventDefault();
+  const s = presFisStart(el, "held");
+  s.px = e.clientX; s.py = e.clientY;
+  s.offX = e.clientX - s.x;
+  s.offY = (innerHeight - 6 - s.y) - e.clientY;
+  /* cuelga del punto exacto donde lo agarraste */
+  body.style.transformOrigin = `${Math.max(0,Math.min(46, s.offX+23)).toFixed(0)}px ${Math.max(0,Math.min(30, 34 - s.offY)).toFixed(0)}px`;
+  el._grabBy = presMe ? presMe.n : "vos"; el._grabByMe = true;
+  if(presLastState) presRender(presLastState);
+  document.body.classList.add("peep-grabbing");
+  try{ body.setPointerCapture(e.pointerId); }catch(err){}
+  const mover = ev=>{ s.px = ev.clientX; s.py = ev.clientY; };
+  const soltar = ()=>{
+    body.removeEventListener("pointermove", mover);
+    body.removeEventListener("pointerup", soltar); body.removeEventListener("pointercancel", soltar);
+    document.body.classList.remove("peep-grabbing");
+    s.mode = "fall"; s.suelo = false;
+    s.vx = Math.max(-1800, Math.min(1800, s.vx)); s.vy = Math.max(-1200, Math.min(1400, s.vy));
+    presSend({ act:"drop", t: el._id, vx: s.vx/innerWidth, vy: s.vy });
+  };
+  body.addEventListener("pointermove", mover);
+  body.addEventListener("pointerup", soltar); body.addEventListener("pointercancel", soltar);
+  presSend({ act:"grab", t: el._id });
+}
+/* delegado: los personajes se crean y se borran todo el tiempo */
+document.addEventListener("pointerdown", e=>{ const b = e.target.closest && e.target.closest("#piso .peep-body"); if(b) presGrab(e, b); });
+/* lo que agarró otro, visto desde acá */
+function presRemoto(p){
+  if(!p || (presMe && p.byId===presMe.id)) return;
+  const el = presEls.get(p.t); if(!el) return;
+  const s0 = presFis.get(el); if(s0 && s0.mode==="held") return;   // justo lo tengo yo
+  if(p.act==="grab"){
+    el._grabBy = p.by || "alguien"; el._grabByMe = false;
+    presFisStart(el, "remote");
+    el.querySelector(".peep-body").style.transformOrigin = "50% 0";
+    if(presLastState) presRender(presLastState);
+    /* si el que lo agarró se desconecta sin soltarlo, se cae solo */
+    clearTimeout(el._autoDrop);
+    el._autoDrop = setTimeout(()=>presRemoto({ act:"drop", t:p.t, byId:p.byId, vx:0, vy:0 }), 12000);
+  } else if(p.act==="drop"){
+    clearTimeout(el._autoDrop);
+    const s = presFis.get(el) || presFisStart(el, "remote");
+    s.mode = "fall"; s.suelo = false;
+    s.vx = (Number(p.vx)||0)*innerWidth; s.vy = Number(p.vy)||0;
+  }
+}
+
 /* el valor real del piso: el sheet es "el último que guarda pisa al otro" */
 function presAvisar(lista, miP){
   if(!miP) return;
@@ -5245,6 +5401,12 @@ function presDemo(){
     x.v = o[0]; x.p = o[1]; x.s = o[2]; x.idle = false; x.t = Date.now();
     presRender(presDemoState());
   }, 9000);
+  /* y de vez en cuando Milena agarra a alguien y lo tira */
+  setInterval(()=>{
+    const t = ["d1","d3","me"][Math.floor(Math.random()*3)];
+    presRemoto({ act:"grab", t, by:"Milena", byId:"d2" });
+    setTimeout(()=>presRemoto({ act:"drop", t, byId:"d2", vx:(Math.random()-.5)*.8, vy:300 }), 2600);
+  }, 20000);
 }
 
 /* init */

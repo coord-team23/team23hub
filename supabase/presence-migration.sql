@@ -5,7 +5,8 @@
 -- cada pestaña abierta publica {nombre, vista, proyecto, qué está haciendo} y
 -- todas reciben la lista. No hay servidor ni workflow: lo único que hace falta
 -- es permitir que los usuarios logueados con rol "interno" lean y publiquen en
--- ese canal. Sin estas policies el canal rechaza la suscripción y el piso de
+-- ese canal (presence = quién está; broadcast = agarrar y soltar personajes).
+-- Sin estas policies el canal rechaza la suscripción y el piso de
 -- presencia simplemente no aparece (no rompe nada más).
 --
 -- Correr una vez en Supabase → SQL Editor. Usa public.is_internal(), la función
@@ -18,7 +19,7 @@ create policy "hub presence: internos escuchan"
   to authenticated
   using (
     realtime.topic() = 'hub-presence'
-    and extension = 'presence'
+    and extension in ('presence', 'broadcast')
     and public.is_internal()
   );
 
@@ -28,7 +29,7 @@ create policy "hub presence: internos publican"
   to authenticated
   with check (
     realtime.topic() = 'hub-presence'
-    and extension = 'presence'
+    and extension in ('presence', 'broadcast')
     and public.is_internal()
   );
 
