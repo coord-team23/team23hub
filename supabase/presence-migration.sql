@@ -8,8 +8,8 @@
 -- ese canal. Sin estas policies el canal rechaza la suscripción y el piso de
 -- presencia simplemente no aparece (no rompe nada más).
 --
--- Correr una vez en Supabase → SQL Editor. Requiere que exista public.profiles
--- con la columna role (la crea admin-migration.sql / el setup del login).
+-- Correr una vez en Supabase → SQL Editor. Usa public.is_internal(), la función
+-- security definer que crea admin-migration.sql (evita la recursión de RLS sobre profiles).
 -- ============================================================================
 
 create policy "hub presence: internos escuchan"
@@ -19,10 +19,7 @@ create policy "hub presence: internos escuchan"
   using (
     realtime.topic() = 'hub-presence'
     and extension = 'presence'
-    and exists (
-      select 1 from public.profiles pr
-      where pr.id = auth.uid() and pr.role = 'interno'
-    )
+    and public.is_internal()
   );
 
 create policy "hub presence: internos publican"
@@ -32,10 +29,7 @@ create policy "hub presence: internos publican"
   with check (
     realtime.topic() = 'hub-presence'
     and extension = 'presence'
-    and exists (
-      select 1 from public.profiles pr
-      where pr.id = auth.uid() and pr.role = 'interno'
-    )
+    and public.is_internal()
   );
 
 -- Para deshacer:
