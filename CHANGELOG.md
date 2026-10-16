@@ -10,7 +10,9 @@ Salido de las notas de Mile (14/9), Eyal (17/8) y Teo (14/8).
 - **Volver de etapa ya no pide tildar el checklist**: el checklist de la etapa actual solo frena *avanzar*. Retomar o reabrir un proyecto (Completado → Ejecutando, Listo para cierre → Entregando, etc.) es libre. Sigue sin poder volver a Pre-producción.
 - **Nuevo `n8n/17-cierre-reminder.json`** (importar y ACTIVAR, cargar `discordCoordId` y el credential `Discord Bot`): todos los días 10:00 avisa en Discord de los proyectos que llevan +10 días en Listo para cierre (`diasUmbral`), y repite cada 7 (`repetirCadaDias`, 0 = una sola vez). Como el Sheet no guarda desde cuándo está en cierre, anota la fecha la primera vez que lo ve (static data de n8n); los que ya estén en cierre al activarlo cuentan desde ese día.
 
-**Pendientes / a decidir:** fechas de ingreso y egreso **por persona** dentro de una tarea (Eyal "roles conectados a periodos", Teo #1) — hoy los rangos son por tarea, no por persona; instancia extra "Re-ejecutando" (Eyal) — con volver de etapa libre quizá ya no haga falta; llevar la inactivación al cierre a wf4 para cubrir también el cambio automático de wf11.
+**Decidido:** no se hacen las fechas de ingreso/egreso por persona (Eyal "roles conectados a periodos", Teo #1; los rangos siguen siendo por tarea), ni la etapa extra "Re-ejecutando" (con volver de etapa libre alcanza), ni el reinicio del checklist al reabrir (si un proyecto vuelve a Entregando, el checklist queda como estaba).
+
+**Pendiente:** llevar la inactivación al cierre a wf4, para cubrir también el cambio automático de wf11.
 
 ## 2026-09-14 — Auditoría: login validado en n8n, config compartida, admin arreglado
 
