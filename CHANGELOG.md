@@ -4,11 +4,12 @@ Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + 
 
 ## 2026-10-16 — Piso de presencia: quién está en el hub y en qué anda
 
-Una franja fija al pie de `index.html` con los ojitos de la marca caminando: una pareja de ojos por persona conectada y un globo que dice dónde está (`viendo · PRESIDENTE`, `en las tareas · …`, `editando la síntesis · …`, `creando un proyecto`, `en Calendario`, `zzz` a los 3 min sin actividad, `en otra pestaña`). Cambió de actividad → saltito. Botón ▾ para achicarlo (se recuerda por navegador).
+Una franja fija al pie de `index.html` con los ojitos de la marca caminando: una pareja de ojos por persona conectada y un globo que dice dónde está (`viendo · PRESIDENTE`, `en las tareas · …`, `editando la síntesis · …`, `creando un proyecto`, `en Calendario`, `zzz` a los 3 min sin actividad, `en otra pestaña`). Cambió de actividad → saltito. Fijo abajo, sin colapsar.
 
 - **Cómo funciona**: Supabase Realtime Presence sobre el canal privado `hub-presence`. Cada pestaña hace `track({n, v, p, s, idle, away, t})`; el estado se lee del DOM (qué overlay está `.open`) y de `currentView`/`detailProject`, así que no hay que avisar en cada lugar. Sin servidor ni workflow.
 - **Para activarlo**: correr `supabase/presence-migration.sql` una vez (dos policies en `realtime.messages`, solo rol `interno`). Sin eso el canal rechaza la suscripción, el piso no aparece y nada más cambia.
 - **Lo útil**: el Sheet es "el último que guarda pisa al otro". Si alguien más está en la misma ficha, su globo pasa a rojo (`· también acá`) y sale un toast una vez por persona y proyecto.
+- Parpadean bajando el párpado (no aplastando el ojo); dormidos, el párpado queda a la mitad. Caminata y frenado sin saltos: la clase de paso se saca en el borde del ciclo, con los dos ojos apoyados.
 - Oculto en mobile (≤640px). Va debajo de los overlays: con un modal abierto se ve apagado detrás del scrim.
 
 ## 2026-10-13 — Un solo camino de alta, barra de candidato y pie de tarea alineado

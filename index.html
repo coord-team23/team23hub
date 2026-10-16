@@ -922,16 +922,9 @@
   #piso{position:fixed;left:0;right:0;bottom:0;z-index:40;height:84px;background:var(--paper);border-top:var(--stroke-sm) solid var(--ink)}
   #piso[hidden]{display:none}
   body.piso-on{padding-bottom:84px}
-  body.piso-on.piso-min{padding-bottom:0}
   .piso-stage{position:absolute;left:0;right:0;bottom:0;height:84px;overflow:hidden}
-  .piso-bar{position:absolute;right:var(--space-5);top:-15px;display:flex;align-items:center;gap:6px;z-index:1}
-  .piso-count{font-size:10.5px;font-weight:var(--weight-bold);letter-spacing:.12em;text-transform:uppercase;background:var(--paper);border:2px solid var(--ink);border-radius:var(--radius-full);padding:5px 11px;line-height:1}
-  .piso-min{width:26px;height:26px;border:2px solid var(--ink);border-radius:50%;background:var(--paper);cursor:pointer;font-size:12px;line-height:1;color:var(--ink);padding:0;transition:transform var(--dur-base) var(--ease-out)}
-  .piso-min:hover{background:var(--ink);color:#fff}
-  #piso.min{height:0;border-top-width:2px}
-  #piso.min .piso-bar{top:-32px}   /* achicado, la pastilla queda entera arriba de la raya */
-  #piso.min .piso-stage{display:none}
-  #piso.min .piso-min{transform:rotate(180deg)}
+  .piso-bar{position:absolute;right:var(--space-5);top:-15px;z-index:1}
+  .piso-count{display:inline-block;font-size:10.5px;font-weight:var(--weight-bold);letter-spacing:.12em;text-transform:uppercase;background:var(--paper);border:2px solid var(--ink);border-radius:var(--radius-full);padding:5px 11px;line-height:1}
   .peep{position:absolute;bottom:6px;left:0;width:0;transform:translateX(var(--x));opacity:0;
     transition:transform 1.6s var(--ease-standard),opacity var(--dur-slow) var(--ease-out)}
   .peep.in{opacity:1}
@@ -940,28 +933,40 @@
      los propios ojos — uno se levanta e inclina mientras el otro apoya, en
      contrafase, y las pupilas miran hacia donde van. Quieto respira, parpadea y
      mira para los costados; dormido se aplasta a dos líneas. */
-  .peep-body{position:absolute;bottom:4px;left:-23px;width:46px;height:30px}
-  .peep.flip .peep-body{transform:scaleX(-1)}
+  /* Cada animación es dueña de un elemento y una propiedad distintos (respiración en
+     .eyes, paso en .eye, párpado en .eye::before, mirada en la pupila con `translate`
+     y dirección con `transform`), así ninguna cancela a otra a mitad de camino y los
+     cambios de estado se transicionan en vez de saltar. */
+  .peep-body{position:absolute;bottom:4px;left:-23px;width:46px;height:30px;transition:transform .35s var(--ease-standard)}
+  .peep.flip .peep-body{transform:scaleX(-1)}   /* darse vuelta: se aplasta y se espeja, no salta */
   .peep-shadow{position:absolute;left:3px;bottom:-4px;width:40px;height:6px;border-radius:50%;background:rgba(0,0,0,.14)}
   .peep .eyes{position:absolute;left:0;bottom:0;display:flex;gap:4px;align-items:flex-end;transform-origin:50% 100%;animation:peepBreath 3.2s ease-in-out infinite}
-  .peep .eye{width:21px;height:26px;border-width:2.5px;transform-origin:50% 100%;animation:peepBlink 5.4s ease-in-out infinite;animation-delay:var(--blink,0s)}
-  .peep .pupil{width:8px;height:8px;top:auto;bottom:4px;left:50%;transform:translateX(-50%);animation:peepLook 7s ease-in-out infinite;animation-delay:var(--look,0s)}
-  @keyframes peepBreath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.035)}}
-  @keyframes peepBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+  .peep .eye{width:21px;height:26px;border-width:2.5px;overflow:hidden;transform-origin:50% 100%}
+  /* párpado: una tapa blanca con el borde de abajo en tinta que baja desde arriba.
+     Parpadea sin deformar el ojo; dormido queda bajo (con transición, no de golpe). */
+  .peep .eye::before{content:"";position:absolute;left:-4px;right:-4px;top:-4px;height:118%;z-index:1;background:#fff;border-bottom:2.5px solid var(--ink);
+    border-radius:0 0 50% 50% / 0 0 35% 35%;transform:translateY(-100%);transition:transform .45s var(--ease-standard);
+    animation:peepBlink 5.4s ease-in-out infinite;animation-delay:var(--blink,0s)}
+  @keyframes peepBlink{0%,93.5%,100%{transform:translateY(-100%)}95.5%,97%{transform:translateY(-12%)}}
+  .peep .pupil{width:8px;height:8px;top:auto;bottom:4px;left:50%;transform:translateX(-50%);transition:transform .5s var(--ease-standard);
+    animation:peepLook 7s ease-in-out infinite;animation-delay:var(--look,0s)}
   @keyframes peepLook{0%,35%,100%{translate:0 0}45%,60%{translate:4px 0}70%,85%{translate:-3px 0}}
-  /* caminando: paso por turno, con aplastadita al apoyar */
-  .peep.walk .eyes{animation:none}
-  .peep.walk .eye{animation:peepStep .72s ease-in-out infinite}
-  .peep.walk .eye:last-child{animation-delay:-.36s}
-  .peep.walk .pupil{animation:none;translate:4px 0}
-  @keyframes peepStep{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-8px) rotate(14deg)}55%{transform:translateY(0) rotate(0) scale(1.06,.94)}70%{transform:scale(1,1)}}
+  @keyframes peepBreath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.035)}}
+  /* caminando: el ojo A da el paso en la primera mitad del ciclo y el B en la segunda.
+     En los bordes del ciclo los dos están apoyados: la clase se saca justo ahí
+     (animationiteration) y el personaje termina de caminar sin saltar. */
+  .peep.walk .eye{animation:peepStep .76s ease-in-out infinite}
+  .peep.walk .eye:last-child{animation-delay:-.38s}
+  .peep.walk .pupil{transform:translateX(calc(-50% + 4px))}   /* miran hacia donde van */
+  @keyframes peepStep{0%,50%,100%{transform:translateY(0) rotate(0) scale(1)}24%{transform:translateY(-8px) rotate(14deg)}42%{transform:translateY(0) rotate(0) scale(1.06,.94)}}
   /* cambió de actividad: saltito */
   .peep.hop .peep-body{animation:peepHop .5s var(--ease-overshoot)}
   @keyframes peepHop{0%,100%{translate:0 0}40%{translate:0 -12px}}
-  /* ausente / sin actividad: ojos cerrados */
-  .peep.idle .eyes{animation:none}
-  .peep.idle .eye{animation:none;transform:scaleY(.12)}
-  .peep.idle .pupil{display:none}
+  /* ausente / sin actividad: el párpado baja hasta la mitad y se queda (ojos de
+     sueño: la línea del párpado cruza el ojo), y las pupilas se apagan */
+  .peep.idle .eye::before{animation:none;transform:translateY(-38%)}
+  .peep .pupil{transition:transform .5s var(--ease-standard),opacity .45s var(--ease-standard)}
+  .peep.idle .pupil{animation:none;opacity:0}
   .peep.idle .peep-bubble{color:var(--gray)}
   .peep-bubble{position:absolute;bottom:44px;left:0;transform:translateX(-50%);white-space:nowrap;max-width:max(96px,min(320px,calc(var(--slot,320px) - 12px)));overflow:hidden;text-overflow:ellipsis;
     background:#fff;border:2px solid var(--ink);border-radius:10px;padding:4px 9px;box-shadow:3px 3px 0 var(--ink);
@@ -1151,7 +1156,7 @@
 <!-- piso de presencia: quién está en el hub (Supabase Realtime Presence, ver supabase/presence-migration.sql) -->
 <div id="piso" hidden aria-label="Quién está en el hub">
   <div class="piso-stage" aria-live="polite"></div>
-  <div class="piso-bar"><span class="piso-count"></span><button type="button" class="piso-min" onclick="presToggle()" title="Achicar / agrandar el piso" aria-label="Achicar o agrandar el piso">▾</button></div>
+  <div class="piso-bar"><span class="piso-count"></span></div>
 </div>
 
 <!-- ============ MODAL: NUEVO PROYECTO (DEBRIEF IA) ============ -->
@@ -5093,17 +5098,8 @@ function presWatchInput(){
   document.addEventListener("visibilitychange", ()=>{ presAway = document.hidden; presSync(); });
   window.addEventListener("resize", ()=>{ if(presLastState) presRender(presLastState); });
 }
-function presMount(){
-  const el = $("#piso"); if(!el) return;
-  el.hidden = false; document.body.classList.add("piso-on");
-  try{ if(localStorage.getItem("t23_piso")==="min"){ el.classList.add("min"); document.body.classList.add("piso-min"); } }catch(e){}
-}
-function presUnmount(){ const el = $("#piso"); if(el) el.hidden = true; document.body.classList.remove("piso-on","piso-min"); }
-function presToggle(){
-  const el = $("#piso"); if(!el) return;
-  const min = el.classList.toggle("min"); document.body.classList.toggle("piso-min", min);
-  try{ localStorage.setItem("t23_piso", min ? "min" : "full"); }catch(e){}
-}
+function presMount(){ const el = $("#piso"); if(!el) return; el.hidden = false; document.body.classList.add("piso-on"); }
+function presUnmount(){ const el = $("#piso"); if(el) el.hidden = true; document.body.classList.remove("piso-on"); }
 /* presenceState() → [{id, n, v, p, s, idle, away, t, me}], una entrada por persona
    (con varias pestañas abiertas gana la más reciente) */
 function presLista(state){
@@ -5140,6 +5136,13 @@ function presRender(state){
       /* parpadeo y mirada desfasados por persona: si todos parpadean juntos parece un GIF */
       el.style.setProperty("--blink", (Math.random()*5).toFixed(2)+"s");
       el.style.setProperty("--look", (Math.random()*7).toFixed(2)+"s");
+      /* fin de la caminata sin salto: cuando termina el desplazamiento se marca
+         walk-end, y la clase walk se saca en el borde del ciclo del paso, donde
+         los dos ojos están apoyados */
+      el.addEventListener("transitionend", e=>{ if(e.target===el && e.propertyName==="transform") el.classList.add("walk-end"); });
+      el.querySelector(".eye").addEventListener("animationiteration", e=>{
+        if(e.animationName==="peepStep" && el.classList.contains("walk-end")) el.classList.remove("walk","walk-end");
+      });
       stage.appendChild(el); presEls.set(x.id, el);
       el._wander = setInterval(()=>presWander(el), 7000 + Math.random()*6000);
       requestAnimationFrame(()=>el.classList.add("in"));
@@ -5164,9 +5167,10 @@ function presMover(el, x){
   const cur = parseFloat(el.style.getPropertyValue("--x")) || 0;
   if(Math.abs(cur-x) < 4) return;
   el.classList.toggle("flip", x < cur);
-  el.classList.add("walk");
+  el.classList.remove("walk-end"); el.classList.add("walk");
   el.style.setProperty("--x", x+"px");
-  clearTimeout(el._walkT); el._walkT = setTimeout(()=>el.classList.remove("walk"), 1700);
+  /* red de contención por si transitionend no llega (pestaña en segundo plano) */
+  clearTimeout(el._walkT); el._walkT = setTimeout(()=>el.classList.add("walk-end"), 4000);
 }
 function presWander(el){
   if(el.classList.contains("idle")) return;
