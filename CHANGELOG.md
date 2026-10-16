@@ -14,6 +14,36 @@ Salido de las notas de Mile (14/9), Eyal (17/8) y Teo (14/8).
 
 **Pendiente:** llevar la inactivación al cierre a wf4, para cubrir también el cambio automático de wf11.
 
+## 2026-10-16 — Piso de presencia: quién está en el hub y en qué anda
+
+Los ojitos de la marca viven al pie de `index.html`, sobre la página misma (sin franja, fondo ni raya; no capturan clicks). Caminan de verdad por todo el ancho a velocidad constante y se reparten para no pisarse los globos: una pareja de ojos por persona conectada y un globo que dice dónde está (`viendo · PRESIDENTE`, `en las tareas · …`, `editando la síntesis · …`, `creando un proyecto`, `en Calendario`, `zzz` a los 3 min sin actividad, `en otra pestaña`). Cambió de actividad → saltito. Fijo abajo, sin colapsar.
+
+- **Cómo funciona**: Supabase Realtime Presence sobre el canal privado `hub-presence`. Cada pestaña hace `track({n, v, p, s, idle, away, t})`; el estado se lee del DOM (qué overlay está `.open`) y de `currentView`/`detailProject`, así que no hay que avisar en cada lugar. Sin servidor ni workflow.
+- **Para activarlo**: correr `supabase/presence-migration.sql` una vez (dos policies en `realtime.messages`, solo rol `interno`). Sin eso el canal rechaza la suscripción, el piso no aparece y nada más cambia.
+- **Lo útil**: el Sheet es "el último que guarda pisa al otro". Si alguien más está en la misma ficha, su globo pasa a rojo (`· también acá`) y sale un toast una vez por persona y proyecto.
+- Parpadean bajando el párpado (no aplastando el ojo); dormidos, el párpado queda a la mitad. Caminata y frenado sin saltos: la clase de paso se saca en el borde del ciclo, con los dos ojos apoyados.
+- **Agarrar y soltar** (lo ven todos): se agarra a cualquiera con el mouse, cuelga del punto donde lo agarraste como un péndulo, mira para arriba con los ojos grandes; al soltarlo cae con gravedad, rebota, se aplasta, patina y se marea, y vuelve a caminar. Física en JS (RULES.md §4). A los demás les llegan dos broadcasts por agarrada (`grab` / `drop`): lo ven levantarse y colgar con el globo `¡lo agarró Eyal!` (o `¡te agarró …!` si sos vos) y caer con la velocidad del tiro. Si el que lo tiene se desconecta, se cae solo a los 12 s. La policy de `presence-migration.sql` ahora también habilita `broadcast`.
+- Un personaje por **navegador**, no por cuenta: dos personas con la misma cuenta en dos computadoras aparecen como dos (con el mismo nombre) y se avisan si coinciden en una ficha; varias pestañas del mismo navegador cuentan como uno. Id en `localStorage` (`t23_browser`).
+- Oculto en mobile (≤640px). Va debajo de los overlays: con un modal abierto se ve apagado detrás del scrim.
+
+## 2026-10-13 — Un solo camino de alta, barra de candidato y pie de tarea alineado
+
+### Alta de proyecto: se va la Opción 1 (kick off manual)
+
+`+ NUEVO PROYECTO` abre directo el formulario desde debrief (IA). Se eliminaron el selector de opciones (`#ovChooser`), el wizard de planificación (`#ovKickOff`, `KICKOFF_QUESTIONS`) y el formulario manual (`#ovNew`, `createProject()` y todo el estado `np*`). `assignStore`, `taskDatesStore`, `autoStore` y `linksStore` ya no tienen rama `np`. Son ~330 líneas menos en `index.html`.
+
+### Bloque de tarea (ficha y armado)
+
+- **Una barra por candidato** (`.person-bar`): a la izquierda el estado y la decisión (Candidato · ✓ Confirmar · ✕ Rechazar), a la derecha la propuesta por mail, separadas por una raya. Antes eran dos filas de pastillas de 24px pegadas entre sí.
+- **La propuesta por mail es un switch** (`.sw`) en los dos lados. En el armado arranca prendido y sale al crear. En la ficha arranca apagado y, prendido, sale con **Guardar cambios de equipo**: `saveTeam()` pregunta con nombres y manda `mails` en el mismo update (antes era un botón que mandaba al toque). Enviada, muestra `Propuesta enviada <fecha>` y un `↺ Reenviar` que existía en `mailSend()` pero no tenía botón.
+- **Fechas y notas en dos columnas alineadas**: `.ab-foot` es una grilla con etiqueta arriba (INICIO · FIN · NOTAS). Sin nota, un botón punteado `+ agregar nota` de la misma altura que los inputs de fecha; con nota, la caja con ✎.
+- Escala única para controles chicos: `.mini-btn` 30px (34 en mobile), `.chipst` 26px, `.mini-btn.ico` para ✎ / ↺.
+- `.modal:focus{outline:none}`: el anillo de foco del navegador alrededor del modal entero (a11y.js enfoca el contenedor al abrirlo).
+
+### Creación: sin `id` no se agrega
+
+Si `/webhook/team23/create` responde sin `id` (wf3 cortado a mitad, p. ej. Frame.io con credencial vencida), el hub avisa en vez de agregar un proyecto fantasma que después devolvía HTTP 500 en cada edición. wf3 además saltea Frame si falla (`¿Frame creado?` / `¿Carpeta POST?`) y devuelve `avisos` que el hub muestra en el toast.
+
 ## 2026-09-14 — Auditoría: login validado en n8n, config compartida, admin arreglado
 
 ### Seguridad: n8n valida la sesión de Supabase en cada webhook

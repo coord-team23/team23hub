@@ -35,6 +35,24 @@
               "name": "dbSheetId",
               "value": "1mL5ks1vzLfZIUjZPX_Y-0xGAUyFjgU9zLxz8iS_PMXE",
               "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "adminMails",
+              "value": "narf@team23.online,teo@team23.online,krl@team23.online,milena@team23.online,biz@team23.online",
+              "type": "string"
+            },
+            {
+              "id": "sb1",
+              "name": "supabaseUrl",
+              "value": "https://muvmrkacjhygfuialpyn.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "sb2",
+              "name": "supabaseAnonKey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI",
+              "type": "string"
             }
           ]
         },
@@ -58,7 +76,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        400,
+        1500,
         0
       ]
     },
@@ -90,7 +108,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        600,
+        1700,
         0
       ],
       "credentials": {
@@ -111,8 +129,225 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        800,
+        1900,
         0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('CONFIG').first().json.supabaseUrl }}/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('CONFIG').first().json.supabaseAnonKey }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Webhook').first().json.headers.authorization || '' }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "941afdcb-4937-4131-ad07-a4171dc46f72",
+      "name": "Validar login",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.email || '' }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fb112b70-5d1e-436b-b863-d2771bb1bc0e",
+      "name": "¿Login válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        640,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: 'login inválido' }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "2d28aa7b-95a1-443b-85f9-26ae2a2975bb",
+      "name": "Responder 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        860,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('CONFIG').first().json.supabaseUrl }}/rest/v1/profiles?id=eq.{{ $('Validar login').first().json.id }}&select=role",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('CONFIG').first().json.supabaseAnonKey }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Webhook').first().json.headers.authorization || '' }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "38552111-20d8-462d-95c0-296153908081",
+      "name": "Leer rol",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.role || '' }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "interno"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "255997f4-7a7f-40c1-8f73-392d1e2910d0",
+      "name": "¿Es interno?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: 'solo productores' }) }}",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "id": "54ec3e00-6fd3-4b6a-9c8b-bc569cb2d127",
+      "name": "Responder 403",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $('CONFIG').first().json.adminMails.split(',').includes(String($('Validar login').first().json.email || '').toLowerCase()) }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d0459a05-7174-4b30-a4b2-22f0308380da",
+      "name": "¿Es admin?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: 'solo admin' }) }}",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "id": "a39bfafb-ca1a-469b-8bbd-7df335294f87",
+      "name": "Responder 403 admin",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        200
       ]
     }
   ],
@@ -132,7 +367,7 @@
       "main": [
         [
           {
-            "node": "Preparar fila",
+            "node": "Validar login",
             "type": "main",
             "index": 0
           }
@@ -155,6 +390,82 @@
         [
           {
             "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar login": {
+      "main": [
+        [
+          {
+            "node": "¿Login válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Login válido?": {
+      "main": [
+        [
+          {
+            "node": "Leer rol",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer rol": {
+      "main": [
+        [
+          {
+            "node": "¿Es interno?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es interno?": {
+      "main": [
+        [
+          {
+            "node": "¿Es admin?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 403",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es admin?": {
+      "main": [
+        [
+          {
+            "node": "Preparar fila",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 403 admin",
             "type": "main",
             "index": 0
           }

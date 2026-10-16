@@ -178,6 +178,10 @@
     width:min(920px,100%);padding:var(--space-9) var(--space-7) var(--space-5);position:relative;
     box-shadow:10px 10px 0 var(--ink);
   }
+  /* a11y.js enfoca el contenedor del diálogo al abrirlo: el anillo de foco del
+     navegador alrededor de todo el modal no aporta nada (el modal ya ES lo que
+     está en foco) y rompe el borde negro */
+  .modal:focus{outline:none}
   /* ficha de proyecto: modal más ancho + contenido escalado al 90% */
   #ovDetail .modal{width:min(1080px,100%)}
   #detailBody{zoom:0.9}
@@ -194,11 +198,8 @@
   }
   .modal .kicker{font-size:var(--fs-caption);letter-spacing:.16em;font-weight:var(--weight-bold);color:var(--gray);text-transform:uppercase;margin-bottom:var(--space-5)}
 
-  /* ---------- wizard kick off ---------- */
-  #ovKickOff .modal{padding-bottom:120px}
-  /* el chooser (elegir opción 1/2) se queda grande; kick off y formularios van a la escala de la ficha de detalle */
-  #ovChooser .modal{zoom:1.4}
-  #ovKickOff .modal,#ovNew .modal,#ovNew2 .modal{zoom:0.9}
+  /* el formulario de alta va a la misma escala que la ficha de detalle */
+  #ovNew2 .modal{zoom:0.9}
   main{max-width:none}
   .usr-table{width:100%;border-collapse:collapse;font-size:13.5px}
   .usr-table th{text-align:left;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);padding:6px 8px;border-bottom:2px solid var(--ink)}
@@ -206,23 +207,6 @@
   .usr-badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.08em;padding:3px 10px;border-radius:999px;border:1.5px solid var(--ink)}
   .usr-badge.in{background:var(--ink);color:#fff}
   .usr-badge.out{background:#fff;color:var(--ink)}
-  .kickoff-q{
-    font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .727);color:var(--gray);
-    text-transform:uppercase;letter-spacing:var(--tracking-tight);line-height:1.05;margin-bottom:var(--space-7);
-    white-space:pre-line;
-  }
-  .kickoff-check{
-    display:flex;align-items:center;gap:var(--space-4);cursor:pointer;
-    font-family:var(--font-primary);font-weight:var(--weight-medium);font-size:calc(var(--fs-modal-title) * .727);color:var(--gray);
-    text-transform:uppercase;letter-spacing:var(--tracking-tight);
-  }
-  .kickoff-check input[type=checkbox],.kickoff-check input[type=radio]{width:30px;height:30px;cursor:pointer;flex:none}
-  .kickoff-sinos{display:flex;gap:var(--space-9);flex-wrap:wrap}
-  .kickoff-actions{
-    position:absolute;left:var(--space-7);right:var(--space-7);bottom:var(--space-7);
-    display:flex;align-items:center;justify-content:space-between;
-  }
-
   .fgroup{margin-bottom:var(--space-7)}
   .glabel{
     font-size:var(--fs-caption);letter-spacing:.12em;font-weight:var(--weight-bold);text-transform:uppercase;
@@ -314,7 +298,10 @@
   .finales-btn.on:hover{background:#d40000;border-color:#d40000}
 
   /* ---------- candidatos (equipo propuesto por tarea) ---------- */
-  .chipst{font-size:9.5px;font-weight:var(--weight-bold);letter-spacing:.08em;text-transform:uppercase;border-radius:var(--radius-full);padding:3px 9px;border:1.5px solid var(--ink)}
+  /* Chips, botones chicos y switch comparten una sola escala de alto (26 / 30px):
+     una fila de controles tiene que leerse como una fila, no como pastillas sueltas
+     de tamaños distintos. */
+  .chipst{display:inline-flex;align-items:center;min-height:26px;font-size:10px;font-weight:var(--weight-bold);letter-spacing:.1em;text-transform:uppercase;border-radius:var(--radius-full);padding:0 10px;border:1.5px solid var(--ink);line-height:1;white-space:nowrap}
   .chipst.cand{border-color:var(--gray);color:var(--gray)}
   .chipst.conf{background:var(--ink);color:#fff}
   .chipst.rech{border-color:var(--red);color:var(--red);text-decoration:line-through}
@@ -324,12 +311,39 @@
   .assign-min .nm{font-size:12.5px;color:var(--gray);text-decoration:line-through;flex:1;min-width:120px}
   /* hueco de la cruz de borrar: en la ficha no se borra a nadie, se cambia de estado */
   .icon-slot{display:block;width:34px;height:38px}
-  .mini-btn{font-family:var(--font-primary);font-size:11px;font-weight:var(--weight-bold);border:2px solid var(--ink);border-radius:var(--radius-full);padding:4px 10px;background:#fff;cursor:pointer;color:var(--ink)}
+  .mini-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:30px;font-family:var(--font-primary);font-size:11.5px;font-weight:var(--weight-bold);letter-spacing:.02em;line-height:1;border:2px solid var(--ink);border-radius:var(--radius-full);padding:0 12px;background:#fff;cursor:pointer;color:var(--ink);white-space:nowrap}
   .mini-btn:hover{background:var(--ink);color:#fff}
   .mini-btn.no{border-color:var(--red);color:var(--red)}
   .mini-btn.no:hover{background:var(--red);color:#fff}
-  .mini-btn.on{background:var(--ink);color:#fff}
-  .cand-state{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-2px 0 10px 2px}
+  /* negro = acción principal de la fila (misma lógica que .btn.primary); .on queda por compatibilidad */
+  .mini-btn.on,.mini-btn.primary{background:var(--ink);color:#fff}
+  .mini-btn.primary:hover{background:#2b2b2b;border-color:#2b2b2b}
+  /* sólo ícono (✎ ↺): círculo del mismo alto que el resto */
+  .mini-btn.ico{width:30px;padding:0;font-size:13px}
+
+  /* Debajo de cada candidato va UNA barra: a la izquierda su estado y la decisión
+     (confirmar / rechazar), a la derecha la propuesta por mail. Antes eran dos filas
+     sueltas de pastillas de 24px pegadas entre sí, y no se entendía qué era estado,
+     qué era acción y qué era un sí/no. */
+  .person-bar{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;margin:6px 0 14px}
+  .person-bar:not(:has(.pb-state:not(:empty),.pb-mail:not(:empty))){display:none}
+  .pb-state,.pb-mail{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pb-state:empty,.pb-mail:empty{display:none}
+  .pb-state:not(:empty) + .pb-mail:not(:empty){padding-left:18px;border-left:2px solid var(--hair)}
+  .pb-sent{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--gray);white-space:nowrap}
+  .pb-sent b{color:var(--ink)}
+
+  /* Switch: en el armado la propuesta se manda al crear el proyecto, así que es un
+     sí/no y se ve como un sí/no — no como un botón negro que parecía "apretado". */
+  .sw{display:inline-flex;align-items:center;gap:9px;position:relative;cursor:pointer;user-select:none;font-size:12px;font-weight:var(--weight-bold);color:var(--ink)}
+  .sw input{position:absolute;opacity:0;width:0;height:0;margin:0}
+  .sw-track{position:relative;flex:none;width:38px;height:22px;border:2px solid var(--ink);border-radius:var(--radius-full);background:#fff;transition:background-color var(--dur-fast) var(--ease-out)}
+  .sw-knob{position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--ink);transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) var(--ease-out)}
+  .sw.on .sw-track{background:var(--ink)}
+  .sw.on .sw-knob{background:#fff;transform:translateX(16px)}
+  .sw:not(.on) .sw-lbl{color:var(--gray)}
+  .sw input:focus-visible + .sw-track{outline:3px solid var(--red);outline-offset:2px}
+  .sw-to{font-size:12px;color:var(--gray)}
   .pill.warn{border-color:var(--red);color:var(--red)}
 
   /* ---------- gate de activación ---------- */
@@ -406,19 +420,18 @@
   .team-line.off .nm{color:var(--gray);text-decoration:line-through}
   .team-line.off .meta{color:var(--gray)}
 
-  /* pie: fechas acotadas y notas en una línea cuando están vacías */
-  .ab-foot{display:flex;gap:var(--space-5);flex-wrap:wrap;align-items:flex-end;margin-top:var(--space-4)}
-  .ab-dates{display:flex;flex-direction:column;gap:var(--space-2);flex:none}
+  /* pie: fechas y notas como dos columnas que arrancan a la misma altura, con la
+     misma etiqueta arriba (INICIO · FIN · NOTAS). Antes la caja de notas colgaba
+     del fondo de la fila y quedaba desalineada con los inputs de fecha. */
+  .ab-foot{display:grid;grid-template-columns:auto minmax(220px,1fr);gap:var(--space-5) var(--space-7);align-items:start;margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--rule-functional,var(--hair))}
+  .ab-lbl{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:var(--weight-bold);color:var(--gray);margin-bottom:6px}
+  .ab-dates{display:flex;flex-direction:column;gap:var(--space-2);min-width:0}
   .ab-dates .rango{display:flex;gap:var(--space-3);align-items:flex-end}
-  .ab-dates .addline{padding:2px 0;font-size:12px}
-  .ab-dates label{display:block;font-size:var(--fs-caption);letter-spacing:.08em;text-transform:uppercase;color:var(--gray);margin-bottom:4px}
+  .ab-dates .addline{padding:2px 0;font-size:12px;align-self:flex-start}
   .ab-dates input{width:158px}
-  .ab-notes{flex:1;min-width:200px}
+  .ab-notes{min-width:0}
 
   /* ---------- mails de propuesta a candidatos ---------- */
-  .mail-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-2px 0 10px 2px}
-  .mail-row .who{font-size:11px;font-weight:var(--weight-bold);letter-spacing:.04em;color:var(--gray)}
-  .mail-row .who.off{text-decoration:line-through}
   #ovMail .modal{width:min(860px,100%)}
   .mail-prev{width:100%;height:340px;border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);background:#fff;display:block}
   .mail-adv{margin-bottom:var(--space-7)}
@@ -427,15 +440,6 @@
   .mail-adv textarea{min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.5}
   .mail-warn{font-size:12.5px;color:var(--red);font-weight:var(--weight-bold);margin:8px 0 6px;line-height:1.45}
 
-  /* ---------- selector de flujo de creación (kick off vs. debrief IA) ---------- */
-  .opt-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
-  @media(min-width:640px){.opt-grid{grid-template-columns:1fr 1fr}}
-  .opt-card{border:2px solid var(--ink);border-radius:var(--radius-lg);padding:20px;cursor:pointer;background:#fff;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:8px;text-align:left}
-  .opt-card:hover{transform:translateY(-3px);box-shadow:6px 6px 0 var(--ink)}
-  .opt-card .opt-num{font-size:10px;letter-spacing:.2em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--red)}
-  .opt-card h3{font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:19px;text-transform:uppercase;letter-spacing:var(--tracking-tight);line-height:1.05}
-  .opt-card p{font-size:12.5px;color:var(--gray);line-height:1.45;flex:1;margin:0}
-  .opt-card .opt-cta{font-size:12px;font-weight:var(--weight-bold)}
   .frame-cta{
     display:flex;align-items:center;justify-content:center;text-align:center;
     border:2px solid var(--ink);border-radius:var(--radius-sm);background:var(--ink);color:#fff !important;
@@ -698,7 +702,8 @@
     .icon-slot{width:44px;height:42px}
 
     /* objetivos táctiles: 4px de alto no se acierta con el dedo */
-    .mini-btn{min-height:34px;padding:6px 12px;font-size:12px}
+    .mini-btn{min-height:34px;padding:0 14px;font-size:12px}
+    .mini-btn.ico{width:34px;padding:0}
     .trk-toggle{min-height:26px;padding:4px 8px;font-size:10px}
 
     /* popups: bajar los altos fijos para no obligar a scrollear tanto */
@@ -709,10 +714,13 @@
     .mail-adv textarea{min-height:120px}
 
     /* controles de fila: que no queden apretados contra el borde */
-    .mail-row,.cand-state,.assign-min{gap:8px}
+    .person-bar,.assign-min{gap:8px 12px}
+    /* sin lugar para dos grupos en una fila: la propuesta baja a su propio renglón, sin la raya */
+    .pb-state:not(:empty) + .pb-mail:not(:empty){padding-left:0;border-left:none;flex-basis:100%}
 
     /* mails y URLs largos empujaban el layout en lugar de cortarse */
-    .mail-row .who,.assign-min .nm,.modal .kicker,.chk-item .txt,.sx-body{overflow-wrap:anywhere}
+    .sw-to,.pb-sent,.assign-min .nm,.modal .kicker,.chk-item .txt,.sx-body{overflow-wrap:anywhere}
+    .pb-sent{white-space:normal}
     .assign-min .nm{min-width:0}
 
     /* tabs: un poco más de alto para el dedo */
@@ -742,11 +750,9 @@
     .team-line .meta{grid-area:2 / 1 / 3 / 3}
     .ab-head{padding:9px var(--space-4)}
     .ab-body{padding:var(--space-2) var(--space-4) var(--space-4)}
-    .ab-foot{gap:var(--space-4)}
-    .ab-dates{flex:1 1 100%}
-    .ab-dates>div{flex:1}
+    .ab-foot{grid-template-columns:1fr;gap:var(--space-4)}
+    .ab-dates .rango>div{flex:1}
     .ab-dates input{width:100%}
-    .ab-notes{flex:1 1 100%;min-width:0}
     .ab-when{margin-left:0;flex-basis:100%}
 
     /* Tabla de fases: a 540px las columnas quedaban tan angostas que los inputs de
@@ -886,14 +892,15 @@
   .sx-empty{font-size:13px;color:var(--gray)}
 
   /* ---------- notas de tarea / fase: se leen enteras, se editan en popup ---------- */
-  .nota-box{border:1.5px solid var(--hair);border-radius:var(--radius-sm);padding:8px 10px;margin-top:var(--space-3)}
-  .nota-box.vacio{display:flex;align-items:center;gap:8px;margin-top:0}
-  .nota-box.tiene{margin-top:0}
-  .nota-box.tiene{border-color:var(--ink)}
-  .nota-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-  .nota-head .lbl{font-size:var(--fs-caption);letter-spacing:.1em;font-weight:var(--weight-bold);text-transform:uppercase;color:var(--gray);flex:1}
-  .nota-txt{font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
-  .nota-txt.vacia{color:var(--gray);font-style:italic}
+  /* vacía: un botón punteado de la misma altura que los inputs de fecha (46px), así
+     la columna de notas arranca alineada con INICIO / FIN en vez de colgar abajo */
+  .nota-add{display:flex;align-items:center;width:100%;min-height:46px;border:2px dashed var(--rule-functional,var(--hair));border-radius:var(--radius-md);background:#fff;padding:0 14px;font-family:var(--font-secondary);font-size:12px;font-weight:var(--weight-bold);color:var(--gray);cursor:pointer;text-align:left}
+  .nota-add:hover{border-color:var(--ink);border-style:solid;color:var(--ink)}
+  .nota-box{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--ink);border-radius:var(--radius-md);padding:10px 12px}
+  .nota-box.vacio{min-height:46px;align-items:center;border-style:dashed;border-color:var(--rule-functional,var(--hair))}
+  .nota-box .mini-btn{flex:none}
+  .nota-txt{flex:1;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;padding-top:5px}
+  .nota-txt.vacia{color:var(--gray);font-style:italic;padding-top:0}
   .cal-nota{cursor:pointer;text-align:left}
   .cal-nota .txt{font-size:12.5px;line-height:1.4;max-height:2.8em;overflow:hidden;display:block}
   .cal-nota .txt.vacia{color:var(--gray)}
@@ -907,6 +914,88 @@
   #ovSintesis .modal{width:min(820px,100%)}
   #sxTa{min-height:300px;font-size:15px;line-height:1.6}
   .sx-prevbox{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);background:#fff;max-height:240px;overflow:auto}
+
+  /* ---------- presencia: quién está en el hub y en qué anda ----------
+     Los ojitos de la marca viven en la página misma: sin franja, sin fondo, sin
+     raya. Caminan por el borde de abajo de la ventana (el contenido pasa por
+     detrás) con un globo que dice dónde está cada uno. No capturan clicks.
+     Van DEBAJO de los overlays (z 40 < 80): con un modal abierto quedan detrás
+     del scrim. */
+  #piso{position:fixed;left:0;right:0;bottom:0;z-index:40;height:84px;pointer-events:none}
+  #piso[hidden]{display:none}
+  body.piso-on{padding-bottom:84px}   /* lo último de la página puede scrollear por encima de ellos */
+  .piso-stage{position:absolute;inset:0}
+  /* el desplazamiento es lineal y a velocidad constante (la duración la calcula
+     presMover según la distancia): así el paso coincide con lo que avanza */
+  .peep{position:absolute;bottom:6px;left:0;width:0;transform:translateX(var(--x));opacity:0;
+    transition:transform var(--walk-dur,0s) linear,opacity var(--dur-slow) var(--ease-out)}
+  .peep.in{opacity:1}
+  .peep.out{opacity:0}
+  .peep.walk{z-index:2}   /* el que camina pasa por delante del que está quieto */
+  /* El personaje son los dos ojos de la marca, sin cuerpo ni patas: caminan con
+     los propios ojos — uno se levanta e inclina mientras el otro apoya, en
+     contrafase, y las pupilas miran hacia donde van. Quieto respira, parpadea y
+     mira para los costados; dormido se aplasta a dos líneas. */
+  /* Cada animación es dueña de un elemento y una propiedad distintos (respiración en
+     .eyes, paso en .eye, párpado en .eye::before, mirada en la pupila con `translate`
+     y dirección con `transform`), así ninguna cancela a otra a mitad de camino y los
+     cambios de estado se transicionan en vez de saltar. */
+  .peep-body{position:absolute;bottom:4px;left:-23px;width:46px;height:30px;transition:transform .35s var(--ease-standard)}
+  .peep.flip .peep-body{transform:scaleX(-1)}   /* darse vuelta: se aplasta y se espeja, no salta */
+  /* la sombra queda en el piso aunque lo levanten: se achica y se aclara con la altura */
+  .peep-shadow{position:absolute;left:-20px;bottom:0;width:40px;height:6px;border-radius:50%;background:rgba(0,0,0,.14);
+    transform:translateY(var(--lifty,0px)) scale(calc(1 - var(--lift,0)*.55));opacity:calc(1 - var(--lift,0)*.6)}
+  /* agarrar y soltar: el cuerpo es lo único del piso que recibe el puntero */
+  .peep-body{pointer-events:auto;cursor:grab;touch-action:none}
+  .peep-body::after{content:"";position:absolute;inset:-8px}
+  .peep:not(.walk):not(.held) .peep-body:hover .eye{transform:scale(1.06)}
+  .peep.held{transition:opacity var(--dur-slow) var(--ease-out);z-index:3}
+  .peep.held .peep-body{transform:rotate(var(--swing,0deg));transition:none}
+  .peep.held .eye{transform:scale(1.12)}
+  .peep.held .pupil{animation:none;transform:translate(-50%,-6px)}   /* miran para arriba, a quien lo tiene */
+  .peep.land .eye{animation:peepLand .45s var(--ease-out)}
+  @keyframes peepLand{0%{transform:scale(1.28,.66)}55%{transform:scale(.93,1.08)}100%{transform:none}}
+  .peep.dizzy .pupil{animation:peepDizzy .8s ease-in-out}
+  @keyframes peepDizzy{0%,100%{translate:0 0}20%{translate:-4px -2px}40%{translate:4px 1px}60%{translate:-3px 2px}80%{translate:3px -1px}}
+  #piso.carrying{z-index:60}   /* mientras vuela pasa por encima del header (50), no de los modales (80+) */
+  body.peep-grabbing,body.peep-grabbing *{cursor:grabbing !important;user-select:none !important}
+  .peep .eyes{position:absolute;left:0;bottom:0;display:flex;gap:4px;align-items:flex-end;transform-origin:50% 100%;animation:peepBreath 3.2s ease-in-out infinite}
+  .peep .eye{width:21px;height:26px;border-width:2.5px;overflow:hidden;transform-origin:50% 100%;transition:transform .2s var(--ease-out)}
+  /* párpado: una tapa blanca con el borde de abajo en tinta que baja desde arriba.
+     Parpadea sin deformar el ojo; dormido queda bajo (con transición, no de golpe). */
+  .peep .eye::before{content:"";position:absolute;left:-4px;right:-4px;top:-4px;height:118%;z-index:1;background:#fff;border-bottom:2.5px solid var(--ink);
+    border-radius:0 0 50% 50% / 0 0 35% 35%;transform:translateY(-100%);transition:transform .45s var(--ease-standard);
+    animation:peepBlink 5.4s ease-in-out infinite;animation-delay:var(--blink,0s)}
+  @keyframes peepBlink{0%,93.5%,100%{transform:translateY(-100%)}95.5%,97%{transform:translateY(-12%)}}
+  .peep .pupil{width:8px;height:8px;top:auto;bottom:4px;left:50%;transform:translateX(-50%);transition:transform .5s var(--ease-standard);
+    animation:peepLook 7s ease-in-out infinite;animation-delay:var(--look,0s)}
+  @keyframes peepLook{0%,35%,100%{translate:0 0}45%,60%{translate:4px 0}70%,85%{translate:-3px 0}}
+  @keyframes peepBreath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.035)}}
+  /* caminando: el ojo A da el paso en la primera mitad del ciclo y el B en la segunda.
+     En los bordes del ciclo los dos están apoyados: la clase se saca justo ahí
+     (animationiteration) y el personaje termina de caminar sin saltar. */
+  .peep.walk .eye{animation:peepStep .76s ease-in-out infinite}
+  .peep.walk .eye:last-child{animation-delay:-.38s}
+  .peep.walk .pupil{transform:translateX(calc(-50% + 4px))}   /* miran hacia donde van */
+  @keyframes peepStep{0%,50%,100%{transform:translateY(0) rotate(0) scale(1)}24%{transform:translateY(-8px) rotate(14deg)}42%{transform:translateY(0) rotate(0) scale(1.06,.94)}}
+  /* cambió de actividad: saltito */
+  .peep.hop .peep-body{animation:peepHop .5s var(--ease-overshoot)}
+  @keyframes peepHop{0%,100%{translate:0 0}40%{translate:0 -12px}}
+  /* ausente / sin actividad: el párpado baja hasta la mitad y se queda (ojos de
+     sueño: la línea del párpado cruza el ojo), y las pupilas se apagan */
+  .peep.idle .eye::before{animation:none;transform:translateY(-38%)}
+  .peep .pupil{transition:transform .5s var(--ease-standard),opacity .45s var(--ease-standard)}
+  .peep.idle .pupil{animation:none;opacity:0}
+  .peep.idle .peep-bubble{color:var(--gray)}
+  .peep-bubble{position:absolute;bottom:44px;left:0;transform:translateX(-50%);white-space:nowrap;max-width:min(260px,40vw);overflow:hidden;text-overflow:ellipsis;
+    background:#fff;border:2px solid var(--ink);border-radius:10px;padding:4px 9px;box-shadow:3px 3px 0 var(--ink);
+    font-family:var(--font-secondary);font-size:11.5px;font-weight:var(--weight-bold);letter-spacing:0;line-height:1.25;color:var(--ink)}
+  .peep-bubble b{font-family:var(--font-primary);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-right:4px}
+  .peep-tail{position:absolute;bottom:40px;left:0;width:8px;height:8px;background:#fff;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:translateX(-50%) rotate(45deg)}
+  /* dos personas en la misma ficha: el otro queda en rojo (el último que guarda pisa al otro) */
+  .peep.juntos .peep-bubble{border-color:var(--red);box-shadow:3px 3px 0 var(--red)}
+  .peep.juntos .peep-tail{border-color:var(--red)}
+  @media(max-width:640px){ #piso{display:none} body.piso-on{padding-bottom:0} }
 </style>
 <!-- Capa de interacción: press, foco, hit area, motion y contraste.
      Va DESPUÉS del <style> de arriba a propósito: misma especificidad,
@@ -1021,59 +1110,6 @@
   </div>
 </footer>
 
-<!-- ============ MODAL: NUEVO PROYECTO ============ -->
-<div class="overlay" id="ovNew">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newTitle">
-    <button class="close" onclick="closeNew()" aria-label="Cerrar">✕</button>
-    <h2 id="newTitle">Nuevo proyecto</h2>
-    <div class="kicker">Al crearlo se genera Drive + Frame.io + documentos, automáticamente</div>
-
-    <div class="fgroup">
-      <div class="glabel">Datos externos</div>
-      <div class="frow">
-        <div><label class="f">Nombre de la campaña *</label><input type="text" id="npNombre" placeholder="BRAHMA - Te la mereSED"></div>
-        <div><label class="f">Productora</label><input type="text" id="npProductora" placeholder="LANDIA / TMMT"></div>
-        <div><label class="f">Director</label><input type="text" id="npDirector" placeholder=""></div>
-        <div><label class="f">Cliente *</label><input type="text" id="npCliente" placeholder="Brahma"></div>
-        <div><label class="f">Agencia</label><input type="text" id="npAgencia" placeholder=""></div>
-      </div>
-      <div id="sx-np"></div>
-    </div>
-
-    <div class="fgroup">
-      <div class="glabel">Equipo interno <small>nombre + mail (para los avisos de calendario)</small></div>
-      <div class="frow">
-        <div><label class="f">Productor Ejecutivo *</label><input type="text" id="npEpNombre" autocomplete="off" oninput="acOpenRol(this,'ep','#npEpEmail')" onfocus="acRolFocus(this,'ep','#npEpEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
-        <div><label class="f">Mail EP *</label><input type="email" id="npEpEmail" placeholder="ep@team23.online"></div>
-      </div>
-      <div class="frow">
-        <div><label class="f">Productor</label><input type="text" id="npProdNombre" autocomplete="off" oninput="acOpenRol(this,'prod','#npProdEmail')" onfocus="acRolFocus(this,'prod','#npProdEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
-        <div><label class="f">Mail Productor</label><input type="email" id="npProdEmail" placeholder="prod@team23.online"></div>
-      </div>
-      <div class="frow">
-        <div><label class="f">Coordinador</label><input type="text" id="npCoordNombre" autocomplete="off" oninput="acOpenRol(this,'coord','#npCoordEmail')" onfocus="acRolFocus(this,'coord','#npCoordEmail')" onkeydown="acKey(event)" onblur="setTimeout(acClose,150)" placeholder="Nombre"></div>
-        <div><label class="f">Mail Coordinador</label><input type="email" id="npCoordEmail" placeholder="coord@team23.online"></div>
-      </div>
-    </div>
-
-    <div class="fgroup">
-      <div class="glabel">Tareas TEAM 23 <small>elegí las que aplican</small></div>
-      <div class="task-pills" id="npTasks"></div>
-      <div id="npAssigns"></div>
-      <div id="npCalPrev"></div>
-    </div>
-
-    <div class="fgroup">
-      <div class="glabel">Automatizaciones <small>vienen todas activadas; desactivá solo si hace falta</small></div>
-      <div id="npAuto"></div>
-    </div>
-
-    <div class="actions">
-      <button class="btn" onclick="closeNew()">Cancelar</button>
-      <button class="btn primary" id="btnCreate" onclick="createProject()">Crear proyecto</button>
-    </div>
-  </div>
-</div>
 
 <!-- ============ MODAL: DETALLE ============ -->
 <div class="overlay" id="ovDetail">
@@ -1083,21 +1119,6 @@
   </div>
 </div>
 
-<!-- ============ MODAL: WIZARD PLANIFICACIÓN KICK OFF ============ -->
-<div class="overlay" id="ovKickOff">
-  <div class="modal" role="dialog" aria-modal="true">
-    <button class="close" onclick="closeModal('ovKickOff')" aria-label="Cerrar">✕</button>
-    <h2>Planificación Kick Off</h2>
-    <div class="kicker" id="kickOffHeader">Paso 1 de 6</div>
-
-    <div id="kickOffContent" style="margin:var(--space-9) 0 0"></div>
-
-    <div class="kickoff-actions">
-      <button class="btn" id="kickOffBtnBack" onclick="kickOffBack()" style="display:none">Atrás</button>
-      <button class="btn primary" id="kickOffBtnNext" onclick="kickOffNext()" disabled style="margin-left:auto">Siguiente</button>
-    </div>
-  </div>
-</div>
 
 <!-- ============ MODAL: GATE DE ACTIVACIÓN ============ -->
 <div class="overlay" id="ovGate">
@@ -1150,34 +1171,18 @@
   </div>
 </div>
 
-<div class="overlay" id="ovChooser">
-  <div class="modal" role="dialog" aria-modal="true" style="width:min(720px,100%)">
-    <button class="close" onclick="closeModal('ovChooser')" aria-label="Cerrar">✕</button>
-    <h2>Nuevo proyecto</h2>
-    <div class="kicker">¿Cómo lo querés crear?</div>
-    <div class="opt-grid">
-      <div class="opt-card" onclick="chooseOption(1)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseOption(1)}">
-        <div class="opt-num">Opción 1</div>
-        <h3>Kick off manual</h3>
-        <p>El checklist de planificación paso a paso (Discord, timing, storyboard, Notion, adelanto) y después el formulario de siempre.</p>
-        <span class="opt-cta">Empezar →</span>
-      </div>
-      <div class="opt-card" onclick="chooseOption(2)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseOption(2)}">
-        <div class="opt-num">Opción 2</div>
-        <h3>Desde debrief (IA)</h3>
-        <p>Mismo checklist de planificación primero. Después pegás el debrief y la IA precarga nombre, cliente, síntesis, tareas y timeline. Revisás, cargás candidatos y creás.</p>
-        <span class="opt-cta">Empezar →</span>
-      </div>
-    </div>
-  </div>
+
+<!-- piso de presencia: quién está en el hub (Supabase Realtime Presence, ver supabase/presence-migration.sql) -->
+<div id="piso" hidden aria-label="Quién está en el hub">
+  <div class="piso-stage" aria-live="polite"></div>
 </div>
 
-<!-- ============ MODAL: NUEVO PROYECTO (OPCIÓN 2 · DEBRIEF IA) ============ -->
+<!-- ============ MODAL: NUEVO PROYECTO (DEBRIEF IA) ============ -->
 <div class="overlay" id="ovNew2">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="closeNew2()" aria-label="Cerrar">✕</button>
     <h2>Nuevo proyecto</h2>
-    <div class="kicker">Opción 2 · Desde debrief — la IA arma el borrador, vos lo revisás</div>
+    <div class="kicker">Desde el debrief — la IA arma el borrador, vos lo revisás</div>
 
     <div class="fgroup" id="n2DebriefStep">
       <div class="glabel">1 · Debrief <small>pegá el documento completo</small></div>
@@ -1723,11 +1728,6 @@ const VIEW_TITLES = {proyectos:"Proyectos", calendario:"Calendario", equipo:"Equ
 let currentView = "dashboard";
 
 /* ---------------- kick off wizard ---------------- */
-let kickOffStep = 1;
-let kickOffChecks = {};
-let kickOffResumen = "";
-let kickOffLinks = {};
-
 function onProjectsLoaded(){ renderAll(); renderCurrentView(); }
 
 function renderCurrentView(){
@@ -1748,6 +1748,7 @@ function switchView(name){
   if(location.hash.slice(1)!==name) location.hash = name;
   applyViewUI(name);
   renderCurrentView();
+  presSync();
 }
 
 window.addEventListener("hashchange", ()=>{
@@ -1786,13 +1787,12 @@ const AUTO_DEFS = [
   ["discord", "Crear canales de Discord",  "Categoría privada, canales del proyecto y aviso inicial al equipo"]
 ];
 const autoDefaults = () => ({ drive:true, frame:true, discord:true });
-let npAuto = autoDefaults();
 let n2Auto = autoDefaults();
-function autoStore(ctx){ return ctx==="n2" ? n2Auto : npAuto; }
+function autoStore(ctx){ return n2Auto; }   /* queda un solo formulario de alta (n2) */
 /* Links pegados a mano cuando se elige no crear Drive o Frame automáticamente.
    Viajan en el body y wf3 los usa para lo que no generó. */
-let npLinks = {}, n2Links = {};
-function linksStore(ctx){ return ctx==="n2" ? n2Links : npLinks; }
+let n2Links = {};
+function linksStore(ctx){ return n2Links; }
 function setManualLink(ctx, k, v){ linksStore(ctx)[k] = String(v||"").trim(); }
 const AUTO_LINK = { drive:["driveRoot","Link de la unidad de Drive","https://drive.google.com/drive/folders/..."],
                     frame:["frameio","Link del proyecto de Frame.io","https://next.frame.io/project/..."] };
@@ -1947,25 +1947,32 @@ function mailRowInner(r, tarea, i, ctx){
   const tq = String(tarea).replace(/'/g,"\\'");
   const editado = mailIsEdited(r) ? '<span class="chipst conf">Editado</span>' : "";
   const editar = `<button class="mini-btn" onclick="mailOpen('${tq}',${i},'${ctx}')">✎ Editar mail</button>`;
+  /* Lo que devuelve va adentro de .pb-mail (la mitad derecha de la barra de la persona). */
   if(ctx==="dt"){
-    /* La propuesta es para invitar a alguien que todavía no dijo que sí. Si ya se
-       la mandaste, o si la persona ya está confirmada / activa / inactiva en el
-       proyecto, el bloque no tiene nada que hacer ahí. La fecha del envío no se
-       pierde: pasa al chip de estado. */
-    if(r.mailSentAt || r.estado !== "candidato") return "";
-    /* sin la etiqueta "Propuesta" al lado, y en blanco: en negro parecía un estado
-       encendido y no un botón */
-    return `<div class="mail-row">
-      <button class="mini-btn" onclick="mailSend('${tq}',${i})">✉ Enviar propuesta por email</button>
-      ${editar}${editado}
-    </div>`;
+    /* La propuesta es para invitar a alguien que todavía no dijo que sí: si la
+       persona ya está confirmada / activa / inactiva, acá no hay nada que hacer. */
+    if(r.estado !== "candidato") return "";
+    /* ya enviada: la fecha queda a la vista, y se puede reenviar */
+    if(r.mailSentAt) return `<span class="pb-sent">✉ Propuesta enviada <b>${esc(mailFechaCorta(r.mailSentAt))}</b></span>
+      <button class="mini-btn" onclick="mailSend('${tq}',${i})" title="Volver a enviar la propuesta">↺ Reenviar</button>${editar}${editado}`;
+    /* sin enviar: el mismo switch que en el armado. Arranca apagado — en la ficha se
+       guarda seguido y nadie quiere mandar una propuesta por tocar una fecha. Prendido,
+       "Guardar cambios de equipo" manda el mail (y pregunta antes). */
+    const onDt = mailOnFor(r, "dt");
+    return `<label class="sw${onDt?" on":""}">
+      <input type="checkbox"${onDt?" checked":""} onchange="mailToggle('${tq}',${i},'dt')">
+      <span class="sw-track"><span class="sw-knob"></span></span>
+      <span class="sw-lbl">${onDt?"Mandar propuesta al guardar":"Mandar propuesta por mail"}</span>
+    </label>${editar}${editado}`;
   }
-  const on = r.mailOn !== false;
-  return `<div class="mail-row">
-    <span class="who ${on?"":"off"}">✉ Propuesta a ${esc(r.email)}</span>
-    <button class="mini-btn ${on?"on":"no"}" onclick="mailToggle('${tq}',${i})" aria-pressed="${on}">${on?"Envío activado":"Envío apagado"}</button>
-    ${editar}${editado}
-  </div>`;
+  /* armado: se manda sola al crear el proyecto, así que acá también es un sí/no (arranca prendido) */
+  const on = mailOnFor(r, "n2");
+  return `<label class="sw${on?" on":""}">
+      <input type="checkbox"${on?" checked":""} onchange="mailToggle('${tq}',${i},'n2')">
+      <span class="sw-track"><span class="sw-knob"></span></span>
+      <span class="sw-lbl">${on?"Mandar propuesta al crear":"No se le manda propuesta"}</span>
+    </label>
+    <span class="sw-to">→ ${esc(r.email)}</span>${editar}${editado}`;
 }
 /* el mail aparece cuando se carga la dirección: refresco solo esta fila para no perder el foco */
 function mailSlotSync(ctx, tarea, i){
@@ -1973,11 +1980,20 @@ function mailSlotSync(ctx, tarea, i){
   const el = $("#"+mailSlotId(ctx,tarea,i));
   if(el) el.innerHTML = mailRowInner((assignStore(ctx)[tarea]||[])[i], tarea, i, ctx);
 }
-function mailToggle(tarea, i){
-  const r = (n2AssignData[tarea]||[])[i]; if(!r) return;
-  r.mailOn = r.mailOn === false;
-  mailSlotSync("n2", tarea, i);
-  toast(r.mailOn ? "Se le manda la propuesta a "+(r.nombre||r.email) : "No se le manda mail a "+(r.nombre||r.email));
+/* En el armado el switch arranca prendido (mailOn === false lo apaga); en la ficha
+   arranca apagado (mailOn === true lo prende) y nunca se persiste: saveTeam lo
+   consume y lo borra antes de guardar. */
+function mailOnFor(r, ctx){ return ctx==="dt" ? r.mailOn===true : r.mailOn!==false; }
+function mailToggle(tarea, i, ctx="n2"){
+  const r = (assignStore(ctx)[tarea]||[])[i]; if(!r) return;
+  const on = !mailOnFor(r, ctx);
+  if(ctx==="dt"){ if(on) r.mailOn = true; else delete r.mailOn; }
+  else r.mailOn = on;
+  mailSlotSync(ctx, tarea, i);
+  const quien = r.nombre||r.email;
+  toast(!on ? "No se le manda mail a "+quien
+      : ctx==="dt" ? "Se le manda la propuesta a "+quien+" al guardar el equipo"
+      : "Se le manda la propuesta a "+quien);
 }
 
 /* ---------- enviar la propuesta desde la ficha (proyecto ya creado) ---------- */
@@ -2087,31 +2103,6 @@ function mailSave(){
 }
 
 /* ---------------- nuevo proyecto ---------------- */
-let npSelected = new Set();
-function renderNPTasks(){
-  $("#npTasks").innerHTML = TAREAS.map(t=>
-    `<span class="task-pill ${npSelected.has(t)?"on":""}" ${npSelected.has(t)?`style="background:${taskColor(t).bg};border-color:${taskColor(t).bd};color:${taskColor(t).fg}"`:""} onclick="toggleTask('${t}')">${t}</span>`).join("");
-  renderNPAssigns();
-}
-function toggleTask(t){
-  npSelected.has(t)? npSelected.delete(t) : npSelected.add(t);
-  renderNPTasks();
-}
-let npAssignData = {};
-let npTaskDates = {};
-let npSintesis = "";
-let npStoryboardUrl = "";
-let npTratamientoUrl = "";
-function renderNPAssigns(){
-  Object.keys(npAssignData).forEach(k=>{ if(!npSelected.has(k)) delete npAssignData[k]; });
-  Object.keys(npTaskDates).forEach(k=>{ if(!npSelected.has(k)) delete npTaskDates[k]; });
-  npSelected.forEach(t=>{
-    if(!npAssignData[t]) npAssignData[t]=[{nombre:"",email:"",discord:"",telefono:""}];
-    if(!npTaskDates[t]) npTaskDates[t]={inicio:"",fin:"",notas:""};
-  });
-  $("#npAssigns").innerHTML = [...npSelected].map(t=>assignBlockHTML(t, npAssignData[t], "np")).join("");
-  renderCreationCal("np");
-}
 function assignBlockHTML(tarea, rows, ctx){
   const td = taskDatesStore(ctx)[tarea] || {};
   const tq = String(tarea).replace(/'/g,"\\'");
@@ -2135,9 +2126,7 @@ function assignBlockHTML(tarea, rows, ctx){
   const stateInner = (r,i)=>{
     if(!dt || vacia(r)) return "";
     const b = (estado, txt, clase="") => `<button class="mini-btn ${clase}" onclick="candSet('${tq}',${i},'${estado}')">${txt}</button>`;
-    /* si se le mandó la propuesta y todavía no contestó, la fecha queda a la vista */
-    const enviado = (dt && r.estado==="candidato" && r.mailSentAt)
-      ? `<span class="who" style="margin-left:2px">✉ enviada ${esc(mailFechaCorta(r.mailSentAt))}</span>` : "";
+    /* la fecha de envío de la propuesta vive en la mitad de mail de la barra (mailRowInner) */
     if(!enCurso){
       /* pre-producción: se resuelve el candidato */
       if(!r.estado) return "";
@@ -2145,20 +2134,19 @@ function assignBlockHTML(tarea, rows, ctx){
       const c = r.estado==="confirmado" ? chip("conf","Confirmado") : chip("cand","Candidato");
       const acts = r.estado==="candidato"
         ? b("confirmado","✓ Confirmar") + b("rechazado","✕ Rechazar","no")
-        : `<button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
-      return c+acts+enviado;
+        : `<button class="mini-btn ico" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>`;
+      return c+acts;
     }
     /* en curso: activo / inactivo. Sin estado (alta manual) cuenta como activo.
        Excepción: un candidato sigue siendo candidato — es gente que se sumó con
        el proyecto en marcha y todavía tiene que decir que sí. Si se rechaza,
        sale del cuadro igual que los rechazados de pre-producción. */
     if(r.estado==="candidato")
-      return chip("cand","Candidato")+b("confirmado","✓ Confirmar")+b("rechazado","✕ Rechazar","no")+enviado;
+      return chip("cand","Candidato")+b("confirmado","✓ Confirmar")+b("rechazado","✕ Rechazar","no");
     if(r.estado==="inactivo") return chip("inact","Inactivo")+b("confirmado","↺ Reactivar");
     return chip("conf","Activo")+b("inactivo","Desactivar","no");
   };
 
-  const stateRow = (r,i)=>{ const s = stateInner(r,i); return s ? `<div class="cand-state">${s}</div>` : ""; };
 
   const visibles = rows.map((r,i)=>({r,i})).filter(({r})=> !(enCurso && r.estado==="rechazado"));
   /* Fila compacta: quien ya está en el equipo (confirmado, sin estado, o inactivo)
@@ -2175,9 +2163,9 @@ function assignBlockHTML(tarea, rows, ctx){
         <span class="nm">${esc(r.nombre || r.email || "Sin nombre")}</span>
         ${meta.length?`<span class="meta">${esc(meta.join(" · "))}</span>`:`<span class="meta falta">sin contacto cargado</span>`}
         <span class="acts">${lockTareasCtx ? "" :
-          stateInner(r,i) + `<button class="mini-btn" onclick="personaOpen('asig','${tq}',${i})" title="Editar datos de contacto">✎</button>`}</span>
+          stateInner(r,i) + `<button class="mini-btn ico" onclick="personaOpen('asig','${tq}',${i})" title="Editar datos de contacto">✎</button>`}</span>
       </div>
-      <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>`;
+      <div class="pb-mail" id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>`;
   };
 
   const filaHTML = ({r,i})=>{
@@ -2187,7 +2175,7 @@ function assignBlockHTML(tarea, rows, ctx){
       <div class="assign-min">
         <span class="nm">${esc(r.nombre||"")}${r.nombre&&r.email?" · ":""}${esc(r.email||"")}</span>
         ${chip("rech","Rechazado")}
-        <button class="mini-btn" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>
+        <button class="mini-btn ico" onclick="candSet('${tq}',${i},'candidato')" title="Volver a candidato">↺</button>
       </div>`;
     const quitar = (!dt || vacia(r))
       ? `<button class="icon-btn" onclick="delAssign('${ctx}','${tq}',${i})" title="Quitar">✕</button>`
@@ -2200,7 +2188,7 @@ function assignBlockHTML(tarea, rows, ctx){
         <input type="text" placeholder="Discord" value="${esc(r.discord||'')}" oninput="setAssign('${ctx}','${tq}',${i},'discord',this.value)">
         <input type="tel" placeholder="Teléfono" value="${esc(r.telefono||'')}" oninput="setAssign('${ctx}','${tq}',${i},'telefono',this.value)">
       </div>
-      <div id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div>${stateRow(r,i)}`;
+      <div class="person-bar"><div class="pb-state">${stateInner(r,i)}</div><div class="pb-mail" id="${mailSlotId(ctx,tarea,i)}">${mailRowInner(r,tarea,i,ctx)}</div></div>`;
   };
   /* el rango va en el encabezado: se entiende la tarea sin leer los inputs */
   const conFechas = taskRangos(td).filter(r=>r.inicio || r.fin);
@@ -2226,8 +2214,8 @@ function assignBlockHTML(tarea, rows, ctx){
       <div class="ab-dates">
         ${taskRangos(td).map((r,ri)=>`
           <div class="rango">
-            <div><label>${ri?"Inicio "+(ri+1):"Inicio"}</label><input type="date" value="${esc(r.inicio)}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value,${ri})"></div>
-            <div><label>${ri?"Fin "+(ri+1):"Fin"}</label><input type="date" value="${esc(r.fin)}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value,${ri})"></div>
+            <div><label class="ab-lbl">${ri?"Inicio "+(ri+1):"Inicio"}</label><input type="date" value="${esc(r.inicio)}" onchange="setTaskDate('${ctx}','${tarea}','inicio',this.value,${ri})"></div>
+            <div><label class="ab-lbl">${ri?"Fin "+(ri+1):"Fin"}</label><input type="date" value="${esc(r.fin)}" onchange="setTaskDate('${ctx}','${tarea}','fin',this.value,${ri})"></div>
             ${ri?`<button class="icon-btn" onclick="delRango('${ctx}','${tarea}',${ri})" title="Quitar este rango">✕</button>`:`<span class="icon-slot"></span>`}
           </div>`).join("")}
         <button class="addline" onclick="addRango('${ctx}','${tarea}')">+ agregar rango de fechas</button>
@@ -2266,7 +2254,7 @@ async function candSet(tarea, i, estado){
     toast(msg);
   }catch(e){ row.estado = prev; renderDetail(); toast("No pude guardar el cambio: "+e.message, true); }
 }
-function taskDatesStore(ctx){ return ctx==="np" ? npTaskDates : ctx==="n2" ? n2TaskDates : (detailProject.taskDates = detailProject.taskDates||{}); }
+function taskDatesStore(ctx){ return ctx==="n2" ? n2TaskDates : (detailProject.taskDates = detailProject.taskDates||{}); }
 function setTaskDate(ctx,t,field,val,ri){
   const s = taskDatesStore(ctx);
   const d = s[t] = s[t]||{inicio:"",fin:"",notas:""};
@@ -2287,7 +2275,7 @@ function addRango(ctx,t){
   d.rangos = d.rangos || [];
   d.rangos.push({inicio:"",fin:""});
   if(ctx==="dt") detailDirty = true;
-  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), renderN2Assigns());
 }
 function delRango(ctx,t,ri){
   const s = taskDatesStore(ctx);
@@ -2295,9 +2283,9 @@ function delRango(ctx,t,ri){
   d.rangos.splice(ri-1,1);
   if(!d.rangos.length) delete d.rangos;
   if(ctx==="dt") detailDirty = true;
-  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), renderN2Assigns());
 }
-function assignStore(ctx){ return ctx==="np" ? npAssignData : ctx==="n2" ? n2AssignData : detailProject.asignaciones; }
+function assignStore(ctx){ return ctx==="n2" ? n2AssignData : detailProject.asignaciones; }
 function setAssign(ctx,t,i,k,v){ assignStore(ctx)[t][i][k]=v; }
 function addAssign(ctx,t){
   /* en la ficha, alguien que se suma al proyecto arranca como candidato: es lo que
@@ -2305,73 +2293,9 @@ function addAssign(ctx,t){
   const fila = {nombre:"",email:"",discord:"",telefono:""};
   if(ctx==="dt") fila.estado = "candidato";
   assignStore(ctx)[t].push(fila);
-  ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail();
+  ctx==="n2"?renderN2Assigns():renderDetail();
 }
-function delAssign(ctx,t,i){ assignStore(ctx)[t].splice(i,1); if(!assignStore(ctx)[t].length) assignStore(ctx)[t]=[{nombre:"",email:"",discord:"",telefono:""}]; ctx==="np"?renderNPAssigns():ctx==="n2"?renderN2Assigns():renderDetail(); }
-
-async function createProject(){
-  const nombre = $("#npNombre").value.trim();
-  const cliente = $("#npCliente").value.trim();
-  const epN = $("#npEpNombre").value.trim(), epE = $("#npEpEmail").value.trim();
-  if(!nombre || !cliente){ toast("Falta el nombre o el cliente", true); return; }
-  if(!epN || !epE){ toast("Cargá el Productor Ejecutivo y su mail", true); return; }
-
-  const asigs = {};
-  Object.entries(npAssignData).forEach(([t,rows])=>{
-    const clean = rows.filter(r=>r.nombre||r.email);
-    if(clean.length) asigs[t]=clean;
-  });
-  const tDates = {};
-  [...npSelected].forEach(t=>{
-    const d = npTaskDates[t];
-    if(d && (d.notas || taskTieneFechas(d))) tDates[t]=d;
-  });
-
-  const body = {
-    nombre, cliente,
-    agencia: $("#npAgencia").value.trim(),
-    productora: $("#npProductora").value.trim(),
-    director: $("#npDirector").value.trim(),
-    ep_nombre: epN, ep_email: epE,
-    prod_nombre: $("#npProdNombre").value.trim(), prod_email: $("#npProdEmail").value.trim(),
-    coord_nombre: $("#npCoordNombre").value.trim(), coord_email: $("#npCoordEmail").value.trim(),
-    tareas: [...npSelected], asignaciones: asigs, taskDates: tDates, sintesis: npSintesis,
-    storyboard_url: npStoryboardUrl, tratamiento_url: npTratamientoUrl,
-    auto_drive: npAuto.drive, auto_frame: npAuto.frame, auto_discord: npAuto.discord,
-    links: manualLinks(npLinks, npAuto)
-  };
-
-  const btn = $("#btnCreate");
-  btn.disabled = true; btn.textContent = autoBusyLabel(npAuto);
-  t23LoadShow("crear");
-
-  try{
-    let proj;
-    if(DEMO){
-      await new Promise(r=>setTimeout(r,900));
-      proj = { ...body, id:"p_"+Date.now(), status:"por_activarse", year:String(new Date().getFullYear()),
-        links:Object.assign(autoDemoLinks(npAuto), manualLinks(npLinks, npAuto)), calendario:[] };
-    } else {
-      proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
-      proj.tareas = proj.tareas||body.tareas; proj.asignaciones = proj.asignaciones||body.asignaciones;
-      proj.taskDates = proj.taskDates||body.taskDates||{};
-      proj.calendario = proj.calendario||[];
-    }
-    projects.push(proj);
-    onProjectsLoaded();
-    closeModal("ovNew");
-    if(currentView!=="proyectos") switchView("proyectos");
-    openDetail(proj.id);
-    const nOn = autoNames(npAuto);
-    toast(nOn.length ? "✔ Proyecto creado, "+nOn.join(" + ")+" listo" : "✔ Proyecto creado, sin automatizaciones");
-    rosterSyncFromAsigs(asigs);
-  }catch(e){
-    toast("Error al crear: "+e.message, true);
-  }finally{
-    t23LoadHide();
-    btn.disabled = false; btn.textContent = "Crear proyecto";
-  }
-}
+function delAssign(ctx,t,i){ assignStore(ctx)[t].splice(i,1); if(!assignStore(ctx)[t].length) assignStore(ctx)[t]=[{nombre:"",email:"",discord:"",telefono:""}]; ctx==="n2"?renderN2Assigns():renderDetail(); }
 
 /* ---------------- detalle ---------------- */
 let detailProject = null;
@@ -2379,12 +2303,12 @@ let detailReadOnly = false; // true cuando se abre desde la vista Equipo: oculta
 let calView = null;   // Date del mes visible
 let weekView = null;  // Date dentro de la semana visible (vista semanal de cierre)
 let selDay = null;    // 'YYYY-MM-DD' del día seleccionado
-let calCtx = "dt";    // dónde vive el calendario visible: dt (ficha) / np (alta manual) / n2 (debrief IA)
+let calCtx = "dt";    // dónde vive el calendario visible: dt (ficha) / n2 (debrief IA)
 let calAuto = true;   // saltar automáticamente al mes de la primera fecha en el armado
 let tareasOpen = false; // colapsa/expande la sección "Tareas TEAM 23" en la ficha
-function toggleTareasOpen(){ tareasOpen = !tareasOpen; renderDetail(); }
+function toggleTareasOpen(){ tareasOpen = !tareasOpen; renderDetail(); presSync(); }
 let calSectionOpen = false; // colapsa/expande la sección "Calendario" en la ficha
-function toggleCalSectionOpen(){ calSectionOpen = !calSectionOpen; renderDetail(); }
+function toggleCalSectionOpen(){ calSectionOpen = !calSectionOpen; renderDetail(); presSync(); }
 let calTableOpen = false; // colapsa/expande la tabla de Fase/Inicio/Fin/Notas (proyectos grandes tienen muchas filas)
 function toggleCalTableOpen(){ calTableOpen = !calTableOpen; renderDetail(); }
 
@@ -2555,7 +2479,7 @@ function faseColorElegido(p, tarea){
    Sirve para pintar el cuadradito del encabezado en los tres contextos. */
 function faseColorDe(ctx, tarea){
   const p = ctx==="dt" ? detailProject
-          : { tareas: [...(ctx==="n2" ? n2Selected : npSelected)], taskDates: taskDatesStore(ctx), calendario: [] };
+          : { tareas: [...n2Selected], taskDates: taskDatesStore(ctx), calendario: [] };
   if(!p) return 0;
   const i = faseLookMap(p)["task:"+tarea];
   return (typeof i === "number" && PHASE_LOOKS[i]) ? i : 0;
@@ -2566,7 +2490,7 @@ function faseColorSet(ctx, tarea, idx){
   if(idx === null) delete d.color; else d.color = idx;
   if(ctx==="dt") detailDirty = true;
   colorCerrar();
-  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), ctx==="np"?renderNPAssigns():renderN2Assigns());
+  ctx==="dt" ? renderDetail() : (renderCreationCal(ctx), renderN2Assigns());
 }
 function faseLookMap(p){
   const map = {};
@@ -2851,10 +2775,10 @@ function navMonth(delta){
 function selectDay(key){ selDay = key; calCtx==="dt" ? renderDetail() : renderCreationCal(calCtx); }
 function closeDayPanel(){ selDay = null; calCtx==="dt" ? renderDetail() : renderCreationCal(calCtx); }
 
-/* vista previa del calendario durante el armado (np = alta manual, n2 = debrief IA) */
+/* vista previa del calendario durante el armado (n2 = debrief IA) */
 function renderCreationCal(ctx){
-  const el = $(ctx==="n2" ? "#n2CalPrev" : "#npCalPrev"); if(!el) return;
-  const sel = ctx==="n2" ? n2Selected : npSelected;
+  const el = $("#n2CalPrev"); if(!el) return;
+  const sel = n2Selected;
   const store = taskDatesStore(ctx);
   const p = { tareas:[...sel], taskDates: store, calendario: [] };
   const dated = [...sel].map(t=>(store[t]&&store[t].inicio)||"").filter(Boolean).sort();
@@ -4298,13 +4222,14 @@ function notaSlotId(ctx, tarea){ return "notabox-"+ctx+"-"+String(tarea).replace
 function notaBoxHTML(ctx, tarea, readOnly){
   const txt = ((taskDatesStore(ctx)||{})[tarea]||{}).notas || "";
   const tq = String(tarea).replace(/'/g,"\\'");
-  const editar = readOnly ? "" :
-    `<button class="mini-btn" onclick="notaOpen('task','${ctx}','${tq}')">${txt?"✎ editar":"+ agregar"}</button>`;
-  /* vacía = una línea; una caja grande para "sin notas" era mucho peso por nada */
-  if(!txt) return `<div class="nota-box vacio"><span class="lbl">Notas</span>${editar}</div>`;
-  return `<div class="nota-box tiene">
-    <div class="nota-head"><span class="lbl">Notas</span>${editar}</div>
+  /* la etiqueta va acá y no en el bloque, porque notaSlotSync reemplaza todo el slot */
+  const lbl = `<span class="ab-lbl">Notas</span>`;
+  if(!txt) return lbl + (readOnly
+    ? `<div class="nota-box vacio"><span class="nota-txt vacia">Sin notas</span></div>`
+    : `<button type="button" class="nota-add" onclick="notaOpen('task','${ctx}','${tq}')">+ agregar nota</button>`);
+  return lbl + `<div class="nota-box tiene">
     <div class="nota-txt">${esc(txt)}</div>
+    ${readOnly ? "" : `<button class="mini-btn ico" onclick="notaOpen('task','${ctx}','${tq}')" title="Editar la nota">✎</button>`}
   </div>`;
 }
 function notaSlotSync(ctx, tarea){
@@ -4351,20 +4276,18 @@ function notaSave(){
 
 /* ================================================================
    SÍNTESIS: caja colapsable + popup de edición
-   Vive en tres lugares (ficha, alta manual, debrief) con el mismo
+   Vive en dos lugares (ficha y debrief) con el mismo
    componente. El portal de proveedores tiene su propia copia y no se
    toca. El texto no se edita nunca en línea: siempre en el popup, que
    tiene lugar de sobra y muestra cómo va a quedar formateado.
 ================================================================ */
-const sxAbierta = { dt:false, np:false, n2:false };   // arranca colapsada; la preferencia dura la sesión, por contexto
+const sxAbierta = { dt:false, n2:false };   // arranca colapsada; la preferencia dura la sesión, por contexto
 function sxValue(ctx){
   if(ctx==="dt") return (detailProject && detailProject.sintesis) || "";
-  if(ctx==="np") return npSintesis || "";
   return (($("#n2Sintesis")||{}).value) || "";
 }
 function sxSetValue(ctx, v){
   if(ctx==="dt"){ if(detailProject) detailProject.sintesis = v; return; }
-  if(ctx==="np"){ npSintesis = v; return; }
   if($("#n2Sintesis")) $("#n2Sintesis").value = v;
 }
 /* lo que se muestra al lado del título cuando está colapsada */
@@ -4411,7 +4334,7 @@ function sxOpen(ctx){
   sxCtx = ctx;
   $("#sxWho").textContent = ctx==="dt"
     ? ((detailProject&&detailProject.nombre)||"Proyecto")
-    : (ctx==="np" ? "Nuevo proyecto · alta manual" : "Nuevo proyecto · desde debrief");
+    : "Nuevo proyecto · desde debrief";
   $("#sxTa").value = sxValue(ctx);
   sxLive();
   $("#ovSintesis").classList.add("open"); modalArmar("ovSintesis");   // sin tocar el scroll: queda un modal abierto detrás
@@ -4575,20 +4498,48 @@ async function saveTeam(btn){
   if(btn){ btn.disabled = true; btn.textContent = "Guardando…"; }
   try{
   const p = detailProject;
-  if(DEMO){ toast("✔ Equipo actualizado (demo)"); onProjectsLoaded(); return; }
+  /* Propuestas con el switch prendido: salen en esta misma llamada (wf4 solo toca
+     Gmail si viene `mails` en el body). Se pregunta antes, con nombres: mandar un
+     mail es lo único de este guardado que no se puede deshacer. */
+  const pendientes = [];
+  Object.entries(p.asignaciones||{}).forEach(([t,rows])=>(rows||[]).forEach(r=>{
+    if(r && r.mailOn===true && (r.email||"").trim() && r.estado==="candidato" && !r.mailSentAt) pendientes.push({t,r});
+  }));
+  if(pendientes.length){
+    const quien = pendientes.map(x=>x.r.nombre||x.r.email).join(", ");
+    const ok = await t23Confirm("Al guardar se le manda la propuesta a "+quien+", con el timeline del proyecto y su rol marcado. Podés revisarla antes con “Editar mail”.",
+      { titulo:"GUARDAR Y ENVIAR PROPUESTA"+(pendientes.length>1?"S":""), ok:"Guardar y enviar", cancelar:"Cancelar" });
+    if(ok !== true) return;
+  }
+  const mails = pendientes.map(({t,r})=>({ rol:t, to:r.email.trim(), nombre:r.nombre||"", enviar:true,
+    subject: mailFinalSubject(r, t, "dt"), html: mailFinalHTML(r, t, "dt") }));
+  const ahora = new Date().toISOString();
+  pendientes.forEach(({r})=>{ r.mailSentAt = ahora; });
+  /* el switch es de esta sesión: no viaja al sheet */
+  Object.values(p.asignaciones||{}).forEach(rows=>(rows||[]).forEach(r=>{ if(r) delete r.mailOn; }));
+  const okMsg = mails.length ? "✔ Equipo actualizado, propuesta enviada a "+mails.length+" candidato"+(mails.length>1?"s":"") : "✔ Equipo actualizado";
+  if(DEMO){ toast(okMsg+" (demo)"); renderDetail(); onProjectsLoaded(); return; }
   try{
-    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify({
+    const body = {
       id:p.id, equipo_json: JSON.stringify(p.equipo||{}),
       ep_nombre:p.ep_nombre, ep_email:p.ep_email, prod_nombre:p.prod_nombre, prod_email:p.prod_email,
       coord_nombre:p.coord_nombre, coord_email:p.coord_email,
       tareas_json: JSON.stringify(p.tareas), asignaciones_json: JSON.stringify(p.asignaciones),
       taskDates_json: JSON.stringify(p.taskDates||{})
-    })});
+    };
+    if(mails.length) body.mails = mails;
+    await api("/webhook/team23/update",{method:"POST",body:JSON.stringify(body)});
     detailDirty = false; snapDetail();
-    toast("✔ Equipo actualizado");
+    toast(okMsg);
+    renderDetail();
     rosterSyncFromAsigs(p.asignaciones);
     onProjectsLoaded();
-  }catch(e){ toast("Error al guardar: "+e.message,true); }
+  }catch(e){
+    /* no salió nada: los switches vuelven a prendidos para reintentar */
+    pendientes.forEach(({r})=>{ delete r.mailSentAt; r.mailOn = true; });
+    renderDetail();
+    toast("Error al guardar: "+e.message,true);
+  }
   }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
@@ -4717,139 +4668,10 @@ function printCalendar(){
 }
 
 /* ---------------- helpers UI ---------------- */
-function openModal(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; }
-function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; acClose(); }
+function openModal(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; presSync(); }
+function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; acClose(); presSync(); }
 
-/* kick off wizard */
-const KICKOFF_QUESTIONS = [
-  { q: "¿Está definida la categoría del proyecto en Discord? (si la automatización de Discord queda activa, el hub la crea al dar de alta)", mandatory: true, resp: "EP / PROD" },
-  { q: "¿Están definidos los canales de prod, coord y general? (con la automatización activa, el hub los crea junto con la categoría)", mandatory: true, resp: "PROD / COORD" },
-  { q: "¿Tenemos a mano la última versión del timing de CL?", mandatory: true, resp: "EP / PROD" },
-  { q: "¿Hay storyboard o tratamiento?\nPegá los links", mandatory: false, links: [{key:"storyboard",label:"Storyboard"},{key:"tratamiento",label:"Tratamiento"}] },
-  { q: "¿Hay resumen de entregables?\nPegalo en esta caja de texto", mandatory: false, texto: true, skipForOption: 2 },
-  { q: "¿Creaste el proyecto en Notion?\n(con fecha inicio/fin + link a presupuesto)", mandatory: true, resp: "EP" },
-  { q: "¿Avisaste a Krla que puede ir pidiendo el adelanto?", mandatory: true, resp: "EP" }
-];
-
-let kickOffQuestions = KICKOFF_QUESTIONS;
-
-function openKickOff(){
-  kickOffQuestions = KICKOFF_QUESTIONS.filter(q=>!q.skipForOption || q.skipForOption!==kickOffTargetOption);
-  kickOffStep = 1;
-  kickOffChecks = {};
-  kickOffResumen = "";
-  kickOffLinks = {};
-  renderKickOffStep();
-  openModal("ovKickOff");
-}
-
-function renderKickOffStep(){
-  const q = kickOffQuestions[kickOffStep-1];
-  const isSinos = q.sinos;
-  const isLast = kickOffStep === kickOffQuestions.length;
-
-  $("#kickOffHeader").textContent = `Paso ${kickOffStep} de ${kickOffQuestions.length}`;
-
-  let html = `<div class="kickoff-q">${esc(q.q)}${q.resp?` <span style="display:inline-block;vertical-align:middle;font-size:14px;font-weight:800;letter-spacing:.1em;border:1.5px solid var(--ink);border-radius:var(--radius-full);padding:2px 10px;color:var(--ink)">${esc(q.resp)}</span>`:""}</div>`;
-
-  if(q.links){
-    html += q.links.map(f=>`
-      <label class="f" style="display:block;margin-top:var(--space-4)">${esc(f.label)}</label>
-      <input type="text" value="${esc(kickOffLinks[f.key]||"")}" placeholder="https://…" style="width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3);border:2px solid var(--ink);border-radius:var(--radius-md)" oninput="kickOffLinks['${f.key}']=this.value">
-    `).join("");
-  } else if(q.texto){
-    html += `<textarea rows="5" style="width:100%;font-family:var(--font-primary);font-size:var(--fs-body);padding:var(--space-3);border:2px solid var(--ink);border-radius:var(--radius-md);resize:vertical" placeholder="Pegá el resumen de entregables…" oninput="kickOffResumen=this.value">${esc(kickOffResumen)}</textarea>`;
-  } else if(isSinos){
-    html += `<div class="kickoff-sinos">
-      <label class="kickoff-check">
-        <input type="radio" name="sinos" value="si" onchange="kickOffChecks[${kickOffStep-1}]='si';updateKickOffBtn()">
-        Sí
-      </label>
-      <label class="kickoff-check">
-        <input type="radio" name="sinos" value="no" onchange="kickOffChecks[${kickOffStep-1}]='no';updateKickOffBtn()">
-        No
-      </label>
-    </div>`;
-  } else {
-    html += `<label class="kickoff-check">
-      <input type="checkbox" id="kickOffCheckbox" onchange="kickOffChecks[${kickOffStep-1}]=this.checked;updateKickOffBtn()">
-      Completé este paso
-    </label>`;
-  }
-
-  $("#kickOffContent").innerHTML = html;
-
-  $("#kickOffBtnBack").style.display = kickOffStep === 1 ? "none" : "";
-  const nextBtn = $("#kickOffBtnNext");
-  nextBtn.textContent = isLast ? "Comenzar creación" : "Siguiente";
-  updateKickOffBtn();
-}
-
-function updateKickOffBtn(){
-  const q = kickOffQuestions[kickOffStep-1];
-  const isChecked = kickOffChecks[kickOffStep-1];
-
-  // Links y texto: siempre válido (opcional). Sí/no: cualquier selección. Checkbox simple: solo marcado
-  const isValid = (q.links || q.texto) ? true : (q.sinos ? isChecked : isChecked === true);
-
-  $("#kickOffBtnNext").disabled = !isValid;
-}
-
-function kickOffBack(){
-  if(kickOffStep > 1){
-    kickOffStep--;
-    renderKickOffStep();
-  }
-}
-
-function kickOffNext(){
-  if(kickOffStep < kickOffQuestions.length){
-    kickOffStep++;
-    renderKickOffStep();
-  } else {
-    kickOffComplete();
-  }
-}
-
-function kickOffComplete(){
-  closeModal("ovKickOff");
-  kickOffStep = 1;
-  kickOffChecks = {};
-  if(kickOffTargetOption===2){
-    openDebrief();
-    if(kickOffLinks.tratamiento || kickOffLinks.storyboard) $("#n2Storyboard").value = kickOffLinks.tratamiento || kickOffLinks.storyboard;
-    return;
-  }
-  // Inicializar el estado del nuevo proyecto
-  npSelected = new Set(); npAssignData = {}; npTaskDates = {};
-  npAuto = autoDefaults(); npLinks = {}; renderAuto("np");
-  npSintesis = kickOffResumen;
-  sxRender("np");
-  npStoryboardUrl = kickOffLinks.storyboard || "";
-  npTratamientoUrl = kickOffLinks.tratamiento || "";
-  ["npNombre","npCliente","npAgencia","npProductora","npDirector","npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"]
-    .forEach(id=>$("#"+id).value="");
-  calCtx = "np"; calAuto = true;
-  renderNPTasks();
-  openModal("ovNew");
-}
-
-/* ================================================================
-   NUEVO PROYECTO — chooser de flujo
-   Ambas opciones pasan primero por el wizard de kick off:
-   Opción 1: wizard → formulario manual ovNew
-   Opción 2: wizard → pegar debrief → IA precarga → formulario ovNew2
-================================================================ */
-let kickOffTargetOption = 1;
-function openChooser(){ openModal("ovChooser"); }
-function chooseOption(n){
-  closeModal("ovChooser");
-  if(n===2){ openDebrief(); return; }   /* Opción 2: directo al debrief IA, sin kickoff previo */
-  kickOffTargetOption = n;
-  openKickOff();
-}
-
-/* ---------------- Opción 2: crear desde debrief (IA) ---------------- */
+/* ---------------- crear desde debrief (IA) — el único camino de alta ---------------- */
 let n2Selected = new Set(), n2AssignData = {}, n2TaskDates = {};
 
 /* ---------------- borradores compartidos (viven en el sheet, los ve todo el equipo) ---------------- */
@@ -5027,25 +4849,6 @@ function n2Dirty(){
   const s = n2Snapshot();
   return hayAlgoCargado({ campos:s.campos, tareas:s.tareas, assign:s.assign, fechas:s.fechas, extras:[s.debrief] });
 }
-/* El alta manual no tenía guarda: la ✕, Cancelar y el click afuera cerraban directo
-   y se perdía todo. No ofrece "guardar borrador" porque el borrador vive en el estado
-   del flujo de debrief, no en este. */
-function npDirty(){
-  const ids = ["npNombre","npCliente","npAgencia","npProductora","npDirector",
-               "npEpNombre","npEpEmail","npProdNombre","npProdEmail","npCoordNombre","npCoordEmail"];
-  return hayAlgoCargado({
-    campos: Object.fromEntries(ids.map(id=>[id, ($("#"+id)||{}).value||""])),
-    tareas: [...npSelected], assign: npAssignData, fechas: npTaskDates,
-    /* lo que trajo el kick off también cuenta: si cerrás, hay que rehacerlo */
-    extras: [npSintesis, npStoryboardUrl, npTratamientoUrl]
-  });
-}
-async function closeNew(){
-  if(!npDirty()){ closeModal("ovNew"); return; }
-  const r = await t23Confirm("Vas a cerrar el armado sin crear el proyecto. Lo que cargaste se pierde.",
-    { titulo:"CERRAR SIN CREAR", ok:"Cerrar sin guardar", peligro:true });
-  if(r === true) closeModal("ovNew");
-}
 
 async function closeNew2(){
   if(!n2Dirty()){ closeModal("ovNew2"); return; }
@@ -5151,6 +4954,7 @@ async function createProject2(){
         calendario:[] };
     } else {
       proj = await api("/webhook/team23/create", { method:"POST", body: JSON.stringify(body) });
+      if(!proj || !proj.id) throw new Error("el servidor no guardó el proyecto (ver Executions en n8n)");
       proj.tareas = proj.tareas||body.tareas;
       proj.asignaciones = proj.asignaciones||body.asignaciones;
       proj.taskDates = proj.taskDates||body.taskDates||{};
@@ -5165,9 +4969,10 @@ async function createProject2(){
     openDetail(proj.id);
     const nCand = mails.filter(m=>m.enviar).length;
     const nOn2 = autoNames(n2Auto);
-    toast(nCand ? "✔ Proyecto creado, propuestas enviadas a "+nCand+" candidato"+(nCand>1?"s":"")
+    toast((proj.avisos||[]).length ? "Proyecto creado, pero: "+proj.avisos.join(" · ")
+        : nCand ? "✔ Proyecto creado, propuestas enviadas a "+nCand+" candidato"+(nCand>1?"s":"")
         : nOn2.length ? "✔ Proyecto creado, "+nOn2.join(" + ")+" listo"
-        : "✔ Proyecto creado, sin automatizaciones");
+        : "✔ Proyecto creado, sin automatizaciones", !!(proj.avisos||[]).length);
     if(currentDraftId){
       const viejoDraft = currentDraftId; currentDraftId = null; n2DraftBase = null;
       projects = projects.filter(x=>x.id!==viejoDraft);
@@ -5227,7 +5032,6 @@ if(_ovDet){
    guardar borrador, el editor de mails no toca el scroll porque queda uno abierto atrás) */
 function closeOverlayById(id){
   if(id==="ovDetail"){ requestCloseDetail(); return; }
-  if(id==="ovNew"){ closeNew(); return; }
   if(id==="ovNew2"){ closeNew2(); return; }
   if(id==="ovMail"){ mailClose(); return; }
   if(id==="ovSintesis"){ sxClose(); return; }
@@ -5263,7 +5067,9 @@ function toast(msg, err=false){
 
 /* ojitos que siguen el cursor */
 document.addEventListener("mousemove",e=>{
-  document.querySelectorAll(".eye").forEach(eye=>{
+  /* solo los ojos del header: los del piso de presencia tienen su propia mirada
+     y sumarlos acá sería un getBoundingClientRect más por persona en cada mousemove */
+  document.querySelectorAll("header .eye").forEach(eye=>{
     const r = eye.getBoundingClientRect();
     const cx = r.left+r.width/2, cy = r.top+r.height/2;
     const a = Math.atan2(e.clientY-cy, e.clientX-cx);
@@ -5272,8 +5078,384 @@ document.addEventListener("mousemove",e=>{
   });
 });
 
+/* ================================================================
+   PRESENCIA — quién está en el hub y en qué anda
+   Supabase Realtime Presence sobre el canal privado "hub-presence": cada
+   pestaña publica {n, v, p, s, idle, away, t} y todas reciben la lista.
+   Sin servidor ni workflow: las dos policies de supabase/presence-migration.sql
+   son lo único que hay que correr. Si faltan, el canal rechaza la suscripción,
+   el piso no aparece y no rompe nada más.
+   El piso: una pareja de ojitos (la marca) por persona, caminando sobre una
+   raya al pie de la página, con un globo que dice dónde está.
+   ================================================================ */
+let presCh = null, presMe = null, presLast = "", presLastState = null;
+let presIdle = false, presAway = false, presLastInput = Date.now();
+const presEls = new Map();        // userId → nodo .peep (se reusa para que las transiciones corran)
+const presAvisados = new Set();   // "navegador|proyecto" ya avisado por toast
+function presBrowserId(){
+  let id = null;
+  try{ id = localStorage.getItem("t23_browser"); }catch(e){}
+  if(!id){
+    id = "b_" + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2));
+    try{ localStorage.setItem("t23_browser", id); }catch(e){}
+  }
+  return id;
+}
+const PRES_IDLE_MS = 3*60*1000;
+const PRES_TXT = { ficha:"viendo", tareas:"en las tareas", cal:"en el calendario", sx:"editando la síntesis", nota:"editando una nota",
+                   mail:"editando un mail", trk:"en el tracker", gate:"activando", new:"creando un proyecto", users:"en usuarios" };
+
+function presNombre(){
+  if(presMe && presMe.n) return presMe.n;
+  const e = ((authUser && authUser.email) || "").split("@")[0];
+  return e.replace(/[._-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase()) || "Alguien";
+}
+/* el estado se lee del DOM y de las variables de la app, no se lleva aparte:
+   así no hay que acordarse de avisar en cada lugar que abre o cierra algo */
+function presState(){
+  const open = id => { const el = $("#"+id); return !!(el && el.classList.contains("open")); };
+  const p = (open("ovDetail") && detailProject) ? detailProject.nombre : "";
+  let s = "";
+  if(open("ovMail")) s = "mail";
+  else if(open("ovSintesis")) s = "sx";
+  else if(open("ovNota")) s = "nota";
+  else if(open("ovTracker")) s = "trk";
+  else if(open("ovGate")) s = "gate";
+  else if(open("ovNew2")) s = "new";
+  else if(open("ovUsers")) s = "users";
+  else if(p) s = calSectionOpen ? "cal" : tareasOpen ? "tareas" : "ficha";
+  return { n: presNombre(), v: currentView, p, s, idle: presIdle, away: presAway, t: Date.now() };
+}
+function presTexto(x){
+  if(x.away) return "en otra pestaña";
+  if(x.idle) return "zzz";
+  const s = PRES_TXT[x.s] || "";
+  if(x.p) return (s || "viendo")+" · "+x.p;
+  return s || ("en "+(VIEW_TITLES[x.v] || x.v || "el hub"));
+}
+/* publica el estado si cambió; con 250ms de gracia para agrupar abrir+render */
+function presSync(force){
+  if(!presCh && !DEMO) return;
+  clearTimeout(presSync._t);
+  presSync._t = setTimeout(async ()=>{
+    const st = presState();
+    const k = JSON.stringify([st.n, st.v, st.p, st.s, st.idle, st.away]);
+    if(!force && k===presLast) return;
+    presLast = k;
+    if(DEMO){ presDemoMe = { ...st, id:"me" }; presRender(presDemoState()); return; }
+    try{ await presCh.track(st); }catch(e){ /* sin red: el próximo cambio lo reintenta */ }
+  }, 250);
+}
+async function presStart(nombre){
+  if(!sb || !authUser) return;
+  /* La clave de presencia es el NAVEGADOR, no la cuenta: dos personas con la misma
+     cuenta (coord@ compartido) en dos computadoras son dos personajes y se avisan
+     entre sí; una persona con varias pestañas en el mismo navegador sigue siendo uno
+     (gana la pestaña más reciente). El id vive en localStorage; si no se puede
+     guardar, cada pestaña es su propio personaje. */
+  presMe = { id: presBrowserId(), n: String(nombre||"").trim() || presNombre() };
+  try{ const { data:{ session } } = await sb.auth.getSession(); if(session) await sb.realtime.setAuth(session.access_token); }catch(e){}
+  presCh = sb.channel("hub-presence", { config: { presence: { key: presMe.id }, private: true } });
+  presCh.on("presence", { event:"sync" }, ()=> presRender(presCh.presenceState()))
+    .on("broadcast", { event:"grab" }, ({ payload })=> presRemoto(payload))
+    .subscribe(status=>{
+      if(status==="SUBSCRIBED"){ presMount(); presLast = ""; presSync(true); }
+      else if(status==="CHANNEL_ERROR" || status==="TIMED_OUT"){
+        presUnmount();
+        console.warn("[presencia] el canal hub-presence rechazó la suscripción: falta correr supabase/presence-migration.sql");
+      }
+    });
+  presWatchInput();
+}
+function presWatchInput(){
+  if(presWatchInput._on) return; presWatchInput._on = true;
+  const touch = ()=>{ presLastInput = Date.now(); if(presIdle){ presIdle = false; presSync(); } };
+  ["pointerdown","pointermove","keydown","scroll","touchstart"].forEach(ev=>document.addEventListener(ev, touch, { passive:true }));
+  setInterval(()=>{ const idle = Date.now()-presLastInput > PRES_IDLE_MS; if(idle!==presIdle){ presIdle = idle; presSync(); } }, 30000);
+  document.addEventListener("visibilitychange", ()=>{ presAway = document.hidden; presSync(); });
+  window.addEventListener("resize", ()=>{ if(presLastState) presRender(presLastState); });
+}
+function presMount(){ const el = $("#piso"); if(!el) return; el.hidden = false; document.body.classList.add("piso-on"); }
+function presUnmount(){ const el = $("#piso"); if(el) el.hidden = true; document.body.classList.remove("piso-on"); }
+/* presenceState() → [{id, n, v, p, s, idle, away, t, me}], una entrada por persona
+   (con varias pestañas abiertas gana la más reciente) */
+function presLista(state){
+  const out = [];
+  Object.entries(state||{}).forEach(([id, arr])=>{
+    const st = (arr||[]).slice().sort((a,b)=>(b.t||0)-(a.t||0))[0]; if(!st) return;
+    out.push({ id, ...st, me: !!(presMe && id===presMe.id) });
+  });
+  return out.sort((a,b)=> a.id<b.id ? -1 : 1);
+}
+function presRender(state){
+  presLastState = state;
+  const piso = $("#piso"); if(!piso) return;
+  const stage = piso.querySelector(".piso-stage");
+  const lista = presLista(state);
+  const miP = presState().p;
+  const vivos = new Set(lista.map(x=>x.id));
+  presEls.forEach((el,id)=>{ if(!vivos.has(id)){ clearTimeout(el._wander); presFis.delete(el); el.classList.add("out"); setTimeout(()=>el.remove(),400); presEls.delete(id); } });
+  /* si la ventana se achicó, nadie queda afuera (el que está en el aire lo resuelve la física) */
+  presEls.forEach(el=>{ if(presFis.has(el)) return; const [lo,hi] = presLimites(); const x = presX(el); if(x<lo || x>hi) presMover(el, Math.min(hi, Math.max(lo, x))); });
+  lista.forEach(x=>{
+    let el = presEls.get(x.id);
+    if(!el){
+      el = document.createElement("div");
+      el.className = "peep"+(x.me?" me":"");
+      el._id = x.id;
+      el.innerHTML = `<div class="peep-bubble"></div><span class="peep-tail"></span><span class="peep-shadow"></span>
+        <div class="peep-body" title="Agarralo"><span class="eyes"><span class="eye"><span class="pupil"></span></span><span class="eye"><span class="pupil"></span></span></span></div>`;
+      el.style.setProperty("--x", presLugarLibre(null)+"px");
+      /* parpadeo y mirada desfasados por persona: si todos parpadean juntos parece un GIF */
+      el.style.setProperty("--blink", (Math.random()*5).toFixed(2)+"s");
+      el.style.setProperty("--look", (Math.random()*7).toFixed(2)+"s");
+      /* fin de la caminata sin salto: cuando termina el desplazamiento se marca
+         walk-end, y la clase walk se saca en el borde del ciclo del paso, donde
+         los dos ojos están apoyados */
+      el.addEventListener("transitionend", e=>{ if(e.target===el && e.propertyName==="transform") el.classList.add("walk-end"); });
+      el.querySelector(".eye").addEventListener("animationiteration", e=>{
+        if(e.animationName==="peepStep" && el.classList.contains("walk-end")) el.classList.remove("walk","walk-end");
+      });
+      stage.appendChild(el); presEls.set(x.id, el);
+      presAgendar(el, 1500 + Math.random()*3000);
+      requestAnimationFrame(()=>el.classList.add("in"));
+    }
+    const juntos = !x.me && !!x.p && x.p===miP && !x.idle && !x.away;
+    const txt = el._grabBy
+      ? (el._grabByMe ? "¡en tus manos!" : x.me ? "¡te agarró "+el._grabBy+"!" : "¡lo agarró "+el._grabBy+"!")
+      : presTexto(x) + (juntos ? " · también acá" : "");
+    const b = el.querySelector(".peep-bubble");
+    if(el._txt!==txt){
+      b.innerHTML = `<b>${esc(x.me ? x.n+" (vos)" : x.n)}</b>${esc(txt)}`;
+      if(el._txt!==undefined && !presFis.has(el)){ el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
+      el._txt = txt;
+    }
+    el.classList.toggle("idle", !!(x.idle||x.away));
+    el.classList.toggle("juntos", juntos);
+  });
+  piso.setAttribute("aria-label", lista.length<=1 ? "Nadie más en el hub" : lista.length+" personas en el hub");
+  presAvisar(lista, miP);
+}
+const PRES_VEL = 46;          // px por segundo: a este ritmo cada paso avanza lo que mide
+const PRES_SEP = 170;         // distancia mínima entre dos personas paradas (que no se pisen los globos)
+function presLimites(){ const W = document.documentElement.clientWidth || 800; return [Math.min(110, W/2), Math.max(W-110, W/2)]; }
+/* posición presentada (la que está en pantalla ahora, a mitad de camino incluida) */
+function presX(el){ const m = new DOMMatrixReadOnly(getComputedStyle(el).transform); return m.m41; }
+/* dónde está parado cada uno, o a dónde va */
+function presDestinos(salvo){ const out = []; presEls.forEach(el=>{ if(el!==salvo) out.push(parseFloat(el.style.getPropertyValue("--x"))||0); }); return out; }
+/* un lugar lejos de los demás; si no hay, el más lejos posible */
+function presLugarLibre(el, desde){
+  const [lo,hi] = presLimites(), otros = presDestinos(el);
+  let mejor = null, mejorD = -1;
+  for(let k=0;k<14;k++){
+    let x;
+    if(desde==null) x = lo + Math.random()*(hi-lo);
+    else { const d = 140 + Math.random()*320; x = desde + (Math.random()<.5?-d:d); if(x<lo||x>hi) x = desde + (desde-x>0?d:-d); }
+    x = Math.min(hi, Math.max(lo, x));
+    const dist = otros.length ? Math.min(...otros.map(o=>Math.abs(o-x))) : Infinity;
+    if(dist >= PRES_SEP) return Math.round(x);
+    if(dist > mejorD){ mejorD = dist; mejor = x; }
+  }
+  return Math.round(mejor);
+}
+function presMover(el, x){
+  const cur = presX(el);
+  const dist = Math.abs(x-cur);
+  if(dist < 4) return;
+  el.classList.toggle("flip", x < cur);
+  el.classList.remove("walk-end"); el.classList.add("walk");
+  const dur = dist / PRES_VEL;
+  el.style.setProperty("--walk-dur", dur.toFixed(2)+"s");
+  el.style.setProperty("--x", Math.round(x)+"px");
+  /* red de contención por si transitionend no llega. En una pestaña en segundo
+     plano la transición se congela: si todavía no llegó, se vuelve a esperar en
+     vez de frenar el paso con el cuerpo todavía deslizándose */
+  const vigilar = ms => { clearTimeout(el._walkT); el._walkT = setTimeout(()=>{
+    const falta = Math.abs(presX(el) - x);
+    if(falta < 2) el.classList.add("walk-end"); else vigilar(falta/PRES_VEL*1000 + 600);
+  }, ms); };
+  vigilar(dur*1000 + 600);
+}
+/* paseo: camina a otro lugar, se queda un rato, vuelve a caminar */
+function presAgendar(el, ms){
+  clearTimeout(el._wander);
+  el._wander = setTimeout(()=>{
+    if(presFis.has(el)) return presAgendar(el, 3000);   /* en el aire: después */
+    const quieto = el.classList.contains("idle") || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(!quieto) presMover(el, presLugarLibre(el, presX(el)));
+    const dur = parseFloat(el.style.getPropertyValue("--walk-dur")) || 0;
+    presAgendar(el, (quieto ? 0 : dur*1000) + 5000 + Math.random()*9000);
+  }, ms);
+}
+/* ---------- agarrar y soltar (lo ven todos) ----------
+   Lo que se arrastra va con física en JS, no con transition (RULES.md §4): sigue
+   al puntero, cuelga del punto donde lo agarraste como un péndulo que hereda la
+   velocidad de la mano, y al soltarlo cae con gravedad, rebota un poco, se
+   aplasta, patina y se marea. Al final vuelve al modo CSS en el mismo lugar.
+   A los demás les llega por broadcast: "grab" (lo levantan y queda colgando con
+   el globo "¡lo agarró Eyal!") y "drop" (cae con la velocidad del tiro). Son dos
+   mensajes por agarrada. Las posiciones son de cada pantalla, así que no se
+   sincroniza el x: cada uno lo ve levantarse y caer donde estaba. */
+const PRES_G = 2600;
+const presFis = new Map();   // el → estado físico mientras está en el aire
+let presRaf = 0, presRafT = 0;
+function presFisLoop(t){
+  const dt = Math.min(.034, presRafT ? (t-presRafT)/1000 : .016); presRafT = t;
+  presFis.forEach((s, el)=>presFisPaso(el, s, dt, t));
+  if(presFis.size) presRaf = requestAnimationFrame(presFisLoop);
+  else { presRaf = 0; presRafT = 0; const p = $("#piso"); if(p) p.classList.remove("carrying"); }
+}
+function presFisStart(el, mode){
+  let s = presFis.get(el);
+  if(!s){
+    /* desde la posición presentada: si venía caminando, lo agarrás donde está */
+    s = { x: presX(el), y: 0, vx: 0, vy: 0, a: 0, va: 0 };
+    clearTimeout(el._wander); clearTimeout(el._walkT);
+    el.classList.remove("walk","walk-end","hop","land","dizzy");
+    el.style.setProperty("--walk-dur","0s");
+    el.style.transform = `translate(${s.x}px, 0px)`;
+    el.classList.add("held");
+    presFis.set(el, s);
+  }
+  s.mode = mode; s.t0 = performance.now(); s.suelo = false;
+  const p = $("#piso"); if(p) p.classList.add("carrying");
+  if(!presRaf){ presRafT = 0; presRaf = requestAnimationFrame(presFisLoop); }
+  return s;
+}
+function presFisPaso(el, s, dt, t){
+  const [lo,hi] = presLimites();
+  if(s.mode==="held"){
+    const nx = s.px - s.offX, ny = Math.max(0, (innerHeight-6) - s.py - s.offY);
+    const k = Math.min(1, dt*14);
+    s.vx += ((nx - s.x)/dt - s.vx)*k; s.vy += ((ny - s.y)/dt - s.vy)*k;
+    s.x = nx; s.y = ny;
+  } else if(s.mode==="remote"){
+    /* lo tiene otro: sube y queda colgando con un vaivén suave */
+    s.y += (64 - s.y)*Math.min(1, dt*7);
+    s.vx = Math.sin((t - s.t0)/1000*2.1)*140;
+  } else {
+    s.vy -= PRES_G*dt; s.y += s.vy*dt; s.x += s.vx*dt;
+    if(s.x<lo){ s.x = lo; s.vx = -s.vx*.45; } else if(s.x>hi){ s.x = hi; s.vx = -s.vx*.45; }
+    if(s.y<=0){
+      s.y = 0;
+      if(s.vy < -520 && !s.suelo){ s.vy = -s.vy*.28; presAnim(el, "land"); }   // rebotito
+      else { if(!s.suelo){ s.suelo = true; presAnim(el, "land"); } s.vy = 0; }
+    }
+    if(s.suelo){ s.vx *= Math.exp(-5*dt); if(Math.abs(s.vx) < 12 && Math.abs(s.a) < 3) return presFisEnd(el, s); }
+  }
+  /* péndulo: en el aire se inclina contra el movimiento; apoyado se endereza */
+  const aT = s.suelo ? 0 : Math.max(-40, Math.min(40, s.vx*.035));
+  s.va += (120*(aT - s.a) - 9*s.va)*dt; s.a += s.va*dt;
+  el.style.transform = `translate(${s.x.toFixed(1)}px, ${(-s.y).toFixed(1)}px)`;
+  el.style.setProperty("--swing", s.a.toFixed(2)+"deg");
+  el.style.setProperty("--lift", Math.min(1, s.y/140).toFixed(3));
+  el.style.setProperty("--lifty", s.y.toFixed(1)+"px");
+}
+function presFisEnd(el, s){
+  presFis.delete(el);
+  /* vuelve a translateX(var(--x)) en el mismo punto: sin transición, sin salto */
+  el.style.setProperty("--x", Math.round(s.x)+"px");
+  el.style.removeProperty("transform");
+  ["--swing","--lift","--lifty"].forEach(v=>el.style.removeProperty(v));
+  el.querySelector(".peep-body").style.removeProperty("transform-origin");
+  el.classList.remove("held");
+  el._grabBy = null; el._grabByMe = false;
+  if(presLastState) presRender(presLastState);
+  presAnim(el, "dizzy");
+  presAgendar(el, 2500 + Math.random()*2500);
+}
+function presAnim(el, cls){
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  clearTimeout(el["_t_"+cls]); el["_t_"+cls] = setTimeout(()=>el.classList.remove(cls), 900);
+}
+function presSend(payload){
+  if(!presCh) return;
+  try{ presCh.send({ type:"broadcast", event:"grab", payload:{ ...payload, by: presMe.n, byId: presMe.id } }); }catch(e){}
+}
+function presGrab(e, body){
+  if(e.button > 0) return;
+  const el = body.closest(".peep"); if(!el || presFis.has(el) && presFis.get(el).mode==="held") return;
+  e.preventDefault();
+  const s = presFisStart(el, "held");
+  s.px = e.clientX; s.py = e.clientY;
+  s.offX = e.clientX - s.x;
+  s.offY = (innerHeight - 6 - s.y) - e.clientY;
+  /* cuelga del punto exacto donde lo agarraste */
+  body.style.transformOrigin = `${Math.max(0,Math.min(46, s.offX+23)).toFixed(0)}px ${Math.max(0,Math.min(30, 34 - s.offY)).toFixed(0)}px`;
+  el._grabBy = presMe ? presMe.n : "vos"; el._grabByMe = true;
+  if(presLastState) presRender(presLastState);
+  document.body.classList.add("peep-grabbing");
+  try{ body.setPointerCapture(e.pointerId); }catch(err){}
+  const mover = ev=>{ s.px = ev.clientX; s.py = ev.clientY; };
+  const soltar = ()=>{
+    body.removeEventListener("pointermove", mover);
+    body.removeEventListener("pointerup", soltar); body.removeEventListener("pointercancel", soltar);
+    document.body.classList.remove("peep-grabbing");
+    s.mode = "fall"; s.suelo = false;
+    s.vx = Math.max(-1800, Math.min(1800, s.vx)); s.vy = Math.max(-1200, Math.min(1400, s.vy));
+    presSend({ act:"drop", t: el._id, vx: s.vx/innerWidth, vy: s.vy });
+  };
+  body.addEventListener("pointermove", mover);
+  body.addEventListener("pointerup", soltar); body.addEventListener("pointercancel", soltar);
+  presSend({ act:"grab", t: el._id });
+}
+/* delegado: los personajes se crean y se borran todo el tiempo */
+document.addEventListener("pointerdown", e=>{ const b = e.target.closest && e.target.closest("#piso .peep-body"); if(b) presGrab(e, b); });
+/* lo que agarró otro, visto desde acá */
+function presRemoto(p){
+  if(!p || (presMe && p.byId===presMe.id)) return;
+  const el = presEls.get(p.t); if(!el) return;
+  const s0 = presFis.get(el); if(s0 && s0.mode==="held") return;   // justo lo tengo yo
+  if(p.act==="grab"){
+    el._grabBy = p.by || "alguien"; el._grabByMe = false;
+    presFisStart(el, "remote");
+    el.querySelector(".peep-body").style.transformOrigin = "50% 0";
+    if(presLastState) presRender(presLastState);
+    /* si el que lo agarró se desconecta sin soltarlo, se cae solo */
+    clearTimeout(el._autoDrop);
+    el._autoDrop = setTimeout(()=>presRemoto({ act:"drop", t:p.t, byId:p.byId, vx:0, vy:0 }), 12000);
+  } else if(p.act==="drop"){
+    clearTimeout(el._autoDrop);
+    const s = presFis.get(el) || presFisStart(el, "remote");
+    s.mode = "fall"; s.suelo = false;
+    s.vx = (Number(p.vx)||0)*innerWidth; s.vy = Number(p.vy)||0;
+  }
+}
+
+/* el valor real del piso: el sheet es "el último que guarda pisa al otro" */
+function presAvisar(lista, miP){
+  if(!miP) return;
+  lista.forEach(x=>{
+    if(x.me || x.p!==miP || x.idle || x.away) return;
+    const k = x.id+"|"+miP; if(presAvisados.has(k)) return; presAvisados.add(k);
+    toast("👀 "+x.n+" también está en "+miP+": el último que guarda pisa al otro");
+  });
+}
+/* modo demo: tres personas de mentira que cambian de lugar, para ver el piso vivo */
+let presDemoMe = null;
+const PRES_DEMO = [ { id:"d1", n:"Teo", v:"proyectos", p:"SPOTIFY - CDMX", s:"tareas", t:1 },
+                    { id:"d2", n:"Milena", v:"calendario", p:"", s:"", t:1 },
+                    { id:"d3", n:"Narf", v:"dashboard", p:"", s:"", idle:true, t:1 } ];
+function presDemoState(){ const st = {}; PRES_DEMO.forEach(x=>st[x.id]=[x]); if(presDemoMe) st.me = [presDemoMe]; return st; }
+function presDemo(){
+  presMe = { id:"me", n:"Eyal" }; presMount(); presWatchInput(); presSync(true);
+  const opts = [["proyectos","SPOTIFY - CDMX","ficha"],["calendario","",""],["proyectos","PROYECTO X - TVC","cal"],["dashboard","",""],["proyectos","","new"],["proyectos","SPOTIFY - CDMX","sx"]];
+  setInterval(()=>{
+    const x = PRES_DEMO[Math.floor(Math.random()*PRES_DEMO.length)]; const o = opts[Math.floor(Math.random()*opts.length)];
+    x.v = o[0]; x.p = o[1]; x.s = o[2]; x.idle = false; x.t = Date.now();
+    presRender(presDemoState());
+  }, 9000);
+  /* y de vez en cuando Milena agarra a alguien y lo tira */
+  setInterval(()=>{
+    const t = ["d1","d3","me"][Math.floor(Math.random()*3)];
+    presRemoto({ act:"grab", t, by:"Milena", byId:"d2" });
+    setTimeout(()=>presRemoto({ act:"drop", t, byId:"d2", vx:(Math.random()-.5)*.8, vy:300 }), 2600);
+  }, 20000);
+}
+
 /* init */
-$("#btnNew").addEventListener("click",()=>{ openChooser(); });
+/* un solo camino de alta: pegar el debrief y que la IA arme el borrador */
+$("#btnNew").addEventListener("click",()=>{ openDebrief(); });
 $("#yr").textContent = new Date().getFullYear();
 if(DEMO) $("#demoBanner").style.display="block";
 currentView = VIEW_TITLES[location.hash.slice(1)] ? location.hash.slice(1) : "dashboard";
@@ -5296,7 +5478,7 @@ function showInternalTools(esAdmin){
   if(esAdmin){ const el = $("#btnAdmin"); if(el) el.style.display=""; }
 }
 async function initAuth(){
-  if(!AUTH_ON){ showInternalTools(true); startApp(); return; }
+  if(!AUTH_ON){ showInternalTools(true); startApp(); presDemo(); return; }
   const gate = $("#authGate"); gate.style.display = "flex";
   try{
     const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
@@ -5309,13 +5491,14 @@ async function initAuth(){
 async function authEnter(session){
   authUser = session.user;
   try{
-    const { data, error } = await sb.from("profiles").select("role,subrol").eq("id", authUser.id).single();
+    const { data, error } = await sb.from("profiles").select("role,subrol,nombre").eq("id", authUser.id).single();
     if(error) throw error;
     if(data.role !== "interno"){ location.replace("/proveedores"); return; }
     $("#authGate").style.display = "none";
     showInternalTools(ADMIN_MAILS.includes((authUser.email||"").toLowerCase()));
     rosterEnsure().catch(()=>{});   /* precarga el directorio para el autocompletado de asignaciones */
     startApp();
+    presStart(data.nombre);          /* piso de presencia: quién más está en el hub */
   }catch(e){
     $("#agMsg").textContent = "No pude verificar tu cuenta ("+e.message+"). Probá recargar.";
   }
