@@ -2,6 +2,16 @@
 
 Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
 
+## 2026-10-16 — Feedback del equipo: cierre de proyecto y volver de etapa
+
+Salido de las notas de Mile (14/9), Eyal (17/8) y Teo (14/8).
+
+- **Al pasar a Listo para cierre (o Completado), todo el equipo asignado queda inactivo** (`desactivarEquipoAlCierre()` en `setStatus`). Así deja de sumar en la Carga de trabajo del Status. Cada fila guarda `estadoAntesDeCierre` para restituirse si el proyecto se reabre; candidatos sin resolver, rechazados y quien ya estaba inactivo no se tocan. Se guarda en el mismo `update` del status, con rollback si falla. Ojo: lo hace el frontend, así que **el avance automático de wf11 (que llama a wf4 directo) no lo aplica** — ver pendientes.
+- **Volver de etapa ya no pide tildar el checklist**: el checklist de la etapa actual solo frena *avanzar*. Retomar o reabrir un proyecto (Completado → Ejecutando, Listo para cierre → Entregando, etc.) es libre. Sigue sin poder volver a Pre-producción.
+- **Nuevo `n8n/17-cierre-reminder.json`** (importar y ACTIVAR, cargar `discordCoordId` y el credential `Discord Bot`): todos los días 10:00 avisa en Discord de los proyectos que llevan +10 días en Listo para cierre (`diasUmbral`), y repite cada 7 (`repetirCadaDias`, 0 = una sola vez). Como el Sheet no guarda desde cuándo está en cierre, anota la fecha la primera vez que lo ve (static data de n8n); los que ya estén en cierre al activarlo cuentan desde ese día.
+
+**Pendientes / a decidir:** fechas de ingreso y egreso **por persona** dentro de una tarea (Eyal "roles conectados a periodos", Teo #1) — hoy los rangos son por tarea, no por persona; instancia extra "Re-ejecutando" (Eyal) — con volver de etapa libre quizá ya no haga falta; llevar la inactivación al cierre a wf4 para cubrir también el cambio automático de wf11.
+
 ## 2026-09-14 — Auditoría: login validado en n8n, config compartida, admin arreglado
 
 ### Seguridad: n8n valida la sesión de Supabase en cada webhook
