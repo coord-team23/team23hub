@@ -10,6 +10,7 @@ Los ojitos de la marca viven al pie de `index.html`, sobre la página misma (sin
 - **Para activarlo**: correr `supabase/presence-migration.sql` una vez (dos policies en `realtime.messages`, solo rol `interno`). Sin eso el canal rechaza la suscripción, el piso no aparece y nada más cambia.
 - **Lo útil**: el Sheet es "el último que guarda pisa al otro". Si alguien más está en la misma ficha, su globo pasa a rojo (`· también acá`) y sale un toast una vez por persona y proyecto.
 - Parpadean bajando el párpado (no aplastando el ojo); dormidos, el párpado queda a la mitad. Caminata y frenado sin saltos: la clase de paso se saca en el borde del ciclo, con los dos ojos apoyados.
+- Un personaje por **navegador**, no por cuenta: dos personas con la misma cuenta en dos computadoras aparecen como dos (con el mismo nombre) y se avisan si coinciden en una ficha; varias pestañas del mismo navegador cuentan como uno. Id en `localStorage` (`t23_browser`).
 - Oculto en mobile (≤640px). Va debajo de los overlays: con un modal abierto se ve apagado detrás del scrim.
 
 ## 2026-10-13 — Un solo camino de alta, barra de candidato y pie de tarea alineado

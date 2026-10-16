@@ -5031,7 +5031,16 @@ document.addEventListener("mousemove",e=>{
 let presCh = null, presMe = null, presLast = "", presLastState = null;
 let presIdle = false, presAway = false, presLastInput = Date.now();
 const presEls = new Map();        // userId → nodo .peep (se reusa para que las transiciones corran)
-const presAvisados = new Set();   // "userId|proyecto" ya avisado por toast
+const presAvisados = new Set();   // "navegador|proyecto" ya avisado por toast
+function presBrowserId(){
+  let id = null;
+  try{ id = localStorage.getItem("t23_browser"); }catch(e){}
+  if(!id){
+    id = "b_" + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2));
+    try{ localStorage.setItem("t23_browser", id); }catch(e){}
+  }
+  return id;
+}
 const PRES_IDLE_MS = 3*60*1000;
 const PRES_TXT = { ficha:"viendo", tareas:"en las tareas", cal:"en el calendario", sx:"editando la síntesis", nota:"editando una nota",
                    mail:"editando un mail", trk:"en el tracker", gate:"activando", new:"creando un proyecto", users:"en usuarios" };
@@ -5079,9 +5088,14 @@ function presSync(force){
 }
 async function presStart(nombre){
   if(!sb || !authUser) return;
-  presMe = { id: authUser.id, n: String(nombre||"").trim() || presNombre() };
+  /* La clave de presencia es el NAVEGADOR, no la cuenta: dos personas con la misma
+     cuenta (coord@ compartido) en dos computadoras son dos personajes y se avisan
+     entre sí; una persona con varias pestañas en el mismo navegador sigue siendo uno
+     (gana la pestaña más reciente). El id vive en localStorage; si no se puede
+     guardar, cada pestaña es su propio personaje. */
+  presMe = { id: presBrowserId(), n: String(nombre||"").trim() || presNombre() };
   try{ const { data:{ session } } = await sb.auth.getSession(); if(session) await sb.realtime.setAuth(session.access_token); }catch(e){}
-  presCh = sb.channel("hub-presence", { config: { presence: { key: authUser.id }, private: true } });
+  presCh = sb.channel("hub-presence", { config: { presence: { key: presMe.id }, private: true } });
   presCh.on("presence", { event:"sync" }, ()=> presRender(presCh.presenceState()))
     .subscribe(status=>{
       if(status==="SUBSCRIBED"){ presMount(); presLast = ""; presSync(true); }
