@@ -915,20 +915,23 @@
   #sxTa{min-height:300px;font-size:15px;line-height:1.6}
   .sx-prevbox{border:var(--stroke-sm) solid var(--ink);border-radius:var(--radius-md);padding:var(--space-4) var(--space-5);background:#fff;max-height:240px;overflow:auto}
 
-  /* ---------- piso de presencia: quién está en el hub y en qué anda ----------
-     Una franja fija abajo con los ojitos de la marca caminando: una pareja de ojos
-     por persona conectada, con un globo que dice dónde está. Va DEBAJO de los
-     overlays (z 40 < 80): con un modal abierto se ve apagado detrás del scrim. */
-  #piso{position:fixed;left:0;right:0;bottom:0;z-index:40;height:84px;background:var(--paper);border-top:var(--stroke-sm) solid var(--ink)}
+  /* ---------- presencia: quién está en el hub y en qué anda ----------
+     Los ojitos de la marca viven en la página misma: sin franja, sin fondo, sin
+     raya. Caminan por el borde de abajo de la ventana (el contenido pasa por
+     detrás) con un globo que dice dónde está cada uno. No capturan clicks.
+     Van DEBAJO de los overlays (z 40 < 80): con un modal abierto quedan detrás
+     del scrim. */
+  #piso{position:fixed;left:0;right:0;bottom:0;z-index:40;height:84px;pointer-events:none}
   #piso[hidden]{display:none}
-  body.piso-on{padding-bottom:84px}
-  .piso-stage{position:absolute;left:0;right:0;bottom:0;height:84px;overflow:hidden}
-  .piso-bar{position:absolute;right:var(--space-5);top:-15px;z-index:1}
-  .piso-count{display:inline-block;font-size:10.5px;font-weight:var(--weight-bold);letter-spacing:.12em;text-transform:uppercase;background:var(--paper);border:2px solid var(--ink);border-radius:var(--radius-full);padding:5px 11px;line-height:1}
+  body.piso-on{padding-bottom:84px}   /* lo último de la página puede scrollear por encima de ellos */
+  .piso-stage{position:absolute;inset:0}
+  /* el desplazamiento es lineal y a velocidad constante (la duración la calcula
+     presMover según la distancia): así el paso coincide con lo que avanza */
   .peep{position:absolute;bottom:6px;left:0;width:0;transform:translateX(var(--x));opacity:0;
-    transition:transform 1.6s var(--ease-standard),opacity var(--dur-slow) var(--ease-out)}
+    transition:transform var(--walk-dur,0s) linear,opacity var(--dur-slow) var(--ease-out)}
   .peep.in{opacity:1}
   .peep.out{opacity:0}
+  .peep.walk{z-index:2}   /* el que camina pasa por delante del que está quieto */
   /* El personaje son los dos ojos de la marca, sin cuerpo ni patas: caminan con
      los propios ojos — uno se levanta e inclina mientras el otro apoya, en
      contrafase, y las pupilas miran hacia donde van. Quieto respira, parpadea y
@@ -968,7 +971,7 @@
   .peep .pupil{transition:transform .5s var(--ease-standard),opacity .45s var(--ease-standard)}
   .peep.idle .pupil{animation:none;opacity:0}
   .peep.idle .peep-bubble{color:var(--gray)}
-  .peep-bubble{position:absolute;bottom:44px;left:0;transform:translateX(-50%);white-space:nowrap;max-width:max(96px,min(320px,calc(var(--slot,320px) - 12px)));overflow:hidden;text-overflow:ellipsis;
+  .peep-bubble{position:absolute;bottom:44px;left:0;transform:translateX(-50%);white-space:nowrap;max-width:min(260px,40vw);overflow:hidden;text-overflow:ellipsis;
     background:#fff;border:2px solid var(--ink);border-radius:10px;padding:4px 9px;box-shadow:3px 3px 0 var(--ink);
     font-family:var(--font-secondary);font-size:11.5px;font-weight:var(--weight-bold);letter-spacing:0;line-height:1.25;color:var(--ink)}
   .peep-bubble b{font-family:var(--font-primary);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-right:4px}
@@ -1156,7 +1159,6 @@
 <!-- piso de presencia: quién está en el hub (Supabase Realtime Presence, ver supabase/presence-migration.sql) -->
 <div id="piso" hidden aria-label="Quién está en el hub">
   <div class="piso-stage" aria-live="polite"></div>
-  <div class="piso-bar"><span class="piso-count"></span></div>
 </div>
 
 <!-- ============ MODAL: NUEVO PROYECTO (DEBRIEF IA) ============ -->
@@ -5115,24 +5117,19 @@ function presRender(state){
   const piso = $("#piso"); if(!piso) return;
   const stage = piso.querySelector(".piso-stage");
   const lista = presLista(state);
-  const W = stage.clientWidth || document.documentElement.clientWidth || 800;
-  /* ancho del lugar de cada uno: acota el globo para que no se pisen entre vecinos */
-  const slot = W/(lista.length+1);
-  stage.style.setProperty("--slot", Math.round(slot)+"px");
   const miP = presState().p;
   const vivos = new Set(lista.map(x=>x.id));
-  presEls.forEach((el,id)=>{ if(!vivos.has(id)){ clearInterval(el._wander); el.classList.add("out"); setTimeout(()=>el.remove(),400); presEls.delete(id); } });
-  lista.forEach((x,i)=>{
-    /* cada uno tiene su lugar fijo (repartidos parejo) y pasea alrededor: así
-       no se pisan entre sí ni hay que resolver choques */
-    const home = Math.round(W*(i+1)/(lista.length+1));
+  presEls.forEach((el,id)=>{ if(!vivos.has(id)){ clearTimeout(el._wander); el.classList.add("out"); setTimeout(()=>el.remove(),400); presEls.delete(id); } });
+  /* si la ventana se achicó, nadie queda afuera */
+  presEls.forEach(el=>{ const [lo,hi] = presLimites(); const x = presX(el); if(x<lo || x>hi) presMover(el, Math.min(hi, Math.max(lo, x))); });
+  lista.forEach(x=>{
     let el = presEls.get(x.id);
     if(!el){
       el = document.createElement("div");
       el.className = "peep"+(x.me?" me":"");
       el.innerHTML = `<div class="peep-bubble"></div><span class="peep-tail"></span>
         <div class="peep-body"><span class="peep-shadow"></span><span class="eyes"><span class="eye"><span class="pupil"></span></span><span class="eye"><span class="pupil"></span></span></span></div>`;
-      el.style.setProperty("--x", home+"px"); el._home = home;
+      el.style.setProperty("--x", presLugarLibre(null)+"px");
       /* parpadeo y mirada desfasados por persona: si todos parpadean juntos parece un GIF */
       el.style.setProperty("--blink", (Math.random()*5).toFixed(2)+"s");
       el.style.setProperty("--look", (Math.random()*7).toFixed(2)+"s");
@@ -5144,39 +5141,72 @@ function presRender(state){
         if(e.animationName==="peepStep" && el.classList.contains("walk-end")) el.classList.remove("walk","walk-end");
       });
       stage.appendChild(el); presEls.set(x.id, el);
-      el._wander = setInterval(()=>presWander(el), 7000 + Math.random()*6000);
+      presAgendar(el, 1500 + Math.random()*3000);
       requestAnimationFrame(()=>el.classList.add("in"));
-    } else if(el._home!==home){ el._home = home; presMover(el, home); }
-    el._amp = Math.max(0, Math.min(45, slot/2 - 70));   /* cuánto puede pasear sin tocar al vecino */
+    }
     const juntos = !x.me && !!x.p && x.p===miP && !x.idle && !x.away;
     const txt = presTexto(x) + (juntos ? " · también acá" : "");
     const b = el.querySelector(".peep-bubble");
     if(el._txt!==txt){
       b.innerHTML = `<b>${esc(x.me ? x.n+" (vos)" : x.n)}</b>${esc(txt)}`;
-      b.title = x.n+" · "+txt;   /* el globo se recorta si hay mucha gente; el texto entero queda en el tooltip */
       if(el._txt!==undefined){ el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
       el._txt = txt;
     }
     el.classList.toggle("idle", !!(x.idle||x.away));
     el.classList.toggle("juntos", juntos);
   });
-  piso.querySelector(".piso-count").textContent = lista.length<=1 ? "nadie más en el hub" : lista.length+" en el hub";
+  piso.setAttribute("aria-label", lista.length<=1 ? "Nadie más en el hub" : lista.length+" personas en el hub");
   presAvisar(lista, miP);
 }
+const PRES_VEL = 46;          // px por segundo: a este ritmo cada paso avanza lo que mide
+const PRES_SEP = 170;         // distancia mínima entre dos personas paradas (que no se pisen los globos)
+function presLimites(){ const W = document.documentElement.clientWidth || 800; return [Math.min(110, W/2), Math.max(W-110, W/2)]; }
+/* posición presentada (la que está en pantalla ahora, a mitad de camino incluida) */
+function presX(el){ const m = new DOMMatrixReadOnly(getComputedStyle(el).transform); return m.m41; }
+/* dónde está parado cada uno, o a dónde va */
+function presDestinos(salvo){ const out = []; presEls.forEach(el=>{ if(el!==salvo) out.push(parseFloat(el.style.getPropertyValue("--x"))||0); }); return out; }
+/* un lugar lejos de los demás; si no hay, el más lejos posible */
+function presLugarLibre(el, desde){
+  const [lo,hi] = presLimites(), otros = presDestinos(el);
+  let mejor = null, mejorD = -1;
+  for(let k=0;k<14;k++){
+    let x;
+    if(desde==null) x = lo + Math.random()*(hi-lo);
+    else { const d = 140 + Math.random()*320; x = desde + (Math.random()<.5?-d:d); if(x<lo||x>hi) x = desde + (desde-x>0?d:-d); }
+    x = Math.min(hi, Math.max(lo, x));
+    const dist = otros.length ? Math.min(...otros.map(o=>Math.abs(o-x))) : Infinity;
+    if(dist >= PRES_SEP) return Math.round(x);
+    if(dist > mejorD){ mejorD = dist; mejor = x; }
+  }
+  return Math.round(mejor);
+}
 function presMover(el, x){
-  const cur = parseFloat(el.style.getPropertyValue("--x")) || 0;
-  if(Math.abs(cur-x) < 4) return;
+  const cur = presX(el);
+  const dist = Math.abs(x-cur);
+  if(dist < 4) return;
   el.classList.toggle("flip", x < cur);
   el.classList.remove("walk-end"); el.classList.add("walk");
-  el.style.setProperty("--x", x+"px");
-  /* red de contención por si transitionend no llega (pestaña en segundo plano) */
-  clearTimeout(el._walkT); el._walkT = setTimeout(()=>el.classList.add("walk-end"), 4000);
+  const dur = dist / PRES_VEL;
+  el.style.setProperty("--walk-dur", dur.toFixed(2)+"s");
+  el.style.setProperty("--x", Math.round(x)+"px");
+  /* red de contención por si transitionend no llega. En una pestaña en segundo
+     plano la transición se congela: si todavía no llegó, se vuelve a esperar en
+     vez de frenar el paso con el cuerpo todavía deslizándose */
+  const vigilar = ms => { clearTimeout(el._walkT); el._walkT = setTimeout(()=>{
+    const falta = Math.abs(presX(el) - x);
+    if(falta < 2) el.classList.add("walk-end"); else vigilar(falta/PRES_VEL*1000 + 600);
+  }, ms); };
+  vigilar(dur*1000 + 600);
 }
-function presWander(el){
-  if(el.classList.contains("idle")) return;
-  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  if(!el._amp) return;
-  presMover(el, el._home + Math.round((Math.random()-.5)*2*el._amp));
+/* paseo: camina a otro lugar, se queda un rato, vuelve a caminar */
+function presAgendar(el, ms){
+  clearTimeout(el._wander);
+  el._wander = setTimeout(()=>{
+    const quieto = el.classList.contains("idle") || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(!quieto) presMover(el, presLugarLibre(el, presX(el)));
+    const dur = parseFloat(el.style.getPropertyValue("--walk-dur")) || 0;
+    presAgendar(el, (quieto ? 0 : dur*1000) + 5000 + Math.random()*9000);
+  }, ms);
 }
 /* el valor real del piso: el sheet es "el último que guarda pisa al otro" */
 function presAvisar(lista, miP){
