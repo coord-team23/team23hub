@@ -42,6 +42,12 @@
               "name": "diasGracia",
               "value": "0",
               "type": "string"
+            },
+            {
+              "id": "int-secret",
+              "name": "internalSecret",
+              "value": "PEGAR_SECRETO_INTERNO_SOLO_EN_N8N",
+              "type": "string"
             }
           ]
         },
@@ -118,7 +124,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const CFG = $('CONFIG').first().json;\n/* Días de gracia antes de dar por vencido un proyecto. 0 = el día siguiente al\n   fin ya cuenta como vencido. Subilo si querés margen. */\nconst gracia = Number(CFG.diasGracia || 0);\nconst hoy = new Date(); hoy.setHours(0, 0, 0, 0);\nconst limite = new Date(hoy); limite.setDate(limite.getDate() - gracia);\n\nconst proyectos = $('Leer Projects').all().map(i => i.json).filter(r => r && r.id);\nconst cal = $('Leer Calendar').all().map(i => i.json).filter(r => r && r.project_id);\n\n/* Fechas en formato YYYY-MM-DD, sin zona horaria: se comparan como día calendario */\nconst parse = (s) => {\n  const m = /^(\\d{4})-(\\d{2})-(\\d{2})/.exec(String(s || '').trim());\n  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;\n};\n\nconst salida = [];\nconst saltados = [];\n\nfor (const p of proyectos) {\n  const st = String(p.status || '').trim();\n  /* solo avanzan los que están corriendo; cierre y completado ya están al final,\n     y pre-producción/borrador no se activan solos: eso lo decide una persona */\n  if (st !== 'activo' && st !== 'entregando') continue;\n\n  const fechas = [];\n  /* 1. fechas de las tareas TEAM23. El chequeo que corría en el navegador NO\n        miraba esto, así que un proyecto con fechas solo en tareas nunca avanzaba. */\n  let td = {};\n  try { td = JSON.parse(p.taskDates_json || '{}') || {}; } catch (e) { td = {}; }\n  /* una tarea puede tener varios rangos: el primero en inicio/fin y los demás en\n     `rangos`. Si solo se mirara el primero, un proyecto con un tramo posterior\n     avanzaría a cierre antes de tiempo. */\n  Object.values(td).forEach(d => {\n    if (!d) return;\n    const tramos = [{ inicio: d.inicio, fin: d.fin }].concat(Array.isArray(d.rangos) ? d.rangos : []);\n    tramos.forEach(r => { const f = parse(r && (r.fin || r.inicio)); if (f) fechas.push(f); });\n  });\n  /* 2. fases y hitos independientes de la hoja Calendar */\n  cal.filter(r => String(r.project_id) === String(p.id)).forEach(r => {\n    const f = parse(r.fin || r.inicio);\n    if (f) fechas.push(f);\n  });\n\n  if (!fechas.length) { saltados.push((p.nombre || p.id) + ': sin fechas cargadas'); continue; }\n\n  const fin = new Date(Math.max(...fechas.map(d => d.getTime())));\n  if (fin >= limite) continue;   // todavía no venció\n\n  salida.push({ json: {\n    id: String(p.id),\n    nombre: p.nombre || '',\n    status_anterior: st,\n    fin: fin.toISOString().slice(0, 10),\n    fechas_evaluadas: fechas.length\n  } });\n}\n\n/* los saltados quedan en el log de la ejecución, para poder auditarlo después */\nif (saltados.length) console.log('Sin fechas, no se evalúan: ' + saltados.join(' | '));\nconsole.log('Proyectos a avanzar a cierre: ' + salida.length);\nreturn salida;\n"
+        "jsCode": "const CFG = $('CONFIG').first().json;\n/* Días de gracia antes de dar por vencido un proyecto. 0 = el día siguiente al\n   fin ya cuenta como vencido. Subilo si querés margen. */\nconst gracia = Number(CFG.diasGracia || 0);\nconst hoy = new Date(); hoy.setHours(0, 0, 0, 0);\nconst limite = new Date(hoy); limite.setDate(limite.getDate() - gracia);\n\nconst proyectos = $('Leer Projects').all().map(i => i.json).filter(r => r && r.id);\nconst cal = $('Leer Calendar').all().map(i => i.json).filter(r => r && r.project_id);\n\n/* Fechas en formato YYYY-MM-DD, sin zona horaria: se comparan como día calendario */\nconst parse = (s) => {\n  const m = /^(\\d{4})-(\\d{2})-(\\d{2})/.exec(String(s || '').trim());\n  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;\n};\n\nconst salida = [];\nconst saltados = [];\n\nfor (const p of proyectos) {\n  const st = String(p.status || '').trim();\n  /* solo avanzan los que están corriendo; cierre y completado ya están al final,\n     y pre-producción/borrador no se activan solos: eso lo decide una persona */\n  if (st !== 'activo' && st !== 'entregando') continue;\n\n  const fechas = [];\n  /* 1. fechas de las tareas TEAM23. El chequeo que corría en el navegador NO\n        miraba esto, así que un proyecto con fechas solo en tareas nunca avanzaba. */\n  let td = {};\n  try { td = JSON.parse(p.taskDates_json || '{}') || {}; } catch (e) { td = {}; }\n  /* una tarea puede tener varios rangos: el primero en inicio/fin y los demás en\n     `rangos`. Si solo se mirara el primero, un proyecto con un tramo posterior\n     avanzaría a cierre antes de tiempo. */\n  Object.values(td).forEach(d => {\n    if (!d) return;\n    const tramos = [{ inicio: d.inicio, fin: d.fin }].concat(Array.isArray(d.rangos) ? d.rangos : []);\n    tramos.forEach(r => { const f = parse(r && (r.fin || r.inicio)); if (f) fechas.push(f); });\n  });\n  /* 2. fases y hitos independientes de la hoja Calendar */\n  cal.filter(r => String(r.project_id) === String(p.id)).forEach(r => {\n    const f = parse(r.fin || r.inicio);\n    if (f) fechas.push(f);\n  });\n\n  if (!fechas.length) { saltados.push((p.nombre || p.id) + ': sin fechas cargadas'); continue; }\n\n  const fin = new Date(Math.max(...fechas.map(d => d.getTime())));\n  if (fin >= limite) continue;   // todavía no venció\n\n  /* Al pasar a cierre el equipo queda inactivo: misma regla que desactivarEquipoAlCierre()\n     en el hub, para que el avance automático no deje gente sumando en la Carga de trabajo.\n     Inactivos, rechazados y candidatos no se tocan; cada fila guarda estadoAntesDeCierre\n     para restituirse si el proyecto se reabre. Sin cambios no se manda asignaciones_json. */\n  let asig = null, inactivados = 0;\n  try { asig = JSON.parse(p.asignaciones_json || '{}') || {}; } catch (e) { asig = null; }\n  if (asig && typeof asig === 'object') Object.values(asig).forEach(rows => (Array.isArray(rows) ? rows : []).forEach(r => {\n    if (!r || !(String(r.nombre || '').trim() || String(r.email || '').trim())) return;\n    if (['inactivo', 'rechazado', 'candidato'].includes(r.estado)) return;\n    r.estadoAntesDeCierre = r.estado || '';\n    r.estado = 'inactivo';\n    inactivados++;\n  }));\n\n  salida.push({ json: {\n    id: String(p.id),\n    nombre: p.nombre || '',\n    status_anterior: st,\n    fin: fin.toISOString().slice(0, 10),\n    fechas_evaluadas: fechas.length,\n    inactivados,\n    ...(inactivados ? { asignaciones_json: JSON.stringify(asig) } : {})\n  } });\n}\n\n/* los saltados quedan en el log de la ejecución, para poder auditarlo después */\nif (saltados.length) console.log('Sin fechas, no se evalúan: ' + saltados.join(' | '));\nconsole.log('Proyectos a avanzar a cierre: ' + salida.length);\nreturn salida;\n"
       },
       "id": "b1100011-0000-0000-0000-000000000005",
       "name": "Decidir avances",
@@ -138,8 +144,17 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ id: $json.id, status: 'cierre' }) }}",
-        "options": {}
+        "jsonBody": "={{ JSON.stringify(Object.assign({ id: $json.id, status: 'cierre' }, $json.asignaciones_json ? { asignaciones_json: $json.asignaciones_json } : {})) }}",
+        "options": {},
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-team23-internal",
+              "value": "={{ $('CONFIG').first().json.internalSecret }}"
+            }
+          ]
+        }
       },
       "id": "b1100011-0000-0000-0000-000000000006",
       "name": "Avanzar a cierre (wf4)",
@@ -155,7 +170,8 @@
           "name": "Team23 Key"
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "notes": "Va a wf4 con la API key (Team23 Key) + x-team23-internal, porque wf4 pide sesión de Supabase y un cron no la tiene. Si hay equipo, manda asignaciones_json ya inactivado."
     },
     {
       "parameters": {

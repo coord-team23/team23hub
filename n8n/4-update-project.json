@@ -65,6 +65,12 @@
               "name": "supabaseAnonKey",
               "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI",
               "type": "string"
+            },
+            {
+              "id": "int-secret",
+              "name": "internalSecret",
+              "value": "PEGAR_SECRETO_INTERNO_SOLO_EN_N8N",
+              "type": "string"
             }
           ]
         },
@@ -722,6 +728,40 @@
         1200,
         -100
       ]
+    },
+    {
+      "id": "1c188c9e-bd5e-4997-a25c-e75be9b63442",
+      "name": "¿Llamada interna?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        180,
+        -100
+      ],
+      "notes": "wf11 (avance automático a cierre) no tiene sesión de Supabase: entra con el header x-team23-internal, cuyo valor vive solo en n8n (CONFIG.internalSecret de wf4 y wf11; en el repo va un placeholder que nunca matchea).",
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "i1",
+              "leftValue": "={{ String($('CONFIG').first().json.internalSecret || '').length >= 32 && !String($('CONFIG').first().json.internalSecret || '').startsWith('PEGAR') && String($('Webhook').first().json.headers['x-team23-internal'] || '') === String($('CONFIG').first().json.internalSecret) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -740,7 +780,7 @@
       "main": [
         [
           {
-            "node": "Validar login",
+            "node": "¿Llamada interna?",
             "type": "main",
             "index": 0
           }
@@ -1012,6 +1052,24 @@
         [
           {
             "node": "Responder 403",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Llamada interna?": {
+      "main": [
+        [
+          {
+            "node": "Preparar fila",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validar login",
             "type": "main",
             "index": 0
           }

@@ -2,6 +2,17 @@
 
 Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
 
+## 2026-10-19 — n8n al día: wf17 activo, Admin reimportado, y el avance automático a cierre por fin funciona
+
+Deployado por API directo en la instancia (`coordteam23.app.n8n.cloud`), nada quedó pendiente de importar a mano.
+
+- **wf17 creado y activo** (`2P8UdQy521XKKLn6`), con `discordCoordId` = `#coordinacion-general` (`1473387046788923527`, el mismo canal de wf12) y las credenciales Google Sheets / Discord Bot. Primer aviso posible: mañana 10:00; los proyectos que ya estaban en cierre cuentan desde hoy.
+- **wf13/14/15/16 reimportados** con la pestaña `Admin` (en vivo todavía decían `AdminTasks`). wf3 ya estaba igual al repo; wf4 recibió el `discordGuildId` que le faltaba en vivo (sin él, la rama de accesos de Discord rompía).
+- **wf11 → wf4 nunca había funcionado.** Dos cosas: el nodo `Avanzar a cierre (wf4)` tenía enchufada la credencial *Discord Bot* en vez de *Team23 Key*, y desde el 14/9 wf4 exige sesión de Supabase, que un cron no tiene. No se notó porque el nodo tiene continue-on-error y `Decidir avances` casi nunca produce filas. Arreglo: wf11 manda el header `x-team23-internal` y wf4 tiene un IF `¿Llamada interna?` antes de `Validar login` que lo acepta. El valor vive **solo en n8n** (`CONFIG.internalSecret` de wf4 y wf11); en el repo va `PEGAR_SECRETO_INTERNO_SOLO_EN_N8N`, que el IF rechaza aunque coincida (pide ≥32 caracteres y que no empiece con `PEGAR`). Probado: con el secreto 200, con uno falso o sin header 401.
+- **Inactivación al cierre en el avance automático: resuelta en wf11, no en wf4.** wf11 ya lee la hoja Projects, así que aplica la misma regla que `desactivarEquipoAlCierre()` del hub sobre `asignaciones_json` (inactivos, rechazados y candidatos no se tocan; guarda `estadoAntesDeCierre`) y lo manda en el mismo update. Hacerlo en wf4 habría sumado una lectura de Sheets a cada update del hub (toggles, tracker…) para cubrir un camino que solo usa wf11.
+
+**Para que el sitio tome los pushes del 16/10** (presencia, cierre, alta unificada): el repo sigue privado, así que Netlify rechaza los builds por el límite de contribuyentes. Hay que hacerlo público (decisión de NETLIFY-CONTRIBUTOR-FIX.md) o reintentar a mano desde el dashboard.
+
 ## 2026-10-16 — Feedback del equipo: cierre de proyecto y volver de etapa
 
 Salido de las notas de Mile (14/9), Eyal (17/8) y Teo (14/8).
