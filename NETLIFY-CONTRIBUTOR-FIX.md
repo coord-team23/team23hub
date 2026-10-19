@@ -8,7 +8,9 @@ El plan actual solo reconoce un colaborador en repos privados, y ahora somos dos
 
 **Dos soluciones:** upgrade a Netlify Pro (colaboradores ilimitados), o hacer público el repo (gratis — el repo es código, no datos; las bases viven en Sheets/Supabase, fuera de git). **Vamos con hacerlo público.**
 
-Falta que alguien con admin en `coord-team23/team23hub` lo confirme: `Settings → Danger Zone → Change repository visibility → Make public`. Después, Netlify reintenta solo o se dispara con "Trigger deploy".
+**Hecho el 2026-10-19:** el repo es público (`gh api -X PATCH repos/coord-team23/team23hub -f private=false`, con la cuenta coord-team23). Antes se revisó todo el historial: el único token que aparece es la anon key de Supabase (pública por diseño) y la API key del header ya se servía en el HTML. El secreto interno de n8n (wf4/wf11) no está en el repo: va un placeholder que el IF rechaza.
+
+Lo que decía la nota original — `Settings → Danger Zone → Change repository visibility → Make public`. Después, Netlify reintenta solo o se dispara con "Trigger deploy".
 
 ---
 
