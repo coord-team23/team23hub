@@ -2,6 +2,14 @@
 
 Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
 
+## 2026-10-23 — Debrief (wf6): la IA responde con JSON garantizado
+
+Tres intentos seguidos el 23/10 fallaron en `Limpiar JSON` con "La IA no devolvió JSON válido": la síntesis traía comillas sin escapar (`Campaña H2 "Futuro"`) y `JSON.parse` se rompía. El prompt pedía "SOLO JSON válido", pero eso es una súplica, no una garantía.
+
+- `Claude: extraer datos` pasa a **structured outputs** (`output_config.format` con el schema de nombre/cliente/agencia/productora/director/síntesis/tareas/timeline/storyboard_url): la API valida el JSON antes de devolverlo. Modelo `claude-opus-5-5` (los structured outputs no corren en Sonnet 4.6, que es lo que estaba en vivo; el repo decía `claude-sonnet-5`), `max_tokens` 6000 (el modelo piensa siempre y eso cuenta), timeout 120 s, y `fallbacks: 'default'` por si un debrief dispara un rechazo de seguridad.
+- `Limpiar JSON` avisa claro si la respuesta vino cortada (`max_tokens`) o rechazada (`refusal`), en vez de "JSON inválido".
+- Probado en vivo con un debrief que repite el caso de las comillas: nombre, 3 tareas y timeline de 6 fases con notas, todo parseado. Deployado por API; nada que importar a mano.
+
 ## 2026-10-19 — n8n al día: wf17 activo, Admin reimportado, y el avance automático a cierre por fin funciona
 
 Deployado por API directo en la instancia (`coordteam23.app.n8n.cloud`), nada quedó pendiente de importar a mano.
