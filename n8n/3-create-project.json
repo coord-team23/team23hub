@@ -87,7 +87,7 @@
             {
               "id": "dsc-view-r",
               "name": "discordViewerRoleIds",
-              "value": "1494710454226915338,1144708813241466920",
+              "value": "",
               "type": "string"
             },
             {
@@ -107,6 +107,12 @@
               "name": "supabaseAnonKey",
               "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dm1ya2Fjamh5Z2Z1aWFscHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTM4NDQsImV4cCI6MjA5OTg4OTg0NH0.zapojPWo2GXKz7ryfxxWJxsTkocUxjL1ocTgOd9TlgI",
               "type": "string"
+            },
+            {
+              "id": "roster",
+              "name": "rosterSheetId",
+              "value": "1jMs5xUhFKrp5z_LHMOdkJia7vKJsrtKdSB20g9KHsp0",
+              "type": "string"
             }
           ]
         },
@@ -120,7 +126,8 @@
       "position": [
         200,
         0
-      ]
+      ],
+      "notes": "discordViewerRoleIds / discordViewerUserIds: solo para quien tenga que ver TODOS los proyectos. Vacío por defecto: la categoría la ve el equipo del proyecto (Equipo a buscar → Discord: permisos)."
     },
     {
       "parameters": {
@@ -750,7 +757,7 @@
     },
     {
       "parameters": {
-        "jsCode": "let ids = {};\ntry { ids = $('Discord: IDs').first().json; } catch (e) { return []; }\nif (!ids.discord_avisos_id) return [];\nconst r = $('Armar registro').first().json.row;\nlet links = {}; try { links = JSON.parse(r.links_json || '{}'); } catch (e) {}\nconst lineas = ['\\ud83d\\ude80 **' + (r.nombre || 'Proyecto') + '** entr\\u00f3 a pre-producci\\u00f3n'];\nconst meta = [];\nif (r.cliente) meta.push('Cliente: ' + r.cliente);\nif (r.agencia) meta.push('Agencia: ' + r.agencia);\nif (meta.length) lineas.push(meta.join(' \\u00b7 '));\nif (links.driveRoot) lineas.push('Drive: <' + links.driveRoot + '>');\nif (links.frameio) lineas.push('Frame.io: <' + links.frameio + '>');\nreturn [{ json: { channelId: ids.discord_avisos_id, content: lineas.join('\\n') } }];\n"
+        "jsCode": "let ids = {};\ntry { ids = $('Discord: IDs').first().json; } catch (e) { return []; }\nif (!ids.discord_avisos_id) return [];\nconst r = $('Armar registro').first().json.row;\nlet links = {}; try { links = JSON.parse(r.links_json || '{}'); } catch (e) {}\nconst lineas = ['\\ud83d\\ude80 **' + (r.nombre || 'Proyecto') + '** entr\\u00f3 a pre-producci\\u00f3n'];\nconst meta = [];\nif (r.cliente) meta.push('Cliente: ' + r.cliente);\nif (r.agencia) meta.push('Agencia: ' + r.agencia);\nif (meta.length) lineas.push(meta.join(' \\u00b7 '));\nif (links.driveRoot) lineas.push('Drive: <' + links.driveRoot + '>');\nif (links.frameio) lineas.push('Frame.io: <' + links.frameio + '>');\n/* quién quedó con acceso a la categoría (lo armó Discord: permisos) */\nlet perm = {}; try { perm = $('Discord: permisos').first().json || {}; } catch (e) {}\nif ((perm.conAcceso || []).length) lineas.push('\\ud83d\\udd13 Acceso: ' + perm.conAcceso.join(', '));\nif ((perm.sinMatch || []).length) lineas.push('\\u26a0 No est\\u00e1n en el servidor o el tag no coincide: ' + perm.sinMatch.join(', '));\nif ((perm.sinTag || []).length) lineas.push('\\u26a0 Sin tag de Discord en el roster: ' + perm.sinTag.join(', '));\nreturn [{ json: { channelId: ids.discord_avisos_id, content: lineas.join('\\n').slice(0, 1900) } }];\n"
       },
       "id": "d15c0005-0000-0000-0000-000000000005",
       "name": "Aviso inicial: mensaje",
@@ -816,7 +823,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const cfg = $('CONFIG').first().json;\nconst guild = String(cfg.discordGuildId || '').trim();\nconst bot = $('Discord: Qui\\u00e9n soy').first().json;\nconst VIEW = '1024';           /* VIEW_CHANNEL */\nconst VIEW_SEND = '3072';      /* VIEW_CHANNEL + SEND_MESSAGES */\nconst parseIds = v => String(v || '').split(',').map(s => s.trim()).filter(s => /^\\d{5,}$/.test(s));\nconst users = parseIds(cfg.discordViewerUserIds);\nconst roles = parseIds(cfg.discordViewerRoleIds);\nconst overwrites = [\n  { id: guild, type: 0, deny: VIEW },                 /* @everyone: no ve la categoria ni los canales */\n  { id: String(bot.id), type: 1, allow: VIEW_SEND }   /* el bot se garantiza ver y escribir */\n];\nroles.forEach(id => overwrites.push({ id, type: 0, allow: VIEW }));\nusers.forEach(id => overwrites.push({ id, type: 1, allow: VIEW }));\nreturn [{ json: { overwrites } }];"
+        "jsCode": "/* Permisos de la categoría y los canales del proyecto nuevo: @everyone no ve, el bot ve y\n   escribe, y el equipo del proyecto (lo que armó 'Equipo a buscar') ve y escribe.\n   discordViewerRoleIds / discordViewerUserIds quedan para quien tenga que ver TODOS los\n   proyectos; antes traían los roles de todos los coordinadores y por eso cualquier alta\n   le aparecía a todo el mundo. */\nconst cfg = $('CONFIG').first().json;\nconst guild = String(cfg.discordGuildId || '').trim();\nconst bot = $('Discord: Quién soy').first().json;\nconst VIEW = '1024', VIEW_SEND = '3072';\nconst parseIds = v => String(v || '').split(',').map(s => s.trim()).filter(s => /^\\d{5,}$/.test(s));\nconst normTag = s => String(s || '').toLowerCase().replace(/^@+/, '').replace(/[^a-z0-9._]/g, '');\n/* resultados de members/search (prefijo): se matchea exacto contra username, nombre global o apodo */\nconst porUser = new Map();\ntry {\n  $('Discord: buscar miembro').all().map(i => i.json).filter(m => m && m.user).forEach(m => {\n    [m.user.username, m.user.global_name, m.nick].forEach(t => { const k = normTag(t); if (k && !porUser.has(k)) porUser.set(k, String(m.user.id)); });\n  });\n} catch (e) {}\nconst pedidos = $('Equipo a buscar').all().map(i => i.json).filter(x => x && x.tag && x.tag !== '__none__');\nconst sinTag = (($('Equipo a buscar').first().json || {}).sinTag) || [];\nconst ids = new Set(), conAcceso = [], sinMatch = [];\npedidos.forEach(x => {\n  const nombres = x.personas.map(q => q.nombre);\n  const uid = porUser.get(x.tag);\n  if (!uid) { sinMatch.push(nombres.join(' / ') + ' (' + x.tag + ')'); return; }\n  if (!ids.has(uid)) { ids.add(uid); nombres.forEach(n => { if (!conAcceso.includes(n)) conAcceso.push(n); }); }\n});\nconst overwrites = [\n  { id: guild, type: 0, deny: VIEW },\n  { id: String(bot.id), type: 1, allow: VIEW_SEND }\n];\nparseIds(cfg.discordViewerRoleIds).forEach(id => overwrites.push({ id, type: 0, allow: VIEW }));\nparseIds(cfg.discordViewerUserIds).forEach(id => overwrites.push({ id, type: 1, allow: VIEW }));\nids.forEach(id => overwrites.push({ id, type: 1, allow: VIEW_SEND }));\nreturn [{ json: { overwrites, conAcceso, sinTag, sinMatch } }];"
       },
       "id": "d15c0008-0000-0000-0000-000000000008",
       "name": "Discord: permisos",
@@ -1667,6 +1674,115 @@
         3092,
         208
       ]
+    },
+    {
+      "id": "eabf6b7e-ace7-4e10-a026-45c1da803f64",
+      "name": "Roster: metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        2740,
+        20
+      ],
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $('CONFIG').first().json.rosterSheetId }}?fields=sheets(properties(sheetId,title))",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "2f83cf09-faee-4aa5-9457-af5204628c8b",
+      "name": "Roster: pestaña",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2964,
+        20
+      ],
+      "parameters": {
+        "jsCode": "const meta = $('Roster: metadata').first().json || {};\nconst hojas = meta.sheets || [];\nconst hoja = hojas.find(s => s.properties && s.properties.sheetId === 0) || hojas[0];\nif (!hoja) return [{ json: { urlLeer: '' } }];   /* sin roster el flujo sigue, solo pierde el fallback */\nconst base = 'https://sheets.googleapis.com/v4/spreadsheets/' + $('CONFIG').first().json.rosterSheetId + '/values/';\nreturn [{ json: { urlLeer: base + encodeURIComponent(hoja.properties.title + '!A1:Z2000') } }];"
+      }
+    },
+    {
+      "id": "c8483085-6886-46c8-9e11-b7340d8bb3b4",
+      "name": "Roster: leer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        3188,
+        20
+      ],
+      "parameters": {
+        "url": "={{ $json.urlLeer || 'https://sheets.googleapis.com/v4/spreadsheets/invalido' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "681cca6d-806b-422b-868d-5a56112b74a2",
+      "name": "Equipo a buscar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3412,
+        20
+      ],
+      "parameters": {
+        "jsCode": "/* Quién tiene que ver la categoría del proyecto nuevo: el equipo interno del proyecto\n   (EP / Productor / Coordinador, tag desde el roster por nombre o mail) y las personas\n   asignadas ya confirmadas o agregadas directo (sin estado). Los candidatos entran\n   cuando wf4 da los accesos al activar. */\nconst norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();\nconst normTag = s => String(s || '').toLowerCase().replace(/^@+/, '').replace(/[^a-z0-9._]/g, '');\n/* roster: nombre -> tag de Discord, mail -> tag */\nconst rosterTag = new Map(), rosterMail = new Map();\ntry {\n  const vals = ($('Roster: leer').first().json || {}).values || [];\n  if (vals.length) {\n    const heads = vals[0].map(norm);\n    const iN = heads.findIndex(h => h.includes('nombre')), iD = heads.findIndex(h => h.includes('discord')), iM = heads.findIndex(h => h.includes('mail'));\n    if (iD >= 0) vals.slice(1).forEach(v => {\n      const d = normTag((v || [])[iD]); if (!d) return;\n      if (iN >= 0) { const n = norm((v || [])[iN]); if (n) rosterTag.set(n, d); }\n      if (iM >= 0) { const m = norm((v || [])[iM]); if (m) rosterMail.set(m, d); }\n    });\n  }\n} catch (e) {}\nconst buscar = new Map(), sinTag = [];\nconst pedir = (nombre, email, tagDirecto, tarea) => {\n  const n = String(nombre || '').trim(), m = norm(email);\n  if (!n && !m) return;\n  const quien = n || m;\n  const tag = normTag(tagDirecto) || rosterTag.get(norm(n)) || rosterMail.get(m) || '';\n  if (!tag) { if (!sinTag.includes(quien)) sinTag.push(quien); return; }\n  if (!buscar.has(tag)) buscar.set(tag, { tag, personas: [] });\n  buscar.get(tag).personas.push({ nombre: quien, tarea: tarea || '' });\n};\nconst b = $('Webhook').first().json.body || {};\npedir(b.ep_nombre, b.ep_email, '', ''); pedir(b.prod_nombre, b.prod_email, '', ''); pedir(b.coord_nombre, b.coord_email, '', '');\nObject.entries(b.asignaciones || {}).forEach(([tarea, rows]) => (Array.isArray(rows) ? rows : []).forEach(r => {\n  if (!r || (r.estado && r.estado !== 'confirmado')) return;\n  pedir(r.nombre, r.email, r.discord, tarea);\n}));\n/* un ítem por tag: el nodo siguiente busca cada uno en el servidor (members/search funciona sin\n   el intent privilegiado de miembros; el listado completo da 403). Siempre sale al menos un ítem\n   para que la cadena no se corte: '__none__' no matchea a nadie. */\nconst items = [...buscar.values()].map(x => ({ json: { ...x, sinTag } }));\nreturn items.length ? items : [{ json: { tag: '__none__', personas: [], sinTag } }];"
+      }
+    },
+    {
+      "id": "c85a834b-a5fa-4fdd-8a49-117c477c3892",
+      "name": "Discord: buscar miembro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3636,
+        20
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "notes": "members/search por cada tag (funciona sin el intent privilegiado de miembros; el listado completo /members da 403).",
+      "parameters": {
+        "method": "GET",
+        "url": "=https://discord.com/api/v10/guilds/{{ $('CONFIG').first().json.discordGuildId }}/members/search?query={{ encodeURIComponent($json.tag) }}&limit=10",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 250
+            }
+          }
+        }
+      }
     }
   ],
   "connections": {
@@ -2008,7 +2124,7 @@
       "main": [
         [
           {
-            "node": "Discord: permisos",
+            "node": "Roster: metadata",
             "type": "main",
             "index": 0
           }
@@ -2371,6 +2487,61 @@
         [
           {
             "node": "¿Discord activo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: metadata": {
+      "main": [
+        [
+          {
+            "node": "Roster: pestaña",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: pestaña": {
+      "main": [
+        [
+          {
+            "node": "Roster: leer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roster: leer": {
+      "main": [
+        [
+          {
+            "node": "Equipo a buscar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Equipo a buscar": {
+      "main": [
+        [
+          {
+            "node": "Discord: buscar miembro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: buscar miembro": {
+      "main": [
+        [
+          {
+            "node": "Discord: permisos",
             "type": "main",
             "index": 0
           }

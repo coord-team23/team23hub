@@ -2,6 +2,14 @@
 
 Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
 
+## 2026-10-23 — Discord: la categoría del proyecto la ve solo su equipo
+
+- **wf3 `Discord: permisos`** dejaba de ver la categoría a `@everyone` pero le daba VIEW a los roles de `discordViewerRoleIds` (los dos roles de coordinadores): cualquier alta le aparecía a todo el equipo. Ahora `discordViewerRoleIds` queda vacío y la categoría y sus canales los ven, con permiso de escribir, el bot y **el equipo del proyecto**: EP / Productor / Coordinador (tag de Discord desde el roster, por nombre o por mail) y las personas asignadas ya confirmadas o agregadas directo. Los candidatos entran cuando wf4 da los accesos al activar. Si alguien tiene que ver *todos* los proyectos, va a propósito en `discordViewerRoleIds` / `discordViewerUserIds`.
+- **El listado de miembros (`GET /guilds/{id}/members`) da 403**: el bot no tiene el intent privilegiado de miembros. Eso significa que la rama de accesos de wf4 (`Discord: miembros`) nunca pudo correr. wf3 y wf4 pasan a `members/search?query=<tag>` por persona (nodo `Equipo a buscar` → `Discord: buscar miembro`), que funciona sin el intent; el match es exacto contra username, nombre global o apodo.
+- wf4 `Armar accesos` también da acceso al equipo interno del proyecto (antes solo a las asignaciones).
+- El aviso inicial en el canal del proyecto ahora lista quién quedó con acceso y quién no tiene tag de Discord en el roster. Probado contra el servidor real: Eyal matchea; "Teo Palvi", "Milena" y "Renee Club Color" no tienen tag en el Directorio con ese nombre/mail, así que hay que cargarlo ahí para que entren solos.
+- Deployado por API (wf3 70 nodos, wf4 32); nada que importar a mano.
+
 ## 2026-10-23 — Debrief (wf6): la IA responde con JSON garantizado
 
 Tres intentos seguidos el 23/10 fallaron en `Limpiar JSON` con "La IA no devolvió JSON válido": la síntesis traía comillas sin escapar (`Campaña H2 "Futuro"`) y `JSON.parse` se rompía. El prompt pedía "SOLO JSON válido", pero eso es una súplica, no una garantía.
