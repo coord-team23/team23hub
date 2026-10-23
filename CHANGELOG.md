@@ -9,6 +9,7 @@ Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + 
 - wf4 `Armar accesos` también da acceso al equipo interno del proyecto (antes solo a las asignaciones).
 - El aviso inicial en el canal del proyecto ahora lista quién quedó con acceso y quién no tiene tag de Discord en el roster. Probado contra el servidor real: Eyal matchea; "Teo Palvi", "Milena" y "Renee Club Color" no tienen tag en el Directorio con ese nombre/mail, así que hay que cargarlo ahí para que entren solos.
 - Deployado por API (wf3 70 nodos, wf4 32); nada que importar a mano.
+- **Equipo interno mapeado en CONFIG** (`discordTagsInternos`, en wf3 y wf4, formato `nombre o mail=tag[,tag2]; …`): el equipo fijo no está en el roster de proveedores, así que sus tags viven acá. Teo Palvi → `teoelperro` ("doggydog"), Milena → `mmilena.m` ("10003N0") y `mmileno` (sus dos cuentas). Probado: los tres entran. "Renee Club Color" sigue sin tag: en el Directorio el contacto de Club Color es Miguel Escudero (`m.escudero.me@gmail.com`), sin Discord cargado.
 
 ## 2026-10-23 — Debrief (wf6): la IA responde con JSON garantizado
 
