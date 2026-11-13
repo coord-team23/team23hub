@@ -1,0 +1,175 @@
+{
+  "name": "TEAM23 — 18 Frame.io keepalive",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "c1800018-0000-0000-0000-000000000001",
+      "name": "Todos los días 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c1800018-0000-0000-0000-000000000002",
+      "name": "Frame: ¿conectado?",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "url": "https://api.frame.io/v4/me",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "oAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Frame.io OAuth2"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "Usar la credencial todos los días hace que n8n renueve el token de Adobe: sin uso, Adobe lo corta a los 14 días."
+    },
+    {
+      "id": "c1800018-0000-0000-0000-000000000003",
+      "name": "¿Desconectado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d1",
+              "leftValue": "={{ !($json.data && $json.data.id) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1800018-0000-0000-0000-000000000004",
+      "name": "Armar aviso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        -80
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: { channelId: \"1473387046788923527\", content: \"⚠️ **Frame.io se desconectó de n8n.** Las altas nuevas del hub no van a crear el proyecto en Frame (el hub lo avisa al crear). Reconectar: n8n → Credentials → *Frame.io OAuth2* → **Switch account**, con biz@team23.online.\" } }];"
+      }
+    },
+    {
+      "id": "c1800018-0000-0000-0000-000000000005",
+      "name": "Discord: aviso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -80
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://discord.com/api/v10/channels/{{ $json.channelId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Discord Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Todos los días 09:00": {
+      "main": [
+        [
+          {
+            "node": "Frame: ¿conectado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frame: ¿conectado?": {
+      "main": [
+        [
+          {
+            "node": "¿Desconectado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Desconectado?": {
+      "main": [
+        [
+          {
+            "node": "Armar aviso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Armar aviso": {
+      "main": [
+        [
+          {
+            "node": "Discord: aviso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

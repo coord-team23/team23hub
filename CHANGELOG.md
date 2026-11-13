@@ -2,6 +2,15 @@
 
 Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
 
+## 2026-11-13 — wf3: la unidad de Drive se comparte primero; Frame caído ya no corta el alta
+
+- **Liverpool x Harry Potter (12/11) no creó Frame.io**: la credencial `Frame.io OAuth2` de n8n devuelve `EAUTH access_denied` (vencida). Hay que reconectarla a mano en n8n (Credentials → Frame.io OAuth2 → Reconnect); hasta entonces ningún alta crea Frame y el hub lo avisa al crear.
+- **Por eso tampoco se compartió la unidad con biz@**: `Drive: Miembros` (biz@ y coord@ como Manager, desde `driveMembers`) colgaba en una rama paralela que n8n corre al final; la rama de la portada se rompía en `Portada Frame: crear archivo` (pedía `Frame: carpetas`, que no corrió) y la ejecución moría antes. Alguien sumó a biz@ a mano como Colaborador; se subió a Administrador como en las demás unidades.
+- Ahora `Drive: Crear Unidad` → `Armar miembros` → `Drive: Miembros` (3 intentos, sigue aunque falle) → `Unidad compartida` → carpetas: la unidad se comparte antes que todo lo demás, y si no se pudo con alguien el hub lo avisa al crear.
+- `¿Portada a Frame?` exige que el proyecto de Frame exista, y `Portada Frame: crear archivo` sigue de largo si falla.
+- Deployado por API (wf3, 71 nodos); nada que importar a mano.
+- **Credencial de Frame reconectada** (13/11, biz@team23.online) y **wf18 Frame.io keepalive** (`xDb7usw2OXBz9IIV`, `n8n/18-frame-keepalive.json`): todos los días a las 09:00 llama a `GET /v4/me` con la credencial. Adobe corta el token de refresco a los 14 días sin uso (conectada el 29/10, murió el 12/11) y n8n solo lo renueva cuando la usa; el uso diario la mantiene viva. Si falla, avisa en `#coordinacion-general` cómo reconectarla. El Server-to-Server de Adobe (que no vence) pide Frame administrado desde Adobe Admin Console, y la cuenta no lo está.
+
 ## 2026-10-23 — Discord: la categoría del proyecto la ve solo su equipo
 
 - **wf3 `Discord: permisos`** dejaba de ver la categoría a `@everyone` pero le daba VIEW a los roles de `discordViewerRoleIds` (los dos roles de coordinadores): cualquier alta le aparecía a todo el equipo. Ahora `discordViewerRoleIds` queda vacío y la categoría y sus canales los ven, con permiso de escribir, el bot y **el equipo del proyecto**: EP / Productor / Coordinador (tag de Discord desde el roster, por nombre o por mail) y las personas asignadas ya confirmadas o agregadas directo. Los candidatos entran cuando wf4 da los accesos al activar. Si alguien tiene que ver *todos* los proyectos, va a propósito en `discordViewerRoleIds` / `discordViewerUserIds`.

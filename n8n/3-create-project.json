@@ -413,7 +413,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $('Webhook').first().json.body;\n/* cada bloque de automatizaciones puede venir apagado desde el hub (auto_drive /\n   auto_frame / auto_discord). Si un nodo no se ejecutó, $('Nodo') tira error:\n   por eso todas las lecturas pasan por estos accesores tolerantes. */\nconst one = (n) => { try { return $(n).first().json; } catch (e) { return null; } };\nconst many = (n) => { try { return $(n).all().map(i => i.json); } catch (e) { return []; } };\n\nconst root = one('Drive: Crear Unidad');\nconst l1 = many('Drive: Subcarpetas N1');\nconst find = (kw) => { const f = l1.find(x => (x.name || '').includes(kw)); return f ? f.id : ''; };\nconst desglose = one('Copia Desglose');\nconst brief = one('Copia Brief');\nconst feedback = one('Copia Feedback');\nconst notas = one('Crear Doc Notas');\nconst frame = one('Frame: carpetas');\nconst dsc = one('Discord: IDs') || {};\nconst folderUrl = (id) => id ? 'https://drive.google.com/drive/folders/' + id : '';\nconst docUrl = (kind, o) => (o && o.id) ? 'https://docs.google.com/' + kind + '/d/' + o.id : '';\nconst links = {\n  driveRoot: folderUrl(root && root.id),\n  coord: folderUrl(find('COORD')),\n  supervision: folderUrl(find('SUPERVISION')),\n  footage: folderUrl(find('FOOTAGE')),\n  recursos: folderUrl(find('RECURSOS')),\n  editables: folderUrl(find('EDITABLES')),\n  finales: folderUrl(find('FINALES')),\n  notas: docUrl('document', notas),\n  desglose: docUrl('spreadsheets', desglose),\n  brief: docUrl('presentation', brief),\n  feedback: docUrl('presentation', feedback),\n  frameio: (frame && frame.frameProjectId) ? 'https://next.frame.io/project/' + frame.frameProjectId : ''\n};\nObject.keys(links).forEach(k => { if (!links[k]) delete links[k]; });\n/* Links pegados a mano en el armado, para lo que se eligió no crear automáticamente.\n   Lo que sí se creó siempre gana: es lo que existe de verdad. */\nconst manual = (body && typeof body.links === 'object' && body.links) ? body.links : {};\nObject.keys(manual).forEach(k => {\n  const v = String(manual[k] == null ? '' : manual[k]).trim();\n  /* solo URLs: si alguien manda cualquier cosa, no se guarda un link muerto */\n  if (/^https?:\\/\\//i.test(v) && !links[k]) links[k] = v;\n});\nconst id = 'p_' + Date.now();\nconst now = new Date().toISOString();\nconst year = String(new Date().getFullYear());\nconst row = {\n  id,\n  nombre: body.nombre,\n  cliente: body.cliente || '',\n  agencia: body.agencia || '',\n  productora: body.productora || '',\n  director: body.director || '',\n  ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '',\n  prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '',\n  coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '',\n  tareas_json: JSON.stringify(body.tareas || []),\n  asignaciones_json: JSON.stringify(body.asignaciones || {}),\n  status: 'por_activarse',\n  year,\n  links_json: JSON.stringify(links),\n  created_at: now,\n  taskDates_json: JSON.stringify(body.taskDates || {}),\n  sintesis: body.sintesis || '',\n  storyboard_url: body.storyboard_url || '',\n  tratamiento_url: body.tratamiento_url || '',\n  discord_category_id: dsc.discord_category_id ? \"'\" + dsc.discord_category_id : '',\n  discord_avisos_id: dsc.discord_avisos_id ? \"'\" + dsc.discord_avisos_id : ''\n};\nconst project = { id, nombre: body.nombre, cliente: body.cliente || '', agencia: body.agencia || '', productora: body.productora || '', director: body.director || '', ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '', prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '', coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '', tareas: body.tareas || [], asignaciones: body.asignaciones || {}, status: 'por_activarse', year, links, calendario: [], taskDates: body.taskDates || {}, sintesis: body.sintesis || '', storyboard_url: body.storyboard_url || '' };\n/* lo que se pidió y no salió: el hub lo muestra al crear en vez de dar todo por listo */\nconst avisos = [];\nif (body.auto_frame !== false && !links.frameio) avisos.push('Frame.io no se creó (revisar la credencial de Frame en n8n)');\nif (avisos.length) project.avisos = avisos;\nreturn [{ json: { row, project } }];\n"
+        "jsCode": "const body = $('Webhook').first().json.body;\n/* cada bloque de automatizaciones puede venir apagado desde el hub (auto_drive /\n   auto_frame / auto_discord). Si un nodo no se ejecutó, $('Nodo') tira error:\n   por eso todas las lecturas pasan por estos accesores tolerantes. */\nconst one = (n) => { try { return $(n).first().json; } catch (e) { return null; } };\nconst many = (n) => { try { return $(n).all().map(i => i.json); } catch (e) { return []; } };\n\nconst root = one('Drive: Crear Unidad');\nconst l1 = many('Drive: Subcarpetas N1');\nconst find = (kw) => { const f = l1.find(x => (x.name || '').includes(kw)); return f ? f.id : ''; };\nconst desglose = one('Copia Desglose');\nconst brief = one('Copia Brief');\nconst feedback = one('Copia Feedback');\nconst notas = one('Crear Doc Notas');\nconst frame = one('Frame: carpetas');\nconst dsc = one('Discord: IDs') || {};\nconst folderUrl = (id) => id ? 'https://drive.google.com/drive/folders/' + id : '';\nconst docUrl = (kind, o) => (o && o.id) ? 'https://docs.google.com/' + kind + '/d/' + o.id : '';\nconst links = {\n  driveRoot: folderUrl(root && root.id),\n  coord: folderUrl(find('COORD')),\n  supervision: folderUrl(find('SUPERVISION')),\n  footage: folderUrl(find('FOOTAGE')),\n  recursos: folderUrl(find('RECURSOS')),\n  editables: folderUrl(find('EDITABLES')),\n  finales: folderUrl(find('FINALES')),\n  notas: docUrl('document', notas),\n  desglose: docUrl('spreadsheets', desglose),\n  brief: docUrl('presentation', brief),\n  feedback: docUrl('presentation', feedback),\n  frameio: (frame && frame.frameProjectId) ? 'https://next.frame.io/project/' + frame.frameProjectId : ''\n};\nObject.keys(links).forEach(k => { if (!links[k]) delete links[k]; });\n/* Links pegados a mano en el armado, para lo que se eligió no crear automáticamente.\n   Lo que sí se creó siempre gana: es lo que existe de verdad. */\nconst manual = (body && typeof body.links === 'object' && body.links) ? body.links : {};\nObject.keys(manual).forEach(k => {\n  const v = String(manual[k] == null ? '' : manual[k]).trim();\n  /* solo URLs: si alguien manda cualquier cosa, no se guarda un link muerto */\n  if (/^https?:\\/\\//i.test(v) && !links[k]) links[k] = v;\n});\nconst id = 'p_' + Date.now();\nconst now = new Date().toISOString();\nconst year = String(new Date().getFullYear());\nconst row = {\n  id,\n  nombre: body.nombre,\n  cliente: body.cliente || '',\n  agencia: body.agencia || '',\n  productora: body.productora || '',\n  director: body.director || '',\n  ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '',\n  prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '',\n  coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '',\n  tareas_json: JSON.stringify(body.tareas || []),\n  asignaciones_json: JSON.stringify(body.asignaciones || {}),\n  status: 'por_activarse',\n  year,\n  links_json: JSON.stringify(links),\n  created_at: now,\n  taskDates_json: JSON.stringify(body.taskDates || {}),\n  sintesis: body.sintesis || '',\n  storyboard_url: body.storyboard_url || '',\n  tratamiento_url: body.tratamiento_url || '',\n  discord_category_id: dsc.discord_category_id ? \"'\" + dsc.discord_category_id : '',\n  discord_avisos_id: dsc.discord_avisos_id ? \"'\" + dsc.discord_avisos_id : ''\n};\nconst project = { id, nombre: body.nombre, cliente: body.cliente || '', agencia: body.agencia || '', productora: body.productora || '', director: body.director || '', ep_nombre: body.ep_nombre || '', ep_email: body.ep_email || '', prod_nombre: body.prod_nombre || '', prod_email: body.prod_email || '', coord_nombre: body.coord_nombre || '', coord_email: body.coord_email || '', tareas: body.tareas || [], asignaciones: body.asignaciones || {}, status: 'por_activarse', year, links, calendario: [], taskDates: body.taskDates || {}, sintesis: body.sintesis || '', storyboard_url: body.storyboard_url || '' };\n/* lo que se pidió y no salió: el hub lo muestra al crear en vez de dar todo por listo */\nconst avisos = [];\nif (body.auto_frame !== false && !links.frameio) avisos.push('Frame.io no se creó (revisar la credencial de Frame en n8n)');\nconst share = one('Unidad compartida');\nif (share && share.sinCompartir && share.sinCompartir.length) avisos.push('La unidad de Drive no se compartió con ' + share.sinCompartir.join(', '));\nif (avisos.length) project.avisos = avisos;\nreturn [{ json: { row, project } }];\n"
       },
       "id": "c3000003-0000-0000-0000-000000000010",
       "name": "Armar registro",
@@ -516,7 +516,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const raw = $('CONFIG').first().json.driveMembers || '';\nconst emails = raw.split(',').map(e => e.trim()).filter(e => e && e.includes('@'));\nreturn emails.map(email => ({ json: { email } }));"
+        "jsCode": "const raw = $('CONFIG').first().json.driveMembers || '';\nconst emails = raw.split(',').map(e => e.trim()).filter(e => e && e.includes('@'));\n/* sin miembros igual sigue: un ítem vacío que 'Drive: Miembros' saltea */\nif (!emails.length) return [{ json: { email: '' } }];\nreturn emails.map(email => ({ json: { email } }));"
       },
       "id": "mm000003-0000-0000-0000-000000000001",
       "name": "Armar miembros",
@@ -543,7 +543,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        780,
+        804,
         180
       ],
       "onError": "continueRegularOutput",
@@ -552,7 +552,10 @@
           "id": "REEMPLAZAR",
           "name": "Google Drive account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
     },
     {
       "parameters": {
@@ -1074,7 +1077,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1393,7 +1397,7 @@
           "conditions": [
             {
               "id": "g1",
-              "leftValue": "={{ $('Webhook').first().json.body.auto_frame !== false }}",
+              "leftValue": "={{ $('Webhook').first().json.body.auto_frame !== false && $('Frame: carpetas').isExecuted && !!$('Frame: carpetas').first().json.rootFolderId }}",
               "rightValue": "",
               "operator": {
                 "type": "boolean",
@@ -1789,6 +1793,19 @@
           }
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "/* un solo ítem para seguir con las carpetas; anota con quién quedó compartida */\nconst pedidos = $('Armar miembros').all().map(i => i.json.email).filter(Boolean);\nconst res = $input.all().map(i => i.json);\nconst ok = [], fallo = [];\npedidos.forEach((email, k) => { const r = res[k] || {}; (r.id && !r.error ? ok : fallo).push(email); });\nreturn [{ json: { driveId: $('Drive: Crear Unidad').first().json.id, compartidaCon: ok, sinCompartir: fallo } }];"
+      },
+      "name": "Unidad compartida",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1028,
+        180
+      ],
+      "id": "unidad-compartida-1"
     }
   ],
   "connections": {
@@ -1992,11 +2009,6 @@
     "Drive: Crear Unidad": {
       "main": [
         [
-          {
-            "node": "Nivel 1: carpetas",
-            "type": "main",
-            "index": 0
-          },
           {
             "node": "Armar miembros",
             "type": "main",
@@ -2548,6 +2560,28 @@
         [
           {
             "node": "Discord: permisos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drive: Miembros": {
+      "main": [
+        [
+          {
+            "node": "Unidad compartida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unidad compartida": {
+      "main": [
+        [
+          {
+            "node": "Nivel 1: carpetas",
             "type": "main",
             "index": 0
           }
