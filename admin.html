@@ -79,7 +79,9 @@
   .stat span{display:block;margin-top:var(--space-2);font-size:var(--fs-caption);color:var(--gray);font-weight:var(--weight-bold);text-transform:uppercase;letter-spacing:.06em}
 
   /* ---------- Status ---------- */
-  .status-block{margin-top:var(--space-8)}
+  /* --space-6 y --space-8 no existen en los tokens (la escala salta 5→7→9): con ellos
+     el margen quedaba en 0 y los títulos se pegaban a las tarjetas de arriba */
+  .status-block{margin-top:var(--space-9)}
   .status-block h3{
     font-family:var(--font-primary);font-weight:var(--weight-bold);font-size:var(--fs-caption);
     text-transform:uppercase;letter-spacing:.1em;color:var(--gray);margin-bottom:var(--space-4);
@@ -310,7 +312,7 @@
 </div>
 
 <main>
-  <span id="mainTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-6)"></span>
+  <span id="mainTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-7)"></span>
 
   <section id="view-status" hidden>
     <div class="stat-grid" id="stats"></div>
@@ -440,8 +442,45 @@ async function api(path, opts={}){
     headers: { "Content-Type":"application/json", "x-team23-key": CONFIG.API_KEY, ...(await authHeader()), ...(opts.headers||{}) }
   });
   if(!r.ok) throw new Error("HTTP "+r.status);
-  return r.json();
+  const data = await r.json();
+  if(opts.method==="POST") adminEmitir(path, opts.body);   /* guardó bien: se les avisa a los demás */
+  return data;
 }
+
+/* ---------- en vivo: lo que guarda otra persona aparece acá ----------
+   Mismo canal privado que usa el hub (Supabase Realtime, "hub-presence", evento
+   "admin") y las mismas policies. Viaja solo lo que se guardó: el campo que cambió,
+   la tarea nueva o el id borrado. No pasa por n8n. */
+let adminCh = null, adminRenderPend = false;
+function adminEmitir(path, rawBody){
+  if(!adminCh) return;
+  const m = String(path).match(/admin-(update|delete|create)-task$/);
+  let b = null; try{ b = JSON.parse(rawBody||"null"); }catch(e){}
+  if(!m || !b) return;
+  const msg = m[1]==="update" ? { t:"upd", id:String(b.id), campos:Object.fromEntries(Object.entries(b).filter(([k])=>k!=="id")) }
+            : m[1]==="delete" ? { t:"del", id:String(b.id) }
+            : { t:"new", task:b };
+  try{ const r = adminCh.send({ type:"broadcast", event:"admin", payload:msg }); if(r && r.catch) r.catch(()=>{}); }catch(e){}
+}
+function adminRecibir(m){
+  if(!m) return;
+  if(m.t==="upd"){
+    const t = tasks.find(x=>String(x.id)===String(m.id)); if(!t) return;
+    Object.assign(t, m.campos||{});
+  } else if(m.t==="del"){
+    tasks = tasks.filter(x=>String(x.id)!==String(m.id));
+  } else if(m.t==="new" && m.task && !tasks.some(x=>String(x.id)===String(m.task.id))){
+    tasks.push(completarSector(m.task));
+  } else return;
+  adminRepintar();
+}
+/* con un campo en foco no se redibuja: se espera a que salga, para no cerrarle un
+   desplegable ni sacarle el cursor a quien está cargando algo */
+function adminEscribiendo(){ const a = document.activeElement; return !!(a && a.matches && a.matches("input:not([type=checkbox]):not([type=radio]),textarea,select")); }
+function adminRepintar(){ if(adminEscribiendo()){ adminRenderPend = true; return; } adminRenderPend = false; render(); }
+document.addEventListener("focusout", ()=>{
+  if(adminRenderPend) setTimeout(()=>{ if(adminRenderPend && !adminEscribiendo()) adminRepintar(); }, 200);
+});
 
 /* La planilla puede no tener todavía la columna "sector" (la carga inicial se
    hizo sin ella). Para que esas tareas no queden fuera de todos los sectores y
@@ -1060,6 +1099,11 @@ async function boot(){
       const mail = (session.user.email||"").toLowerCase();
       if(!data || data.role !== "interno" || !ADMIN_MAILS.includes(mail)){ location.replace("/productores"); return; }
       $("#btnLogout").style.display = "inline-flex";
+      try{
+        await sb.realtime.setAuth(session.access_token);
+        adminCh = sb.channel("hub-presence", { config:{ private:true } });
+        adminCh.on("broadcast", { event:"admin" }, ({ payload })=> adminRecibir(payload)).subscribe();
+      }catch(e){ /* sin tiempo real el admin funciona igual, solo no se actualiza solo */ }
     }catch(e){ $("#body").innerHTML = `<div class="empty">No pude conectar con el login (${esc(e.message)}). Recargá la página.</div>`; return; }
   }
 

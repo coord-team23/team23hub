@@ -2,6 +2,40 @@
 
 Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
 
+## 2026-11-24 — Auditoría del hub: calendario, fases duplicadas, y cambios en vivo entre personas
+
+**Calendario desalineado (ficha de MILO J).** `.week` y `.wdays` usaban `repeat(7,1fr)`: `1fr` deja crecer la columna hasta el contenido, así que un hito de nombre largo ("Día de corrección de urgencia (De ser necesario)") ensanchaba su columna y esa semana dejaba de coincidir con los días de arriba. Ahora `repeat(7,minmax(0,1fr))` y la celda con `min-width:0`: el hito se corta con puntos suspensivos y las siete columnas miden lo mismo en todas las semanas (ficha, vista semanal y calendario global).
+
+**Las tareas aparecían dos veces en el calendario (bug de wf5, corregido en vivo).** El guardado de calendario mandaba todas las entradas —también las fases que salen de las TAREAS— y wf5 las escribía todas en la hoja `Calendar`. Al recargar, esas copias volvían como fases independientes: cada tarea duplicada en la tabla de Fases, en el calendario, en el portal de proveedores y en los recordatorios. Además `Fila taskDates` leía `id` y `taskDates`, y el hub manda `projectId` y `taskDates_json`: las fechas de las tareas **no se guardaban nunca** desde "Guardar cambios de calendario" y cada guardado agregaba una fila vacía a `Projects` (había 22 de 29).
+- wf5: a `Calendar` van solo fases independientes e hitos (las de tarea, id `task:…`, viven en `taskDates_json`); `Fila taskDates` lee los campos que el hub manda y cuelga directo de `Limpiar Calendario`, así se guarda aunque no haya filas de calendario. El mail y el aviso de Discord siguen listando todo.
+- wf4 `Aviso de etapa`: el rango de fechas del aviso general suma las de `taskDates_json` (antes salía de las copias en `Calendar`).
+- Hub (`calSinCopiasDeTareas`, al cargar): limpia las copias viejas sin perder fechas. Copia vacía o igual a la tarea → se descarta; la tarea no tenía fechas y la copia sí → la tarea las recupera; las dos tienen fechas distintas → quedan las dos a la vista. Hoy ese último caso es solo BBVA - FUTURO (VFX hasta 24/11 vs 4/12, Online hasta 26/11 vs 8/12): hay que borrar a mano la que no vale.
+- Las 22 filas vacías de `Projects` quedaron: no molestan (wf2 las ignora) y no se borró nada de la hoja.
+
+**Cambios en vivo.** Cada guardado que sale bien se reenvía por el canal privado de la presencia (Supabase Realtime, `hub-presence`, evento `sync`) como un parche con **solo los campos que ese guardado escribió**, sacados del body del pedido. Los demás lo aplican sobre el mismo objeto y se redibuja lo que tengan abierto: listas, Status, calendario global, la ficha y el tracker. No pasa por n8n (cero ejecuciones); la lista entera solo se vuelve a pedir si aparece un proyecto nuevo, al reconectar tras un corte o al volver a una pestaña que estuvo más de 10 minutos en segundo plano. No hace falta SQL nuevo: usa las policies de `presence-migration.sql`.
+- Con la ficha abierta **y cambios sin guardar**, se fusiona de a tres (lo que había en el sheet / lo mío / lo que llegó), bajando por tarea y por campo: yo cambio las fechas de Online y otra persona las notas de VFX → entran las dos. Si las dos partes tocaron exactamente lo mismo queda lo mío y sale un aviso en rojo que dice qué. Fases e hitos se fusionan por entrada.
+- Con un campo en foco la ficha no se redibuja (el dato ya está aplicado): espera a que salga, para no sacarle el cursor a quien escribe. Con un popup abierto encima (mail, nota, persona, links…) o un guardado en vuelo, el cambio espera en cola.
+- "Descartar cambios" ahora vuelve a lo último que hay en el sheet: cada guardado propio actualiza ese punto. Antes, cambiar de etapa y después descartar devolvía la ficha a la etapa vieja.
+- Admin (`admin.html`): mismo canal, evento `admin`; el campo editado, la tarea nueva o la borrada le aparecen al resto.
+- Límite conocido: wf5 sigue reescribiendo la hoja `Calendar` entera en cada guardado (limpia y vuelve a agregar). Dos guardados de calendario de proyectos distintos en el mismo par de segundos pueden pisarse. La salida de fondo es guardar el calendario en la fila del proyecto (`calendario_json`).
+
+**PDF del calendario ("Descargar PDF"), rehecho.** Salía solo el mes que estaba en pantalla: en MILO J, con el calendario en noviembre, los cuatro hitos de diciembre no aparecían. Además traía una hoja en blanco al final, las fases duplicadas (el bug de wf5 de arriba) y las tablas de Fases e Hitos una al lado de la otra, con los hitos sin ordenar.
+- Sale el calendario **entero**: todas las semanas entre la primera y la última fecha del proyecto, corridas, con el mes anotado al margen y el "1 DIC" marcado en su día. Sin las semanas vacías de un mes completo y sin repetir la semana que cae entre dos meses. MILO J entra en una hoja; BBVA en dos; IA (seis meses, 25 fases) en tres.
+- Las fases van como barras continuas (como en pantalla) y la fila crece con la cantidad de barras; los hitos muestran el nombre completo, en dos o tres renglones si hace falta.
+- Abajo, **Fases y después Hitos**, cada tabla a todo el ancho y en orden de fecha. Fases con Desde / Hasta / Duración; Hitos con el día de la semana. La columna Notas solo aparece si alguna fila tiene notas; las fases sin fecha van en una línea ("Sin fecha todavía: …") en vez de filas con rayas.
+- Vertical (A4): Safari ignora el tamaño de `@page` y sacaba vertical un diseño pensado apaisado. La hoja en blanco venía del alto mínimo de pantalla del `body`.
+- El archivo se propone como `<PROYECTO> — Calendario.pdf` en vez de "TEAM 23 — Production Hub.pdf".
+
+**Otros arreglos de la pasada.**
+- Tracker: la esquina "DÍA" del encabezado quedaba por debajo de las filas al scrollear (z-index).
+- Tarjetas de Proyectos: el nombre se cortaba a mitad de palabra ("LOCOSOMI / O", "PRESIDENT / E"); ahora ceden las pills.
+- Calendario global: cada hito decía solo el nombre del proyecto (todos iguales); ahora dice el hito, con el punto del color del proyecto.
+- Mobile: el encabezado fijo ocupaba cinco renglones (230 px de 812); las acciones pasan a una fila que scrolea, como las tabs (140 px).
+- Síntesis: el markdown del debrief (`**Síntesis:**`) se veía con los asteriscos.
+- Cerrar un popup abierto sobre la ficha le devolvía el scroll al fondo.
+- Admin: `--space-6` y `--space-8` no existen en los tokens, así que los títulos de Status quedaban pegados a las tarjetas de arriba.
+- Debrief (wf6): caído desde el 21/11 por la API key de Anthropic (401 `invalid x-api-key`). No es código: hay que pegar una key nueva en la credencial `Anthropic API Key` de n8n.
+
 ## 2026-11-13 — wf3: la unidad de Drive se comparte primero; Frame caído ya no corta el alta
 
 - **Liverpool x Harry Potter (12/11) no creó Frame.io**: la credencial `Frame.io OAuth2` de n8n devuelve `EAUTH access_denied` (vencida). Hay que reconectarla a mano en n8n (Credentials → Frame.io OAuth2 → Reconnect); hasta entonces ningún alta crea Frame y el hub lo avisa al crear.

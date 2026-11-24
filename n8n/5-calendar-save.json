@@ -95,7 +95,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $('Webhook').first().json.body;\nif (!body || !body.projectId) { throw new Error('Falta projectId'); }\nconst now = new Date().toISOString();\nconst existentes = $('Leer Calendario').all().map(i => i.json).filter(r => r && r.project_id && String(r.project_id) !== String(body.projectId));\nconst nuevos = (body.entries || []).map(e => ({\n  project_id: String(body.projectId),\n  fase: e.fase || '',\n  inicio: e.inicio || '',\n  fin: e.fin || '',\n  notas: e.notas || '',\n  tipo: e.tipo === 'hito' ? 'hito' : 'fase',\n  updated_at: now\n}));\nconst rows = existentes.concat(nuevos);\nconst recipients = [...new Set((body.recipients || []).filter(Boolean).map(x => String(x).trim()))].join(',');\nconst fmt = d => d ? d : '-';\nconst cell = 'padding:8px 12px;border-bottom:1px solid #ddd;';\nconst th = 'text-align:left;padding:8px 12px;border-bottom:2px solid #0A0A0A;font-size:11px;letter-spacing:1px;';\nconst fases = nuevos.filter(e => e.tipo !== 'hito');\nconst hitos = nuevos.filter(e => e.tipo === 'hito');\nconst trsF = fases.map(e => '<tr><td style=\"' + cell + '\"><b>' + e.fase + '</b></td><td style=\"' + cell + '\">' + fmt(e.inicio) + '</td><td style=\"' + cell + '\">' + fmt(e.fin) + '</td><td style=\"' + cell + '\">' + (e.notas || '-') + '</td></tr>').join('');\nconst trsH = hitos.map(e => '<tr><td style=\"' + cell + '\">' + fmt(e.inicio) + '</td><td style=\"' + cell + '\"><b>' + e.fase + '</b></td></tr>').join('');\nlet html = '<div style=\"font-family:Helvetica,Arial,sans-serif;color:#0A0A0A;max-width:640px;\">' +\n  '<h2 style=\"margin:0 0 4px;font-size:24px;\">' + (body.projectName || 'Proyecto') + '</h2>' +\n  '<p style=\"margin:0 0 18px;color:#FF2B1E;font-weight:bold;letter-spacing:2px;font-size:11px;\">' + (body.isFirst ? 'CALENDARIO DEFINIDO' : 'CALENDARIO ACTUALIZADO') + ' · TEAM23</p>' +\n  '<table style=\"border-collapse:collapse;width:100%;font-size:14px;\"><thead><tr>' +\n  '<th style=\"' + th + '\">FASE</th><th style=\"' + th + '\">INICIO</th><th style=\"' + th + '\">FIN</th><th style=\"' + th + '\">NOTAS</th>' +\n  '</tr></thead><tbody>' + trsF + '</tbody></table>';\nif (hitos.length) {\n  html += '<p style=\"margin:22px 0 6px;font-weight:bold;font-size:12px;letter-spacing:2px;\">HITOS</p>' +\n    '<table style=\"border-collapse:collapse;width:100%;font-size:14px;\"><thead><tr>' +\n    '<th style=\"' + th + '\">FECHA</th><th style=\"' + th + '\">HITO</th>' +\n    '</tr></thead><tbody>' + trsH + '</tbody></table>';\n}\nhtml += '<p style=\"margin-top:24px;font-size:10px;color:#8A8A8A;letter-spacing:2px;\">TEAM23 PRODUCTION HUB</p></div>';\nreturn [{ json: { rows, recipients, html, projectName: body.projectName || 'Proyecto', isFirst: !!body.isFirst } }];"
+        "jsCode": "const body = $('Webhook').first().json.body;\nif (!body || !body.projectId) { throw new Error('Falta projectId'); }\nconst now = new Date().toISOString();\nconst existentes = $('Leer Calendario').all().map(i => i.json).filter(r => r && r.project_id && String(r.project_id) !== String(body.projectId));\n/* Las fases que salen de las TAREAS (id \"task:…\") viven en taskDates_json de la hoja\n   Projects, no acá: guardarlas también en Calendar las duplicaba en el hub, en el\n   portal de proveedores y en los recordatorios. Al mail y al aviso de Discord\n   van todas; a la hoja Calendar solo las fases independientes y los hitos. */\nconst esDeTarea = e => String((e && e.id) || '').startsWith('task:');\nconst todas = (body.entries || []).map(e => ({\n  _tarea: esDeTarea(e),\n  project_id: String(body.projectId),\n  fase: e.fase || '',\n  inicio: e.inicio || '',\n  fin: e.fin || '',\n  notas: e.notas || '',\n  tipo: e.tipo === 'hito' ? 'hito' : 'fase',\n  updated_at: now\n}));\nconst nuevos = todas.filter(e => !e._tarea).map(e => { const r = Object.assign({}, e); delete r._tarea; return r; });\nconst rows = existentes.concat(nuevos);\nconst recipients = [...new Set((body.recipients || []).filter(Boolean).map(x => String(x).trim()))].join(',');\nconst fmt = d => d ? d : '-';\nconst cell = 'padding:8px 12px;border-bottom:1px solid #ddd;';\nconst th = 'text-align:left;padding:8px 12px;border-bottom:2px solid #0A0A0A;font-size:11px;letter-spacing:1px;';\nconst fases = todas.filter(e => e.tipo !== 'hito');\nconst hitos = todas.filter(e => e.tipo === 'hito');\nconst trsF = fases.map(e => '<tr><td style=\"' + cell + '\"><b>' + e.fase + '</b></td><td style=\"' + cell + '\">' + fmt(e.inicio) + '</td><td style=\"' + cell + '\">' + fmt(e.fin) + '</td><td style=\"' + cell + '\">' + (e.notas || '-') + '</td></tr>').join('');\nconst trsH = hitos.map(e => '<tr><td style=\"' + cell + '\">' + fmt(e.inicio) + '</td><td style=\"' + cell + '\"><b>' + e.fase + '</b></td></tr>').join('');\nlet html = '<div style=\"font-family:Helvetica,Arial,sans-serif;color:#0A0A0A;max-width:640px;\">' +\n  '<h2 style=\"margin:0 0 4px;font-size:24px;\">' + (body.projectName || 'Proyecto') + '</h2>' +\n  '<p style=\"margin:0 0 18px;color:#FF2B1E;font-weight:bold;letter-spacing:2px;font-size:11px;\">' + (body.isFirst ? 'CALENDARIO DEFINIDO' : 'CALENDARIO ACTUALIZADO') + ' · TEAM23</p>' +\n  '<table style=\"border-collapse:collapse;width:100%;font-size:14px;\"><thead><tr>' +\n  '<th style=\"' + th + '\">FASE</th><th style=\"' + th + '\">INICIO</th><th style=\"' + th + '\">FIN</th><th style=\"' + th + '\">NOTAS</th>' +\n  '</tr></thead><tbody>' + trsF + '</tbody></table>';\nif (hitos.length) {\n  html += '<p style=\"margin:22px 0 6px;font-weight:bold;font-size:12px;letter-spacing:2px;\">HITOS</p>' +\n    '<table style=\"border-collapse:collapse;width:100%;font-size:14px;\"><thead><tr>' +\n    '<th style=\"' + th + '\">FECHA</th><th style=\"' + th + '\">HITO</th>' +\n    '</tr></thead><tbody>' + trsH + '</tbody></table>';\n}\nhtml += '<p style=\"margin-top:24px;font-size:10px;color:#8A8A8A;letter-spacing:2px;\">TEAM23 PRODUCTION HUB</p></div>';\nreturn [{ json: { rows, recipients, html, projectName: body.projectName || 'Proyecto', isFirst: !!body.isFirst } }];"
       },
       "id": "e5000005-0000-0000-0000-000000000004",
       "name": "Reconstruir",
@@ -259,7 +259,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const w = $('Webhook').first().json.body;\nreturn [{ json: { id: w.id, taskDates_json: JSON.stringify(w.taskDates || {}) } }];"
+        "jsCode": "/* El hub manda `projectId` y `taskDates_json` (ya serializado). Antes se leían `id` y\n   `taskDates`, que no existen en ese body: cada guardado de calendario agregaba una fila\n   vacía a Projects y las fechas de las tareas no se guardaban nunca desde acá. */\nconst w = $('Webhook').first().json.body || {};\nconst id = String(w.projectId || w.id || '').trim();\nif (!id) return [];\nlet td = w.taskDates_json;\nif (typeof td !== 'string' || !td) td = JSON.stringify(w.taskDates || {});\ntry { JSON.parse(td); } catch (e) { return []; }\nreturn [{ json: { id, taskDates_json: td } }];"
       },
       "id": "db000005-0000-0000-0000-000000000001",
       "name": "Fila taskDates",
@@ -574,6 +574,11 @@
             "index": 0
           },
           {
+            "node": "Fila taskDates",
+            "type": "main",
+            "index": 0
+          },
+          {
             "node": "¿Avisar por mail?",
             "type": "main",
             "index": 0
@@ -599,13 +604,7 @@
     },
     "Guardar Calendario": {
       "main": [
-        [
-          {
-            "node": "Fila taskDates",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Fila taskDates": {

@@ -481,17 +481,19 @@
   .cal-nav button:hover{background:var(--ink);color:#fff}
   .cal-scroll{overflow-x:auto;min-width:0}
   .cal-min{min-width:660px}
-  .wdays{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:2px solid var(--ink);background:var(--soft)}
+  .wdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:2px solid var(--ink);background:var(--soft)}
   .wdays div{
     font-size:var(--fs-caption);font-weight:var(--weight-bold);letter-spacing:.12em;text-transform:uppercase;
     padding:var(--space-2) var(--space-2);color:var(--ink);border-right:1px solid var(--hair);
   }
   .wdays div:last-child{border-right:none}
-  .week{position:relative;display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--hair)}
+  /* minmax(0,1fr) y no 1fr: con 1fr un hito de nombre largo ensanchaba SU columna y la
+     semana dejaba de coincidir con los días de arriba */
+  .week{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid var(--hair)}
   .week:last-child{border-bottom:none}
   .cell{
     border-right:1px solid var(--hair);padding:4px 5px 6px;cursor:pointer;
-    min-height:calc(58px + var(--bh,0px));display:flex;flex-direction:column;background:#fff;
+    min-height:calc(58px + var(--bh,0px));display:flex;flex-direction:column;background:#fff;min-width:0;
     transition:background .12s;
   }
   .cell:last-child{border-right:none}
@@ -504,13 +506,14 @@
     justify-content:center;border-radius:50%;margin-bottom:2px;
   }
   .dnum.today{background:var(--red);color:#fff}
-  .cell .chips{margin-top:calc(var(--bh,0px) + 2px);display:flex;flex-direction:column;gap:2px}
+  .cell .chips{margin-top:calc(var(--bh,0px) + 2px);display:flex;flex-direction:column;gap:2px;min-width:0}
   .chip{
     font-size:9.5px;font-weight:var(--weight-bold);border:1.5px solid var(--red);color:var(--red);
     border-radius:6px;padding:1.5px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     background:#fff;
   }
   .om .chip{opacity:.45}
+  .chip-dot{display:inline-block;width:7px;height:7px;border-radius:50%;border:1px solid var(--ink);margin-right:4px;vertical-align:-.5px}
   .barlayer{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
   .bar{
     position:absolute;height:15px;border-radius:7px;font-size:9.5px;font-weight:var(--weight-bold);
@@ -536,6 +539,7 @@
   table.trk td.trk-day,table.trk th.trk-day{position:sticky;left:0;background:#fff;z-index:1;text-align:left;font-weight:var(--weight-bold)}
   table.trk td.trk-date{position:sticky;left:54px;background:#fff;z-index:1;text-align:left;color:var(--gray)}
   table.trk th.trk-date{position:sticky;left:54px;background:#fff;z-index:3}
+  table.trk thead th.trk-day{z-index:3}
   table.trk tr.trk-weekend td{background:var(--soft)}
   /* el día de hoy, para encontrarlo de un vistazo al abrir */
   table.trk tr.trk-hoy td{box-shadow:inset 0 2px 0 var(--red), inset 0 -2px 0 var(--red)}
@@ -602,56 +606,75 @@
   /* ---------- print (PDF del calendario) ---------- */
   #printArea{display:none}
   @media print{
-    @page{ size:A4 landscape; margin:10mm; }
+    /* Vertical: Safari ignora el tamaño de @page y sale siempre vertical, así que el
+       diseño se pensó para eso. Entran dos meses por hoja. */
+    @page{ size:A4 portrait; margin:12mm; }
     /* Sin esto el navegador descarta TODOS los fondos al imprimir, que era la razón
        por la que el PDF anterior sólo podía marcar el color con un ▪ diminuto. */
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+    /* el alto mínimo de pantalla y el lugar del piso de presencia agregaban una hoja en blanco al final */
+    html,body{height:auto !important;min-height:0 !important;margin:0 !important;padding:0 !important;background:#fff !important;overflow:visible !important}
     body>*:not(#printArea){display:none !important}
     #printArea{display:block;font-family:var(--font-primary),Helvetica,sans-serif;color:#0A0A0A}
 
     /* encabezado */
-    #printArea .phead{display:flex;align-items:flex-end;justify-content:space-between;
-      border-bottom:3px solid #0A0A0A;padding-bottom:8px;margin-bottom:14px}
-    #printArea h1{font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:-.02em;margin:0;line-height:1}
-    #printArea .psub{font-size:11px;color:#666;margin-top:4px}
-    #printArea .pmonth{font-weight:800;font-size:19px;text-transform:uppercase;letter-spacing:.02em;text-align:right;line-height:1}
-    #printArea .pmark{font-size:9px;letter-spacing:.18em;color:#888;text-transform:uppercase;text-align:right;margin-top:4px}
+    #printArea .phead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+      border-bottom:3px solid #0A0A0A;padding-bottom:8px;margin-bottom:10px}
+    #printArea h1{font-weight:800;font-size:25px;text-transform:uppercase;letter-spacing:-.02em;margin:0;line-height:1}
+    #printArea .psub{font-size:10.5px;color:#666;margin-top:4px}
+    #printArea .prango{font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.02em;text-align:right;line-height:1;white-space:nowrap}
+    #printArea .pmark{font-size:8px;letter-spacing:.18em;color:#888;text-transform:uppercase;text-align:right;margin-top:5px;white-space:nowrap}
 
-    /* leyenda de colores */
-    #printArea .pleg{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px}
-    #printArea .pleg span{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700}
-    #printArea .pleg i{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.35);display:inline-block}
+    /* semanas corridas, de la primera a la última fecha del proyecto: sin las semanas
+       vacías de un mes entero y sin repetir la semana que cae entre dos meses */
+    #printArea .pcal{margin-top:2px}
+    #printArea .pwd{display:grid;grid-template-columns:34px repeat(7,minmax(0,1fr));background:#0A0A0A;color:#fff;border-radius:4px 4px 0 0}
+    #printArea .pwd div{font-size:7.5px;letter-spacing:.16em;padding:4px 5px;font-weight:700}
+    #printArea .pweek{display:grid;grid-template-columns:34px minmax(0,1fr);border-left:1px solid #D4D4CF;border-bottom:1px solid #D4D4CF;
+      break-inside:avoid;page-break-inside:avoid}
+    /* el margen dice el mes en la primera semana y cada vez que cambia */
+    #printArea .pg{border-right:1px solid #D4D4CF;padding:5px 0 0 5px;font-weight:800;font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;line-height:1.15}
+    #printArea .pg small{display:block;font-weight:400;font-size:7px;color:#888;letter-spacing:.08em}
+    #printArea .pdays{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+    /* la fila crece con la cantidad de barras de esa semana (--bh): con cuatro o cinco
+       fases a la vez se montaban sobre la semana de abajo */
+    #printArea .pc{min-height:max(50px, calc(var(--bh,0px) + 26px));padding:4px 4px 4px;border-right:1px solid #D4D4CF;min-width:0;box-sizing:border-box}
+    #printArea .pc.wk{background:#F5F5F2}
+    #printArea .pd{font-weight:800;font-size:9.5px;line-height:11px;height:11px}
+    /* el 1 de cada mes lleva el mes al lado, del mismo alto que un número: no empuja las barras */
+    #printArea .pd.m1{display:block;width:fit-content;background:#0A0A0A;color:#fff;border-radius:3px;padding:0 4px;margin-left:-2px;text-transform:uppercase;letter-spacing:.04em;font-size:8px}
+    /* los hitos van debajo de las barras de fase de esa semana (--bh) y pueden ocupar
+       dos o tres renglones: en papel no hay tooltip, el nombre tiene que leerse entero */
+    #printArea .ph{margin-top:calc(var(--bh,0px) + 4px);display:flex;flex-direction:column;gap:2px}
+    #printArea .phito{background:#FF2B1E;color:#fff;border-radius:3px;padding:2px 4px;font-weight:700;font-size:7.5px;
+      line-height:1.25;overflow-wrap:break-word}
+    #printArea .pbl{position:absolute;left:0;right:0;top:0;bottom:0}
+    #printArea .pbar{position:absolute;height:11px;border-radius:3px;padding:0 4px;font-weight:700;font-size:7px;line-height:10px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;letter-spacing:.03em;
+      border:1px solid rgba(0,0,0,.3);box-sizing:border-box}
 
-    /* grilla del mes */
-    #printArea table.pgrid{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed}
-    #printArea table.pgrid th{font-size:8.5px;letter-spacing:.16em;padding:5px 4px;text-transform:uppercase;
-      background:#0A0A0A;color:#fff;border-radius:4px}
-    #printArea table.pgrid td{vertical-align:top;padding:4px;height:88px;font-size:8.5px;
-      background:#FAFAF8;border-radius:6px;border:1px solid #E4E4E0}
-    #printArea table.pgrid td.wknd{background:#F1F1EE}
-    #printArea table.pgrid td.om{background:#fff;border-color:#F0F0EE}
-    #printArea .pd{font-weight:800;font-size:11px;margin-bottom:4px;line-height:1}
-    #printArea .pd.om{color:#C8C8C4}
-    /* barra de fase: el color ahora se ve de verdad */
-    #printArea .pbar{border-radius:4px;padding:2px 5px;margin-bottom:2px;font-weight:700;font-size:8px;
-      line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #printArea .pbar.ini{box-shadow:inset 3px 0 0 rgba(0,0,0,.45)}
-    #printArea .phito{background:#FF2B1E;color:#fff;border-radius:4px;padding:2px 5px;margin-bottom:2px;
-      font-weight:700;font-size:8px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-    /* tablas de detalle */
-    #printArea .pcols{display:flex;gap:18px;margin-top:16px;break-inside:avoid}
-    #printArea .pcols>div{flex:1}
-    #printArea h3{font-size:10px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 6px;color:#666}
-    #printArea table.plist{width:100%;border-collapse:collapse;font-size:10px}
-    #printArea table.plist th{text-align:left;border-bottom:2px solid #0A0A0A;padding:5px 6px;
-      font-size:8.5px;text-transform:uppercase;letter-spacing:.12em;color:#666}
-    #printArea table.plist td{padding:5px 6px;border-bottom:1px solid #E4E4E0;vertical-align:top}
+    /* detalle: fases arriba, hitos abajo, las dos a todo el ancho */
+    #printArea .psec{margin-top:18px}
+    /* una tabla corta pasa entera a la hoja siguiente antes que dejar dos filas sueltas */
+    #printArea .psec.junta{break-inside:avoid;page-break-inside:avoid}
+    #printArea .psin{font-size:10px;color:#666;margin-top:7px}
+    #printArea .psin b{color:#0A0A0A}
+    #printArea h3{font-size:10px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 5px;color:#0A0A0A;
+      break-after:avoid;page-break-after:avoid}
+    #printArea h3 small{font-weight:400;color:#888;letter-spacing:.12em;margin-left:6px}
+    #printArea table.plist{width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed}
+    #printArea table.plist th{text-align:left;border-bottom:2px solid #0A0A0A;padding:4px 6px;
+      font-size:8px;text-transform:uppercase;letter-spacing:.12em;color:#666}
+    #printArea table.plist td{padding:5px 6px;border-bottom:1px solid #E4E4E0;vertical-align:top;overflow-wrap:break-word}
+    #printArea table.plist tr{break-inside:avoid;page-break-inside:avoid}
+    #printArea table.plist td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+    #printArea table.plist td.sf{color:#999}
     #printArea table.plist .sw{width:10px;height:10px;border-radius:3px;display:inline-block;
       border:1px solid rgba(0,0,0,.35);margin-right:6px;vertical-align:-1px}
-    #printArea .pfoot{margin-top:18px;padding-top:8px;border-top:1px solid #E4E4E0;
-      font-size:8.5px;letter-spacing:.16em;color:#999;text-transform:uppercase;
-      display:flex;justify-content:space-between}
+    #printArea table.plist .sw.h{background:#FF2B1E;border-color:#FF2B1E;border-radius:50%}
+    #printArea .pfoot{margin-top:16px;padding-top:7px;border-top:1px solid #E4E4E0;
+      font-size:8px;letter-spacing:.16em;color:#999;text-transform:uppercase;
+      display:flex;justify-content:space-between;break-inside:avoid}
   }
   /* ---------- mobile ---------- */
   @media(max-width:640px){
@@ -665,9 +688,12 @@
        que es el último, quedaba afuera. Ahora cada grupo toma su propio renglón. */
     .tabrow{flex-direction:column;align-items:stretch;gap:8px}
     .tabbar{min-width:0;width:100%}
-    .tabacts{margin-left:0;width:100%}
-    .tabacts .btn{flex:1 1 auto;min-width:0}
-    #btnNew{width:auto;flex:1 1 100%;order:-1}
+    /* una sola fila que scrolea de costado, igual que las tabs: el header es sticky y
+       con las acciones en tres renglones se llevaba un tercio de la pantalla */
+    .tabacts{margin-left:0;width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .tabacts::-webkit-scrollbar{display:none}
+    .tabacts .btn{flex:none}
+    #btnNew{width:auto;flex:none;order:-1}
     .demo-banner{margin:0 16px 8px}
     main{padding:8px 16px 90px}
     section.status-block + section.status-block{margin-top:30px}
@@ -809,6 +835,7 @@
     .bar{height:14px;font-size:8.5px;padding:0 5px;line-height:11px}
     .cell .chips{flex-direction:row;flex-wrap:wrap;gap:3px}
     .chip{width:10px;height:10px;border-radius:50%;padding:0;font-size:0;background:var(--red);border-color:var(--red);flex:none}
+    .chip .chip-dot{display:none}
     /* pista de que se puede arrastrar */
     .cal-scroll{scroll-snap-type:x proximity;overscroll-behavior-x:contain}
     .daypanel{padding:12px 12px 14px}
@@ -1512,13 +1539,26 @@ async function authHeader(){
   try{ const { data:{ session } } = await sb.auth.getSession(); return session ? { "Authorization": "Bearer "+session.access_token } : {}; }
   catch(e){ return {}; }
 }
+/* cuántos pedidos a n8n hay en vuelo, y los cambios de otras personas que esperan a
+   que terminen para aplicarse (ver EN VIVO, más abajo) */
+let apiEnVuelo = 0;
+const syncCola = [];
 async function api(path, opts={}){
-  const res = await fetch(CONFIG.N8N_BASE + path, {
-    ...opts,
-    headers:{ "Content-Type":"application/json", "x-team23-key": CONFIG.API_KEY, ...(await authHeader()), ...(opts.headers||{}) }
-  });
-  if(!res.ok) throw new Error("HTTP "+res.status);
-  return res.json().catch(()=>({}));
+  apiEnVuelo++;
+  try{
+    const res = await fetch(CONFIG.N8N_BASE + path, {
+      ...opts,
+      headers:{ "Content-Type":"application/json", "x-team23-key": CONFIG.API_KEY, ...(await authHeader()), ...(opts.headers||{}) }
+    });
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const data = await res.json().catch(()=>({}));
+    /* guardó bien: se le avisa a quien más tenga el hub abierto */
+    if(opts.method==="POST") syncEmitir(path, opts.body);
+    return data;
+  }finally{
+    apiEnVuelo--;
+    if(syncCola.length) setTimeout(syncVaciar, 0);
+  }
 }
 
 /* fecha de finalización = la última fecha del calendario (fin de fase o hito) */
@@ -1597,6 +1637,18 @@ function setupBanner(faltan){
   el.style.display = "block";
 }
 
+/* un proyecto tal como llega de wf2 → tal como lo usa el hub */
+function projNormalizar(p){
+  return calSinCopiasDeTareas({
+    ...p,
+    tareas: p.tareas || [],
+    asignaciones: p.asignaciones || {},
+    taskDates: p.taskDates || (p.taskDates_json ? (()=>{try{return JSON.parse(p.taskDates_json)}catch(e){return {}}})() : {}),
+    equipo: p.equipo || (p.equipo_json ? (()=>{try{return JSON.parse(p.equipo_json)}catch(e){return {}}})() : {}),
+    links: p.links || {},
+    calendario: ensureCalIds((p.calendario || []).map(c=>({ ...c, tipo: c.tipo==="hito"?"hito":"fase" })))
+  });
+}
 async function loadProjects(){
   if(DEMO){
     projects = JSON.parse(JSON.stringify(demoProjects));
@@ -1617,15 +1669,7 @@ async function loadProjects(){
   syncPillShow(true);
   try{
     const data = await api("/webhook/team23/projects");
-    projects = (data.projects||[]).map(p=>({
-      ...p,
-      tareas: p.tareas || [],
-      asignaciones: p.asignaciones || {},
-      taskDates: p.taskDates || (p.taskDates_json ? (()=>{try{return JSON.parse(p.taskDates_json)}catch(e){return {}}})() : {}),
-      equipo: p.equipo || (p.equipo_json ? (()=>{try{return JSON.parse(p.equipo_json)}catch(e){return {}}})() : {}),
-      links: p.links || {},
-      calendario: ensureCalIds((p.calendario || []).map(c=>({ ...c, tipo: c.tipo==="hito"?"hito":"fase" })))
-    }));
+    projects = (data.projects||[]).map(projNormalizar);
     onProjectsLoaded();
     cacheGuardar(projects);
     staleBannerHide();
@@ -1672,7 +1716,8 @@ function cardHTML(p, readOnly=false){
   const fLink = p.links?.frameio && p.links.frameio!=="#" ? `<a href="${esc(p.links.frameio)}" target="_blank" onclick="event.stopPropagation()">FRAME.IO ↗</a>` : "";
   return `<div class="card" onclick="openDetail('${p.id}'${readOnly?",true":""})">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3)">
-      <h3 style="margin-bottom:0;min-width:0;overflow-wrap:anywhere">${esc(p.nombre)}</h3>
+      ${""/* el título no lleva min-width:0: así su mínimo es la palabra más larga y las que ceden son las pills, no el nombre partido a mitad de palabra */}
+      <h3 style="margin-bottom:0;overflow-wrap:break-word">${esc(p.nombre)}</h3>
       ${pills?`<div class="pills" style="flex:0 1 auto;min-width:0;max-width:60%;justify-content:flex-end">${pills}</div>`:""}
     </div>
     <div class="meta">${meta||"&nbsp;"}</div>
@@ -2312,6 +2357,24 @@ function toggleCalSectionOpen(){ calSectionOpen = !calSectionOpen; renderDetail(
 let calTableOpen = false; // colapsa/expande la tabla de Fase/Inicio/Fin/Notas (proyectos grandes tienen muchas filas)
 function toggleCalTableOpen(){ calTableOpen = !calTableOpen; renderDetail(); }
 
+/* lo que la ficha necesita que exista para poder dibujarse: una fila en blanco por
+   tarea, sus fechas, y la fase "Entrega Masters". Lo usa openDetail y también la
+   sincronización en vivo, cuando otro agrega una tarea con la ficha abierta. */
+function fichaDefaults(p){
+  p.tareas = p.tareas||[];
+  p.asignaciones = p.asignaciones||{};
+  p.taskDates = p.taskDates||{};
+  p.calendario = p.calendario||[];
+  p.tareas.forEach(t=>{
+    if(!p.asignaciones[t] || !p.asignaciones[t].length) p.asignaciones[t]=[{nombre:"",email:"",discord:"",telefono:""}];
+    if(!p.taskDates[t]) p.taskDates[t]={inicio:"",fin:"",notas:""};
+  });
+  // sembrar "Entrega Masters" como fase independiente: se carga desde pre-producción, no recién al activar
+  if(p.status!=="completado" && !p.calendario.some(r=>(r.tipo||"fase")!=="hito")){
+    p.calendario.push({id:uid(), tipo:"fase", fase:"Entrega Masters", inicio:"", fin:"", notas:""});
+  }
+  return p;
+}
 function openDetail(id, readOnly=false){
   calCtx = "dt";
   detailProject = projects.find(p=>p.id===id);
@@ -2322,18 +2385,7 @@ function openDetail(id, readOnly=false){
   tareasOpen = false;
   calSectionOpen = false;
   calTableOpen = false;
-  detailProject.tareas = detailProject.tareas||[];
-  detailProject.asignaciones = detailProject.asignaciones||{};
-  detailProject.taskDates = detailProject.taskDates||{};
-  detailProject.calendario = detailProject.calendario||[];
-  detailProject.tareas.forEach(t=>{
-    if(!detailProject.asignaciones[t]) detailProject.asignaciones[t]=[{nombre:"",email:"",discord:"",telefono:""}];
-    if(!detailProject.taskDates[t]) detailProject.taskDates[t]={inicio:"",fin:"",notas:""};
-  });
-  // sembrar "Entrega Masters" como fase independiente: se carga desde pre-producción, no recién al activar
-  if(detailProject.status!=="completado" && !detailProject.calendario.some(r=>(r.tipo||"fase")!=="hito")){
-    detailProject.calendario.push({id:uid(), tipo:"fase", fase:"Entrega Masters", inicio:"", fin:"", notas:""});
-  }
+  fichaDefaults(detailProject);
   /* Abre en el mes de HOY, que es lo que uno quiere ver al entrar. Si el proyecto
      todavía no empezó o ya terminó, abrir en un mes vacío no sirve: se acota al
      rango del proyecto. */
@@ -2387,7 +2439,7 @@ function sintesisHTML(txt, small){
   let out = "", list = [];
   const flush = ()=>{ if(list.length){ out += `<ul class="sx-list">${list.join("")}</ul>`; list = []; } };
   lines.forEach(raw=>{
-    const l = raw.trim();
+    const l = sxSinMd(raw.trim());
     if(!l){ flush(); return; }
     const m = l.match(/^[•·\-\*]\s+(.*)$/);
     if(m){ list.push(`<li>${esc(m[1])}</li>`); return; }
@@ -2427,6 +2479,37 @@ function allCalEntries(p){
     out.push({id:r.id||("cal:"+i), src:"cal", idx:i, tipo:(r.tipo||"fase"), fase:r.fase, inicio:r.inicio, fin:r.fin, notas:r.notas||""});
   });
   return out;
+}
+/* Hasta el 24/11/2026 el guardado de calendario (wf5) escribía en la hoja Calendar una
+   copia de cada fase de TAREA, y al volver a cargar esa copia llegaba como una fase
+   independiente más: cada tarea se veía dos veces. wf5 ya no las guarda; esto limpia
+   las copias que quedaron en proyectos viejos, sin perder fechas:
+   · copia vacía o igual a la tarea → se descarta
+   · la tarea no tenía fechas y la copia sí → la tarea las recupera
+   · las dos tienen fechas y no coinciden → quedan las dos a la vista, lo decide una persona */
+function calSinCopiasDeTareas(p){
+  const tareas = new Set(p.tareas||[]);
+  if(!tareas.size || !(p.calendario||[]).length) return p;
+  p.taskDates = p.taskDates || {};
+  const igual = (a,b)=> (a.inicio||"")===(b.inicio||"") && (a.fin||a.inicio||"")===(b.fin||b.inicio||"");
+  p.calendario = p.calendario.filter(r=>{
+    if((r.tipo||"fase")==="hito") return true;
+    const nom = String(r.fase||"").trim();
+    const m = nom.match(/^(.*) \((\d+)\)$/);
+    const t = tareas.has(nom) ? nom : (m && tareas.has(m[1]) ? m[1] : null);
+    if(!t) return true;
+    if(!r.inicio && !r.fin) return false;
+    const ri = t===nom ? 0 : Number(m[2])-1;
+    const d = p.taskDates[t];
+    const propio = d ? taskRangos(d)[ri] : null;
+    if(propio && igual(propio, r)) return false;
+    if(ri===0 && (!d || (!d.inicio && !d.fin))){
+      p.taskDates[t] = { ...(d||{notas:""}), inicio:r.inicio||"", fin:r.fin||"", notas:(d&&d.notas)||r.notas||"" };
+      return false;
+    }
+    return true;
+  });
+  return p;
 }
 function taskDateSet(t,field,val,ri){
   detailProject.taskDates = detailProject.taskDates||{};
@@ -2994,7 +3077,7 @@ function globalCalendarHTML(){
     const color = PROJECT_COLORS[pi % PROJECT_COLORS.length];
     allCalEntries(p).forEach(r=>{
       if(r.tipo!=="hito" && r.inicio) fases.push({...r, project:p, color});
-      else if(r.tipo==="hito" && r.inicio) hitos.push({...r, project:p});
+      else if(r.tipo==="hito" && r.inicio) hitos.push({...r, project:p, color});
     });
   });
 
@@ -3020,7 +3103,7 @@ function globalCalendarHTML(){
       const other = d.getMonth()!==m;
       const dayHitos = hitos.filter(h=>h.inicio===key);
       const chips = dayHitos.map(h=>
-        `<div class="chip" title="${esc(h.project.nombre)} · ${esc(h.fase)}" onclick="event.stopPropagation();openDetail('${h.project.id}')">● ${esc(h.project.nombre)}</div>`
+        `<div class="chip" title="${esc(h.project.nombre)} · ${esc(h.fase)}" onclick="event.stopPropagation();openDetail('${h.project.id}')"><i class="chip-dot" style="background:${h.color}"></i>${esc(h.fase||h.project.nombre)}</div>`
       ).join("");
       return `<div class="cell ${other?"om":""}">
         <div class="dnum ${key===todayKey?"today":""}">${d.getDate()}</div>
@@ -4291,8 +4374,12 @@ function sxSetValue(ctx, v){
   if($("#n2Sintesis")) $("#n2Sintesis").value = v;
 }
 /* lo que se muestra al lado del título cuando está colapsada */
+/* el debrief a veces llega con markdown (**Síntesis:**): acá no se interpreta, se limpia */
+function sxSinMd(l){ return String(l||"").replace(/\*\*(.+?)\*\*/g,"$1").replace(/__(.+?)__/g,"$1").replace(/^#{1,4}\s+/,""); }
 function sxPreviewLine(txt){
-  const l = String(txt||"").split(/\r?\n/).map(s=>s.trim()).find(Boolean) || "";
+  const lineas = String(txt||"").split(/\r?\n/).map(s=>sxSinMd(s.trim())).filter(Boolean);
+  /* un subtítulo solo ("Síntesis:") no dice nada: se muestra la primera línea con contenido */
+  const l = lineas.find(x=>!/^[^:]{2,40}:$/.test(x)) || lineas[0] || "";
   const limpia = l.replace(/^[•·\-\*]\s+/,"");
   return limpia.length > 90 ? limpia.slice(0,90)+"…" : limpia;
 }
@@ -4586,90 +4673,128 @@ async function saveCalendar(isFirst, btn, avisar){
   }finally{ if(btn){ btn.disabled = false; btn.textContent = _lbl; } }
 }
 
-function printCalendar(){
-  const p = detailProject;
+/* PDF del calendario. Sale el calendario ENTERO, no solo el mes que está en pantalla:
+   todas las semanas entre la primera y la última fecha del proyecto, corridas, con el
+   mes anotado al margen. Las fases van como barras continuas y los hitos con el nombre
+   completo. Abajo el detalle: primero las fases y después los hitos, cada tabla a todo
+   el ancho y en orden de fecha. */
+const PRINT_MAX_SEMANAS = 80;
+function calPrintHTML(p){
   const lookMap = faseLookMap(p);
-  const y = calView.getFullYear(), m = calView.getMonth();
-  const first = new Date(y, m, 1);
-  const startOff = (first.getDay()+6)%7;
-  const gridStart = new Date(y, m, 1-startOff);
-  const lastDate = new Date(y, m+1, 0).getDate();
-  const totalCells = Math.ceil((startOff+lastDate)/7)*7;
-  const days = [];
-  for(let i=0;i<totalCells;i++){ const d=new Date(gridStart); d.setDate(gridStart.getDate()+i); days.push(d); }
+  const look = e => PHASE_LOOKS[lookMap[e.id]||0];
+  const entries = allCalEntries(p).filter(e=>e.fase);
+  /* rango de cada entrada, ya ordenado: una fase cargada al revés igual se dibuja */
+  const rango = e => { const a = parseYMD(e.inicio)||parseYMD(e.fin), b = parseYMD(e.fin)||a; return !a ? null : (a<=b ? {s:a,f:b} : {s:b,f:a}); };
+  const fases = entries.filter(e=>e.tipo!=="hito").map(e=>({ e, r:rango(e) }));
+  const hitos = entries.filter(e=>e.tipo==="hito").map(e=>({ e, r:rango(e) }));
+  const porFecha = (x,z)=> (x.r && z.r) ? (x.r.s - z.r.s || x.r.f - z.r.f) : (x.r ? -1 : z.r ? 1 : 0);
+  fases.sort(porFecha); hitos.sort(porFecha);
 
-  const entries = allCalEntries(p);
-  const fases = entries.filter(e=>e.tipo!=="hito" && e.inicio);
-  const hitos = entries.filter(e=>e.tipo==="hito" && e.inicio);
+  const fechas = fases.concat(hitos).filter(x=>x.r).flatMap(x=>[x.r.s, x.r.f]);
+  const desde = fechas.length ? new Date(Math.min(...fechas)) : null;
+  const hasta = fechas.length ? new Date(Math.max(...fechas)) : null;
+  const corta = d => d.toLocaleDateString("es-AR",{day:"numeric",month:"short"}).replace(".","");
+  const mesCorto = d => d.toLocaleDateString("es-AR",{month:"short"}).replace(".","");
+  const conDia = d => d.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short"}).replace(/[.,]/g,"");
 
-  let rowsHTML = "";
-  for(let w=0; w<days.length; w+=7){
-    rowsHTML += "<tr>" + days.slice(w,w+7).map(d=>{
-      const key = ymd(d);
-      const other = d.getMonth()!==m;
-      const dayFases = fases.filter(f=>{
-        const s=parseYMD(f.inicio), e=parseYMD(f.fin)||s;
-        return s<=d && e>=d;
-      }).map(f=>{
-        const lk = PHASE_LOOKS[lookMap[f.id]||0];
-        /* la barra va pintada, igual que en pantalla: con print-color-adjust el
-           navegador ya no descarta el fondo */
-        return `<div class="pbar${f.inicio===key?" ini":""}" style="background:${lk.bg};color:${lk.fg}">${esc(f.fase)}</div>`;
-      }).join("");
-      const dayHitos = hitos.filter(h=>h.inicio===key).map(h=>`<div class="phito">${esc(h.fase)}</div>`).join("");
-      const wknd = [0,6].includes(d.getDay());
-      return `<td class="${other?"om":wknd?"wknd":""}"><div class="pd ${other?"om":""}">${d.getDate()}</div>${other?"":dayFases+dayHitos}</td>`;
-    }).join("") + "</tr>";
+  /* semanas (lunes a domingo) que cubren el proyecto */
+  const semanas = [];
+  if(desde){
+    for(let w = weekStartOf(desde); w <= hasta && semanas.length < PRINT_MAX_SEMANAS; w = new Date(w.getFullYear(), w.getMonth(), w.getDate()+7)){
+      semanas.push(Array.from({length:7}, (_,i)=> new Date(w.getFullYear(), w.getMonth(), w.getDate()+i)));
+    }
   }
+  const cortado = semanas.length===PRINT_MAX_SEMANAS && semanas[semanas.length-1][6] < hasta;
 
-  const mtitle = calView.toLocaleDateString("es-AR",{month:"long",year:"numeric"}).toUpperCase();
-  const dm = s => s ? fechaCorta(s) : "—";
-
-  /* leyenda: una entrada por fase, con su color */
-  const vistas = new Set();
-  const leyenda = fases.filter(f=>{ const k = f.src==="task"?"task:"+f.key:f.id;
-      if(vistas.has(k)) return false; vistas.add(k); return true; })
-    .map(f=>{ const lk = PHASE_LOOKS[lookMap[f.id]||0];
-      return `<span><i style="background:${lk.bg}"></i>${esc(f.src==="task"?f.key:f.fase)}</span>`; }).join("");
-
-  const faseList = entries.filter(r=>r.tipo!=="hito" && r.fase).map(r=>{
-    const lk = PHASE_LOOKS[lookMap[r.id]||0];
-    return `<tr><td><span class="sw" style="background:${lk.bg}"></span><b>${esc(r.fase)}</b></td>`+
-           `<td>${dm(r.inicio)} → ${dm(r.fin)}</td><td>${esc(r.notas||"—")}</td></tr>`;
+  let mesAnterior = -1;
+  const semanasHTML = semanas.map((week, wi)=>{
+    const segs = [];
+    fases.forEach(x=>{
+      if(!x.r || x.r.f < week[0] || x.r.s > week[6]) return;
+      segs.push({ x, c0: Math.max(0, dayDiff(week[0], x.r.s)), c1: Math.min(6, dayDiff(week[0], x.r.f)) });
+    });
+    segs.sort((a,b)=> a.c0-b.c0 || (b.c1-b.c0)-(a.c1-a.c0));
+    const laneEnd = [];
+    segs.forEach(sg=>{ let L=0; while(laneEnd[L]!==undefined && laneEnd[L]>=sg.c0) L++; sg.lane=L; laneEnd[L]=sg.c1; });
+    const bh = laneEnd.length ? laneEnd.length*13 : 0;
+    /* el mes de la semana es el de su jueves (donde cae la mayoría de sus días): una
+       semana con seis días de octubre y el 1 de noviembre sigue siendo de octubre */
+    const ref = week[3], claveMes = ref.getFullYear()*12+ref.getMonth();
+    const cambia = claveMes!==mesAnterior; mesAnterior = claveMes;
+    const margen = cambia ? `${esc(mesCorto(ref))}<small>${ref.getFullYear()}</small>` : "";
+    const celdas = week.map(d=>{
+      const key = ymd(d);
+      const hs = hitos.filter(h=>h.r && ymd(h.r.s)===key).map(h=>`<div class="phito">${esc(h.e.fase)}</div>`).join("");
+      const uno = d.getDate()===1 && wi>0;
+      return `<div class="pc ${[0,6].includes(d.getDay())?"wk":""}"><div class="pd${uno?" m1":""}">${uno ? "1 "+esc(mesCorto(d)) : d.getDate()}</div>${hs?`<div class="ph">${hs}</div>`:""}</div>`;
+    }).join("");
+    const barras = segs.map(sg=>{
+      const lk = look(sg.x.e);
+      return `<div class="pbar" style="left:calc(${(sg.c0/7*100).toFixed(3)}% + 2px);width:calc(${((sg.c1-sg.c0+1)/7*100).toFixed(3)}% - 4px);top:${18+sg.lane*13}px;background:${lk.bg};color:${lk.fg}">${esc(sg.x.e.fase)}</div>`;
+    }).join("");
+    return `<div class="pweek"><div class="pg">${margen}</div><div class="pdays" style="--bh:${bh}px">${celdas}<div class="pbl">${barras}</div></div></div>`;
   }).join("");
-  const hitoList = entries.filter(r=>r.tipo==="hito" && r.fase).map(r=>
-    `<tr><td>${dm(r.inicio)}</td><td><b>${esc(r.fase)}</b></td></tr>`).join("");
 
-  $("#printArea").innerHTML = `
+  const rangoTxt = !desde ? "Sin fechas cargadas"
+    : (+desde===+hasta) ? corta(desde)+" "+desde.getFullYear()
+    : corta(desde)+(desde.getFullYear()===hasta.getFullYear()?"":" "+desde.getFullYear())+" → "+corta(hasta)+" "+hasta.getFullYear();
+
+  const conFecha = fases.filter(x=>x.r), sinFecha = fases.filter(x=>!x.r);
+  /* la columna de notas solo aparece si alguna fila tiene algo que decir */
+  const notasF = conFecha.some(x=>x.e.notas), notasH = hitos.some(x=>x.e.notas);
+  const faseRows = conFecha.map(x=>{
+    const dias = dayDiff(x.r.s, x.r.f)+1;
+    return `<tr><td><span class="sw" style="background:${look(x.e).bg}"></span><b>${esc(x.e.fase)}</b></td><td class="n">${corta(x.r.s)}</td><td class="n">${corta(x.r.f)}</td>`+
+           `<td class="n">${dias} ${dias===1?"día":"días"}</td>${notasF?`<td>${esc(x.e.notas||"")}</td>`:""}</tr>`;
+  }).join("");
+  const hitoRows = hitos.map(x=>
+    `<tr><td class="${x.r?"n":"sf"}">${x.r ? conDia(x.r.s) : "Sin fecha"}</td><td><span class="sw h"></span><b>${esc(x.e.fase)}</b></td>${notasH?`<td>${esc(x.e.notas||"")}</td>`:""}</tr>`).join("");
+  const sinFechaHTML = sinFecha.length ? `<div class="psin"><b>Sin fecha todavía:</b> ${sinFecha.map(x=>esc(x.e.fase)).join(" · ")}</div>` : "";
+
+  return `
     <div class="phead">
       <div>
         <h1>${esc(p.nombre)}</h1>
-        <div class="psub">${esc([p.cliente, p.agencia, p.productora].filter(Boolean).join(" · "))}</div>
+        <div class="psub">${esc([p.cliente, p.agencia, p.productora].filter(v=>v && v!=="-").join(" · "))}</div>
       </div>
       <div>
-        <div class="pmonth">${mtitle}</div>
-        <div class="pmark">TEAM 23 · Production Hub</div>
+        <div class="prango">${esc(rangoTxt)}</div>
+        <div class="pmark">Calendario · TEAM 23 Production Hub</div>
       </div>
     </div>
-    ${leyenda?`<div class="pleg">${leyenda}</div>`:""}
-    <table class="pgrid"><thead><tr>${WDAYS.map(w=>`<th>${w}</th>`).join("")}</tr></thead><tbody>${rowsHTML}</tbody></table>
-    <div class="pcols">
-      <div>
-        <h3>Fases</h3>
-        <table class="plist"><thead><tr><th>Fase</th><th>Fechas</th><th>Notas</th></tr></thead><tbody>${faseList||'<tr><td colspan="3">—</td></tr>'}</tbody></table>
-      </div>
-      ${hitoList?`<div style="flex:0 0 30%">
-        <h3>Hitos</h3>
-        <table class="plist"><thead><tr><th>Fecha</th><th>Hito</th></tr></thead><tbody>${hitoList}</tbody></table>
-      </div>`:""}
-    </div>
-    <div class="pfoot"><span>${esc(p.nombre)} · ${esc(mtitle)}</span><span>Generado ${new Date().toLocaleDateString("es-AR")}</span></div>`;
+    ${semanasHTML?`<div class="pcal"><div class="pwd"><div></div>${WDAYS.map(w=>`<div>${w}</div>`).join("")}</div>${semanasHTML}</div>`:""}
+    ${cortado?`<div class="psin">El calendario sigue hasta ${esc(corta(hasta)+" "+hasta.getFullYear())}: acá van las primeras ${PRINT_MAX_SEMANAS} semanas.</div>`:""}
+    ${(faseRows||sinFechaHTML)?`<div class="psec${conFecha.length<=14?" junta":""}">
+      <h3>Fases <small>${fases.length}</small></h3>
+      ${faseRows?`<table class="plist"><colgroup><col style="width:${notasF?34:52}%"><col style="width:${notasF?11:16}%"><col style="width:${notasF?11:16}%"><col style="width:${notasF?11:16}%">${notasF?"<col>":""}</colgroup>
+        <thead><tr><th>Fase</th><th>Desde</th><th>Hasta</th><th>Duración</th>${notasF?"<th>Notas</th>":""}</tr></thead><tbody>${faseRows}</tbody></table>`:""}
+      ${sinFechaHTML}
+    </div>`:""}
+    ${hitoRows?`<div class="psec${hitos.length<=14?" junta":""}">
+      <h3>Hitos <small>${hitos.length}</small></h3>
+      <table class="plist"><colgroup><col style="width:17%"><col style="width:${notasH?43:83}%">${notasH?"<col>":""}</colgroup>
+        <thead><tr><th>Fecha</th><th>Hito</th>${notasH?"<th>Notas</th>":""}</tr></thead><tbody>${hitoRows}</tbody></table>
+    </div>`:""}
+    <div class="pfoot"><span>${esc(p.nombre)} · Calendario</span><span>Generado ${new Date().toLocaleDateString("es-AR")}</span></div>`;
+}
+function printCalendar(){
+  const p = detailProject;
+  $("#printArea").innerHTML = calPrintHTML(p);
+  /* el navegador propone el título de la página como nombre del archivo */
+  const titulo = document.title;
+  document.title = (p.nombre||"Proyecto")+" — Calendario";
+  window.addEventListener("afterprint", ()=>{ document.title = titulo; }, { once:true });
   window.print();
 }
 
 /* ---------------- helpers UI ---------------- */
 function openModal(id){ $("#"+id).classList.add("open"); document.body.style.overflow="hidden"; presSync(); }
-function closeModal(id){ $("#"+id).classList.remove("open"); document.body.style.overflow=""; acClose(); presSync(); }
+function closeModal(id){
+  $("#"+id).classList.remove("open");
+  /* con un popup encima de la ficha, cerrar el de arriba no puede devolverle el scroll al fondo */
+  if(!document.querySelector(".overlay.open")) document.body.style.overflow="";
+  acClose(); presSync();
+}
 
 /* ---------------- crear desde debrief (IA) — el único camino de alta ---------------- */
 let n2Selected = new Set(), n2AssignData = {}, n2TaskDates = {};
@@ -5017,6 +5142,7 @@ function confirmDiscard(){
          seguían mostrando y guardando datos de un proyecto que ya no estaba en la lista. */
       Object.keys(actual).forEach(k=>{ delete actual[k]; });
       Object.assign(actual, JSON.parse(JSON.stringify(detailSnapshot)));
+      ensureCalIds(actual.calendario);
     }
   }
   detailDirty = false; calDirty = false;
@@ -5077,6 +5203,236 @@ document.addEventListener("mousemove",e=>{
     p.style.transform = `translate(calc(-50% + ${Math.cos(a)*3.5}px), calc(-50% + ${Math.sin(a)*4.5}px))`;
   });
 });
+
+/* ================================================================
+   EN VIVO — lo que guarda una persona le aparece a las demás
+   Cada guardado que sale bien se reenvía por el canal privado de la presencia
+   (Supabase Realtime, "hub-presence") como un parche: SOLO los campos que ese
+   guardado escribió en el sheet, sacados del body del pedido. No viaja el
+   proyecto entero a propósito: en memoria puede haber cambios sin guardar, y
+   esos todavía no son de nadie más.
+   Quien lo recibe lo aplica sobre el mismo objeto (nunca lo reemplaza: la ficha
+   y el tracker guardan referencias a él). Si tiene la ficha de ese proyecto
+   abierta con cambios sin guardar, se fusiona de a tres (lo que había en el
+   sheet / lo mío / lo que llegó): gana lo que cambió una sola de las dos
+   partes, y si las dos tocaron exactamente lo mismo queda lo mío y se avisa.
+   No pasa por n8n, así que no gasta ejecuciones. La lista entera solo se
+   vuelve a pedir cuando aparece un proyecto nuevo o al reconectar tras un corte.
+   Usa las mismas dos policies de supabase/presence-migration.sql (broadcast).
+   ================================================================ */
+const SYNC_PLANOS = ["nombre","cliente","agencia","productora","director","ep_nombre","ep_email","prod_nombre","prod_email",
+                     "coord_nombre","coord_email","status","year","month","sintesis","storyboard_url","tratamiento_url"];
+const SYNC_JSON = { equipo_json:"equipo", tareas_json:"tareas", asignaciones_json:"asignaciones", taskDates_json:"taskDates",
+                    checklist_json:"checklist", tracker_json:"tracker", links_json:"links" };
+const SYNC_NOMBRE = { asignaciones:"el equipo", taskDates:"las fechas", tracker:"el tracker", checklist:"el checklist", links:"los links",
+                      equipo:"el equipo interno", status:"la etapa", sintesis:"la síntesis", nombre:"el nombre", cliente:"el cliente",
+                      agencia:"la agencia", productora:"la productora", director:"el director" };
+let syncRenderPend = false;
+
+function syncClon(v){ return v===undefined ? undefined : JSON.parse(JSON.stringify(v)); }
+function syncEsObj(v){ return !!v && typeof v==="object" && !Array.isArray(v); }
+/* forma canónica para comparar: sin diferencias por el orden de las claves ni por
+   "vacíos" que significan lo mismo (una fila de persona en blanco, un rango sin
+   fechas, "" / null / false / [] / {}) */
+function syncCanon(v){
+  if(v===undefined || v===null || v==="" || v===false) return null;
+  if(Array.isArray(v)){ const a = v.map(syncCanon).filter(x=>x!==null); return a.length ? a : null; }
+  if(typeof v==="object"){
+    const o = {};
+    Object.keys(v).sort().forEach(k=>{ if(k==="mailOn") return; const c = syncCanon(v[k]); if(c!==null) o[k] = c; });
+    return Object.keys(o).length ? o : null;
+  }
+  return v;
+}
+function syncIgual(a,b){ return JSON.stringify(syncCanon(a))===JSON.stringify(syncCanon(b)); }
+/* fusión de a tres. `ruta` es por dónde se viene bajando, para poder decir qué chocó */
+function syncFusion(base, mio, suyo, ruta, choques){
+  if(syncIgual(mio, suyo)) return mio;
+  if(syncIgual(mio, base)) return syncClon(suyo);
+  if(syncIgual(suyo, base)) return mio;
+  /* los dos lo cambiaron: si son mapas se baja un nivel y se decide clave por clave
+     (yo cambié las fechas de VFX, la otra persona las de Color: entran las dos) */
+  if(syncEsObj(mio) && syncEsObj(suyo)){
+    const b = syncEsObj(base) ? base : {}, out = {};
+    new Set([...Object.keys(mio), ...Object.keys(suyo)]).forEach(k=>{
+      const v = syncFusion(b[k], mio[k], suyo[k], ruta.concat(k), choques);
+      if(v!==undefined) out[k] = v;
+    });
+    return out;
+  }
+  choques.push(ruta);
+  return mio;
+}
+/* listas (fases/hitos del calendario, tareas): se parte de lo mío, se saca lo que la
+   otra persona sacó y entra lo que agregó. Editar una entrada es sacarla y agregarla. */
+function syncFusionLista(base, mio, suyo, clave){
+  const kb = new Set((base||[]).map(clave)), ks = new Set((suyo||[]).map(clave)), km = new Set((mio||[]).map(clave));
+  const out = (mio||[]).filter(x=>{ const k = clave(x); return !(kb.has(k) && !ks.has(k)); });
+  (suyo||[]).forEach(x=>{ const k = clave(x); if(!kb.has(k) && !km.has(k)) out.push(syncClon(x)); });
+  return out;
+}
+function syncClaveCal(x){ return [(x.tipo==="hito"?"hito":"fase"), x.fase||"", x.inicio||"", x.fin||"", x.notas||""].join("|"); }
+
+/* ---- salida: del body de un guardado al parche que se reenvía ---- */
+function syncParcheDe(path, body){
+  const m = String(path).match(/\/webhook\/team23\/(update|calendar|delete|create)$/);
+  if(!m || !body) return null;
+  if(m[1]==="create") return { t:"lista" };                       /* proyecto o borrador nuevo: que pidan la lista */
+  if(m[1]==="delete") return body.id ? { t:"borrado", id:String(body.id) } : null;
+  const patch = {};
+  if(m[1]==="update"){
+    if(!body.id) return null;
+    SYNC_PLANOS.forEach(k=>{ if(k in body) patch[k] = body[k]; });
+    Object.entries(SYNC_JSON).forEach(([kj,k])=>{ if(typeof body[kj]==="string"){ try{ patch[k] = JSON.parse(body[kj]); }catch(e){} } });
+    return Object.keys(patch).length ? { t:"parche", id:String(body.id), patch } : null;
+  }
+  if(!body.projectId) return null;
+  /* calendario: las fases que salen de tareas viajan como taskDates, igual que en el sheet */
+  patch.calendario = (body.entries||[]).filter(e=>!String(e.id||"").startsWith("task:"))
+    .map(e=>({ tipo:e.tipo==="hito"?"hito":"fase", fase:e.fase||"", inicio:e.inicio||"", fin:e.fin||"", notas:e.notas||"" }));
+  try{ patch.taskDates = JSON.parse(body.taskDates_json||"{}"); }catch(e){}
+  return { t:"parche", id:String(body.projectId), patch };
+}
+function syncEmitir(path, rawBody){
+  let body = null; try{ body = typeof rawBody==="string" ? JSON.parse(rawBody) : null; }catch(e){}
+  let msg = syncParcheDe(path, body);
+  if(!msg) return;
+  /* lo que acabo de guardar ya está en el sheet: pasa a ser el punto de "Descartar" y la
+     base de la próxima fusión. Antes, cambiar de etapa y después descartar otros cambios
+     devolvía la ficha a la etapa vieja, aunque en el sheet ya estaba la nueva. */
+  if(msg.t==="parche" && detailSnapshot && String(detailSnapshot.id)===msg.id)
+    Object.keys(msg.patch).forEach(k=>{ detailSnapshot[k] = syncClon(msg.patch[k]); });
+  if(!presCh) return;
+  msg.by = presNombre(); msg.ts = Date.now();
+  /* Realtime corta los mensajes muy grandes: en ese caso que pidan la lista */
+  if(JSON.stringify(msg).length > 180000) msg = { t:"lista", by:msg.by, ts:msg.ts };
+  try{ const r = presCh.send({ type:"broadcast", event:"sync", payload:msg }); if(r && r.catch) r.catch(()=>{}); }catch(e){}
+}
+
+/* ---- entrada ---- */
+function syncRecibir(m){ if(!m || !m.t) return; syncCola.push(m); syncVaciar(); }
+/* no se aplica nada mientras hay un guardado mío en vuelo, ni con un popup abierto que
+   edita una copia o guarda por número de fila (mail, nota, persona…): espera a que cierre */
+function syncOcupado(){
+  if(apiEnVuelo > 0) return true;
+  return ["ovMail","ovPersona","ovNota","ovFin","ovReact","ovInterno","ovLinks","ovSintesis","ovGate","ovConfirm"]
+    .some(id=>{ const el = $("#"+id); return !!(el && el.classList.contains("open")); });
+}
+function syncAbierta(p, ov){ const el = $("#"+ov); return !!(p && el && el.classList.contains("open")); }
+/* aplica campos sobre el MISMO objeto. Devuelve qué chocó (rutas). */
+function syncAplicarCampos(p, patch){
+  const fichaAbierta = detailProject===p && syncAbierta(p, "ovDetail");
+  const sucio = fichaAbierta && (detailDirty || calDirty);
+  const choques = [];
+  Object.keys(patch).forEach(k=>{
+    if(k==="id") return;
+    const suyo = patch[k];
+    if(!sucio){ p[k] = syncClon(suyo); return; }
+    const base = detailSnapshot ? detailSnapshot[k] : undefined;
+    if(k==="calendario") p[k] = syncFusionLista(base, p[k], suyo, syncClaveCal);
+    else if(k==="tareas") p[k] = syncFusionLista(base, p[k], suyo, x=>String(x));
+    else p[k] = syncFusion(base, p[k], suyo, [k], choques);
+  });
+  if("calendario" in patch) p.calendario = ensureCalIds((p.calendario||[]).map(c=>({ ...c, tipo: c.tipo==="hito"?"hito":"fase" })));
+  if(fichaAbierta){
+    /* "Descartar" y la próxima fusión parten de lo que ahora hay en el sheet */
+    if(detailSnapshot) Object.keys(patch).forEach(k=>{ if(k!=="id") detailSnapshot[k] = syncClon(patch[k]); });
+    fichaDefaults(p);
+  }
+  if(trkProject===p) ensureTracker(p);
+  return choques;
+}
+function syncQuitar(p, by){
+  const enFicha = detailProject===p && syncAbierta(p, "ovDetail"), enTrk = trkProject===p && syncAbierta(p, "ovTracker");
+  projects = projects.filter(x=>x!==p);
+  if(enFicha){ detailDirty = false; calDirty = false; closeModal("ovDetail"); }
+  if(enTrk) closeModal("ovTracker");
+  if(enFicha || enTrk) toast((by||"Alguien")+" eliminó “"+p.nombre+"”", true);
+}
+function syncVaciar(){
+  clearTimeout(syncVaciar._t);
+  if(!syncCola.length) return;
+  if(syncOcupado()){ syncVaciar._t = setTimeout(syncVaciar, 700); return; }
+  const lote = syncCola.splice(0);
+  let pedirLista = false, cambio = false;
+  const tocados = new Map();    /* proyecto → { by, choques } */
+  lote.forEach(m=>{
+    if(m.t==="lista"){ pedirLista = true; return; }
+    const p = projects.find(x=>String(x.id)===String(m.id));
+    if(m.t==="borrado"){ if(p){ syncQuitar(p, m.by); cambio = true; } return; }
+    if(m.t!=="parche" || !m.patch) return;
+    if(!p){ pedirLista = true; return; }      /* no lo tengo: es nuevo, o mi lista es vieja */
+    const choques = syncAplicarCampos(p, m.patch);
+    const t = tocados.get(p) || { by:m.by, choques:[] };
+    t.by = m.by; t.choques.push(...choques); tocados.set(p, t);
+    cambio = true;
+  });
+  if(cambio) syncRepintar(tocados);
+  if(pedirLista) syncPullPronto();
+}
+function syncRepintar(tocados){
+  renderAll();
+  /* el directorio no se redibuja: puede haber una celda a medio escribir */
+  if(currentView!=="directorio") renderCurrentView();
+  cacheGuardar(projects);
+  tocados.forEach((t, p)=>{
+    const enFicha = detailProject===p && syncAbierta(p, "ovDetail"), enTrk = trkProject===p && syncAbierta(p, "ovTracker");
+    if(enFicha) syncRenderFicha();
+    if(enTrk) renderTracker();
+    if(!enFicha && !enTrk) return;
+    const quien = t.by || "Alguien";
+    if(t.choques.length){
+      const que = [...new Set(t.choques.map(r=>(SYNC_NOMBRE[r[0]]||r[0]) + (r[1] && SYNC_NOMBRE[r[0]] && r[0]!=="tracker" ? " de "+r[1] : "")))].join(", ");
+      toast("↻ "+quien+" guardó cambios en "+que+" mientras vos también lo editabas: al guardar queda lo tuyo", true);
+    } else toast("↻ "+quien+" guardó cambios en este proyecto");
+  });
+}
+/* la ficha se redibuja al toque, salvo que haya un campo en foco: ahí se espera a que
+   salga, para no sacarle el cursor a quien está escribiendo (el dato ya está aplicado) */
+function syncEscribiendo(){
+  const a = document.activeElement;
+  return !!(a && a.closest && a.closest("#ovDetail") && a.matches("input:not([type=checkbox]):not([type=radio]),textarea,select,[contenteditable]"));
+}
+function syncRenderFicha(){
+  if(!detailProject || !syncAbierta(detailProject, "ovDetail")) { syncRenderPend = false; return; }
+  if(syncEscribiendo()){ syncRenderPend = true; return; }
+  syncRenderPend = false;
+  const ov = $("#ovDetail"), y = ov.scrollTop;
+  renderDetail();
+  ov.scrollTop = y;
+}
+document.addEventListener("focusout", ()=>{
+  if(syncRenderPend) setTimeout(()=>{ if(syncRenderPend && !syncEscribiendo()) syncRenderFicha(); }, 200);
+});
+/* la lista entera, aplicada en el lugar (mismo criterio que un parche por proyecto) */
+function syncPullPronto(){ clearTimeout(syncPullPronto._t); syncPullPronto._t = setTimeout(syncPull, 1500); }
+async function syncPull(){
+  if(DEMO) return;
+  let data; try{ data = await api("/webhook/team23/projects"); }catch(e){ return; }
+  if(syncOcupado()){ syncPullPronto(); return; }
+  const frescos = (data.projects||[]).map(projNormalizar);
+  const ids = new Set(frescos.map(f=>String(f.id)));
+  const tocados = new Map(); let nuevos = 0;
+  frescos.forEach(f=>{
+    const p = projects.find(x=>String(x.id)===String(f.id));
+    if(!p){ projects.push(f); nuevos++; return; }
+    const antes = JSON.stringify(syncCanon({ ...p, calendario:(p.calendario||[]).map(syncClaveCal) }));
+    const choques = syncAplicarCampos(p, f);
+    const despues = JSON.stringify(syncCanon({ ...p, calendario:(p.calendario||[]).map(syncClaveCal) }));
+    if(antes!==despues) tocados.set(p, { by:"", choques });
+  });
+  projects.filter(p=>!ids.has(String(p.id))).forEach(p=>syncQuitar(p, ""));
+  syncRepintar(tocados);
+  staleBannerHide();
+  if(nuevos) toast("✔ "+nuevos+(nuevos>1?" proyectos nuevos":" proyecto nuevo"));
+}
+/* pestaña que estuvo mucho tiempo en segundo plano: al volver, una pasada por las dudas */
+document.addEventListener("visibilitychange", ()=>{
+  if(document.hidden){ syncPull._oculta = Date.now(); return; }
+  if(syncPull._oculta && Date.now()-syncPull._oculta > 10*60*1000 && presCh) syncPullPronto();
+  syncPull._oculta = 0;
+});
+
 
 /* ================================================================
    PRESENCIA — quién está en el hub y en qué anda
@@ -5158,8 +5514,15 @@ async function presStart(nombre){
   presCh = sb.channel("hub-presence", { config: { presence: { key: presMe.id }, private: true } });
   presCh.on("presence", { event:"sync" }, ()=> presRender(presCh.presenceState()))
     .on("broadcast", { event:"grab" }, ({ payload })=> presRemoto(payload))
+    .on("broadcast", { event:"sync" }, ({ payload })=> syncRecibir(payload))
     .subscribe(status=>{
-      if(status==="SUBSCRIBED"){ presMount(); presLast = ""; presSync(true); }
+      if(status==="SUBSCRIBED"){
+        presMount(); presLast = ""; presSync(true);
+        /* reconexión después de un corte (la compu se durmió, se cayó la red): lo que se
+           guardó mientras tanto no llegó, así que se vuelve a pedir la lista una vez */
+        if(presStart._subs) syncPullPronto();
+        presStart._subs = (presStart._subs||0) + 1;
+      }
       else if(status==="CHANNEL_ERROR" || status==="TIMED_OUT"){
         presUnmount();
         console.warn("[presencia] el canal hub-presence rechazó la suscripción: falta correr supabase/presence-migration.sql");
@@ -5428,7 +5791,7 @@ function presAvisar(lista, miP){
   lista.forEach(x=>{
     if(x.me || x.p!==miP || x.idle || x.away) return;
     const k = x.id+"|"+miP; if(presAvisados.has(k)) return; presAvisados.add(k);
-    toast("👀 "+x.n+" también está en "+miP+": el último que guarda pisa al otro");
+    toast("👀 "+x.n+" también está en "+miP+": lo que guarde te va a aparecer acá");
   });
 }
 /* modo demo: tres personas de mentira que cambian de lugar, para ver el piso vivo */
