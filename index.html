@@ -1473,7 +1473,12 @@
 function uid(){ return "c_"+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
 function ensureCalIds(cal){ (cal||[]).forEach(r=>{ if(!r.id) r.id = uid(); }); return cal; }
 
-const TAREAS = ["VFX","Color","DG","Motion Graphics","IA","3D/CGI","Retoque","SFX/Mezcla","Online"];
+/* servicios que se pueden marcar en un proyecto, en el orden en que se muestran (el del
+   flujo de post). La misma lista vive en wf6 (enum del debrief y `Limpiar JSON`). */
+const TAREAS = ["Edición","Offline","VFX","Color","DG","Motion Graphics","IA","3D/CGI","Retoque","SFX/Mezcla","Online"];
+/* orden en que se repartieron los colores: lo que se agrega va al final, así las tareas
+   de siempre no cambian de color por haber sumado una adelante */
+const TAREAS_COLOR = ["VFX","Color","DG","Motion Graphics","IA","3D/CGI","Retoque","SFX/Mezcla","Online","Edición","Offline"];
 const DEMO = !CONFIG.N8N_BASE;
 const WDAYS = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
 /* looks de fase (calendario por proyecto): paleta Supportive Brand, texto oscuro sobre
@@ -1493,7 +1498,7 @@ const PHASE_LOOKS = [
 /* color fijo por tarea (no por posición en el calendario) — mismo TAREA siempre el mismo color,
    se usa en los pills de selección de tareas (alta y ficha) */
 function taskColor(t){
-  const i = TAREAS.indexOf(t);
+  const i = TAREAS_COLOR.indexOf(t);
   return PHASE_LOOKS[i>=0 ? i%PHASE_LOOKS.length : PHASE_LOOKS.length-1];
 }
 /* colores de marca (Supportive Brand del design system) para distinguir proyectos en el calendario global */

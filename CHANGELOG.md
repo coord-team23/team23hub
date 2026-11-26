@@ -2,6 +2,12 @@
 
 Resumen de los cambios mergeados hasta ahora en TEAM 23 Production Hub (panel + portal de proveedores).
 
+## 2026-11-26 — Dos servicios nuevos: Edición y Offline
+
+- `TAREAS` suma **Edición** y **Offline**, adelante de todo (orden del flujo de post): aparecen en el alta por debrief y en las tareas de la ficha, con su equipo, fechas, barra en el calendario y lugar en el tracker como cualquier otra.
+- Los colores de las tareas de siempre no cambian: el color sale de `TAREAS_COLOR`, donde lo nuevo va al final (Edición verde, Offline amarillo).
+- wf6 (debrief): los dos entran en el enum del schema, en el prompt y en `Limpiar JSON`, así la IA puede marcarlos y cargarles fechas. Deployado por API. El prompt no los define; si la IA confunde Offline con Edición hay que sumarle una línea que diga qué es cada uno.
+
 ## 2026-11-24 — Auditoría del hub: calendario, fases duplicadas, y cambios en vivo entre personas
 
 **Calendario desalineado (ficha de MILO J).** `.week` y `.wdays` usaban `repeat(7,1fr)`: `1fr` deja crecer la columna hasta el contenido, así que un hito de nombre largo ("Día de corrección de urgencia (De ser necesario)") ensanchaba su columna y esa semana dejaba de coincidir con los días de arriba. Ahora `repeat(7,minmax(0,1fr))` y la celda con `min-width:0`: el hito se corta con puntos suspensivos y las siete columnas miden lo mismo en todas las semanas (ficha, vista semanal y calendario global).
